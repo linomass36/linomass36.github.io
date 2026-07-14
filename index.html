@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
 
-<meta name="NetsparkQuiltingResult" total-length="17050" removed="0" rules-found="w3573,w3509,w6243,w8931,w6193,w2656,w3144,w3139,w3429,w3430,w10821,w10822,w11212,w5472" />
+<meta name="NetsparkQuiltingResult" total-length="17568" removed="0" rules-found="w3573,w3509,w6243,w8931,w6193,w2656,w3144,w3139,w3429,w3430,w10821,w10822,w11212,w5472" />
 </head>
 <body>
 <x-dc>
@@ -195,8 +195,18 @@ class Component extends DCLogic {
       if (!this.ensureApp()) { this.showErr({ code: 'no-firebase' }); return; }
       const p = new firebase.auth.GoogleAuthProvider();
       p.setCustomParameters({ prompt: 'select_account' });
-      // Full-page redirect is the reliable flow on GitHub Pages (no popup/COOP issues).
-      firebase.auth().signInWithRedirect(p).catch((e) => this.showErr(e));
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+      // Popup keeps the session same-origin — reliable on GitHub Pages, unlike redirect.
+      firebase.auth().signInWithPopup(p).catch((e) => {
+        console.error('[gate] sign-in:', e && e.code, e && e.message);
+        if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+          firebase.auth().signInWithRedirect(p).catch((e2) => this.showErr(e2));
+        } else if (e && e.code === 'auth/cancelled-popup-request') {
+          this.setState({ err: '' });
+        } else {
+          this.showErr(e);
+        }
+      });
     } catch (e) { this.showErr(e); }
   };
 
