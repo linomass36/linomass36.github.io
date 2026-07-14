@@ -32,10 +32,11 @@ SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VERSION", ".gitignore"}
 GATE_SOURCE = "index.dc.html"   # renamed to index.html in the build
 GATE_OUTPUT = "index.html"
 
-# The two scripts every hub page needs, in order (sync depends on APP_CONFIG).
+# The scripts every hub page needs, in order (sync + nav depend on APP_CONFIG).
 SHIM = (
     '<script src="./config.js"></script>\n'
     '<script src="./sync.js"></script>\n'
+    '<script src="./nav.js"></script>\n'
 )
 
 # Written to the site root at build time; the freshest version number, fetched
