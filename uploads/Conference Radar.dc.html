@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',sans-serif;background:#f4f1ea;color:#1c1b19;min-height:100vh;padding:28px 30px 40px;">
+
+  <!-- HEADER -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px;max-width:1160px;margin:0 auto 20px;">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#8a8577;margin-bottom:8px;">Summer 2026 · CT / Transplant / Biomedical</div>
+      <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;line-height:1.05;margin:0;letter-spacing:-0.02em;">Conference Radar</h1>
+      <div style="font-size:14px;color:#5f5a4e;margin-top:8px;">Anchored to <strong style="color:#1c1b19;">{{ homeCity }}</strong> · next 3 months (Jul–Oct 2026) · AZ + neighbors, then Northeast · <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">{{ upcomingCount }} upcoming</span> · <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8577;">{{ concludedCount }} concluded</span></div>
+    </div>
+    <div style="display:flex;background:#e7e2d6;border-radius:11px;padding:4px;gap:3px;">
+      <button onClick="{{ showMap }}" style="{{ mapTabStyle }}">◎ Map</button>
+      <button onClick="{{ showCal }}" style="{{ calTabStyle }}">▤ Calendar</button>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:1160px;margin:0 auto 22px;padding:12px 16px;background:#fbf9f4;border:1px solid #e6e0d3;border-radius:12px;">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8a8577;margin-right:2px;">Relevance</span>
+    <sc-for list="{{ relChips }}" as="c" hint-placeholder-count="4">
+      <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+    </sc-for>
+    <div style="flex:1;"></div>
+    <button onClick="{{ toggleConcluded }}" style="{{ concludedToggleStyle }}">{{ concludedToggleLabel }}</button>
+  </div>
+
+  <div style="max-width:1160px;margin:0 auto;display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;">
+
+    <!-- MAIN VIEW -->
+    <div style="flex:1 1 640px;min-width:0;">
+
+      <!-- MAP VIEW -->
+      <sc-if value="{{ isMap }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fbf9f4;border:1px solid #e6e0d3;border-radius:16px;padding:8px;">
+          <div style="position:relative;width:100%;height:520px;background:radial-gradient(circle at 47% 53%, #f4f1e8 0%, #efeadf 70%, #eae3d5 100%);border-radius:12px;overflow:hidden;">
+
+            <!-- rings -->
+            <sc-for list="{{ rings }}" as="r" hint-placeholder-count="3">
+              <div style="{{ r.style }}"></div>
+              <div style="{{ r.labelStyle }}">{{ r.label }}</div>
+            </sc-for>
+
+            <!-- Phoenix anchor -->
+            <div style="position:absolute;left:47%;top:53%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;z-index:4;">
+              <div style="width:16px;height:16px;background:#1c1b19;transform:rotate(45deg);box-shadow:0 0 0 4px rgba(28,27,25,0.12);"></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.08em;background:#1c1b19;color:#f4f1ea;padding:2px 6px;border-radius:4px;white-space:nowrap;">{{ homeShort }}</div>
+            </div>
+
+            <!-- event pins -->
+            <sc-for list="{{ events }}" as="ev" hint-placeholder-count="5">
+              <div style="{{ ev.pinWrapStyle }}">
+                <button onClick="{{ ev.select }}" style="{{ ev.circleStyle }}">{{ ev.acronym }}</button>
+                <div style="{{ ev.pinLabelStyle }}">{{ ev.city }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- legend -->
+          <div style="display:flex;flex-wrap:wrap;gap:18px;padding:14px 12px 8px;font-size:12px;color:#5f5a4e;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8a8577;">Rings = travel from AZ</span>
+            <span>◍ Drive ≤6h</span>
+            <span>◍ Short flight ≤3h</span>
+            <span>◍ East Coast</span>
+            <span style="margin-left:8px;display:inline-flex;align-items:center;gap:6px;"><i style="width:10px;height:10px;border-radius:50%;background:{{ ctColorLegend }};display:inline-block;"></i>CT-core</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;"><i style="width:10px;height:10px;border-radius:50%;background:{{ adjColorLegend }};display:inline-block;"></i>Adjacent</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;"><i style="width:10px;height:10px;border-radius:50%;background:{{ genColorLegend }};display:inline-block;"></i>General</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- CALENDAR VIEW -->
+      <sc-if value="{{ isCal }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fbf9f4;border:1px solid #e6e0d3;border-radius:16px;padding:20px 22px 24px;">
+          <!-- month axis -->
+          <div style="position:relative;height:22px;margin-left:150px;border-bottom:1px solid #e6e0d3;">
+            <sc-for list="{{ months }}" as="m" hint-placeholder-count="3">
+              <div style="{{ m.style }}">{{ m.label }}</div>
+            </sc-for>
+            <div style="{{ todayLineTopStyle }}"></div>
+          </div>
+
+          <!-- lanes -->
+          <div style="position:relative;margin-top:2px;height:312px;">
+            <!-- lane labels + rows -->
+            <sc-for list="{{ lanes }}" as="ln" hint-placeholder-count="4">
+              <div style="{{ ln.rowStyle }}">
+                <div style="{{ ln.labelStyle }}">{{ ln.label }}</div>
+              </div>
+            </sc-for>
+
+            <!-- timeline track (offset past the 150px label gutter) -->
+            <div style="position:absolute;left:150px;right:0;top:0;height:312px;">
+              <div style="{{ todayTrackStyle }}"></div>
+
+              <sc-for list="{{ events }}" as="ev" hint-placeholder-count="5">
+                <button onClick="{{ ev.select }}" style="{{ ev.barStyle }}" title="{{ ev.dateShort }}">{{ ev.acronym }}</button>
+              </sc-for>
+
+              <sc-for list="{{ commitments }}" as="cm" hint-placeholder-count="2">
+                <div style="{{ cm.style }}">{{ cm.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;font-size:11px;color:#8a8577;font-family:'IBM Plex Mono',monospace;">▸ Vertical line = today (Jul 6). Tell me your Texas / East Coast / work dates and I'll drop them into the bottom lane.</div>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <!-- DETAIL PANEL -->
+    <div style="flex:0 0 330px;position:sticky;top:20px;">
+      <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fbf9f4;border:1px solid #e6e0d3;border-radius:16px;overflow:hidden;">
+          <div style="{{ selHeaderStyle }}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+              <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.06em;opacity:0.85;">{{ sel.acronym }}</div>
+                <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:19px;line-height:1.15;margin-top:4px;">{{ sel.name }}</div>
+              </div>
+              <button onClick="{{ clearSel }}" style="background:rgba(0,0,0,0.12);border:none;color:inherit;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0;">✕</button>
+            </div>
+          </div>
+          <div style="padding:18px 20px 22px;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+              <span style="{{ sel.relBadgeStyle }}">{{ sel.relLabel }}</span>
+              <span style="{{ sel.statusBadgeStyle }}">{{ sel.statusLabel }}</span>
+            </div>
+            <sc-for list="{{ sel.rows }}" as="row" hint-placeholder-count="5">
+              <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #efe9dc;">
+                <div style="flex:0 0 92px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#8a8577;padding-top:2px;">{{ row.k }}</div>
+                <div style="flex:1;font-size:14px;color:#2b2926;">{{ row.v }}</div>
+              </div>
+            </sc-for>
+            <div style="margin-top:16px;font-size:13px;line-height:1.5;color:#5f5a4e;background:#f1ede2;border-radius:9px;padding:12px 13px;">{{ sel.rationale }}</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noSelection }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fbf9f4;border:1px dashed #d8d1c1;border-radius:16px;padding:34px 24px;text-align:center;color:#8a8577;">
+          <div style="font-size:26px;margin-bottom:10px;">◎</div>
+          <div style="font-size:14px;line-height:1.5;">Select an event pin or bar to see dates, city, cost estimate, deadline, and CT/transplant relevance.</div>
+        </div>
+      </sc-if>
+
+      <!-- HORIZON PANEL -->
+      <div style="margin-top:14px;background:#fbf9f4;border:1px solid #e6e0d3;border-radius:16px;padding:16px 18px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#8a8577;margin-bottom:4px;">On the horizon · plan ahead</div>
+        <div style="font-size:11.5px;line-height:1.45;color:#8a8577;margin-bottom:12px;">Beyond the 3-month window — the career anchors worth blocking a calendar for now.</div>
+
+        <sc-for list="{{ horizon }}" as="h" hint-placeholder-count="5">
+          <div style="display:flex;gap:11px;padding:9px 0;border-top:1px solid #efe9dc;">
+            <div style="flex:0 0 8px;margin-top:5px;"><i style="display:block;width:7px;height:7px;border-radius:50%;background:{{ h.dot }};"></i></div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;color:#1c1b19;">{{ h.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#b0741a;margin-top:2px;">{{ h.when }}</div>
+              <div style="font-size:12px;line-height:1.4;color:#5f5a4e;margin-top:3px;">{{ h.why }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:14px;font-size:10.5px;line-height:1.5;color:#a29c8c;font-family:'IBM Plex Mono',monospace;padding:0 4px;">Dates from official society sites (ATC, WTSA, SCCT, NCVH, SNIS, AST, ISHLT, AATS, STS). Costs are rough all-in estimates — verify registration + travel before deciding.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:760},&quot;homeCity&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Phoenix, AZ&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;defaultView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;map&quot;,&quot;calendar&quot;],&quot;default&quot;:&quot;map&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;ctColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#15707e&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Relevance colors&quot;},&quot;adjColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#b0741a&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Relevance colors&quot;},&quot;genColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#5c6673&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Relevance colors&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { view: (props && props.defaultView) || 'map', rel: 'all', hideConcluded: false, sel: null };
+  }
+
+  baseEvents() {
+    return [
+      { id:'atc', acronym:'ATC', name:'American Transplant Congress', city:'Boston, MA', rel:'ctcore', feas:'east',
+        start:[2026,5,20], end:[2026,5,24], bearing:70, r:0.95, cost:'~$2,400 all-in', deadline:'Abstracts closed (Dec 2025)',
+        rationale:'The joint ASTS/AST meeting — solid-organ and heart/lung transplant science. Core to any transplant-facing CT practice.' },
+      { id:'wtsa', acronym:'WTSA', name:'Western Thoracic Surgical Assn — 52nd Annual', city:'Ivins, UT', rel:'ctcore', feas:'drive',
+        start:[2026,5,24], end:[2026,5,27], bearing:5, r:0.30, cost:'~$1,600 all-in', deadline:'Abstracts closed (Feb 2026)',
+        rationale:'Western cardiothoracic society meeting at Black Desert Resort — CT-core content and the only one you can reach by car from Phoenix.' },
+      { id:'scct', acronym:'SCCT', name:'Society of Cardiovascular CT — Annual Meeting', city:'San Diego, CA', rel:'adjacent', feas:'driveflight',
+        start:[2026,6,9], end:[2026,6,12], bearing:250, r:0.32, cost:'~$1,700 all-in', deadline:'Registration open',
+        rationale:'Cardiac CT imaging — adjacent to surgical planning and structural workup. Gaylord Pacific, San Diego: drive it or a 1-hr hop.' },
+      { id:'ncvh', acronym:'NCVH', name:'New Cardiovascular Horizons — New Jersey', city:'Atlantic City, NJ', rel:'adjacent', feas:'east',
+        start:[2026,6,11], end:[2026,6,11], bearing:82, r:0.92, cost:'~$1,100 all-in', deadline:'Registration open',
+        rationale:'One-day endovascular / vascular regional. Adjacent relevance — only worth it if already on the East Coast.' },
+      { id:'snis', acronym:'SNIS', name:'Society of NeuroInterventional Surgery — 23rd Annual', city:'Seattle, WA', rel:'general', feas:'flight',
+        start:[2026,6,20], end:[2026,6,24], bearing:325, r:0.62, cost:'~$1,900 all-in', deadline:'Registration open',
+        rationale:'Neurointerventional technique and device overlap. General-biomedical relevance — strip it out unless you want the crossover.' },
+      { id:'hotm', acronym:'MAYO', name:'Mayo Cardiology Update: Heart of the Matter', city:'Sedona, AZ', rel:'adjacent', feas:'drive',
+        start:[2026,6,29], end:[2026,7,1], bearing:25, r:0.17, cost:'~$1,900 all-in', deadline:'Registration open (hotel block closes Jul 7)',
+        rationale:'Broad cardiology update — arrhythmias, valve disease, HF, aortopathies. In-state at Enchantment Resort: a 2-hour drive up I-17. The easiest yes on this list.' },
+      { id:'swf', acronym:'SWF', name:'Mayo Success With Failure (Heart Failure)', city:'Jackson, WY', rel:'adjacent', feas:'flight',
+        start:[2026,6,30], end:[2026,7,1], bearing:355, r:0.60, cost:'~$1,600 all-in', deadline:'Registration open',
+        rationale:'Heart-failure diagnosis and management — feeds the transplant / MCS referral pipeline. Short flight to Jackson Hole; overlaps Sedona, pick one.' },
+      { id:'aicard', acronym:'AI-C', name:'Mayo Artificial Intelligence in Cardiology', city:'Napa, CA', rel:'general', feas:'flight',
+        start:[2026,9,11], end:[2026,9,14], bearing:300, r:0.46, cost:'~$2,000 all-in', deadline:'Registration open',
+        rationale:'AI/ML in cardiovascular care — general-biomedical crossover for the research side. Sits just past your 3-month window (Oct 11).' },
+      { id:'fellows', acronym:'FELL', name:'AST Fellows Symposium on Transplantation', city:'Lincolnshire, IL', rel:'ctcore', feas:'flight',
+        start:[2026,8,25], end:[2026,8,27], bearing:52, r:0.70, cost:'~$1,700 all-in', deadline:'Registration open',
+        rationale:'AST\'s career-building meeting — specialized scientific sessions plus one-on-one time with senior transplant specialists. High leverage whether you\'re building your own transplant track or mentoring trainees. Chicago-area, short flight.' },
+      { id:'mdf', acronym:'MDF', name:'AST Medical Directors Forum', city:'Boston, MA', rel:'adjacent', feas:'east',
+        start:[2026,5,19], end:[2026,5,20], bearing:68, r:0.94, cost:'~$1,900 all-in', deadline:'Held pre-ATC (concluded)',
+        rationale:'The "not obviously for me" one that pays off toward program leadership — transplant finance, running a service line, leadership skills. Ran the two days before ATC in Boston; put it on your radar for 2027.' }
+    ];
+  }
+
+  renderVals() {
+    const p = this.props || {};
+    const st = this.state;
+    const homeCity = p.homeCity || 'Phoenix, AZ';
+    const homeShort = homeCity.split(',')[0].slice(0,3).toUpperCase() || 'PHX';
+    const relMeta = {
+      ctcore:  { label:'CT-core',       color: p.ctColor  || '#15707e', bg:'#e2eeee' },
+      adjacent:{ label:'Adjacent',      color: p.adjColor || '#b0741a', bg:'#f6ecd8' },
+      general: { label:'General biomed',color: p.genColor || '#5c6673', bg:'#e9ebee' }
+    };
+    const feasMeta = {
+      driveflight:{ label:'Drive or short flight', detail:'~5.5 hr drive · 1 hr flight', ring:'drive' },
+      drive:{ label:'Drive from AZ', detail:'~5–6 hr drive', ring:'drive' },
+      flight:{ label:'Short flight', detail:'~1–3 hr flight', ring:'flight' },
+      east:{ label:'East Coast', detail:'Fold into East Coast trip', ring:'east' }
+    };
+    const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const RS = Date.UTC(2026,5,1), SPAN = (Date.UTC(2026,9,16) - Date.UTC(2026,5,1)) / 86400000;
+    const off = d => (Date.UTC(d[0],d[1],d[2]) - RS) / 86400000;
+    const tOff = off([2026,6,6]);
+    const laneIdx = { ctcore:0, adjacent:1, general:2 };
+    const LANE_H = 78, LANE_TOP0 = 0;
+    const fmtRange = e => {
+      const sM = MON[e.start[1]], eM = MON[e.end[1]];
+      if (e.start[1]===e.end[1] && e.start[2]===e.end[2]) return `${sM} ${e.start[2]}, 2026`;
+      if (e.start[1]===e.end[1]) return `${sM} ${e.start[2]}–${e.end[2]}, 2026`;
+      return `${sM} ${e.start[2]} – ${eM} ${e.end[2]}, 2026`;
+    };
+    const fmtShort = e => {
+      const sM = MON[e.start[1]];
+      if (e.start[2]===e.end[2] && e.start[1]===e.end[1]) return `${sM} ${e.start[2]}`;
+      if (e.start[1]===e.end[1]) return `${sM} ${e.start[2]}–${e.end[2]}`;
+      return `${sM} ${e.start[2]}–${MON[e.end[1]]} ${e.end[2]}`;
+    };
+
+    const self = this;
+    const base = this.baseEvents();
+    const concludedTotal = base.filter(e => off(e.end) < tOff).length;
+
+    let filtered = base.filter(e => st.rel === 'all' || e.rel === st.rel)
+                       .filter(e => !(st.hideConcluded && off(e.end) < tOff));
+
+    // assign a sub-row within each lane so overlapping events stack instead of collide
+    const laneRowEnds = {};
+    const rowFor = {};
+    filtered.slice().sort((a,b) => off(a.start) - off(b.start)).forEach(e => {
+      const rows = laneRowEnds[e.rel] || (laneRowEnds[e.rel] = []);
+      const s = off(e.start), en = off(e.end);
+      let placed = -1;
+      for (let i = 0; i < rows.length; i++) { if (s > rows[i]) { rows[i] = en; placed = i; break; } }
+      if (placed < 0) { rows.push(en); placed = rows.length - 1; }
+      rowFor[e.id] = placed;
+    });
+
+    const events = filtered.map(e => {
+      const rm = relMeta[e.rel];
+      const concluded = off(e.end) < tOff;
+      const daysAway = Math.round(off(e.start) - tOff);
+      let statusLabel, statusColor, statusBg;
+      if (concluded) { statusLabel='Concluded'; statusColor='#8a8577'; statusBg='#eceadf'; }
+      else if (daysAway <= 12) { statusLabel = daysAway<=0?'Happening now':`In ${daysAway} days`; statusColor='#b23b2e'; statusBg='#f6e2de'; }
+      else { statusLabel='Upcoming'; statusColor='#2f7a52'; statusBg='#e2efe6'; }
+      const sel = st.sel === e.id;
+
+      // map position
+      const cx=47, cy=53, SX=42, SY=39;
+      const rad = e.bearing * Math.PI/180;
+      let x = cx + e.r*SX*Math.sin(rad);
+      let y = cy - e.r*SY*Math.cos(rad);
+      x = Math.max(7, Math.min(93, x)); y = Math.max(11, Math.min(90, y));
+
+      const circleStyle = `width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;`+
+        `font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:#fff;background:${rm.color};`+
+        `border:2px solid ${sel?'#1c1b19':'rgba(255,255,255,0.7)'};box-shadow:0 3px 10px rgba(0,0,0,0.20);`+
+        `cursor:pointer;opacity:${concluded?0.42:1};`;
+      const pinWrapStyle = `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);`+
+        `display:flex;flex-direction:column;align-items:center;gap:4px;z-index:${sel?6:3};`;
+      const pinLabelStyle = `font-family:'IBM Plex Sans',sans-serif;font-size:10px;font-weight:500;color:#4a463c;`+
+        `background:rgba(251,249,244,0.85);padding:1px 5px;border-radius:4px;white-space:nowrap;${concluded?'opacity:0.5;':''}`;
+
+      // calendar bar
+      const l = off(e.start)/SPAN*100;
+      const w = Math.max((off(e.end)-off(e.start)+1)/SPAN*100, 4.6);
+      const top = LANE_TOP0 + laneIdx[e.rel]*LANE_H + 12 + rowFor[e.id]*32;
+      const barStyle = `position:absolute;left:${l}%;width:${w}%;`+
+        `top:${top}px;height:28px;background:${rm.bg};border:1px solid ${rm.color};border-left:4px solid ${rm.color};`+
+        `border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 8px;`+
+        `font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.02em;`+
+        `color:${rm.color};cursor:pointer;overflow:visible;white-space:nowrap;opacity:${concluded?0.5:1};`+
+        `box-shadow:${sel?'0 0 0 2px #1c1b19':'none'};z-index:${sel?5:2};`;
+
+      return {
+        id:e.id, acronym:e.acronym, name:e.name, city:e.city,
+        relLabel:rm.label, rationale:e.rationale,
+        dateShort: fmtShort(e),
+        circleStyle, pinWrapStyle, pinLabelStyle, barStyle,
+        statusLabel,
+        relBadgeStyle:`font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.05em;padding:4px 9px;border-radius:6px;background:${rm.bg};color:${rm.color};`,
+        statusBadgeStyle:`font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.05em;padding:4px 9px;border-radius:6px;background:${statusBg};color:${statusColor};`,
+        selHeaderStyle:`background:${rm.color};color:#fff;padding:18px 20px;`,
+        rows:[
+          { k:'Dates', v: fmtRange(e) },
+          { k:'City', v: e.city },
+          { k:'Travel', v: feasMeta[e.feas].label+' — '+feasMeta[e.feas].detail },
+          { k:'Est. cost', v: e.cost },
+          { k:'Deadline', v: e.deadline }
+        ],
+        select: () => self.setState({ sel: e.id })
+      };
+    });
+
+    const selObj = events.find(e => e.id === st.sel) || null;
+
+    // relevance chips
+    const chipDef = [['all','All'],['ctcore','CT-core'],['adjacent','Adjacent'],['general','General']];
+    const relChips = chipDef.map(([k,label]) => {
+      const active = st.rel === k;
+      const clr = k==='all' ? '#1c1b19' : relMeta[k].color;
+      return { label, pick: () => self.setState({ rel:k }),
+        style:`font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:8px;cursor:pointer;`+
+          `border:1px solid ${active?clr:'#dcd5c6'};background:${active?clr:'transparent'};color:${active?'#fff':'#5f5a4e'};` };
+    });
+
+    // rings
+    const ringDef = [
+      { label:'Drive ≤6h', rx:14, ry:13 },
+      { label:'Short flight ≤3h', rx:29, ry:27 },
+      { label:'East Coast', rx:42, ry:39 }
+    ];
+    const rings = ringDef.map(r => ({
+      label:r.label,
+      style:`position:absolute;left:${47-r.rx}%;top:${53-r.ry}%;width:${2*r.rx}%;height:${2*r.ry}%;`+
+        `border:1px dashed #c8bda3;border-radius:50%;pointer-events:none;`,
+      labelStyle:`position:absolute;left:47%;top:${53-r.ry}%;transform:translate(-50%,-9px);`+
+        `font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.06em;color:#a89e86;`+
+        `background:#f1ece1;padding:0 5px;border-radius:3px;white-space:nowrap;pointer-events:none;`
+    }));
+
+    // calendar months
+    const months = [
+      { label:'JUNE', l: 0 },
+      { label:'JULY', l: off([2026,6,1])/SPAN*100 },
+      { label:'AUGUST', l: off([2026,7,1])/SPAN*100 },
+      { label:'SEPT', l: off([2026,8,1])/SPAN*100 },
+      { label:'OCT', l: off([2026,9,1])/SPAN*100 }
+    ].map(m => ({ label:m.label,
+      style:`position:absolute;left:${m.l}%;top:2px;`+
+        `font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#8a8577;` }));
+
+    // lanes
+    const laneDef = [['CT-core','ctcore'],['Adjacent','adjacent'],['General biomed','general'],['Your commitments',null]];
+    const lanes = laneDef.map(([label,key],i) => {
+      const clr = key ? relMeta[key].color : '#8a8577';
+      return { label,
+        rowStyle:`position:relative;height:${LANE_H}px;border-bottom:1px solid #efe9dc;${i===0?'border-top:1px solid #efe9dc;':''}`,
+        labelStyle:`position:absolute;left:0;top:20px;width:140px;font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:600;color:${clr};` };
+    });
+
+    // today markers
+    const todayPct = tOff/SPAN*100;
+    const todayLineTopStyle = `position:absolute;left:${todayPct}%;top:2px;width:2px;height:20px;background:#b23b2e;`;
+    const todayTrackStyle = `position:absolute;left:${todayPct}%;top:0;width:2px;height:${LANE_H*4}px;background:#b23b2e;opacity:0.55;z-index:1;`;
+
+    // commitment placeholders (lane index 3)
+    const cmTop = LANE_TOP0 + 3*LANE_H + 16;
+    const commitments = [
+      { label:'＋ East Coast trip — add dates', l: 55 },
+      { label:'＋ Texas trip — add dates', l: 20 }
+    ].map(c => ({ label:c.label,
+      style:`position:absolute;left:${c.l}%;top:${cmTop}px;height:34px;`+
+        `display:flex;align-items:center;padding:0 12px;border:1px dashed #c9c0ac;border-radius:7px;`+
+        `font-size:11px;color:#a29885;background:#f6f2e8;white-space:nowrap;cursor:default;` }));
+
+    const horizon = [
+      { name:'AST Cutting Edge of Transplantation (CEoT)', when:'Feb 25–27, 2027 · Scottsdale, AZ', dot: relMeta.ctcore.color,
+        why:'In-state — a short drive from Phoenix. Pragmatic, cutting-edge transplant. The single easiest high-value yes on the horizon.' },
+      { name:'ISHLT 47th Annual Meeting', when:'Apr 14–17, 2027 · Sydney, AU', dot: relMeta.ctcore.color,
+        why:'The heart/lung transplant + MCS flagship. Symposium proposals opened already; abstracts this fall if you want to present.' },
+      { name:'ISHLT Grants & Awards + Intl Visiting Scholarship', when:'Apply by Sep 30, 2026', dot: relMeta.general.color,
+        why:'Funding cycle open now — research grants (biomarkers, EVLP) and a visiting scholarship. Low-effort, high-upside for the CV.' },
+      { name:'AATS · STS Annual Meetings (2027)', when:'Spring / winter 2027', dot: relMeta.ctcore.color,
+        why:'The two CT-surgery flagships. AATS 2026 (Chicago) and STS 2026 (New Orleans) already ran — watch fall abstract deadlines for 2027.' },
+      { name:'ISHLT 2026 (Toronto, concluded)', when:'Apr 22–25, 2026 — done', dot: relMeta.adjacent.color,
+        why:'Flagship already passed this year. Session recordings worth catching if you missed it; put 2027 Sydney on the calendar instead.' }
+    ];
+
+    const isMap = st.view === 'map';
+    const tabBase = `font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;`;
+
+    return {
+      homeCity, homeShort,
+      upcomingCount: base.length - concludedTotal,
+      concludedCount: concludedTotal,
+      isMap, isCal: !isMap,
+      showMap: () => self.setState({ view:'map' }),
+      showCal: () => self.setState({ view:'calendar' }),
+      mapTabStyle: tabBase + (isMap ? 'background:#fbf9f4;color:#1c1b19;box-shadow:0 1px 3px rgba(0,0,0,0.12);' : 'background:transparent;color:#7a7566;'),
+      calTabStyle: tabBase + (!isMap ? 'background:#fbf9f4;color:#1c1b19;box-shadow:0 1px 3px rgba(0,0,0,0.12);' : 'background:transparent;color:#7a7566;'),
+      relChips,
+      toggleConcluded: () => self.setState({ hideConcluded: !st.hideConcluded }),
+      concludedToggleLabel: st.hideConcluded ? '☐ Show concluded' : '☑ Hide concluded',
+      concludedToggleStyle: `font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid #dcd5c6;background:transparent;color:#5f5a4e;`,
+      events, rings, months, lanes, commitments, horizon,
+      todayLineTopStyle, todayTrackStyle,
+      ctColorLegend: relMeta.ctcore.color, adjColorLegend: relMeta.adjacent.color, genColorLegend: relMeta.general.color,
+      hasSelection: !!selObj, noSelection: !selObj, sel: selObj || {},
+      clearSel: () => self.setState({ sel:null })
+    };
+  }
+}
+</script>
+</body>
+</html>

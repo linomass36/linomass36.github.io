@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#3B6D11"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">SS</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./hub-data.js"></script>
+<script src="./quotes.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #3B6D11; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes sumIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes sumPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+  @keyframes sumSheen { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+</style>
+</helmet>
+<div data-screen-label="Summer Sprint" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 72px;">
+
+  <!-- TOP BAR -->
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 320px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #3B6D11; color: #3B6D11;">← Mission Control</a>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #3B6D11;">01 · The Summer Sprint</span>
+        </div>
+        <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 30px; line-height: 1.04; margin: 8px 0 0; letter-spacing: -.01em;">Set the operating system for the decade</h1>
+        <div style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 600px; line-height: 1.5; font-style: italic;">"{{ positioning }}"</div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">{{ todayLabel }}</div>
+        <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px; justify-content: flex-end;">
+          <span style="font-family: 'Newsreader', serif; font-size: 34px; font-weight: 500; color: #3B6D11; line-height: 1;">{{ sprintPct }}%</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ sprintDone }} / {{ sprintActive }} moves</span>
+        </div>
+        <div style="height: 6px; width: 230px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px;">
+          <div style="height: 100%; border-radius: 3px; background: #3B6D11; width: {{ sprintPct }}%; transition: width .4s ease;"></div>
+        </div>
+        <div style="display: flex; gap: 14px; justify-content: flex-end; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">
+          <span><b style="color: #854F0B; font-weight: 600;">{{ daysLeft }}</b> days left of summer</span>
+          <span>sprint day <b style="color: #3B6D11; font-weight: 600;">{{ sprintDay }}</b>/{{ sprintDays }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 1180px; margin: 0 auto; padding: 22px 24px 0;">
+
+    <!-- MILESTONE CELEBRATION -->
+    <sc-if value="{{ celebrate }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px solid #C9DDB0; border-radius: 14px; background: linear-gradient(100deg, #F1F7E9, #FBFDF6); padding: 15px 22px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; animation: sumPop .35s ease;">
+        <span style="font-family: 'Newsreader', serif; font-size: 30px; color: #3B6D11; line-height: 1;">{{ celebratePct }}%</span>
+        <div style="flex: 1;">
+          <div style="font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500; color: #274d0b;">{{ celebrateText }}</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #5c7a3a; margin-top: 3px;">{{ celebrateSub }}</div>
+        </div>
+        <button onClick="{{ dismissCelebrate }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #5c7a3a; background: transparent; border: 1px solid #C9DDB0; border-radius: 16px; padding: 4px 11px; cursor: pointer;">noted ✓</button>
+      </div>
+    </sc-if>
+
+    <!-- RECOVERY NUDGE -->
+    <sc-if value="{{ showRecovery }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px solid #E6D6B0; border-radius: 14px; background: #FBF6EA; padding: 14px 22px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; animation: sumIn .3s ease;">
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: #b0741a; flex: none;"></span>
+        <div style="flex: 1; font-size: 13px; color: #6e5417; line-height: 1.5;">{{ recoveryText }}</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #b0741a; flex: none;">gentle nudge</span>
+      </div>
+    </sc-if>
+
+    <!-- REST CYCLE STRIP -->
+    <div style="display: flex; align-items: center; gap: 12px; border: 1px solid {{ restBorder }}; border-radius: 12px; background: {{ restBg }}; padding: 11px 18px; margin-bottom: 16px;">
+      <span style="width: 9px; height: 9px; border-radius: 50%; background: {{ restDot }}; flex: none;"></span>
+      <div style="flex: 1; font-size: 13px; color: {{ restTextColor }}; line-height: 1.5;">{{ restText }}</div>
+      <div style="display: flex; gap: 3px; align-items: center;">
+        <sc-for list="{{ restPips }}" as="p" hint-placeholder-count="10">
+          <span style="width: 8px; height: 8px; border-radius: 2px; background: {{ p.color }};"></span>
+        </sc-for>
+      </div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: {{ restTag }}; flex: none;">{{ restLabel }}</span>
+    </div>
+
+    <!-- THIS WEEK PIN + BURN-UP -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch;">
+
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #3B6D11; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; animation: sumIn .3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #3B6D11;">Pinned for this week</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">{{ pinPhase }}</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">next moves</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <sc-for list="{{ pinItems }}" as="it" hint-placeholder-count="3">
+            <label style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid #ECEAE4; background: #FCFBF8; cursor: pointer;" style-hover="border-color: #C9DDB0;">
+              <input type="checkbox" checked="{{ it.checked }}" onChange="{{ it.toggle }}" style="margin-top: 1px; width: 16px; height: 16px; flex-shrink: 0; accent-color: #3B6D11; cursor: pointer;">
+              <span style="flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.4; color: #26271F;">{{ it.label }}</span>
+            </label>
+          </sc-for>
+          <sc-if value="{{ pinEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 18px; border: 1px dashed #C9DDB0; border-radius: 10px; text-align: center; font-size: 13px; color: #5c7a3a; line-height: 1.5;">This phase is clear. 🌱 Everything pinned is done — roll into the next phase below.</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; animation: sumIn .3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div style="font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500;">Burn-up to October</div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ paceColor }};">{{ paceText }}</span>
+        </div>
+        <svg viewBox="0 0 560 200" style="width: 100%; height: auto; display: block; margin-top: 8px;">
+          <line x1="40" y1="20" x2="40" y2="170" stroke="#E7E4DE" stroke-width="1"></line>
+          <line x1="40" y1="170" x2="540" y2="170" stroke="#E7E4DE" stroke-width="1"></line>
+          <polyline points="{{ idealPts }}" fill="none" stroke="#C7C4BC" stroke-width="1.5" stroke-dasharray="4 4"></polyline>
+          <polyline points="{{ actualPts }}" fill="none" stroke="#3B6D11" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+          <line x1="{{ todayX }}" y1="20" x2="{{ todayX }}" y2="170" stroke="#854F0B" stroke-width="1" stroke-dasharray="3 3"></line>
+          <circle cx="{{ todayX }}" cy="{{ todayY }}" r="4" fill="#3B6D11"></circle>
+          <text x="44" y="16" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#A6A79F">{{ burnTop }} moves</text>
+          <text x="40" y="186" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#A6A79F">Jul 2</text>
+          <text x="500" y="186" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#A6A79F">Oct 1</text>
+          <text x="{{ todayLabelX }}" y="186" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#854F0B" text-anchor="middle">today</text>
+        </svg>
+        <div style="display: flex; gap: 16px; margin-top: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #77786F;">
+          <span><span style="display: inline-block; width: 16px; border-top: 2.5px solid #3B6D11; vertical-align: middle;"></span> done</span>
+          <span><span style="display: inline-block; width: 16px; border-top: 1.5px dashed #C7C4BC; vertical-align: middle;"></span> ideal pace</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASES -->
+    <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 14px;">
+      <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 22px; margin: 0;">The 35 moves, in phases</h2>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">checking a move syncs with the plan &amp; the hub</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 16px;">
+      <sc-for list="{{ phaseRows }}" as="p" hint-placeholder-count="4">
+        <div style="border: 1px solid #E4E2DD; border-top: 3px solid {{ p.color }}; border-radius: 14px; background: #FFFFFF; padding: 18px 18px 8px; animation: sumIn .3s ease;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: {{ p.color }};">{{ p.month }}</div>
+              <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">{{ p.name }}</div>
+            </div>
+            <div style="position: relative; width: 46px; height: 46px; flex-shrink: 0;">
+              <svg width="46" height="46" viewBox="0 0 46 46">
+                <circle cx="23" cy="23" r="19" fill="none" stroke="#EAE7E1" stroke-width="5"></circle>
+                <circle cx="23" cy="23" r="19" fill="none" stroke="{{ p.color }}" stroke-width="5" stroke-linecap="round" stroke-dasharray="{{ p.ringDash }}" transform="rotate(-90 23 23)"></circle>
+              </svg>
+              <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: {{ p.color }};">{{ p.pct }}</div>
+            </div>
+          </div>
+          <div style="font-size: 12px; color: #77786F; line-height: 1.5; margin-top: 6px; min-height: 34px;">{{ p.sub }}</div>
+          <div style="display: flex; flex-direction: column; margin-top: 8px;">
+            <sc-for list="{{ p.items }}" as="it" hint-placeholder-count="5">
+              <div style="display: flex; gap: 9px; align-items: flex-start; padding: 8px 2px; border-top: 1px solid #F2F0EB;">
+                <input type="checkbox" checked="{{ it.checked }}" onChange="{{ it.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: {{ it.accent }}; cursor: pointer;">
+                <span style="flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: {{ it.textColor }}; text-decoration: {{ it.strike }};">{{ it.label }}<sc-if value="{{ it.tagged }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase; color: {{ it.tagColor }}; border: 1px solid {{ it.tagColor }}; border-radius: 10px; padding: 1px 6px; margin-left: 6px; white-space: nowrap;">{{ it.tagLabel }}</span></sc-if></span>
+                <button onClick="{{ it.carry }}" title="Carry over to the academic year" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1; background: transparent; border: none; color: #C4C2BA; cursor: pointer; padding: 2px;" style-hover="color: #2E6A86;">→</button>
+                <button onClick="{{ it.kill }}" title="Cut this move" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1; background: transparent; border: none; color: #C4C2BA; cursor: pointer; padding: 2px;" style-hover="color: #A32E27;">✕</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- OCTOBER END-STATE SCOREBOARD -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #185FA5; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #185FA5;">Definition of done</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Where October has to land</div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span style="font-family: 'Newsreader', serif; font-size: 28px; font-weight: 500; color: #185FA5; line-height: 1;">{{ endDone }}<span style="font-size: 15px; color: #A6A79F;">/{{ endTotal }}</span></span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">outcomes locked</span>
+        </div>
+      </div>
+      <div style="height: 6px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 12px;">
+        <div style="height: 100%; border-radius: 3px; background: #185FA5; width: {{ endPct }}%; transition: width .4s ease;"></div>
+      </div>
+      <sc-if value="{{ endAllDone }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 14px; padding: 16px; border: 1px dashed #C9DDB0; border-radius: 10px; text-align: center; font-size: 13px; color: #3B6D11; line-height: 1.5;">Every October outcome is locked. 🌱 The operating system is online — enter the year recovered, not depleted.</div>
+      </sc-if>
+      <sc-if value="{{ endHasRemaining }}" hint-placeholder-val="{{ true }}">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 14px;">still open</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 4px 18px; margin-top: 6px;">
+          <sc-for list="{{ endRows }}" as="e" hint-placeholder-count="8">
+            <label style="display: flex; gap: 9px; align-items: flex-start; padding: 6px 2px; cursor: pointer;">
+              <input type="checkbox" checked="{{ e.checked }}" onChange="{{ e.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: #185FA5; cursor: pointer;">
+              <span style="flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: #26271F;">{{ e.label }}</span>
+            </label>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- HABITS -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #3B6D11;">The foundation habits</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Weekly cadence</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onClick="{{ prevWeek }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #FFF; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 9px; cursor: pointer;">‹</button>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ weekLabel }}</span>
+          <button onClick="{{ nextWeek }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #FFF; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 9px; cursor: pointer;">›</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 14px;">
+        <div style="display: grid; grid-template-columns: 190px repeat(7, 1fr) 74px; gap: 6px; align-items: center;">
+          <span></span>
+          <sc-for list="{{ dayHeads }}" as="d" hint-placeholder-count="7">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-align: center; color: #A6A79F;">{{ d.label }}</span>
+          </sc-for>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-align: right; color: #A6A79F;">streak</span>
+        </div>
+        <sc-for list="{{ habitRows }}" as="h" hint-placeholder-count="4">
+          <div style="display: grid; grid-template-columns: 190px repeat(7, 1fr) 74px; gap: 6px; align-items: center;">
+            <div style="display: flex; align-items: baseline; gap: 7px; min-width: 0;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ h.dot }}; flex: none;"></span>
+              <span style="font-size: 13px; color: #26271F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ h.label }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ h.metColor }};">{{ h.count }}/{{ h.target }}</span>
+            </div>
+            <sc-for list="{{ h.days }}" as="c" hint-placeholder-count="7">
+              <button onClick="{{ c.toggle }}" style="height: 26px; border-radius: 7px; border: 1px solid {{ c.border }}; background: {{ c.bg }}; cursor: pointer;" style-hover="border-color: #3B6D11;"></button>
+            </sc-for>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-align: right; color: {{ h.streakColor }};">{{ h.streakLabel }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Tap a cell to log the day. Green means the week hit its target — this is the recovery the whole sprint is built on.</div>
+    </div>
+
+    <!-- THE GUIDE PIPELINE -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">The summer's product</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">The guide — draft to first sales</div>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">$49 · Gumroad</span>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+        <sc-for list="{{ guideStages }}" as="g" hint-placeholder-count="3">
+          <button onClick="{{ g.set }}" style="flex: 1; min-width: 130px; text-align: left; padding: 11px 13px; border-radius: 11px; cursor: pointer; border: 1px solid {{ g.border }}; background: {{ g.bg }};">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: {{ g.numColor }};">stage {{ g.num }}</div>
+            <div style="font-size: 13px; font-weight: 600; color: {{ g.textColor }}; margin-top: 2px;">{{ g.label }}</div>
+            <div style="font-size: 11px; color: {{ g.subColor }}; margin-top: 1px;">{{ g.sub }}</div>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px;">
+        <div style="padding: 14px; border: 1px solid #ECEAE4; border-radius: 11px; background: #FCFBF8;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-size: 12.5px; color: #55564F;">Sections drafted — one per morning</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #534AB7;">{{ guideSecLabel }}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
+            <button onClick="{{ decSec }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFF; font-size: 18px; color: #55564F; cursor: pointer;">−</button>
+            <div style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; color: #534AB7; line-height: 1; min-width: 46px; text-align: center;">{{ guideSections }}</div>
+            <button onClick="{{ incSec }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #D3CFEA; background: #F0EFFA; font-size: 18px; color: #534AB7; cursor: pointer;">+</button>
+            <div style="flex: 1; height: 7px; border-radius: 4px; background: #EAE7F3; overflow: hidden;">
+              <div style="height: 100%; border-radius: 4px; background: #534AB7; width: {{ guideSecPct }}%; transition: width .4s ease;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding: 14px; border: 1px solid #ECEAE4; border-radius: 11px; background: #FCFBF8;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-size: 12.5px; color: #55564F;">Copies sold — first 10 is the milestone</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #0F6E56;">{{ guideRevenue }}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
+            <button onClick="{{ decSale }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFF; font-size: 18px; color: #55564F; cursor: pointer;">−</button>
+            <div style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; color: #0F6E56; line-height: 1; min-width: 46px; text-align: center;">{{ guideSales }}</div>
+            <button onClick="{{ incSale }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #B9DDCF; background: #EAF5F0; font-size: 18px; color: #0F6E56; cursor: pointer;">+</button>
+            <div style="flex: 1; height: 7px; border-radius: 4px; background: #E2EFE9; overflow: hidden;">
+              <div style="height: 100%; border-radius: 4px; background: #0F6E56; width: {{ guideSalesPct }}%; transition: width .4s ease;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 12px; line-height: 1.5;">{{ guideHint }}</div>
+    </div>
+
+    <!-- TWO-COLUMN: GUIDE BOARD + MONEY -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+
+      <!-- GUIDE VALIDATION BOARD -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Validate the guide</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Community board</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ commSummary }}</span>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <input value="{{ commName }}" onChange="{{ setCommName }}" onKeyDown="{{ commKey }}" placeholder="Community / forum name" style="flex: 1; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
+          <button onClick="{{ addComm }}" style="font-size: 13px; font-weight: 600; padding: 8px 15px; border-radius: 9px; border: none; background: #534AB7; color: #FFF; cursor: pointer;">Add</button>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 6px;">
+          <sc-for list="{{ commRows }}" as="c" hint-placeholder-count="3">
+            <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid #F2F0EB;">
+              <button onClick="{{ c.cycle }}" title="Advance: contributing → posted → responses → validated / didn't land" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .04em; text-transform: uppercase; padding: 4px 8px; border-radius: 14px; cursor: pointer; border: 1px solid {{ c.statusColor }}; color: {{ c.statusColor }}; background: {{ c.statusBg }};">{{ c.statusLabel }}</button>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 13px; color: #26271F;">{{ c.name }}</div>
+                <div style="font-size: 11.5px; color: #8a8577; line-height: 1.4; margin-top: 2px; font-style: italic;">{{ c.note }}</div>
+              </div>
+              <button onClick="{{ c.editNote }}" title="Capture feedback" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #534AB7;">✎</button>
+              <button onClick="{{ c.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ commEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 6px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Add the 3 communities you'll validate in. Advance each pill as you contribute, post, and gather responses.</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- MONEY LADDER -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B;">The money moves</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Capital ladder</div>
+          </div>
+        </div>
+        <div style="margin-top: 12px; padding: 12px 14px; border: 1px solid #EFE7D6; border-radius: 11px; background: #FBF7EE;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-size: 12px; color: #6e5417;">Saved from the juice shop</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #854F0B;">{{ savingsLabel }}</span>
+          </div>
+          <div style="height: 7px; border-radius: 4px; background: #EADFC7; overflow: hidden; margin-top: 8px;">
+            <div style="height: 100%; border-radius: 4px; background: #854F0B; width: {{ savingsPct }}%; transition: width .4s ease;"></div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <input value="{{ savingsInput }}" onChange="{{ setSavingsInput }}" placeholder="e.g. 12000" inputmode="numeric" style="flex: 1; font-size: 13px; padding: 7px 11px; border: 1px solid #DAD7D0; border-radius: 8px; background: #FFF;">
+            <button onClick="{{ saveSavings }}" style="font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: none; background: #854F0B; color: #FFF; cursor: pointer;">Set PLN</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 10px;">
+          <sc-for list="{{ moneyRows }}" as="m" hint-placeholder-count="5">
+            <label style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-top: 1px solid #F2F0EB; cursor: pointer;">
+              <input type="checkbox" checked="{{ m.checked }}" onChange="{{ m.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: #854F0B; cursor: pointer;">
+              <span style="flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: #26271F;">{{ m.label }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #854F0B; white-space: nowrap;">{{ m.amount }}</span>
+            </label>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWO-COLUMN: READING + BOSTON -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+
+      <!-- READING THROUGHPUT -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #4A5B7A;">Literature engine</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Papers triaged</div>
+          </div>
+          <a href="Library.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86;">open the library →</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 18px; margin-top: 16px;">
+          <button onClick="{{ decPaper }}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid #DAD7D0; background: #FCFBF8; font-size: 20px; color: #55564F; cursor: pointer;">−</button>
+          <div style="text-align: center;">
+            <div style="font-family: 'Newsreader', serif; font-size: 40px; font-weight: 500; color: #4A5B7A; line-height: 1;">{{ papersWeek }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 4px;">this week</div>
+          </div>
+          <button onClick="{{ incPaper }}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid #C7D2E0; background: #EEF3F8; font-size: 20px; color: #4A5B7A; cursor: pointer;">+</button>
+          <div style="flex: 1; border-left: 1px solid #F2F0EB; padding-left: 18px;">
+            <div style="font-family: 'Newsreader', serif; font-size: 26px; font-weight: 500; color: #26271F; line-height: 1;">{{ papersTotal }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 4px;">all summer</div>
+          </div>
+        </div>
+        <div style="font-size: 11px; color: #A6A79F; margin-top: 14px; line-height: 1.5;">Zotero + 5 PubMed alerts feeding the pipe. Keep a steady throughput and the lead track picks itself.</div>
+      </div>
+
+      <!-- BOSTON THREAD -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">The anchor relationship</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Boston surgeon thread</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ bostonWarnColor }};">{{ bostonLast }}</span>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <select value="{{ bostonKind }}" onChange="{{ setBostonKind }}" style="font-size: 12.5px; padding: 8px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
+            <option value="call">call</option>
+            <option value="email">email</option>
+            <option value="note">note</option>
+          </select>
+          <input value="{{ bostonText }}" onChange="{{ setBostonText }}" onKeyDown="{{ bostonKey }}" placeholder="What happened / next step" style="flex: 1; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
+          <button onClick="{{ addBoston }}" style="font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 9px; border: none; background: #993C1D; color: #FFF; cursor: pointer;">Log</button>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 6px; max-height: 210px; overflow: auto;">
+          <sc-for list="{{ bostonRows }}" as="b" hint-placeholder-count="3">
+            <div style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid #F2F0EB;">
+              <span style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .04em; text-transform: uppercase; padding: 3px 7px; border-radius: 12px; color: {{ b.kindColor }}; border: 1px solid {{ b.kindColor }};">{{ b.kind }}</span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 12.5px; color: #26271F; line-height: 1.4;">{{ b.text }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F; margin-top: 2px;">{{ b.when }}</div>
+              </div>
+              <button onClick="{{ b.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ bostonEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 6px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Log every touch here — relationship, not pitch. The first move: call, don't email.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUNDAY REVIEW -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B;">The Sunday ritual</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Close the week</div>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ sundayColor }};">{{ sundayLabel }}</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 12px;">
+        <sc-for list="{{ sundayRows }}" as="r" hint-placeholder-count="5">
+          <label style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid {{ r.border }}; background: {{ r.bg }}; cursor: pointer;">
+            <input type="checkbox" checked="{{ r.checked }}" onChange="{{ r.toggle }}" style="margin-top: 1px; width: 16px; height: 16px; flex-shrink: 0; accent-color: #854F0B; cursor: pointer;">
+            <span style="flex: 1; min-width: 0;">
+              <span style="font-size: 13.5px; line-height: 1.4; color: #26271F;">{{ r.label }}</span>
+              <span style="display: block; font-size: 11.5px; color: #8a8577; margin-top: 1px;">{{ r.sub }}</span>
+            </span>
+            <sc-if value="{{ r.flag }}" hint-placeholder-val="{{ false }}"><span style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase; color: #A32E27; border: 1px solid #A32E27; border-radius: 10px; padding: 1px 7px;">{{ r.flagLabel }}</span></sc-if>
+          </label>
+        </sc-for>
+      </div>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Ten quiet minutes every Sunday — the loop that keeps the sprint honest. Resets fresh each week; use the week arrows above to review a past one.</div>
+    </div>
+
+    <!-- SHIPPED LOG + KILL LIST -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+
+      <!-- FRIDAY SHIPPED LOG -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Every Friday</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">What actually shipped</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ shipCount }} logged</span>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <input value="{{ shipText }}" onChange="{{ setShipText }}" onKeyDown="{{ shipKey }}" placeholder="One line: what shipped this week" style="flex: 1; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
+          <button onClick="{{ addShip }}" style="font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 9px; border: none; background: #0F6E56; color: #FFF; cursor: pointer;">Log</button>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 6px;">
+          <sc-for list="{{ shipRows }}" as="s" hint-placeholder-count="3">
+            <div style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid #F2F0EB;">
+              <span style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #0F6E56; min-width: 54px;">{{ s.week }}</span>
+              <span style="flex: 1; min-width: 0; font-size: 12.5px; color: #26271F; line-height: 1.4;">{{ s.text }}</span>
+              <button onClick="{{ s.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ shipEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 6px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">One honest line each Friday builds the summer's story — the raw material for October's review.</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- KILL LIST / CARRYOVER -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A32E27;">Cut &amp; carried</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">The kill list</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ killSummary }}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 10px;">
+          <sc-for list="{{ killRows }}" as="k" hint-placeholder-count="2">
+            <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid #F2F0EB;">
+              <span style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .04em; text-transform: uppercase; padding: 3px 7px; border-radius: 12px; color: {{ k.color }}; border: 1px solid {{ k.color }};">{{ k.typeLabel }}</span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 12.5px; color: #55564F; line-height: 1.4; text-decoration: {{ k.strike }};">{{ k.label }}</div>
+                <sc-if value="{{ k.hasReason }}" hint-placeholder-val="{{ false }}"><div style="font-size: 11.5px; color: #8a8577; font-style: italic; margin-top: 2px;">{{ k.reason }}</div></sc-if>
+              </div>
+              <button onClick="{{ k.revive }}" title="Bring it back" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; background: transparent; border: 1px solid #E4E2DD; border-radius: 12px; padding: 3px 9px; color: #55564F; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">revive</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ killEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 4px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Nothing cut yet. Use ✕ on a move to kill it (with a reason), or → to carry it into the academic year. Killing on purpose is a skill.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUOTE -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 15px 24px; margin-top: 22px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap;">
+      <span style="font-family: 'Newsreader', serif; font-size: 42px; line-height: .6; color: #3B6D11; transform: translateY(9px); flex: none;">“</span>
+      <div style="flex: 1; min-width: 280px;">
+        <div style="font-family: 'Newsreader', serif; font-style: italic; font-size: 17px; line-height: 1.45; color: #26271F;">{{ quoteText }}</div>
+        <div style="margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #77786F;"><span style="color: #3B6D11;">— {{ quoteBy }}</span> · {{ quoteSub }}</div>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #BBB9B1; flex: none;">Discipline for the sprint</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:1900},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#3B6D11&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pinCount&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:1,&quot;max&quot;:6,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  PKEY = 'ct-master-plan-v2';
+  SKEY = 'ct_summer_v1';
+  state = { tick: 0, weekOff: 0, commName: '', savingsInput: '', bostonText: '', bostonKind: 'call', shipText: '' };
+
+  // ---------- plan store (shared with Hub / Master Plan) ----------
+  readPlan() {
+    const empty = { checked: {}, meta: {}, history: [], cuts: {} };
+    let saved = null;
+    try { const raw = localStorage.getItem(this.PKEY); if (raw) saved = JSON.parse(raw); } catch (e) {}
+    return Object.assign({}, empty, saved || {});
+  }
+  writePlan(patch) {
+    try {
+      const raw = localStorage.getItem(this.PKEY);
+      const cur = raw ? JSON.parse(raw) : { v: 2, checked: {}, meta: {}, history: [] };
+      Object.assign(cur, patch);
+      localStorage.setItem(this.PKEY, JSON.stringify(cur));
+    } catch (e) {}
+  }
+  toggle(id) {
+    const plan = this.readPlan();
+    const checked = Object.assign({}, plan.checked);
+    const meta = Object.assign({}, plan.meta);
+    const m = Object.assign({}, meta[id] || {});
+    if (checked[id]) { delete checked[id]; delete m.completedAt; }
+    else { checked[id] = 1; m.completedAt = Date.now(); }
+    meta[id] = m;
+    const hist = (plan.history || []).concat([{ id, ts: Date.now(), a: checked[id] ? 1 : 0 }]).slice(-2000);
+    this.writePlan({ checked, meta, history: hist });
+    this.bump();
+  }
+  setKill(id) {
+    const plan = this.readPlan();
+    const meta = Object.assign({}, plan.meta);
+    const m = Object.assign({}, meta[id] || {});
+    const checked = Object.assign({}, plan.checked);
+    if (m.killed) { delete m.killed; delete m.killReason; }
+    else {
+      const r = window.prompt('Cutting this move — why? (kept on the kill list)', '');
+      if (r === null) return;
+      m.killed = 1; m.killReason = r.trim(); delete m.carryover; delete checked[id]; delete m.completedAt;
+    }
+    meta[id] = m;
+    this.writePlan({ meta, checked });
+    this.bump();
+  }
+  setCarry(id) {
+    const plan = this.readPlan();
+    const meta = Object.assign({}, plan.meta);
+    const m = Object.assign({}, meta[id] || {});
+    if (m.carryover) delete m.carryover; else { m.carryover = 1; delete m.killed; delete m.killReason; }
+    meta[id] = m;
+    this.writePlan({ meta });
+    this.bump();
+  }
+
+  // ---------- summer store ----------
+  readS() {
+    const empty = { habits: {}, communities: [], boston: [], shipped: [], papers: {}, savings: 0, celebrated: {}, guideSections: 0, guideStage: 'draft', guideSales: 0, reviews: {} };
+    let saved = null;
+    try { const raw = localStorage.getItem(this.SKEY); if (raw) saved = JSON.parse(raw); } catch (e) {}
+    return Object.assign({}, empty, saved || {});
+  }
+  writeS(patch) {
+    const cur = this.readS();
+    Object.assign(cur, patch);
+    try { localStorage.setItem(this.SKEY, JSON.stringify(cur)); } catch (e) {}
+  }
+  bump() { this.setState(s => ({ tick: s.tick + 1 })); }
+
+  // ---------- dates ----------
+  pDate(s) { return new Date(s + 'T00:00:00'); }
+  mondayOf(d) { const x = new Date(d); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day); x.setHours(0, 0, 0, 0); return x; }
+  wkKey(d) { const m = this.mondayOf(d); return m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0') + '-' + String(m.getDate()).padStart(2, '0'); }
+
+  // ---------- habit helpers ----------
+  habitCount(hbs, wk, id) { const w = hbs[wk] || {}; const h = w[id] || {}; return Object.keys(h).filter(k => h[k]).length; }
+  habitMet(hbs, wk, id, target) { return this.habitCount(hbs, wk, id) >= target; }
+  habitStreak(hbs, id, target) {
+    const now = new Date();
+    let streak = 0;
+    const start = this.habitMet(hbs, this.wkKey(now), id, target) ? 0 : 1;
+    for (let k = start; k < 26; k++) {
+      const d = new Date(now); d.setDate(d.getDate() - k * 7);
+      if (this.habitMet(hbs, this.wkKey(d), id, target)) streak++; else break;
+    }
+    return streak;
+  }
+  toggleHabitDay(id, wk, dayIdx) {
+    const s = this.readS();
+    const habits = JSON.parse(JSON.stringify(s.habits || {}));
+    if (!habits[wk]) habits[wk] = {};
+    if (!habits[wk][id]) habits[wk][id] = {};
+    if (habits[wk][id][dayIdx]) delete habits[wk][id][dayIdx]; else habits[wk][id][dayIdx] = 1;
+    this.writeS({ habits });
+    this.bump();
+  }
+
+  toggleReview(wk, id) {
+    const s = this.readS();
+    const reviews = JSON.parse(JSON.stringify(s.reviews || {}));
+    if (!reviews[wk]) reviews[wk] = {};
+    if (reviews[wk][id]) delete reviews[wk][id]; else reviews[wk][id] = 1;
+    this.writeS({ reviews });
+    this.bump();
+  }
+
+  renderVals() {
+    this.state.tick;
+    const data = window.HUB_DATA;
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const now = new Date(); const nowMs = now.getTime();
+    const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+    if (!data) return { todayLabel, positioning: '', sprintPct: 0, sprintDone: 0, sprintActive: 0, daysLeft: 0, sprintDay: 0, sprintDays: 52, phaseRows: [], pinItems: [], habitRows: [], dayHeads: [], moneyRows: [], commRows: [], bostonRows: [], shipRows: [], killRows: [], quoteText: '', quoteBy: '', quoteSub: '' };
+
+    const ex = data.extras;
+    const plan = this.readPlan();
+    const s = this.readS();
+    const checked = plan.checked, meta = plan.meta;
+    const isChecked = id => !!checked[id];
+    const isKilled = id => !!(meta[id] && meta[id].killed);
+    const isCarry = id => !!(meta[id] && meta[id].carryover);
+
+    const S = data.items.filter(i => i.branchId === 'summer');
+    const accent = this.props.accent ?? '#3B6D11';
+
+    // ---- positioning ----
+    const positioning = (ex.positioning && ex.positioning[0] && ex.positioning[0].text) || '';
+
+    // ---- dates / counters ----
+    const planStart = this.pDate(ex.planStart);
+    const sprintDays = ex.sprintDays || 52;
+    const summerEnd = this.pDate('2026-10-01');
+    const daysLeft = Math.max(0, Math.ceil((summerEnd - now) / 86400000));
+    const sprintDayRaw = Math.floor((nowMs - planStart.getTime()) / 86400000) + 1;
+    const sprintDay = Math.max(1, sprintDayRaw);
+
+    // ---- phases ----
+    const phaseDefs = [
+      { key: 'found', name: 'Foundation', month: 'Early July', sub: 'Rest first, wire up the engines, make the first contact.', color: '#3B6D11', test: id => /^sum-s0|^sum-s1/.test(id) },
+      { key: 'build', name: 'Build', month: 'Mid–late July', sub: 'Write the guide, show up in the rooms, save every Sunday.', color: '#3F6B3A', test: id => /^sum-s2/.test(id) },
+      { key: 'ship', name: 'Ship & deepen', month: 'August', sub: 'Launch, deploy the capital, lock the lead track.', color: '#854F0B', test: id => /^sum-s3/.test(id) },
+      { key: 'oct', name: 'By October', month: 'End state', sub: 'The outcomes everything above rolls up to.', color: '#185FA5', test: id => /^end-/.test(id) },
+    ];
+    const RC = 2 * Math.PI * 19;
+    const phaseRows = phaseDefs.map(pd => {
+      const items = S.filter(it => pd.test(it.id));
+      const active = items.filter(it => !isKilled(it.id));
+      const doneN = active.filter(it => isChecked(it.id)).length;
+      const pct = active.length ? Math.round(doneN / active.length * 100) : 0;
+      return {
+        name: pd.name, month: pd.month, sub: pd.sub, color: pd.color, pct: pct + '%',
+        ringDash: (pct / 100 * RC).toFixed(1) + ' ' + RC.toFixed(1),
+        items: items.map(it => {
+          const killed = isKilled(it.id), carry = isCarry(it.id);
+          return {
+            id: it.id, label: it.label, checked: isChecked(it.id), accent: pd.color,
+            textColor: killed ? '#B7B5AD' : (isChecked(it.id) ? '#9a9b93' : '#26271F'),
+            strike: killed ? 'line-through' : 'none',
+            tagged: killed || carry,
+            tagLabel: killed ? 'cut' : 'carry →',
+            tagColor: killed ? '#A32E27' : '#2E6A86',
+            toggle: () => this.toggle(it.id),
+            kill: () => this.setKill(it.id),
+            carry: () => this.setCarry(it.id),
+          };
+        }),
+      };
+    });
+
+    // ---- overall sprint progress (all 35, minus killed) ----
+    const activeAll = S.filter(it => !isKilled(it.id));
+    const sprintActive = activeAll.length;
+    const sprintDone = activeAll.filter(it => isChecked(it.id)).length;
+    const sprintPct = sprintActive ? Math.round(sprintDone / sprintActive * 100) : 0;
+
+    // ---- pin: current phase's next unchecked ----
+    let curPhase = phaseDefs[0];
+    if (sprintDay > 14 && sprintDay <= 30) curPhase = phaseDefs[1];
+    else if (sprintDay > 30) curPhase = phaseDefs[2];
+    const pinCount = this.props.pinCount ?? 3;
+    const pinPool = S.filter(it => curPhase.test(it.id) && !isChecked(it.id) && !isKilled(it.id));
+    const pinItems = pinPool.slice(0, pinCount).map(it => ({ id: it.id, label: it.label, checked: false, toggle: () => this.toggle(it.id) }));
+    const pinEmpty = pinItems.length === 0;
+    const pinPhase = curPhase.name + ' · ' + curPhase.month;
+
+    // ---- burn-up ----
+    const sIds = {}; S.forEach(it => sIds[it.id] = 1);
+    const sHist = (plan.history || []).filter(h => sIds[h.id]).slice().sort((a, b) => a.ts - b.ts);
+    const denom = Math.max(1, S.length);
+    const sxOf = day => 40 + (Math.max(0, Math.min(sprintDaysTo, day)) / sprintDaysTo) * 500;
+    const sprintDaysTo = 91; // Jul 2 -> Oct 1
+    const syOf = v => 170 - (Math.max(0, Math.min(denom, v)) / denom) * 150;
+    const dayFromMs = ms => (ms - planStart.getTime()) / 86400000;
+    let val = 0; const pts = [[sxOf(0), syOf(0)]];
+    sHist.forEach(h => { const d = dayFromMs(h.ts); pts.push([sxOf(d), syOf(val)]); val += h.a ? 1 : -1; if (val < 0) val = 0; pts.push([sxOf(d), syOf(val)]); });
+    const todayDay = Math.max(0, dayFromMs(nowMs));
+    pts.push([sxOf(todayDay), syOf(sprintDone)]);
+    const actualPts = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const idealPts = sxOf(0).toFixed(1) + ',' + syOf(0).toFixed(1) + ' ' + sxOf(sprintDaysTo).toFixed(1) + ',' + syOf(denom).toFixed(1);
+    const todayX = sxOf(todayDay).toFixed(1); const todayY = syOf(sprintDone).toFixed(1);
+    const todayLabelX = Math.max(58, Math.min(520, sxOf(todayDay))).toFixed(1);
+    const idealNow = denom * (todayDay / sprintDaysTo);
+    const ahead = sprintDone - idealNow;
+    let paceText, paceColor;
+    if (ahead >= 1) { paceText = '+' + Math.round(ahead) + ' ahead of pace'; paceColor = '#3B6D11'; }
+    else if (ahead <= -1) { paceText = Math.round(ahead) + ' behind pace'; paceColor = '#A32E27'; }
+    else { paceText = 'on pace'; paceColor = '#854F0B'; }
+
+    // ---- recovery nudge ----
+    const lastDo = (plan.history || []).filter(h => sIds[h.id] && h.a).reduce((m, h) => Math.max(m, h.ts), 0);
+    const daysSince = lastDo ? Math.floor((nowMs - lastDo) / 86400000) : 99;
+    const showRecovery = sprintDone < sprintActive && daysSince >= 3;
+    const recoveryText = daysSince >= 90
+      ? 'No moves logged yet. Don\'t look at all 35 — just tick one pinned move today. Momentum is the whole game.'
+      : (daysSince + ' days since your last checked move. Pick one small thing from the pin above and close it — that\'s all today needs.');
+
+    // ---- milestone celebration ----
+    const tiers = [100, 75, 50, 25];
+    let celebrate = false, celebratePct = '', celebrateText = '', celebrateSub = '';
+    for (const t of tiers) { if (sprintPct >= t && !s.celebrated[t]) { celebrate = true; celebratePct = t + '%'; break; } }
+    if (celebrate) {
+      const tn = parseInt(celebratePct);
+      celebrateText = tn === 100 ? 'The sprint is cleared.' : tn === 75 ? 'Three quarters of the sprint, done.' : tn === 50 ? 'Halfway through the 35.' : 'A quarter of the sprint is behind you.';
+      celebrateSub = tn === 100 ? 'The operating system is online. Enter the year recovered, not depleted.' : 'Compounding is quiet. Keep the tempo.';
+    }
+    const dismissCelebrate = () => { const c = Object.assign({}, s.celebrated); tiers.forEach(t => { if (sprintPct >= t) c[t] = 1; }); this.writeS({ celebrated: c }); this.bump(); };
+
+    // ---- habits ----
+    const wkBase = new Date(now); wkBase.setDate(wkBase.getDate() + this.state.weekOff * 7);
+    const wk = this.wkKey(wkBase); const mon = this.mondayOf(wkBase);
+    const weekLabel = 'wk of ' + MON[mon.getMonth()] + ' ' + mon.getDate() + (this.state.weekOff === 0 ? ' · now' : '');
+    const dayHeads = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((l, i) => ({ label: l }));
+    const habitDots = { sleep: '#185FA5', lift: '#993C1D', swim: '#2E6A86', church: '#854F0B' };
+    const habitRows = (ex.healthMetrics || []).map(hm => {
+      const count = this.habitCount(s.habits, wk, hm.id);
+      const met = count >= hm.target;
+      const streak = this.habitStreak(s.habits, hm.id, hm.target);
+      const wdata = (s.habits[wk] || {})[hm.id] || {};
+      return {
+        id: hm.id, label: hm.label, target: hm.target, count, dot: habitDots[hm.id] || '#3B6D11',
+        metColor: met ? '#3B6D11' : '#A6A79F',
+        streakColor: streak > 0 ? '#3B6D11' : '#C4C2BA',
+        streakLabel: streak > 0 ? streak + 'w' : '–',
+        days: [0, 1, 2, 3, 4, 5, 6].map(di => {
+          const on = !!wdata[di];
+          return { on, bg: on ? (habitDots[hm.id] || '#3B6D11') : '#FCFBF8', border: on ? (habitDots[hm.id] || '#3B6D11') : '#ECEAE4', toggle: () => this.toggleHabitDay(hm.id, wk, di) };
+        }),
+      };
+    });
+    const prevWeek = () => this.setState(st => ({ weekOff: st.weekOff - 1 }));
+    const nextWeek = () => this.setState(st => ({ weekOff: Math.min(0, st.weekOff + 1) }));
+
+    // ---- guide validation board ----
+    const commStatus = { contributing: { label: 'contributing', color: '#8a8577', bg: '#F6F4EF' }, posted: { label: 'posted', color: '#854F0B', bg: '#FBF6EA' }, responses: { label: 'responses in', color: '#534AB7', bg: '#F0EFFA' }, validated: { label: 'validated ✓', color: '#3B6D11', bg: '#F1F7E9' }, missed: { label: "didn't land", color: '#A32E27', bg: '#FBEDEC' } };
+    const commOrder = ['contributing', 'posted', 'responses', 'validated', 'missed'];
+    const commRows = (s.communities || []).map(c => {
+      const st = commStatus[c.status] || commStatus.contributing;
+      return {
+        id: c.id, name: c.name, note: c.note || 'no feedback captured yet',
+        statusLabel: st.label, statusColor: st.color, statusBg: st.bg,
+        cycle: () => { const list = this.readS().communities.map(x => x.id === c.id ? Object.assign({}, x, { status: commOrder[(commOrder.indexOf(x.status) + 1) % commOrder.length] }) : x); this.writeS({ communities: list }); this.bump(); },
+        editNote: () => { const r = window.prompt('Capture the feedback / verdict:', c.note || ''); if (r === null) return; const list = this.readS().communities.map(x => x.id === c.id ? Object.assign({}, x, { note: r.trim() }) : x); this.writeS({ communities: list }); this.bump(); },
+        remove: () => { this.writeS({ communities: this.readS().communities.filter(x => x.id !== c.id) }); this.bump(); },
+      };
+    });
+    const commValidated = (s.communities || []).filter(c => c.status === 'validated').length;
+    const commSummary = commValidated + ' / 3 validated';
+    const commEmpty = commRows.length === 0;
+    const setCommName = e => this.setState({ commName: e.target.value });
+    const addComm = () => { const n = this.state.commName.trim(); if (!n) return; this.writeS({ communities: this.readS().communities.concat([{ id: 'c' + Date.now(), name: n, status: 'contributing', note: '' }]) }); this.setState({ commName: '' }); this.bump(); };
+    const commKey = e => { if (e.key === 'Enter') addComm(); };
+
+    // ---- money ladder ----
+    const moneyDefs = [
+      { id: 'end-0', label: 'Save from the juice shop', amount: '25 000 PLN' },
+      { id: 'sum-s1-2', label: 'Open the IBKR account', amount: '—' },
+      { id: 'sum-s3-2', label: 'Deploy into VWCE + standing order', amount: '15 000 PLN' },
+      { id: 'end-1', label: 'Auto-invest, monthly', amount: '2 000/mo' },
+      { id: 'sum-s3-3', label: 'Reserve Patent Fund + buffer', amount: '5k + 5k PLN' },
+    ];
+    const moneyRows = moneyDefs.map(m => ({ label: m.label, amount: m.amount, checked: isChecked(m.id), toggle: () => this.toggle(m.id) }));
+    const savingsGoal = 25000;
+    const savingsVal = Number(s.savings) || 0;
+    const savingsPct = Math.min(100, Math.round(savingsVal / savingsGoal * 100));
+    const savingsLabel = savingsVal.toLocaleString('en-US').replace(/,/g, ' ') + ' / 25 000';
+    const setSavingsInput = e => this.setState({ savingsInput: e.target.value });
+    const saveSavings = () => { const v = Math.max(0, parseInt((this.state.savingsInput || '').replace(/\D/g, '')) || 0); this.writeS({ savings: v }); this.setState({ savingsInput: '' }); this.bump(); };
+
+    // ---- the guide pipeline ----
+    const guideTargetSecs = 8;
+    const guideSecN = Number(s.guideSections) || 0;
+    const guideSalesN = Number(s.guideSales) || 0;
+    const guidePrice = 49, guideSalesGoal = 10;
+    const guideStage = s.guideStage || 'draft';
+    const stageDefs = [
+      { key: 'draft', num: '1', label: 'Writing', sub: 'one section per morning' },
+      { key: 'live', num: '2', label: 'Page live', sub: 'Gumroad up by week 3' },
+      { key: 'launched', num: '3', label: 'Launched', sub: 'selling at $49' },
+    ];
+    const stageIdx = stageDefs.findIndex(x => x.key === guideStage);
+    const guideStages = stageDefs.map((st, i) => {
+      const active = i <= stageIdx, isCur = i === stageIdx;
+      return {
+        num: st.num, label: st.label, sub: st.sub,
+        border: isCur ? '#534AB7' : (active ? '#D3CFEA' : '#ECEAE4'),
+        bg: isCur ? '#F0EFFA' : (active ? '#F7F6FC' : '#FCFBF8'),
+        numColor: active ? '#534AB7' : '#B7B5AD',
+        textColor: active ? '#26271F' : '#9a9b93',
+        subColor: active ? '#77786F' : '#B7B5AD',
+        set: () => { this.writeS({ guideStage: st.key }); this.bump(); },
+      };
+    });
+    const guideSecPct = Math.min(100, Math.round(guideSecN / guideTargetSecs * 100));
+    const guideSecLabel = guideSecN + ' / ' + guideTargetSecs + ' sections';
+    const incSec = () => { this.writeS({ guideSections: guideSecN + 1 }); this.bump(); };
+    const decSec = () => { this.writeS({ guideSections: Math.max(0, guideSecN - 1) }); this.bump(); };
+    const guideSalesPct = Math.min(100, Math.round(guideSalesN / guideSalesGoal * 100));
+    const guideRevenue = '$' + (guideSalesN * guidePrice).toLocaleString('en-US');
+    const incSale = () => { this.writeS({ guideSales: guideSalesN + 1 }); this.bump(); };
+    const decSale = () => { this.writeS({ guideSales: Math.max(0, guideSalesN - 1) }); this.bump(); };
+    const guideHint = guideSalesN >= guideSalesGoal
+      ? 'First 10 sales cleared — the distribution loop works. Now it compounds while you sleep.'
+      : (guideStage === 'launched'
+        ? guideSalesN + ' sold. ' + (guideSalesGoal - guideSalesN) + ' more to the milestone — keep contributing in the communities, don\'t sell.'
+        : 'Write first, launch by week 3, then let the three communities pull the first sales.');
+
+    // ---- reading throughput ----
+    const papersWeek = (s.papers && s.papers[wk]) || 0;
+    const papersTotal = Object.values(s.papers || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    const incPaper = () => { const p = Object.assign({}, s.papers); p[wk] = (p[wk] || 0) + 1; this.writeS({ papers: p }); this.bump(); };
+    const decPaper = () => { const p = Object.assign({}, s.papers); p[wk] = Math.max(0, (p[wk] || 0) - 1); this.writeS({ papers: p }); this.bump(); };
+
+    // ---- boston thread ----
+    const kindColor = { call: '#3B6D11', email: '#2E6A86', note: '#8a8577' };
+    const bostonSorted = (s.boston || []).slice().sort((a, b) => b.ts - a.ts);
+    const bostonRows = bostonSorted.map(b => ({
+      id: b.id, text: b.text, kind: b.kind, kindColor: kindColor[b.kind] || '#8a8577',
+      when: DAYS[new Date(b.ts).getDay()].slice(0, 3) + ' ' + MON[new Date(b.ts).getMonth()] + ' ' + new Date(b.ts).getDate(),
+      remove: () => { this.writeS({ boston: this.readS().boston.filter(x => x.id !== b.id) }); this.bump(); },
+    }));
+    const bostonEmpty = bostonRows.length === 0;
+    const lastB = bostonSorted[0];
+    const bDaysAgo = lastB ? Math.floor((nowMs - lastB.ts) / 86400000) : null;
+    const bostonLast = lastB ? (bDaysAgo === 0 ? 'touched today' : bDaysAgo + 'd since last touch') : 'no touch yet';
+    const bostonWarnColor = (bDaysAgo === null || bDaysAgo > 21) ? '#A32E27' : (bDaysAgo > 10 ? '#854F0B' : '#3B6D11');
+    const setBostonText = e => this.setState({ bostonText: e.target.value });
+    const setBostonKind = e => this.setState({ bostonKind: e.target.value });
+    const addBoston = () => { const t = this.state.bostonText.trim(); if (!t) return; this.writeS({ boston: this.readS().boston.concat([{ id: 'b' + Date.now(), text: t, kind: this.state.bostonKind, ts: Date.now() }]) }); this.setState({ bostonText: '' }); this.bump(); };
+    const bostonKey = e => { if (e.key === 'Enter') addBoston(); };
+
+    // ---- shipped log ----
+    const shipSorted = (s.shipped || []).slice().sort((a, b) => b.ts - a.ts);
+    const shipRows = shipSorted.map(x => { const d = new Date(this.mondayOf(new Date(x.ts))); return { id: x.id, text: x.text, week: MON[d.getMonth()] + ' ' + d.getDate(), remove: () => { this.writeS({ shipped: this.readS().shipped.filter(y => y.id !== x.id) }); this.bump(); } }; });
+    const shipEmpty = shipRows.length === 0;
+    const shipCount = shipRows.length;
+    const setShipText = e => this.setState({ shipText: e.target.value });
+    const addShip = () => { const t = this.state.shipText.trim(); if (!t) return; this.writeS({ shipped: this.readS().shipped.concat([{ id: 's' + Date.now(), text: t, ts: Date.now() }]) }); this.setState({ shipText: '' }); this.bump(); };
+    const shipKey = e => { if (e.key === 'Enter') addShip(); };
+
+    // ---- rest cycle ----
+    const restEvery = ex.restCycleWeeks || 10;
+    const workWeek = Math.floor((this.mondayOf(now) - this.mondayOf(planStart)) / (7 * 86400000)) + 1;
+    const cycleWeek = ((Math.max(1, workWeek) - 1) % restEvery) + 1;
+    const isRestWeek = cycleWeek === restEvery;
+    const weeksToRest = restEvery - cycleWeek;
+    const restPips = Array.from({ length: restEvery }, (_, i) => ({ color: i < cycleWeek - 1 ? '#C4C2BA' : (i === cycleWeek - 1 ? (isRestWeek ? '#854F0B' : '#3B6D11') : '#E7E4DE') }));
+    let restText, restBorder, restBg, restDot, restTextColor, restTag, restLabel;
+    if (isRestWeek) {
+      restText = 'This is a scheduled rest week. Pull the throttle back on purpose — recovery is a move, not a gap.';
+      restBorder = '#E6D6B0'; restBg = '#FBF6EA'; restDot = '#854F0B'; restTextColor = '#6e5417'; restTag = '#b0741a'; restLabel = 'rest week';
+    } else if (weeksToRest <= 1) {
+      restText = 'Rest week is next. Front-load anything heavy now so you can genuinely pull back.';
+      restBorder = '#E6D6B0'; restBg = '#FBF6EA'; restDot = '#854F0B'; restTextColor = '#6e5417'; restTag = '#b0741a'; restLabel = 'rest soon';
+    } else {
+      restText = 'Work week ' + cycleWeek + ' of the ' + restEvery + '-week cycle. Steady tempo — the planned rest week is ' + weeksToRest + ' weeks out.';
+      restBorder = '#E4E2DD'; restBg = '#FFFFFF'; restDot = '#3B6D11'; restTextColor = '#55564F'; restTag = '#A6A79F'; restLabel = 'in rhythm';
+    }
+
+    // ---- october end-state scoreboard ----
+    const endItems = S.filter(it => /^end-/.test(it.id) && !isKilled(it.id));
+    const endTotal = endItems.length;
+    const endDone = endItems.filter(it => isChecked(it.id)).length;
+    const endPct = endTotal ? Math.round(endDone / endTotal * 100) : 0;
+    const endRemaining = endItems.filter(it => !isChecked(it.id));
+    const endAllDone = endTotal > 0 && endRemaining.length === 0;
+    const endHasRemaining = endRemaining.length > 0;
+    const endRows = endRemaining.map(it => ({ id: it.id, label: it.label, checked: false, toggle: () => this.toggle(it.id) }));
+
+    // ---- sunday review (tied to the viewed habit week) ----
+    const rv = (s.reviews || {})[wk] || {};
+    const sundaySteps = [
+      { id: 'savings', label: "Log this week's savings", sub: 'Track savings every Sunday' },
+      { id: 'shipped', label: 'Write one honest line of what shipped', sub: 'Feeds the shipped log below' },
+      { id: 'pin', label: "Pick next week's pinned move", sub: 'Decide the one thing before Monday' },
+      { id: 'boston', label: 'Touch the Boston thread if it is due', sub: bostonLast, flag: (bDaysAgo === null || bDaysAgo > 10), flagLabel: 'overdue' },
+      { id: 'sleep', label: 'Confirm the sleep floor held', sub: '7 hours, non-negotiable' },
+    ];
+    const sundayRows = sundaySteps.map(st => ({
+      label: st.label, sub: st.sub, checked: !!rv[st.id], flag: !!st.flag, flagLabel: st.flagLabel || '',
+      border: rv[st.id] ? '#C9DDB0' : '#ECEAE4', bg: rv[st.id] ? '#F6FAF0' : '#FCFBF8',
+      toggle: () => this.toggleReview(wk, st.id),
+    }));
+    const sundayDoneN = sundaySteps.filter(st => !!rv[st.id]).length;
+    const sundayLabel = sundayDoneN + ' / ' + sundaySteps.length + ' · ' + (this.state.weekOff === 0 ? 'this week' : weekLabel.replace('wk of ', ''));
+    const sundayColor = sundayDoneN === sundaySteps.length ? '#3B6D11' : '#A6A79F';
+
+    // ---- kill list / carryover ----
+    const killRows = [];
+    S.forEach(it => {
+      const m = meta[it.id] || {};
+      if (m.killed) killRows.push({ id: it.id, label: it.label, typeLabel: 'cut', color: '#A32E27', strike: 'line-through', reason: m.killReason || '', hasReason: !!(m.killReason && m.killReason.length), revive: () => this.setKill(it.id) });
+      else if (m.carryover) killRows.push({ id: it.id, label: it.label, typeLabel: '→ year', color: '#2E6A86', strike: 'none', reason: 'Carried into the academic year.', hasReason: true, revive: () => this.setCarry(it.id) });
+    });
+    const killEmpty = killRows.length === 0;
+    const cutN = killRows.filter(k => k.typeLabel === 'cut').length;
+    const carryN = killRows.length - cutN;
+    const killSummary = cutN + ' cut · ' + carryN + ' carried';
+
+    // ---- quote (rotated daily) ----
+    const quotes = (window.CT_QUOTES && window.CT_QUOTES.length) ? window.CT_QUOTES : [{ q: 'The best preparation for tomorrow is to do today\'s work superbly well.', by: 'Sir William Osler', sub: 'father of modern medicine' }];
+    const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    const qq = quotes[doy % quotes.length];
+
+    return {
+      todayLabel, positioning,
+      sprintPct, sprintDone, sprintActive, daysLeft, sprintDay, sprintDays,
+      celebrate, celebratePct, celebrateText, celebrateSub, dismissCelebrate,
+      showRecovery, recoveryText,
+      pinPhase, pinItems, pinEmpty,
+      idealPts, actualPts, todayX, todayY, todayLabelX, burnTop: denom, paceText, paceColor,
+      phaseRows,
+      weekLabel, dayHeads, habitRows, prevWeek, nextWeek,
+      commSummary, commRows, commEmpty, commName: this.state.commName, setCommName, addComm, commKey,
+      moneyRows, savingsPct, savingsLabel, savingsInput: this.state.savingsInput, setSavingsInput, saveSavings,
+      guideStages, guideSections: guideSecN, guideSecPct, guideSecLabel, incSec, decSec, guideSales: guideSalesN, guideSalesPct, guideRevenue, incSale, decSale, guideHint,
+      papersWeek, papersTotal, incPaper, decPaper,
+      bostonLast, bostonWarnColor, bostonRows, bostonEmpty, bostonText: this.state.bostonText, setBostonText, bostonKind: this.state.bostonKind, setBostonKind, addBoston, bostonKey,
+      shipCount, shipRows, shipEmpty, shipText: this.state.shipText, setShipText, addShip, shipKey,
+      restText, restBorder, restBg, restDot, restTextColor, restTag, restLabel, restPips,
+      endDone, endTotal, endPct, endAllDone, endHasRemaining, endRows,
+      sundayRows, sundayLabel, sundayColor,
+      killSummary, killRows, killEmpty,
+      quoteText: qq.q, quoteBy: qq.by, quoteSub: qq.sub,
+    };
+  }
+}
+</script>
+</body>
+</html>

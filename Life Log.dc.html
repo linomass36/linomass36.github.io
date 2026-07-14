@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F7F5F1"></rect><rect x="34" y="30" width="8" height="40" rx="2" fill="#534AB7"></rect><rect x="46" y="42" width="8" height="28" rx="2" fill="#0F6E56"></rect><rect x="58" y="36" width="8" height="34" rx="2" fill="#993C1D"></rect></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./hub-data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  input[type="checkbox"] { accent-color: #0F6E56; width: 20px; height: 20px; }
+  @keyframes llIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes llPulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+</style>
+</helmet>
+<div data-screen-label="Life Log" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 90px;">
+
+  <!-- HEADER -->
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.95); position: sticky; top: 0; z-index: 20;">
+    <div style="max-width: 620px; margin: 0 auto; padding: 14px 18px 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #993C1D;">05 · The body &amp; the hours</div>
+          <div style="display: flex; align-items: baseline; gap: 8px;">
+            <div style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 24px; line-height: 1.05; margin-top: 3px;">Life Log</div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .1em; color: #2E6A86; border: 1px solid #D5E0E7; background: #F0F5F8; border-radius: 20px; padding: 2px 8px;">US SUMMER '26</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <sc-if value="{{ timerLive }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ goFocus }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 8px 12px; border-radius: 20px; border: 1px solid #0F6E56; background: #0F6E56; color: #FFF; cursor: pointer; animation: llPulse 2.4s infinite;">● {{ timerChip }}</button>
+          </sc-if>
+          <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFF; color: #55564F;">⌂ Hub</a>
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px; margin-top: 12px;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.go }}" style="{{ t.style }}">{{ t.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 620px; margin: 0 auto; padding: 16px 18px 0;">
+
+    <!-- ═══════ TODAY ═══════ -->
+    <sc-if value="{{ vToday }}" hint-placeholder-val="{{ true }}">
+    <div style="animation: llIn .25s ease;">
+
+      <!-- day nav -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px;">
+        <button onClick="{{ prevDay }}" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #E4E2DD; background: #FFF; font-size: 16px; color: #55564F; cursor: pointer;">‹</button>
+        <div style="text-align: center;">
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500;">{{ dayLabel }}</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 1px;">{{ daySub }}</div>
+        </div>
+        <button onClick="{{ nextDay }}" disabled="{{ atToday }}" style="{{ nextStyle }}">›</button>
+      </div>
+
+      <!-- SLEEP -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #534AB7; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Sleep · morning</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">copy from AutoSleep</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">In bed from</span><input type="time" value="{{ sl_from }}" onChange="{{ setSl_from }}" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Until</span><input type="time" value="{{ sl_to }}" onChange="{{ setSl_to }}" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Hrs asleep</span><input type="number" step="0.1" inputmode="decimal" value="{{ sl_asleep }}" onChange="{{ setSl_asleep }}" placeholder="7.3" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Quality /100</span><input type="number" inputmode="numeric" value="{{ sl_quality }}" onChange="{{ setSl_quality }}" placeholder="82" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Resting HR</span><input type="number" inputmode="numeric" value="{{ sl_rhr }}" onChange="{{ setSl_rhr }}" placeholder="54" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Readiness /10</span><input type="number" inputmode="numeric" value="{{ sl_ready }}" onChange="{{ setSl_ready }}" placeholder="7" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+        </div>
+        <sc-if value="{{ hasInBed }}"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #534AB7; margin-top: 9px;">{{ inBedText }} in bed</div></sc-if>
+      </div>
+
+      <!-- WEIGHT -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #2E6A86; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #2E6A86;">Weight · morning</div>
+          <sc-if value="{{ hasWDelta }}"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ wDeltaColor }};">{{ wDelta }} vs last</div></sc-if>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Weight kg</span><input type="number" step="0.1" inputmode="decimal" value="{{ w_kg }}" onChange="{{ setW_kg }}" placeholder="78.4" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Body fat %</span><input type="number" step="0.1" inputmode="decimal" value="{{ w_bf }}" onChange="{{ setW_bf }}" placeholder="15.2" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Muscle kg</span><input type="number" step="0.1" inputmode="decimal" value="{{ w_mm }}" onChange="{{ setW_mm }}" placeholder="36.1" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+        </div>
+      </div>
+
+      <!-- TRAINING -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #993C1D; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">Training</div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <sc-for list="{{ trainChips }}" as="tc" hint-placeholder-count="3">
+            <button onClick="{{ tc.toggle }}" style="{{ tc.style }}">{{ tc.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ tGym }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 14px; border-top: 1px solid #F2F0EB; padding-top: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Session length, min</span><input type="number" inputmode="numeric" value="{{ gy_len }}" onChange="{{ setGy_len }}" placeholder="75" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Avg break, min</span><input type="number" step="0.5" inputmode="decimal" value="{{ gy_break }}" onChange="{{ setGy_break }}" placeholder="2.5" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px;">
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Bench</span><input value="{{ gy_bench }}" onChange="{{ setGy_bench }}" placeholder="80×5×5" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;"></label>
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Squat</span><input value="{{ gy_squat }}" onChange="{{ setGy_squat }}" placeholder="100×5×5" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;"></label>
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">OHP</span><input value="{{ gy_ohp }}" onChange="{{ setGy_ohp }}" placeholder="50×5×5" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;"></label>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; min-height: 44px;">
+              <button onClick="{{ toggleGyAll }}" style="{{ gyAllStyle }}">{{ gyAllLabel }}</button>
+              <sc-if value="{{ gyNotAll }}"><input value="{{ gy_why }}" onChange="{{ setGy_why }}" placeholder="what was skipped & why" style="flex: 1; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></sc-if>
+            </div>
+            <input value="{{ gy_notes }}" onChange="{{ setGy_notes }}" placeholder="pain / fatigue / anything off" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; margin-top: 8px;">
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tSwim }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 14px; border-top: 1px solid #F2F0EB; padding-top: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Duration, min</span><input type="number" inputmode="numeric" value="{{ sw_dur }}" onChange="{{ setSw_dur }}" placeholder="45" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Distance, m</span><input type="number" inputmode="numeric" value="{{ sw_m }}" onChange="{{ setSw_m }}" placeholder="1000" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+            </div>
+            <input value="{{ sw_routine }}" onChange="{{ setSw_routine }}" placeholder="routine — e.g. 4×100 free easy, 4×50 drills, 200 cool" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; margin-top: 8px;">
+            <div style="font-size: 11px; color: #A6A79F; margin-top: 8px; line-height: 1.5;">New swimmer's rule: track distance + time (pace comes free), and note the main set. Technique &gt; volume for the first months — one drill-focused session per week beats extra laps.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tClimb }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 14px; border-top: 1px solid #F2F0EB; padding-top: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Duration, min</span><input type="number" inputmode="numeric" value="{{ cl_dur }}" onChange="{{ setCl_dur }}" placeholder="90" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Hardest send</span><input value="{{ cl_grade }}" onChange="{{ setCl_grade }}" placeholder="V4 / 6b+" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;"></label>
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;"># problems</span><input type="number" inputmode="numeric" value="{{ cl_count }}" onChange="{{ setCl_count }}" placeholder="12" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+            </div>
+            <input value="{{ cl_notes }}" onChange="{{ setCl_notes }}" placeholder="style that shut you down / skin / finger health" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; margin-top: 8px;">
+            <div style="font-size: 11px; color: #A6A79F; margin-top: 8px; line-height: 1.5;">Enough for a beginner: hardest clean send, rough volume, and what style stopped you (slab, overhang, crimps). Grades will plateau — the "what shut me down" note is the useful signal.</div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- STUDY -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #0F6E56; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Study</div>
+          <button onClick="{{ goFocus }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #0F6E56; background: none; border: none; cursor: pointer; padding: 4px 0;">hours come from the timer →</button>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 6px;">
+          <sc-for list="{{ studyRows }}" as="s" hint-placeholder-count="3">
+            <div style="display: flex; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid #F7F5F1;">
+              <span style="flex: none; width: 76px; font-size: 12.5px; font-weight: 600; color: {{ s.color }};">{{ s.label }}</span>
+              <input type="number" step="0.25" inputmode="decimal" value="{{ s.hours }}" onChange="{{ s.onHours }}" placeholder="{{ s.autoH }}" title="override timer hours" style="flex: none; width: 64px; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace; text-align: center;">
+              <input value="{{ s.note }}" onChange="{{ s.onNote }}" placeholder="what I covered — one line" style="flex: 1; min-width: 0; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-size: 10.5px; color: #A6A79F; margin-top: 8px;">Hours field shows the timer's count as placeholder — type only to override. Syllabus lives in the Week tab.</div>
+      </div>
+
+      <!-- MONEY -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #b0741a; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #b0741a;">Money</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ budColor }};">{{ budLine }}</div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <input type="number" step="0.01" inputmode="decimal" value="{{ spendAmt }}" onChange="{{ setSpendAmt }}" placeholder="$" style="flex: none; width: 90px; min-height: 44px; font-size: 15px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;">
+          <input value="{{ spendNote }}" onChange="{{ setSpendNote }}" placeholder="what for (optional)" style="flex: 1; min-width: 0; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+          <button onClick="{{ addSpend }}" style="flex: none; min-height: 44px; padding: 0 16px; border-radius: 9px; border: none; background: #b0741a; color: #FFF; font-size: 14px; font-weight: 600; cursor: pointer;">＋</button>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+          <sc-for list="{{ spendCats }}" as="sc" hint-placeholder-count="5">
+            <button onClick="{{ sc.pick }}" style="{{ sc.style }}">{{ sc.label }}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasSpends }}">
+          <div style="margin-top: 10px; border-top: 1px solid #F2F0EB; padding-top: 4px;">
+            <sc-for list="{{ spendRows }}" as="sp" hint-placeholder-count="2">
+              <div style="display: flex; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid #F7F5F1;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #1A1B1A; flex: none; width: 76px;">{{ sp.amt }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #b0741a; flex: none;">{{ sp.cat }}</span>
+                <span style="flex: 1; font-size: 12px; color: #77786F; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ sp.note }}</span>
+                <button onClick="{{ sp.del }}" style="font-size: 12px; color: #A6A79F; background: none; border: none; cursor: pointer; padding: 4px 6px;">✕</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- EVENING NOTE -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #55564F;">Evening · one honest line</div>
+        <textarea value="{{ evNote }}" onChange="{{ setEvNote }}" placeholder="how the day actually went — energy, focus, what leaked time" rows="2" style="width: 100%; font-size: 13.5px; padding: 10px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; margin-top: 10px; resize: vertical; line-height: 1.5;"></textarea>
+      </div>
+
+      <!-- WORK: coming soon -->
+      <div style="border: 1px dashed #DAD7D0; border-radius: 14px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+        <div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A6A79F;">Work / university</span>
+          <span style="font-size: 12px; color: #77786F; margin-left: 10px;">lands with the academic year</span>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #b0741a; border: 1px solid #ECD9B8; background: #FBF4E6; border-radius: 20px; padding: 3px 10px;">coming soon</span>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ═══════ FOCUS ═══════ -->
+    <sc-if value="{{ vFocus }}" hint-placeholder-val="{{ false }}">
+    <div style="animation: llIn .25s ease;">
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #0F6E56; border-radius: 14px; background: #FFF; padding: 20px 18px; text-align: center;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Focus timer</div>
+        <div style="display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap;">
+          <sc-for list="{{ subjChips }}" as="sj" hint-placeholder-count="4">
+            <button onClick="{{ sj.pick }}" style="{{ sj.style }}">{{ sj.label }}</button>
+          </sc-for>
+        </div>
+
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 52px; font-weight: 600; letter-spacing: .02em; margin-top: 18px; color: {{ clockColor }};">{{ clock }}</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #77786F; margin-top: 4px;">{{ clockSub }}</div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 18px;">
+          <sc-if value="{{ tsIdle }}">
+            <button onClick="{{ startStudy }}" style="min-height: 56px; padding: 0 28px; border-radius: 14px; border: none; background: #0F6E56; color: #FFF; font-size: 16px; font-weight: 600; cursor: pointer;">▶ Start studying</button>
+          </sc-if>
+          <sc-if value="{{ tsStudy }}">
+            <button onClick="{{ takeBreak }}" style="min-height: 56px; padding: 0 24px; border-radius: 14px; border: 1px solid #b0741a; background: #FBF4E6; color: #b0741a; font-size: 16px; font-weight: 600; cursor: pointer;">☕ Break</button>
+            <button onClick="{{ endSession }}" style="min-height: 56px; padding: 0 24px; border-radius: 14px; border: 1px solid #DAD7D0; background: #FFF; color: #55564F; font-size: 16px; font-weight: 600; cursor: pointer;">■ End</button>
+          </sc-if>
+          <sc-if value="{{ tsBreak }}">
+            <button onClick="{{ resumeStudy }}" style="min-height: 56px; padding: 0 28px; border-radius: 14px; border: none; background: #0F6E56; color: #FFF; font-size: 16px; font-weight: 600; cursor: pointer;">▶ Resume</button>
+            <button onClick="{{ endSession }}" style="min-height: 56px; padding: 0 24px; border-radius: 14px; border: 1px solid #DAD7D0; background: #FFF; color: #55564F; font-size: 16px; font-weight: 600; cursor: pointer;">■ End</button>
+          </sc-if>
+        </div>
+        <div style="font-size: 11px; color: #A6A79F; margin-top: 12px;">One tap for a break, one to resume — the leak you suspect gets measured, not guessed.</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;">
+        <sc-for list="{{ focusStats }}" as="fs" hint-placeholder-count="6">
+          <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFF; padding: 12px 12px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F;">{{ fs.label }}</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin-top: 3px; color: {{ fs.color }};">{{ fs.value }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ hasSess }}">
+        <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFF; padding: 14px 18px; margin-top: 12px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #55564F;">Today's blocks</div>
+          <div style="margin-top: 4px;">
+            <sc-for list="{{ sessRows }}" as="sr" hint-placeholder-count="4">
+              <div style="display: flex; gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid #F7F5F1;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; flex: none; width: 92px;">{{ sr.span }}</span>
+                <span style="font-size: 12.5px; font-weight: 600; color: {{ sr.color }}; flex: 1;">{{ sr.label }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #55564F;">{{ sr.dur }}</span>
+                <button onClick="{{ sr.del }}" style="font-size: 12px; color: #A6A79F; background: none; border: none; cursor: pointer; padding: 4px 6px;">✕</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- ═══════ WEEK ═══════ -->
+    <sc-if value="{{ vWeek }}" hint-placeholder-val="{{ false }}">
+    <div style="animation: llIn .25s ease;">
+
+      <!-- SCORE -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #993C1D; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">This week · {{ weekLabel }}</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 4px;">{{ scoreMsg }}</div>
+            <div style="font-size: 11px; color: #A6A79F; margin-top: 3px;">a nudge, not a verdict — targets editable below</div>
+          </div>
+          <div style="font-family: 'Newsreader', serif; font-size: 40px; font-weight: 500; color: #993C1D; line-height: 1;">{{ scorePct }}%</div>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 12px;">
+          <sc-for list="{{ targetRows }}" as="tr" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F7F5F1;">
+              <span style="flex: none; width: 110px; font-size: 12.5px; font-weight: 600;">{{ tr.label }}</span>
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: #EFECE6; overflow: hidden;"><div style="height: 100%; border-radius: 3px; background: {{ tr.barColor }}; width: {{ tr.pct }}%;"></div></div>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F; flex: none;">{{ tr.actual }} /</span>
+              <input type="number" step="{{ tr.step }}" inputmode="decimal" value="{{ tr.target }}" onChange="{{ tr.onTarget }}" style="flex: none; width: 54px; min-height: 38px; font-size: 12px; padding: 4px 6px; border: 1px solid #DAD7D0; border-radius: 8px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace; text-align: center;">
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- 7-DAY GRID -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #55564F;">The seven days</div>
+        <div style="margin-top: 6px;">
+          <sc-for list="{{ weekRows }}" as="wr" hint-placeholder-count="7">
+            <div style="display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F7F5F1;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ wr.dayColor }}; flex: none; width: 64px;">{{ wr.day }}</span>
+              <span style="flex: 1; font-size: 12px; color: #55564F; letter-spacing: .02em;">{{ wr.badges }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #0F6E56; flex: none;">{{ wr.studyH }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- BUDGET -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #b0741a; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #b0741a;">Budget · {{ monthLabel }}</div>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #77786F;">monthly budget $<input type="number" inputmode="numeric" value="{{ budgetVal }}" onChange="{{ setBudget }}" placeholder="0" style="width: 84px; min-height: 38px; font-size: 12px; padding: 4px 8px; border: 1px solid #DAD7D0; border-radius: 8px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace; text-align: right;"></label>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 10px;">
+          <span style="font-family: 'Newsreader', serif; font-size: 28px; font-weight: 500; color: {{ budColor }};">${{ monthSpent }}</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">spent this month</span>
+        </div>
+        <sc-if value="{{ hasBudget }}">
+          <div style="height: 7px; border-radius: 4px; background: #EFECE6; overflow: hidden; margin-top: 8px;"><div style="height: 100%; border-radius: 4px; background: {{ budColor }}; width: {{ budPct }}%;"></div></div>
+        </sc-if>
+        <sc-if value="{{ hasCats }}">
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px;">
+            <sc-for list="{{ catRows }}" as="cr" hint-placeholder-count="4">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #77786F;">{{ cr.label }} <span style="color: #1A1B1A; font-weight: 600;">{{ cr.amt }}</span></span>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- SYLLABUS -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #0F6E56; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Syllabus — the long game</div>
+        <sc-for list="{{ sylBlocks }}" as="sb" hint-placeholder-count="3">
+          <div style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 13.5px; font-weight: 600; color: {{ sb.color }};">{{ sb.label }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F;">{{ sb.progress }}</span>
+            </div>
+            <div style="margin-top: 4px;">
+              <sc-for list="{{ sb.items }}" as="it" hint-placeholder-count="2">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+                  <input type="checkbox" checked="{{ it.done }}" onChange="{{ it.toggle }}" style="flex: none; cursor: pointer;">
+                  <span style="flex: 1; font-size: 13px; color: {{ it.color }}; text-decoration: {{ it.deco }};">{{ it.label }}</span>
+                  <button onClick="{{ it.del }}" style="font-size: 12px; color: #C9C7C0; background: none; border: none; cursor: pointer; padding: 4px 6px;">✕</button>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <input value="{{ sb.input }}" onChange="{{ sb.onInput }}" placeholder="{{ sb.placeholder }}" style="flex: 1; min-width: 0; min-height: 40px; font-size: 12.5px; padding: 6px 10px; border: 1px solid #E4E2DD; border-radius: 9px; background: #FCFBF9;">
+              <button onClick="{{ sb.add }}" style="flex: none; min-height: 40px; padding: 0 14px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFF; color: #55564F; font-size: 13px; cursor: pointer;">＋</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- WEEKLY REVIEW -->
+      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #534AB7; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Sunday review · ten minutes</div>
+          <a href="Journal.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">the journal →</a>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 14px;">
+          <span style="flex: none; width: 22px; height: 22px; border: 1px solid #DAD7D0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">1</span>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 13px; font-weight: 600;">Read the numbers</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F; margin-top: 4px; line-height: 1.6;">{{ revSummary }}</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 14px;">
+          <span style="flex: none; width: 22px; height: 22px; border: 1px solid #DAD7D0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">2</span>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 13px; font-weight: 600;">Write the honest paragraph</div>
+            <textarea value="{{ revText }}" onChange="{{ setRevText }}" placeholder="what worked · what leaked time · the one change for next week" rows="3" style="width: 100%; font-size: 13.5px; padding: 10px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; margin-top: 8px; resize: vertical; line-height: 1.5;"></textarea>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+              <button onClick="{{ saveReview }}" style="min-height: 44px; padding: 0 18px; border-radius: 10px; border: none; background: #534AB7; color: #FFF; font-size: 13.5px; font-weight: 600; cursor: pointer;">✓ Save to Journal</button>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #0F6E56;">{{ revMsg }}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 14px;">
+          <span style="flex: none; width: 22px; height: 22px; border: 1px solid #DAD7D0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">3</span>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 13px; font-weight: 600;">Reset the week</div>
+            <div style="font-size: 12px; color: #77786F; line-height: 1.5; margin-top: 4px;">Adjust the targets in the score card above if they were wrong, then export below and let the model argue with you.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPORT -->
+      <div style="border: 1px solid #1A1B1A; border-radius: 14px; background: #1A1B1A; color: #F7F5F1; padding: 18px 18px; margin-bottom: 12px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #C9B487;">Weekend synthesis</div>
+        <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 5px;">Export the whole project, let the model read it</div>
+        <div style="font-size: 12px; color: #A6A79F; line-height: 1.55; margin-top: 6px;">Step 1 downloads one .md — this log plus the master plan's week, journal, network, conferences and scholarships. Step 2 copies the analysis prompt. Paste both into Claude.</div>
+        <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+          <button onClick="{{ downloadMd }}" style="min-height: 48px; padding: 0 20px; border-radius: 11px; border: none; background: #F7F5F1; color: #1A1B1A; font-size: 14px; font-weight: 600; cursor: pointer;">↓ Download project .md</button>
+          <button onClick="{{ copyPrompt }}" style="min-height: 48px; padding: 0 20px; border-radius: 11px; border: 1px solid #55564F; background: none; color: #F7F5F1; font-size: 14px; cursor: pointer;">⧉ Copy analysis prompt</button>
+        </div>
+        <sc-if value="{{ hasCopied }}"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #7FD9B9; margin-top: 10px;">{{ copiedMsg }}</div></sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ═══════ TRENDS ═══════ -->
+    <sc-if value="{{ vTrends }}" hint-placeholder-val="{{ false }}">
+    <div style="animation: llIn .25s ease;">
+      <sc-if value="{{ noTrends }}">
+        <div style="border: 1px dashed #DAD7D0; border-radius: 14px; padding: 26px 20px; text-align: center;">
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500;">Nothing to draw yet</div>
+          <div style="font-size: 12.5px; color: #77786F; line-height: 1.55; margin-top: 6px; max-width: 400px; margin-left: auto; margin-right: auto;">Lines appear once two or more days carry a weight, sleep, study or lift number. Log today — the charts start tomorrow.</div>
+        </div>
+      </sc-if>
+      <sc-for list="{{ trendCharts }}" as="c" hint-placeholder-count="4">
+        <div style="border: 1px solid #E4E2DD; border-top: 3px solid {{ c.color }}; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: {{ c.color }};">{{ c.title }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ c.range }}</div>
+          </div>
+          <sc-if value="{{ c.hasTop }}">
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px;">
+              <span style="font-family: 'Newsreader', serif; font-size: 24px; font-weight: 500; color: {{ c.latestColor }};">{{ c.latest }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #77786F;">{{ c.sub }}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ c.has }}">
+            <svg viewBox="0 0 560 150" style="display: block; width: 100%; height: auto; margin-top: 10px;">
+              <line x1="36" y1="12" x2="552" y2="12" style="stroke: #F2F0EB; stroke-width: 1;"></line>
+              <line x1="36" y1="71" x2="552" y2="71" style="stroke: #F2F0EB; stroke-width: 1;"></line>
+              <line x1="36" y1="130" x2="552" y2="130" style="stroke: #E4E2DD; stroke-width: 1;"></line>
+              <sc-for list="{{ c.series }}" as="sr" hint-placeholder-count="1">
+                <path d="{{ sr.path }}" style="fill: none; stroke: {{ sr.color }}; stroke-width: 2; stroke-dasharray: {{ sr.dash }}; stroke-linejoin: round; stroke-linecap: round;"></path>
+              </sc-for>
+              <sc-for list="{{ c.dots }}" as="p" hint-placeholder-count="3">
+                <circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="3.5" style="fill: {{ p.color }}; stroke: #FFFFFF; stroke-width: 1.5;"></circle>
+              </sc-for>
+              <text x="31" y="16" style="text-anchor: end; font-family: 'IBM Plex Mono', monospace; font-size: 10px; fill: #A6A79F;">{{ c.yMaxL }}</text>
+              <text x="31" y="133" style="text-anchor: end; font-family: 'IBM Plex Mono', monospace; font-size: 10px; fill: #A6A79F;">{{ c.yMinL }}</text>
+              <text x="36" y="147" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; fill: #A6A79F;">{{ c.x0L }}</text>
+              <text x="552" y="147" style="text-anchor: end; font-family: 'IBM Plex Mono', monospace; font-size: 10px; fill: #A6A79F;">{{ c.x1L }}</text>
+            </svg>
+            <sc-if value="{{ c.hasLegend }}">
+              <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;">
+                <sc-for list="{{ c.legend }}" as="lg" hint-placeholder-count="3">
+                  <span style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #55564F;"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{ lg.color }};"></span>{{ lg.label }} · {{ lg.last }}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ c.needs }}">
+            <div style="font-size: 12px; color: #A6A79F; line-height: 1.5; margin-top: 8px;">{{ c.hint }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ hasTrends }}">
+        <div style="font-size: 11px; color: #A6A79F; line-height: 1.55; padding: 0 4px;">Charts read the same daily entries — nothing extra to log. Lifts plot the first number of each entry (80×5×5 → 80); study is summed per week against the dashed target.</div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  KEY = 'ct_lifelog_v1';
+  state = { view: 'today', off: 0, tick: 0, now: Date.now(), subject: 'anatomy', spendAmt: '', spendNote: '', spendCat: 'food', syl: { anatomy: '', math: '', python: '' }, copied: '', revText: '', revMsg: '' };
+
+  componentDidMount() { this._t = setInterval(() => { const d = this.read(); if (d.active) this.setState({ now: Date.now() }); }, 1000); }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  read() {
+    let p = null;
+    try { p = JSON.parse(localStorage.getItem(this.KEY)); } catch (e) {}
+    const d = Object.assign({ days: {}, sessions: [], active: null, syllabus: {}, targets: {}, budget: '' }, p || {});
+    d.syllabus = Object.assign({ anatomy: [], math: [], python: [] }, d.syllabus);
+    d.targets = Object.assign({ gym: 3, swim: 1, climb: 1, studyH: 25, logDays: 6 }, d.targets);
+    return d;
+  }
+  write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} }
+  mut(fn) { const d = this.read(); fn(d); this.write(d); this.setState(s => ({ tick: s.tick + 1 })); }
+
+  iso(off) { const t = new Date(); t.setDate(t.getDate() + off); return t.toISOString().slice(0, 10); }
+  key() { return this.iso(this.state.off); }
+  day(d, k) { if (!d.days[k]) d.days[k] = {}; return d.days[k]; }
+  sec(d, k, s) { const dy = this.day(d, k); if (!dy[s]) dy[s] = {}; return dy[s]; }
+
+  setF(section, field) {
+    return (e) => { const v = e && e.target ? e.target.value : e; this.mut(d => { this.sec(d, this.key(), section)[field] = v; }); };
+  }
+  num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+  fmtH(h) { return (Math.round(h * 10) / 10) + 'h'; }
+  fmtHM(ms) { const m = Math.floor(ms / 60000); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') + ':' + String(Math.floor(ms / 1000) % 60).padStart(2, '0'); }
+  fmtMin(ms) { const m = Math.round(ms / 60000); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : m + 'm'; }
+
+  daySessions(k) { return this.read().sessions.filter(s => new Date(s.start).toISOString().slice(0, 10) === k); }
+  timerHours(k, subj) {
+    let ms = 0;
+    this.daySessions(k).forEach(s => { if (s.type === 'study' && (!subj || s.subject === subj)) ms += s.end - s.start; });
+    const d = this.read();
+    if (d.active && d.active.mode === 'study' && (!subj || d.active.subject === subj) && new Date(d.active.start).toISOString().slice(0, 10) === k) ms += Date.now() - d.active.start;
+    return ms / 3600000;
+  }
+  studyHoursDay(k) {
+    const d = this.read(); const st = (d.days[k] || {}).study || {}; let h = 0;
+    ['anatomy', 'math', 'python', 'research', 'other'].forEach(s => {
+      const ov = st[s] && st[s].h;
+      h += (ov !== undefined && ov !== null && ov !== '') ? (this.num(ov) || 0) : this.timerHours(k, s);
+    });
+    return h;
+  }
+
+  closeSeg(d) { if (d.active) { d.sessions.push({ type: d.active.mode, subject: d.active.subject, start: d.active.start, end: Date.now() }); d.active = null; } }
+  timerAct(mode) { this.mut(d => { this.closeSeg(d); if (mode) d.active = { mode: mode, subject: this.state.subject, start: Date.now() }; }); }
+
+  weekKeys() {
+    const t = new Date(); const dow = (t.getDay() + 6) % 7; const out = [];
+    for (let i = 0; i < 7; i++) { const x = new Date(t); x.setDate(t.getDate() - dow + i); out.push(x.toISOString().slice(0, 10)); }
+    return out;
+  }
+  dayLogged(d, k) {
+    const dy = d.days[k]; if (!dy) return this.daySessions(k).length > 0;
+    const any = (o) => o && Object.values(o).some(v => v !== '' && v != null && v !== false);
+    return any(dy.sleep) || any(dy.weight) || any(dy.gym) || any(dy.swim) || any(dy.climb) || !!dy.note || (dy.spends || []).length > 0 || any(dy.study && Object.assign({}, dy.study.anatomy, dy.study.math, dy.study.python)) || this.daySessions(k).length > 0;
+  }
+
+  mkChart(defs, fmtY) {
+    const pL = 36, pR = 8, pT = 12, pB = 20, W = 560, H = 150;
+    const dataPts = [];
+    defs.forEach(s => { if (s.pts) s.pts.forEach(p => dataPts.push(p)); });
+    if (dataPts.length < 2) return { has: false };
+    let x0 = Infinity, x1 = -Infinity, yMin = Infinity, yMax = -Infinity;
+    dataPts.forEach(p => { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < yMin) yMin = p[1]; if (p[1] > yMax) yMax = p[1]; });
+    defs.forEach(s => { if (s.line != null) { if (s.line < yMin) yMin = s.line; if (s.line > yMax) yMax = s.line; } });
+    if (!(x1 > x0)) return { has: false };
+    const r = (yMax - yMin) || Math.abs(yMax) * 0.1 || 1;
+    yMin -= r * 0.12; yMax += r * 0.12;
+    const sx = t => pL + (t - x0) / (x1 - x0) * (W - pL - pR);
+    const sy = v => (H - pB) - (v - yMin) / (yMax - yMin) * (H - pB - pT);
+    const series = [], dots = [], legend = [];
+    defs.forEach(s => {
+      const pts = s.line != null ? [[x0, s.line], [x1, s.line]] : (s.pts || []);
+      if (!pts.length) return;
+      series.push({ path: pts.map((p, i) => (i ? 'L' : 'M') + sx(p[0]).toFixed(1) + ' ' + sy(p[1]).toFixed(1)).join(''), color: s.color, dash: s.dash || 'none' });
+      if (s.dots) pts.forEach(p => dots.push({ cx: sx(p[0]).toFixed(1), cy: sy(p[1]).toFixed(1), color: s.color }));
+      if (s.label) legend.push({ label: s.label, color: s.color, last: s.last });
+    });
+    const fD = t => new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return { has: true, series, dots, legend, hasLegend: legend.length > 0, yMaxL: fmtY(yMax), yMinL: fmtY(yMin), x0L: fD(x0), x1L: fD(x1) };
+  }
+
+  buildMd() {
+    const d = this.read(); const wk = this.weekKeys(); const L = [];
+    L.push('# CT project export — week ' + wk[0] + ' → ' + wk[6]); L.push('');
+    const V = (x) => (x === undefined || x === null || x === '') ? null : x;
+    wk.forEach(k => {
+      const dy = d.days[k] || {}; const dt = new Date(k + 'T12:00:00');
+      L.push('## ' + dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ' (' + k + ')');
+      const sl = dy.sleep || {};
+      if (V(sl.asleep) || V(sl.from)) L.push('- Sleep: in bed ' + (sl.from || '?') + '–' + (sl.to || '?') + ', asleep ' + (sl.asleep || '?') + 'h, quality ' + (sl.quality || '?') + '/100, RHR ' + (sl.rhr || '?') + ', readiness ' + (sl.ready || '?') + '/10');
+      const w = dy.weight || {};
+      if (V(w.kg)) L.push('- Weight: ' + w.kg + ' kg' + (V(w.bf) ? ', BF ' + w.bf + '%' : '') + (V(w.mm) ? ', muscle ' + w.mm + ' kg' : ''));
+      const g = dy.gym || {};
+      if (g.on) L.push('- Gym: ' + (g.len || '?') + ' min, bench ' + (g.bench || '—') + ', squat ' + (g.squat || '—') + ', OHP ' + (g.ohp || '—') + ', avg break ' + (g.brk || '?') + ' min, all exercises: ' + (g.all === false ? 'NO — ' + (g.why || 'no reason logged') : 'yes') + (g.notes ? ', notes: ' + g.notes : ''));
+      const sw = dy.swim || {};
+      if (sw.on) L.push('- Swim: ' + (sw.dur || '?') + ' min, ' + (sw.m || '?') + ' m' + (sw.routine ? ', routine: ' + sw.routine : ''));
+      const cl = dy.climb || {};
+      if (cl.on) L.push('- Climb: ' + (cl.dur || '?') + ' min, hardest ' + (cl.grade || '—') + ', ' + (cl.count || '?') + ' problems' + (cl.notes ? ', notes: ' + cl.notes : ''));
+      ['anatomy', 'math', 'python', 'research', 'other'].forEach(s => {
+        const st = (dy.study || {})[s] || {}; const th = this.timerHours(k, s);
+        const h = V(st.h) != null ? st.h : (th > 0 ? Math.round(th * 100) / 100 : null);
+        if (h != null || V(st.note)) L.push('- Study [' + s + ']: ' + (h != null ? h + 'h' : '?') + (st.note ? ' — ' + st.note : ''));
+      });
+      const sess = this.daySessions(k);
+      if (sess.length) {
+        const stu = sess.filter(s => s.type === 'study'), br = sess.filter(s => s.type === 'break');
+        const bMs = br.reduce((a, s) => a + s.end - s.start, 0);
+        L.push('- Focus timer: ' + stu.length + ' study blocks (' + this.fmtH(stu.reduce((a, s) => a + s.end - s.start, 0) / 3600000) + '), ' + br.length + ' breaks (' + this.fmtH(bMs / 3600000) + ' total' + (br.length ? ', avg ' + Math.round(bMs / br.length / 60000) + 'm, longest ' + Math.round(Math.max.apply(null, br.map(s => s.end - s.start)) / 60000) + 'm' : '') + ')');
+      }
+      (dy.spends || []).forEach(sp => L.push('- Spend: $' + sp.amt + ' [' + sp.cat + ']' + (sp.note ? ' ' + sp.note : '')));
+      if (dy.note) L.push('- Evening note: ' + dy.note);
+      if (L[L.length - 1].startsWith('## ')) L.push('- (nothing logged)');
+      L.push('');
+    });
+    L.push('## Week totals');
+    const gymN = wk.filter(k => (d.days[k] || {}).gym && d.days[k].gym.on).length;
+    const swN = wk.filter(k => (d.days[k] || {}).swim && d.days[k].swim.on).length;
+    const clN = wk.filter(k => (d.days[k] || {}).climb && d.days[k].climb.on).length;
+    L.push('- Gym ' + gymN + '× · Swim ' + swN + '× · Climb ' + clN + '×');
+    L.push('- Study hours: ' + this.fmtH(wk.reduce((a, k) => a + this.studyHoursDay(k), 0)));
+    const mp = wk[0].slice(0, 7);
+    let spent = 0; Object.keys(d.days).forEach(k => { if (k.slice(0, 7) === mp) (d.days[k].spends || []).forEach(s => spent += this.num(s.amt) || 0); });
+    L.push('- Month spend so far: $' + Math.round(spent) + (this.num(d.budget) ? ' of $' + d.budget + ' budget' : ''));
+    L.push('');
+    L.push('## Syllabus state');
+    ['anatomy', 'math', 'python'].forEach(s => {
+      const it = d.syllabus[s] || [];
+      L.push('- ' + s + ': ' + it.filter(i => i.done).length + '/' + it.length + ' done' + (it.length ? ' — open: ' + it.filter(i => !i.done).map(i => i.label).join('; ') : ''));
+    });
+    L.push('');
+    this.appendProjectMd(L, wk);
+    return L.join('\n');
+  }
+
+  readLS(key, fallback) { try { const p = JSON.parse(localStorage.getItem(key)); if (p != null) return p; } catch (e) {} return fallback; }
+  appendProjectMd(L, wk) {
+    const HD = window.HUB_DATA || {};
+    const w0 = new Date(wk[0] + 'T00:00:00').getTime(), w1 = new Date(wk[6] + 'T23:59:59').getTime();
+    L.push('# Rest of the project — same week');
+    L.push('');
+    // master plan
+    const plan = this.readLS('ct-master-plan-v2', {});
+    const items = HD.items || [];
+    const byId = {}; items.forEach(it => { byId[it.id] = it; });
+    const checked = plan.checked || {};
+    const doneN = items.filter(it => checked[it.id]).length;
+    L.push('## CT Master Plan');
+    L.push('- Overall: ' + doneN + ' / ' + items.length + ' moves done (' + (items.length ? Math.round(doneN / items.length * 100) : 0) + '%)');
+    const hist = (plan.history || []).filter(h => h.ts >= w0 && h.ts <= w1);
+    const wkDone = hist.filter(h => h.a === 1), wkUndone = hist.filter(h => h.a !== 1);
+    if (wkDone.length) { L.push('- Checked this week (' + wkDone.length + '):'); wkDone.forEach(h => { const it = byId[h.id]; L.push('  - ' + (it ? it.label : h.id)); }); }
+    else L.push('- Checked this week: none');
+    if (wkUndone.length) L.push('- Un-checked this week: ' + wkUndone.length);
+    const summer = items.filter(it => it.branchId === 'summer');
+    if (summer.length) L.push('- Summer Sprint: ' + summer.filter(it => checked[it.id]).length + ' / ' + summer.length + ' done');
+    L.push('');
+    // journal
+    const jj = this.readLS('ct_journal_v1', []).filter(e => e && e.date >= wk[0] && e.date <= wk[6]);
+    L.push('## Journal — this week');
+    if (!jj.length) L.push('- no entries');
+    jj.slice().sort((a, b) => (a.date > b.date ? 1 : -1)).forEach(e => {
+      const body = String(e.body || '').replace(/\s+/g, ' ').trim();
+      L.push('- ' + e.date + ' [' + (e.type || 'note') + '] ' + (e.title ? e.title + ' — ' : '') + (body.length > 220 ? body.slice(0, 220) + '…' : body));
+    });
+    L.push('');
+    // network
+    const nodes = this.readLS('nm_nodes_v2', HD.contacts || []).filter(c => c && c.type !== 'you');
+    L.push('## Network');
+    L.push('- ' + nodes.length + ' contacts tracked');
+    const owed = nodes.filter(c => c.owed);
+    if (owed.length) { L.push('- Owed a touch (' + owed.length + '):'); owed.forEach(c => L.push('  - ' + c.name + (c.role ? ' — ' + c.role : '') + (c.city ? ' · ' + c.city : '') + ' · last contact ' + (c.lastDays || '?') + 'd ago')); }
+    else L.push('- Nobody owed a touch');
+    L.push('');
+    // conferences
+    const confs = this.readLS('hub_confs_v1', []);
+    L.push('## Conferences logged');
+    if (!confs.length) L.push('- none logged');
+    confs.forEach(c => {
+      const st = c.start ? new Date(c.start[0], c.start[1], c.start[2]) : null;
+      L.push('- ' + (c.acronym ? c.acronym + ' · ' : '') + c.name + (c.city ? ' · ' + c.city : '') + (st ? ' · ' + st.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '') + (c.cost ? ' · ' + c.cost : '') + (c.deadline ? ' · deadline: ' + c.deadline : ''));
+    });
+    L.push('');
+    // scholarships
+    const sch = this.readLS('hub_scholarships_v1', []);
+    L.push('## Scholarships & funding');
+    if (!sch.length) L.push('- none tracked');
+    sch.forEach(g => L.push('- ' + g.name + ' [' + (g.status || 'researching') + ']' + (g.amount ? ' · ' + g.amount : '') + (g.deadline ? ' · due ' + g.deadline : '') + (g.note ? ' · ' + g.note : '')));
+  }
+  PROMPT = 'Attached is my weekly export (.md) covering my whole system: a life log (sleep, weight/body-comp, gym bench/squat/OHP, swimming, climbing, a focus timer with study blocks and breaks, spending in USD, evening notes) plus the rest of the project — master-plan moves checked this week, journal entries, network (who I owe a touch), logged conferences and scholarship pipeline. Act as my performance analyst and chief of staff. 1) Synthesize the week: what actually happened vs targets, across body, study and the plan. 2) Cross-correlate: does sleep quality/readiness predict study hours or gym performance? Are break patterns (count, avg, longest) eating focused time — quantify the leak. 3) Flag progression or stalls on the three lifts and body-comp trend. 4) Plan & pipeline: is master-plan progress consistent with the logged hours? Any owed contacts or deadlines (conferences, scholarships) about to slip? 5) Spending: any category drifting? 6) End with the 3 highest-leverage adjustments for next week, each tied to a number in the data. Be blunt, no praise padding.';
+
+  renderVals() {
+    const S = this.state, d = this.read(), k = this.key();
+    const dy = d.days[k] || {};
+    const F = (sec, f) => ((dy[sec] || {})[f] !== undefined && (dy[sec] || {})[f] !== null) ? dy[sec][f] : '';
+    const mono = "font-family:'IBM Plex Mono',monospace;";
+    const tabBase = mono + 'flex:1;min-height:42px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border-radius:10px;cursor:pointer;';
+    const tabs = [['today', 'Today'], ['focus', 'Focus'], ['week', 'Week'], ['trends', 'Trends']].map(t => ({
+      label: t[1], go: () => this.setState({ view: t[0] }),
+      style: tabBase + (S.view === t[0] ? 'border:1px solid #1A1B1A;background:#1A1B1A;color:#FFF;' : 'border:1px solid #E4E2DD;background:#FFF;color:#55564F;')
+    }));
+
+    // day nav
+    const dt = new Date(k + 'T12:00:00');
+    const dayLabel = S.off === 0 ? 'Today' : (S.off === -1 ? 'Yesterday' : dt.toLocaleDateString('en-US', { weekday: 'long' }));
+    const daySub = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const atToday = S.off >= 0;
+
+    // sleep computed
+    const from = F('sleep', 'from'), to = F('sleep', 'to');
+    let inBedText = '', hasInBed = false;
+    if (from && to) {
+      const [fh, fm] = from.split(':').map(Number), [th, tm] = to.split(':').map(Number);
+      let mins = (th * 60 + tm) - (fh * 60 + fm); if (mins <= 0) mins += 1440;
+      inBedText = Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm'; hasInBed = true;
+    }
+
+    // weight delta
+    const kg = this.num(F('weight', 'kg'));
+    let wDelta = '', hasWDelta = false, wDeltaColor = '#77786F';
+    if (kg != null) {
+      const keys = Object.keys(d.days).filter(x => x < k && d.days[x].weight && this.num(d.days[x].weight.kg) != null).sort();
+      if (keys.length) {
+        const prev = this.num(d.days[keys[keys.length - 1]].weight.kg);
+        const df = Math.round((kg - prev) * 10) / 10;
+        wDelta = (df > 0 ? '+' : '') + df + ' kg'; hasWDelta = df !== 0; wDeltaColor = df > 0 ? '#993C1D' : '#0F6E56';
+      }
+    }
+
+    // training chips
+    const chipOn = (col) => mono + 'flex:1;min-height:44px;font-size:11px;letter-spacing:.06em;border-radius:10px;cursor:pointer;border:1px solid ' + col + ';background:' + col + ';color:#FFF;';
+    const chipOff = mono + 'flex:1;min-height:44px;font-size:11px;letter-spacing:.06em;border-radius:10px;cursor:pointer;border:1px solid #E4E2DD;background:#FFF;color:#55564F;';
+    const mkTrain = (sec, label, col) => ({
+      label: label, style: (dy[sec] || {}).on ? chipOn(col) : chipOff,
+      toggle: () => this.mut(D => { const s = this.sec(D, k, sec); s.on = !s.on; })
+    });
+    const trainChips = [mkTrain('gym', '⚒ Gym', '#993C1D'), mkTrain('swim', '≈ Swim', '#2E6A86'), mkTrain('climb', '▲ Climb', '#b0741a')];
+    const gyAll = (dy.gym || {}).all;
+    const gyNotAll = gyAll === false;
+
+    // study rows
+    const SUBJ = [['anatomy', 'Anatomy', '#993C1D'], ['math', 'Math', '#2E6A86'], ['python', 'Python', '#0F6E56']];
+    const studyRows = SUBJ.map(s => {
+      const st = (dy.study || {})[s[0]] || {};
+      const auto = this.timerHours(k, s[0]);
+      return {
+        label: s[1], color: s[2],
+        hours: st.h !== undefined && st.h !== null ? st.h : '',
+        autoH: auto > 0 ? String(Math.round(auto * 100) / 100) : '0',
+        onHours: (e) => this.mut(D => { const dd = this.sec(D, k, 'study'); dd[s[0]] = dd[s[0]] || {}; dd[s[0]].h = e.target.value; }),
+        note: st.note || '',
+        onNote: (e) => this.mut(D => { const dd = this.sec(D, k, 'study'); dd[s[0]] = dd[s[0]] || {}; dd[s[0]].note = e.target.value; })
+      };
+    });
+
+    // money
+    const CATS = ['food', 'transport', 'training', 'gear', 'fun', 'other'];
+    const spendCats = CATS.map(c => ({
+      label: c, pick: () => this.setState({ spendCat: c }),
+      style: mono + 'min-height:36px;padding:0 12px;font-size:10.5px;border-radius:18px;cursor:pointer;' + (S.spendCat === c ? 'border:1px solid #b0741a;background:#b0741a;color:#FFF;' : 'border:1px solid #E4E2DD;background:#FFF;color:#77786F;')
+    }));
+    const spends = dy.spends || [];
+    const spendRows = spends.map((sp, i) => ({
+      amt: '$' + sp.amt, cat: sp.cat, note: sp.note || '',
+      del: () => this.mut(D => { this.day(D, k).spends.splice(i, 1); })
+    }));
+    const addSpend = () => {
+      const a = this.num(S.spendAmt); if (a == null) return;
+      this.mut(D => { const dd = this.day(D, k); dd.spends = dd.spends || []; dd.spends.push({ amt: a, cat: S.spendCat, note: S.spendNote.trim() }); });
+      this.setState({ spendAmt: '', spendNote: '' });
+    };
+    const mp = this.iso(0).slice(0, 7);
+    let monthSpent = 0; const catTot = {};
+    Object.keys(d.days).forEach(x => { if (x.slice(0, 7) === mp) (d.days[x].spends || []).forEach(s => { const n = this.num(s.amt) || 0; monthSpent += n; catTot[s.cat] = (catTot[s.cat] || 0) + n; }); });
+    monthSpent = Math.round(monthSpent);
+    const budget = this.num(d.budget);
+    const hasBudget = budget != null && budget > 0;
+    const budPctRaw = hasBudget ? monthSpent / budget * 100 : 0;
+    const budColor = hasBudget && budPctRaw > 100 ? '#A32E27' : (hasBudget && budPctRaw > 80 ? '#b0741a' : '#0F6E56');
+    const budLine = hasBudget ? '$' + monthSpent + ' / $' + budget + ' this month' : '$' + monthSpent + ' this month · set budget in Week';
+    const catRows = Object.keys(catTot).sort((a, b) => catTot[b] - catTot[a]).map(c => ({ label: c, amt: '$' + Math.round(catTot[c]) }));
+
+    // timer
+    const active = d.active;
+    const tsIdle = !active, tsStudy = !!active && active.mode === 'study', tsBreak = !!active && active.mode === 'break';
+    const elapsed = active ? Date.now() - active.start : 0;
+    const subjName = { anatomy: 'Anatomy', math: 'Math', python: 'Python', research: 'Research', other: 'Other' };
+    const subjChips = ['anatomy', 'math', 'python', 'research', 'other'].map(s => ({
+      label: subjName[s],
+      pick: () => { this.setState({ subject: s }); if (active && active.mode === 'study') this.mut(D => { this.closeSeg(D); D.active = { mode: 'study', subject: s, start: Date.now() }; }); },
+      style: mono + 'min-height:40px;padding:0 16px;font-size:11px;border-radius:20px;cursor:pointer;' + ((active ? active.subject : S.subject) === s ? 'border:1px solid #0F6E56;background:#0F6E56;color:#FFF;' : 'border:1px solid #E4E2DD;background:#FFF;color:#55564F;')
+    }));
+    const tk = this.iso(0);
+    const sessT = this.daySessions(tk);
+    const stuMs = sessT.filter(s => s.type === 'study').reduce((a, s) => a + s.end - s.start, 0) + (tsStudy ? elapsed : 0);
+    const brs = sessT.filter(s => s.type === 'break');
+    const brMs = brs.reduce((a, s) => a + s.end - s.start, 0) + (tsBreak ? elapsed : 0);
+    const brCount = brs.length + (tsBreak ? 1 : 0);
+    const focusStats = [
+      { label: 'Studied', value: this.fmtMin(stuMs), color: '#0F6E56' },
+      { label: 'On break', value: this.fmtMin(brMs), color: '#b0741a' },
+      { label: 'Breaks', value: String(brCount), color: '#b0741a' },
+      { label: 'Avg break', value: brCount ? this.fmtMin(brMs / brCount) : '—', color: '#55564F' },
+      { label: 'Longest', value: brs.length ? this.fmtMin(Math.max.apply(null, brs.map(s => s.end - s.start))) : '—', color: '#55564F' },
+      { label: 'Focus ratio', value: (stuMs + brMs) > 0 ? Math.round(stuMs / (stuMs + brMs) * 100) + '%' : '—', color: '#0F6E56' }
+    ];
+    const sessRows = sessT.slice().reverse().map(s => ({
+      span: new Date(s.start).toTimeString().slice(0, 5) + '–' + new Date(s.end).toTimeString().slice(0, 5),
+      label: s.type === 'study' ? subjName[s.subject] || 'Study' : 'Break',
+      color: s.type === 'study' ? '#0F6E56' : '#b0741a',
+      dur: this.fmtMin(s.end - s.start),
+      del: () => this.mut(D => { const i = D.sessions.indexOf(D.sessions.filter(x => x.start === s.start && x.end === s.end)[0]); if (i > -1) D.sessions.splice(i, 1); })
+    }));
+
+    // week
+    const wk = this.weekKeys();
+    const cnt = (sec) => wk.filter(x => (d.days[x] || {})[sec] && d.days[x][sec].on).length;
+    const studyWk = wk.reduce((a, x) => a + this.studyHoursDay(x), 0);
+    const loggedN = wk.filter(x => this.dayLogged(d, x)).length;
+    const T = d.targets;
+    const tDefs = [
+      ['Gym', cnt('gym'), 'gym', 1], ['Swim', cnt('swim'), 'swim', 1], ['Climb', cnt('climb'), 'climb', 1],
+      ['Study hrs', Math.round(studyWk * 10) / 10, 'studyH', 1], ['Days logged', loggedN, 'logDays', 1]
+    ];
+    let scoreSum = 0, scoreN = 0;
+    const targetRows = tDefs.map(t => {
+      const tgt = this.num(T[t[2]]) || 0;
+      const r = tgt > 0 ? Math.min(1, t[1] / tgt) : 1;
+      if (tgt > 0) { scoreSum += r; scoreN++; }
+      return {
+        label: t[0], actual: String(t[1]), target: T[t[2]], step: String(t[3]),
+        pct: Math.round(r * 100), barColor: r >= 1 ? '#0F6E56' : (r >= 0.6 ? '#b0741a' : '#993C1D'),
+        onTarget: (e) => this.mut(D => { D.targets[t[2]] = e.target.value; })
+      };
+    });
+    const scorePct = scoreN ? Math.round(scoreSum / scoreN * 100) : 0;
+    const scoreMsg = scorePct >= 85 ? 'On track — keep the rhythm' : (scorePct >= 55 ? 'Solid week, a few targets short' : 'Slow week — data first, judgement never');
+    const todayIso = this.iso(0);
+    const weekRows = wk.map(x => {
+      const dd = d.days[x] || {}; const b = [];
+      if ((dd.sleep || {}).asleep || (dd.sleep || {}).from) b.push('☾');
+      if ((dd.weight || {}).kg) b.push('⚖');
+      if ((dd.gym || {}).on) b.push('⚒');
+      if ((dd.swim || {}).on) b.push('≈');
+      if ((dd.climb || {}).on) b.push('▲');
+      if ((dd.spends || []).length) b.push('zł');
+      if (dd.note) b.push('✎');
+      const sh = this.studyHoursDay(x);
+      return {
+        day: new Date(x + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }),
+        dayColor: x === todayIso ? '#993C1D' : (x > todayIso ? '#C9C7C0' : '#55564F'),
+        badges: b.length ? b.join('  ') : (x > todayIso ? '' : '—'),
+        studyH: sh > 0 ? this.fmtH(sh) : ''
+      };
+    });
+
+    // syllabus
+    const sylBlocks = SUBJ.map(s => {
+      const items = d.syllabus[s[0]] || [];
+      const doneN = items.filter(i => i.done).length;
+      return {
+        label: s[1], color: s[2],
+        progress: items.length ? doneN + ' / ' + items.length : 'empty — add the units',
+        placeholder: s[0] === 'anatomy' ? 'add a chapter / region' : (s[0] === 'math' ? 'add a topic' : 'add a milestone'),
+        items: items.map((it, i) => ({
+          label: it.label, done: !!it.done,
+          color: it.done ? '#A6A79F' : '#1A1B1A', deco: it.done ? 'line-through' : 'none',
+          toggle: () => this.mut(D => { D.syllabus[s[0]][i].done = !D.syllabus[s[0]][i].done; }),
+          del: () => this.mut(D => { D.syllabus[s[0]].splice(i, 1); })
+        })),
+        input: S.syl[s[0]],
+        onInput: (e) => this.setState({ syl: Object.assign({}, S.syl, { [s[0]]: e.target.value }) }),
+        add: () => { const v = S.syl[s[0]].trim(); if (!v) return; this.mut(D => { D.syllabus[s[0]].push({ label: v, done: false }); }); this.setState({ syl: Object.assign({}, S.syl, { [s[0]]: '' }) }); }
+      };
+    });
+
+    // weekly review
+    let weekSpend = 0; wk.forEach(x => ((((d.days[x] || {}).spends) || [])).forEach(sp => { weekSpend += this.num(sp.amt) || 0; }));
+    const revSummary = scorePct + '% of targets · ⚒' + cnt('gym') + ' ≈' + cnt('swim') + ' ▲' + cnt('climb') + ' · ' + this.fmtH(studyWk) + ' study · $' + Math.round(weekSpend) + ' this week · ' + loggedN + '/7 days logged';
+    const wl = new Date(wk[0] + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + new Date(wk[6] + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const saveReview = () => {
+      const txt = S.revText.trim();
+      if (!txt) { this.setState({ revMsg: 'write the paragraph first' }); setTimeout(() => this.setState({ revMsg: '' }), 3000); return; }
+      const list = this.readLS('ct_journal_v1', []);
+      list.push({ id: 'j' + Date.now() + Math.floor(Math.random() * 999), type: 'weekly', date: this.iso(0), title: 'Weekly review — ' + wl, body: txt + '\n\nNumbers: ' + revSummary, tags: ['weekly-review'], created: Date.now() });
+      try { localStorage.setItem('ct_journal_v1', JSON.stringify(list)); } catch (e) {}
+      this.setState({ revText: '', revMsg: 'saved to the Journal ✓' });
+      setTimeout(() => this.setState({ revMsg: '' }), 4000);
+    };
+
+    // trends
+    const vTrends = S.view === 'trends';
+    let trendCharts = [], noTrends = false;
+    if (vTrends) {
+      const dayKeys = Object.keys(d.days).sort();
+      const tOf = x => new Date(x + 'T12:00:00').getTime();
+      const cut60 = Date.now() - 60 * 86400000, cut28 = Date.now() - 28 * 86400000, cut120 = Date.now() - 120 * 86400000;
+      const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+      const wPts = dayKeys.filter(x => tOf(x) >= cut60 && this.num(((d.days[x] || {}).weight || {}).kg) != null).map(x => [tOf(x), this.num(d.days[x].weight.kg)]);
+      const wc = this.mkChart([{ pts: wPts, color: '#2E6A86', dots: true }], f1);
+      const wDf = wPts.length >= 2 ? wPts[wPts.length - 1][1] - wPts[0][1] : 0;
+      const sPts = dayKeys.filter(x => tOf(x) >= cut28 && this.num(((d.days[x] || {}).sleep || {}).asleep) != null).map(x => [tOf(x), this.num(d.days[x].sleep.asleep)]);
+      const sc = this.mkChart([{ pts: sPts, color: '#534AB7', dots: true }], f1);
+      const sAvg = sPts.length ? sPts.reduce((a, p) => a + p[1], 0) / sPts.length : 0;
+      const sessH = {};
+      d.sessions.forEach(s => { if (s.type === 'study') { const kk = new Date(s.start).toISOString().slice(0, 10); sessH[kk] = sessH[kk] || {}; sessH[kk][s.subject] = (sessH[kk][s.subject] || 0) + (s.end - s.start) / 3600000; } });
+      const dayStudy = kk => { const st = (d.days[kk] || {}).study || {}; let h = 0; ['anatomy', 'math', 'python', 'research', 'other'].forEach(sj => { const ov = st[sj] && st[sj].h; if (ov !== undefined && ov !== null && ov !== '') h += this.num(ov) || 0; else h += (sessH[kk] || {})[sj] || 0; }); return h; };
+      const wkPts = [];
+      for (let i = 7; i >= 0; i--) {
+        const t = new Date(); const dow = (t.getDay() + 6) % 7; t.setDate(t.getDate() - dow - i * 7);
+        let h = 0; for (let j = 0; j < 7; j++) { const x = new Date(t); x.setDate(t.getDate() + j); h += dayStudy(x.toISOString().slice(0, 10)); }
+        wkPts.push([t.getTime() + 43200000, Math.round(h * 10) / 10]);
+      }
+      while (wkPts.length && wkPts[0][1] === 0) wkPts.shift();
+      const tgtH = this.num(d.targets.studyH);
+      const kc = this.mkChart([{ pts: wkPts, color: '#0F6E56', dots: true }].concat(tgtH ? [{ line: tgtH, color: '#b0741a', dash: '5 5' }] : []), f1);
+      const liftDefs = [['bench', 'Bench', '#993C1D'], ['squat', 'Squat', '#2E6A86'], ['ohp', 'OHP', '#0F6E56']];
+      const liftSeries = liftDefs.map(L => {
+        const pts = dayKeys.filter(x => tOf(x) >= cut120).map(x => { const g = (d.days[x] || {}).gym || {}; return g.on ? [tOf(x), parseFloat(g[L[0]])] : null; }).filter(p => p && !isNaN(p[1]));
+        return { pts, color: L[2], dots: true, label: L[1], last: pts.length ? String(pts[pts.length - 1][1]) : '—' };
+      }).filter(s => s.pts.length);
+      const lc = this.mkChart(liftSeries, v => String(Math.round(v)));
+      const mkCard = (o, c) => Object.assign({ show: true, needs: !c.has, has: false, series: [], dots: [], legend: [], hasLegend: false, hasTop: false, latest: '', latestColor: '#1A1B1A', sub: '', yMaxL: '', yMinL: '', x0L: '', x1L: '' }, c.has ? c : {}, o);
+      trendCharts = [
+        mkCard({ title: 'Weight', color: '#2E6A86', range: 'last 60 days', hasTop: wc.has, latest: wPts.length ? f1(wPts[wPts.length - 1][1]) + ' kg' : '', sub: wc.has ? ((wDf > 0 ? '+' : '') + f1(wDf) + ' kg over the range') : '', hint: 'Needs a weight on two different days — the morning number is enough.' }, wc),
+        mkCard({ title: 'Sleep', color: '#534AB7', range: 'last 28 days', hasTop: sc.has, latest: sPts.length ? f1(sPts[sPts.length - 1][1]) + 'h' : '', sub: sc.has ? 'avg ' + f1(sAvg) + 'h asleep' : '', hint: 'Needs “hrs asleep” on two different days.' }, sc),
+        mkCard({ title: 'Study hours · weekly', color: '#0F6E56', range: 'last 8 weeks', hasTop: kc.has, latest: wkPts.length ? f1(wkPts[wkPts.length - 1][1]) + 'h' : '', latestColor: '#0F6E56', sub: kc.has ? (tgtH ? 'this week so far · dashed = ' + tgtH + 'h target' : 'this week so far') : '', hint: 'Fills in once the timer or study rows carry hours across two weeks.' }, kc),
+        mkCard({ title: 'The three lifts', color: '#993C1D', range: 'last 120 days', hint: 'Log gym days with bench / squat / OHP — the first number of each entry (80×5×5 → 80) gets plotted.' }, lc)
+      ];
+      noTrends = !trendCharts.some(c => c.has);
+      if (noTrends) trendCharts = [];
+    }
+
+    // export
+    const downloadMd = () => {
+      const md = this.buildMd();
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ct-project-week-' + wk[0] + '.md';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      this.setState({ copied: '.md downloaded — now copy the prompt' });
+    };
+    const copyPrompt = () => {
+      try { navigator.clipboard.writeText(this.PROMPT); } catch (e) {}
+      this.setState({ copied: 'prompt copied — paste it with the .md into Claude' });
+      setTimeout(() => this.setState({ copied: '' }), 4000);
+    };
+
+    return {
+      tabs, vToday: S.view === 'today', vFocus: S.view === 'focus', vWeek: S.view === 'week',
+      goFocus: () => this.setState({ view: 'focus' }),
+      timerLive: !!active, timerChip: active ? (active.mode === 'study' ? subjName[active.subject] : 'break') + ' ' + this.fmtMin(elapsed) : '',
+      dayLabel, daySub, atToday,
+      prevDay: () => this.setState(s => ({ off: s.off - 1 })),
+      nextDay: () => this.setState(s => ({ off: Math.min(0, s.off + 1) })),
+      nextStyle: 'width:44px;height:44px;border-radius:12px;border:1px solid #E4E2DD;background:#FFF;font-size:16px;cursor:pointer;color:' + (atToday ? '#DDDBD4' : '#55564F') + ';',
+      sl_from: from, setSl_from: this.setF('sleep', 'from'),
+      sl_to: to, setSl_to: this.setF('sleep', 'to'),
+      sl_asleep: F('sleep', 'asleep'), setSl_asleep: this.setF('sleep', 'asleep'),
+      sl_quality: F('sleep', 'quality'), setSl_quality: this.setF('sleep', 'quality'),
+      sl_rhr: F('sleep', 'rhr'), setSl_rhr: this.setF('sleep', 'rhr'),
+      sl_ready: F('sleep', 'ready'), setSl_ready: this.setF('sleep', 'ready'),
+      hasInBed, inBedText,
+      w_kg: F('weight', 'kg'), setW_kg: this.setF('weight', 'kg'),
+      w_bf: F('weight', 'bf'), setW_bf: this.setF('weight', 'bf'),
+      w_mm: F('weight', 'mm'), setW_mm: this.setF('weight', 'mm'),
+      hasWDelta, wDelta, wDeltaColor,
+      trainChips,
+      tGym: !!(dy.gym || {}).on, tSwim: !!(dy.swim || {}).on, tClimb: !!(dy.climb || {}).on,
+      gy_len: F('gym', 'len'), setGy_len: this.setF('gym', 'len'),
+      gy_break: F('gym', 'brk'), setGy_break: this.setF('gym', 'brk'),
+      gy_bench: F('gym', 'bench'), setGy_bench: this.setF('gym', 'bench'),
+      gy_squat: F('gym', 'squat'), setGy_squat: this.setF('gym', 'squat'),
+      gy_ohp: F('gym', 'ohp'), setGy_ohp: this.setF('gym', 'ohp'),
+      gy_why: F('gym', 'why'), setGy_why: this.setF('gym', 'why'),
+      gy_notes: F('gym', 'notes'), setGy_notes: this.setF('gym', 'notes'),
+      gyNotAll,
+      gyAllLabel: gyAll === false ? '✕ not all done' : '✓ all exercises done',
+      gyAllStyle: mono + 'min-height:44px;padding:0 14px;font-size:10.5px;border-radius:10px;cursor:pointer;flex:none;' + (gyAll === false ? 'border:1px solid #A32E27;background:#FBEDEC;color:#A32E27;' : 'border:1px solid #0F6E56;background:#EDF5F1;color:#0F6E56;'),
+      toggleGyAll: () => this.mut(D => { const g = this.sec(D, k, 'gym'); g.all = g.all === false ? true : false; }),
+      sw_dur: F('swim', 'dur'), setSw_dur: this.setF('swim', 'dur'),
+      sw_m: F('swim', 'm'), setSw_m: this.setF('swim', 'm'),
+      sw_routine: F('swim', 'routine'), setSw_routine: this.setF('swim', 'routine'),
+      cl_dur: F('climb', 'dur'), setCl_dur: this.setF('climb', 'dur'),
+      cl_grade: F('climb', 'grade'), setCl_grade: this.setF('climb', 'grade'),
+      cl_count: F('climb', 'count'), setCl_count: this.setF('climb', 'count'),
+      cl_notes: F('climb', 'notes'), setCl_notes: this.setF('climb', 'notes'),
+      studyRows,
+      spendAmt: S.spendAmt, setSpendAmt: (e) => this.setState({ spendAmt: e.target.value }),
+      spendNote: S.spendNote, setSpendNote: (e) => this.setState({ spendNote: e.target.value }),
+      spendCats, addSpend, hasSpends: spends.length > 0, spendRows, budLine, budColor,
+      evNote: dy.note || '', setEvNote: (e) => this.mut(D => { this.day(D, k).note = e.target.value; }),
+      subjChips, tsIdle, tsStudy, tsBreak,
+      clock: active ? this.fmtHM(elapsed) : '0:00:00',
+      clockColor: tsBreak ? '#b0741a' : '#0F6E56',
+      clockSub: tsIdle ? 'pick a subject, hit start' : (tsStudy ? 'studying ' + (subjName[active.subject] || '') : 'on a break — it counts'),
+      startStudy: () => this.timerAct('study'),
+      takeBreak: () => this.timerAct('break'),
+      resumeStudy: () => this.timerAct('study'),
+      endSession: () => this.timerAct(null),
+      focusStats, hasSess: sessRows.length > 0, sessRows,
+      weekLabel: new Date(wk[0] + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + new Date(wk[6] + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      scorePct, scoreMsg, targetRows, weekRows,
+      monthLabel: new Date().toLocaleDateString('en-US', { month: 'long' }),
+      budgetVal: d.budget, setBudget: (e) => this.mut(D => { D.budget = e.target.value; }),
+      monthSpent: String(monthSpent), hasBudget, budPct: Math.min(100, Math.round(budPctRaw)),
+      hasCats: catRows.length > 0, catRows,
+      sylBlocks, downloadMd, copyPrompt,
+      vTrends, trendCharts, noTrends, hasTrends: trendCharts.length > 0,
+      revSummary, revText: S.revText, setRevText: (e) => this.setState({ revText: e.target.value }), saveReview, revMsg: S.revMsg,
+      hasCopied: !!S.copied, copiedMsg: S.copied
+    };
+  }
+}
+</script>
+</body>
+</html>

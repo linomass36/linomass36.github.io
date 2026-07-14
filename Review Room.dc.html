@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#6E4B8A"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">RR</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes rrIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div data-screen-label="Review Room" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 80px;">
+
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.95); position: sticky; top: 0; z-index: 20;">
+    <div style="max-width: 680px; margin: 0 auto; padding: 14px 18px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #6E4B8A;">06 · The ritual</div>
+        <div style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 24px; line-height: 1.05; margin-top: 3px;">Review Room</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ progColor }};">{{ progText }}</span>
+        <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFF; color: #55564F;">⌂ Hub</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 680px; margin: 0 auto; padding: 16px 18px 0; animation: rrIn .25s ease;">
+
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 14px 18px; display: flex; gap: 12px; align-items: baseline;">
+      <span style="font-family: 'Newsreader', serif; font-size: 30px; line-height: .6; color: #6E4B8A; transform: translateY(6px); flex: none;">§</span>
+      <div style="font-size: 12.5px; color: #55564F; line-height: 1.55;">Twenty minutes, once a week, phone elsewhere. The numbers are compiled for you — you supply the honesty. Saving files the whole thing into the <a href="Journal.dc.html">Journal</a> as a weekly entry.</div>
+    </div>
+
+    <!-- THE WEEK IN NUMBERS -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #6E4B8A; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6E4B8A;">Step 1 · The week in numbers</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ rangeLabel }}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px;">
+        <sc-for list="{{ numRows }}" as="n" hint-placeholder-count="6">
+          <div style="border: 1px solid #F2F0EB; border-radius: 10px; padding: 10px 12px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F;">{{ n.k }}</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500; margin-top: 3px; color: #26271F;">{{ n.v }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Read them once, slowly. Ask: does the week I remember match the week that happened?</div>
+    </div>
+
+    <!-- THE FIVE QUESTIONS -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #6E4B8A; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6E4B8A;">Step 2 · The five questions</div>
+      <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 14px;">
+        <sc-for list="{{ qRows }}" as="q" hint-placeholder-count="5">
+          <div>
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #6E4B8A; flex: none;">{{ q.n }}</span>
+              <span style="font-family: 'Newsreader', serif; font-size: 16.5px; font-weight: 500;">{{ q.label }}</span>
+            </div>
+            <div style="font-size: 11px; color: #A6A79F; margin: 3px 0 7px 22px;">{{ q.hint }}</div>
+            <textarea rows="3" value="{{ q.val }}" onChange="{{ q.set }}" placeholder="{{ q.ph }}" style="width: 100%; font-size: 13.5px; line-height: 1.55; padding: 10px 12px; border: 1px solid #DAD7D0; border-radius: 10px; background: #FCFBF9; resize: vertical;"></textarea>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- SAVE -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #0F6E56; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Step 3 · File it</div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
+        <button onClick="{{ saveReview }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .06em; min-height: 44px; padding: 0 22px; border-radius: 22px; border: 1px solid #0F6E56; background: #0F6E56; color: #FFF; cursor: pointer;">save the week → Journal</button>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ msgColor }};">{{ msg }}</span>
+      </div>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Numbers + answers become one weekly entry. The draft autosaves as you type, so you can walk away mid-ritual.</div>
+    </div>
+
+    <!-- PAST REVIEWS -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #55564F;">Past rituals</div>
+        <a href="Journal.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">all in the Journal →</a>
+      </div>
+      <sc-if value="{{ hasPast }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; margin-top: 6px;">
+          <sc-for list="{{ pastRows }}" as="p" hint-placeholder-count="3">
+            <div style="border-top: 1px solid #F2F0EB; padding: 10px 2px;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+                <span style="font-family: 'Newsreader', serif; font-size: 15px; font-weight: 500;">{{ p.title }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; flex: none;">{{ p.dateText }}</span>
+              </div>
+              <div style="font-size: 11.5px; color: #77786F; line-height: 1.5; margin-top: 3px;">{{ p.preview }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noPast }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 10px; padding: 14px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12px; color: #77786F;">No weekly reviews on file yet — this Sunday is the first.</div>
+      </sc-if>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;pastCount&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 6, &quot;min&quot;: 3, &quot;max&quot;: 12, &quot;step&quot;: 1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Review Room&quot;}}">
+class Component extends DCLogic {
+  KEY = 'ct_reviewroom_v1';
+  JKEY = 'ct_journal_v1';
+  LKEY = 'ct_lifelog_v1';
+  state = { tick: 0, msg: '' };
+
+  QUESTIONS = [
+    ['moved', 'What actually moved this week?', 'wins, shipped things, conversations that advanced the plan', 'e.g. sent the abstract draft, first swim over 1500m…'],
+    ['stalled', 'What stalled — and why, really?', 'not the excuse; the mechanism behind it', 'e.g. anatomy slipped because evenings got eaten by…'],
+    ['learned', 'What did I learn that changes anything?', 'about the field, a person, a method, or yourself', ''],
+    ['cut', 'What gets cut or refused next week?', 'subtraction is the lever — name one thing', ''],
+    ['one', 'The one thing that must happen next week', 'if only this happens, the week still counted', '']
+  ];
+
+  lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
+  num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+  fmtH(h) { return (Math.round(h * 10) / 10) + 'h'; }
+  weekKeys() {
+    const t = new Date(); const dow = (t.getDay() + 6) % 7; const out = [];
+    for (let i = 0; i < 7; i++) { const x = new Date(t); x.setDate(t.getDate() - dow + i); out.push(x.toISOString().slice(0, 10)); }
+    return out;
+  }
+  fmtDay(k) { return new Date(k + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+
+  readDraft(monday) {
+    const d = this.lsJson(this.KEY, {});
+    if (d.week === monday && d.a) return d.a;
+    return {};
+  }
+  writeDraft(monday, a) { try { localStorage.setItem(this.KEY, JSON.stringify({ week: monday, a: a })); } catch (e) {} }
+
+  renderVals() {
+    const S = this.state;
+    const wk = this.weekKeys();
+    const monday = wk[0];
+    const rangeLabel = this.fmtDay(wk[0]) + ' – ' + this.fmtDay(wk[6]);
+    const a = this.readDraft(monday);
+
+    // numbers from the life log
+    const numRows = [];
+    const ll = this.lsJson(this.LKEY, null);
+    const days = (ll && ll.days) || {};
+    const sess = (ll && ll.sessions) || [];
+    const inWk = k => wk.indexOf(k) >= 0;
+    const cnt = sec => wk.filter(k => (days[k] || {})[sec] && days[k][sec].on).length;
+    numRows.push({ k: 'Training', v: '⚒' + cnt('gym') + ' · ≈' + cnt('swim') + ' · ▲' + cnt('climb') });
+    // study hours: per-day per-subject override else timer sessions
+    let studyH = 0;
+    wk.forEach(k => {
+      const st = (days[k] || {}).study || {};
+      ['anatomy', 'math', 'python', 'research', 'other'].forEach(s => {
+        const ov = st[s] && st[s].h;
+        if (ov !== undefined && ov !== null && ov !== '') { studyH += this.num(ov) || 0; }
+        else { sess.forEach(x => { if (x.type === 'study' && x.subject === s && new Date(x.start).toISOString().slice(0, 10) === k) studyH += (x.end - x.start) / 3600000; }); }
+      });
+    });
+    numRows.push({ k: 'Study', v: this.fmtH(studyH) });
+    const slVals = wk.map(k => this.num(((days[k] || {}).sleep || {}).asleep)).filter(v => v != null);
+    numRows.push({ k: 'Sleep', v: slVals.length ? 'avg ' + this.fmtH(slVals.reduce((x, y) => x + y, 0) / slVals.length) : '—' });
+    const wPts = []; wk.forEach(k => { const v = this.num(((days[k] || {}).weight || {}).kg); if (v != null) wPts.push(v); });
+    numRows.push({ k: 'Weight', v: wPts.length ? (wPts[wPts.length - 1].toFixed(1) + ' kg' + (wPts.length > 1 ? ' (' + (wPts[wPts.length - 1] - wPts[0] >= 0 ? '+' : '') + (Math.round((wPts[wPts.length - 1] - wPts[0]) * 10) / 10) + ')' : '')) : '—' });
+    let spend = 0; wk.forEach(k => (((days[k] || {}).spends) || []).forEach(sp => { spend += this.num(sp.amt) || 0; }));
+    numRows.push({ k: 'Spend', v: '$' + Math.round(spend) });
+    // plan moves this week (history timestamps, shape-tolerant)
+    let moves = 0;
+    try {
+      const plan = this.lsJson('ct-master-plan-v2', null);
+      const wkStart = new Date(monday + 'T00:00:00').getTime();
+      ((plan && plan.history) || []).forEach(h => { const ts = h && (h.ts || h.t || h.time); if (ts && ts >= wkStart) moves++; });
+    } catch (e) {}
+    numRows.push({ k: 'Plan moves', v: String(moves) });
+    const journal = this.lsJson(this.JKEY, []);
+    numRows.push({ k: 'Journal', v: journal.filter(e => e && inWk(e.date)).length + ' entries' });
+    const anyv = o => o && Object.values(o).some(v => v !== '' && v != null && v !== false);
+    const sessDays = {}; sess.forEach(x => { sessDays[new Date(x.start).toISOString().slice(0, 10)] = 1; });
+    const loggedN = wk.filter(k => { const dd = days[k]; return !!((dd && (anyv(dd.sleep) || anyv(dd.weight) || anyv(dd.gym) || anyv(dd.swim) || anyv(dd.climb) || dd.note || (dd.spends || []).length)) || sessDays[k]); }).length;
+    numRows.push({ k: 'Days logged', v: loggedN + ' / 7' });
+
+    const qRows = this.QUESTIONS.map((q, i) => ({
+      n: '0' + (i + 1), label: q[1], hint: q[2], ph: q[3] || 'write plainly — nobody reads this but you',
+      val: a[q[0]] || '',
+      set: (e) => { const na = Object.assign({}, this.readDraft(monday)); na[q[0]] = e.target.value; this.writeDraft(monday, na); this.setState(s => ({ tick: s.tick + 1 })); }
+    }));
+    const answeredN = this.QUESTIONS.filter(q => (a[q[0]] || '').trim()).length;
+
+    const saveReview = () => {
+      const cur = this.readDraft(monday);
+      const any = this.QUESTIONS.some(q => (cur[q[0]] || '').trim());
+      if (!any) { this.setState({ msg: 'answer at least one question first' }); setTimeout(() => this.setState({ msg: '' }), 3000); return; }
+      const L = [];
+      L.push('Numbers: ' + numRows.map(n => n.k + ' ' + n.v).join(' · '));
+      L.push('');
+      this.QUESTIONS.forEach(q => { const t = (cur[q[0]] || '').trim(); if (t) { L.push(q[1]); L.push(t); L.push(''); } });
+      const list = this.lsJson(this.JKEY, []);
+      list.push({ id: 'j' + Date.now() + Math.floor(Math.random() * 999), type: 'weekly', date: new Date().toISOString().slice(0, 10), title: 'Weekly review — ' + rangeLabel, body: L.join('\n').trim(), tags: ['weekly-review', 'review-room'] });
+      try { localStorage.setItem(this.JKEY, JSON.stringify(list)); } catch (e) {}
+      this.writeDraft(monday, {});
+      this.setState({ msg: 'filed to the Journal ✓' });
+      setTimeout(() => this.setState({ msg: '' }), 4000);
+    };
+
+    const past = journal.filter(e => e && e.type === 'weekly').sort((x, y) => (y.date > x.date ? 1 : -1)).slice(0, this.props.pastCount ?? 6);
+    const pastRows = past.map(p => {
+      const body = String(p.body || '').replace(/\s+/g, ' ').trim();
+      return { title: p.title || 'Weekly review', dateText: this.fmtDay(p.date), preview: body.slice(0, 150) + (body.length > 150 ? '…' : '') };
+    });
+
+    return {
+      rangeLabel, numRows, qRows, saveReview,
+      msg: S.msg, msgColor: S.msg.indexOf('✓') >= 0 ? '#0F6E56' : '#A32E27',
+      progText: answeredN + ' / 5 answered', progColor: answeredN === 5 ? '#0F6E56' : '#A6A79F',
+      hasPast: pastRows.length > 0, noPast: pastRows.length === 0, pastRows
+    };
+  }
+}
+</script>
+</body>
+</html>

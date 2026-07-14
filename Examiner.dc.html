@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#A32E27"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">EX</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./hub-data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes exIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes exPulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+</style>
+</helmet>
+<div data-screen-label="The Examiner" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 80px;">
+
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.95); position: sticky; top: 0; z-index: 20;">
+    <div style="max-width: 720px; margin: 0 auto; padding: 14px 18px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #A32E27;">11 · The examiner</div>
+        <div style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 24px; line-height: 1.05; margin-top: 3px;">The Examiner</div>
+      </div>
+      <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFF; color: #55564F;">⌂ Hub</a>
+    </div>
+  </div>
+
+  <div style="max-width: 720px; margin: 0 auto; padding: 16px 18px 0; animation: exIn .25s ease;">
+
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 14px 18px; display: flex; gap: 12px; align-items: baseline;">
+      <span style="font-family: 'Newsreader', serif; font-size: 30px; line-height: .6; color: #A32E27; transform: translateY(6px); flex: none;">✱</span>
+      <div style="font-size: 12.5px; color: #55564F; line-height: 1.55;">Reads everything you've logged — training, study, sleep, money, people, plan moves, your own journal — and examines it. It only knows what you've written down: thin logs, thin coaching.</div>
+    </div>
+
+    <!-- BRIEFING -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #A32E27; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A32E27;">The briefing</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ digestSub }}</span>
+      </div>
+      <div style="font-size: 11.5px; color: #77786F; line-height: 1.5; margin-top: 4px;">Pick who examines you, then run it. Takes ~10 seconds.</div>
+      <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+        <sc-for list="{{ lensChips }}" as="lc" hint-placeholder-count="3">
+          <button onClick="{{ lc.go }}" style="{{ lc.style }}">{{ lc.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
+        <button onClick="{{ runBriefing }}" disabled="{{ busy }}" style="{{ runStyle }}">{{ runLabel }}</button>
+        <sc-if value="{{ hasErr }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A32E27;">{{ err }}</span></sc-if>
+      </div>
+      <sc-if value="{{ busy }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 14px; border: 1px dashed #E7CFC4; border-radius: 10px; background: #FBF6F0; padding: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #993C1D; animation: exPulse 1.6s ease infinite;">{{ busyText }}</div>
+      </sc-if>
+      <sc-if value="{{ hasBrief }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 14px; border: 1px solid #F2F0EB; border-radius: 12px; background: #FCFBF9; padding: 16px 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A32E27;">{{ briefLens }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ briefWhen }}</span>
+          </div>
+          <div style="font-family: 'Newsreader', serif; font-size: 15.5px; line-height: 1.65; color: #26271F; margin-top: 8px; white-space: pre-wrap;">{{ briefText }}</div>
+          <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button onClick="{{ fileBrief }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; min-height: 38px; padding: 0 16px; border-radius: 19px; border: 1px solid #0F6E56; background: #FFF; color: #0F6E56; cursor: pointer;">{{ fileLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- ASK ANYTHING -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #185FA5; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #185FA5;">Cross-examine</div>
+      <div style="font-size: 11.5px; color: #77786F; line-height: 1.5; margin-top: 4px;">Ask anything against your own record — "when do I actually study best?", "am I on pace for the anatomy exam?", "who am I neglecting?"</div>
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <input value="{{ q }}" onChange="{{ setQ }}" onKeyDown="{{ qKey }}" placeholder="ask the record…" style="flex: 1; min-height: 44px; font-size: 13.5px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 10px; background: #FCFBF9;">
+        <button onClick="{{ ask }}" disabled="{{ busy }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #185FA5; background: #185FA5; color: #FFF; cursor: pointer; flex: none;">ask</button>
+      </div>
+      <sc-if value="{{ hasAnswer }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 12px; border: 1px solid #F2F0EB; border-radius: 12px; background: #FCFBF9; padding: 14px 16px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #185FA5;">Q — {{ answerQ }}</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 15px; line-height: 1.65; color: #26271F; margin-top: 6px; white-space: pre-wrap;">{{ answerText }}</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- PAST BRIEFINGS -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #55564F;">Past examinations</div>
+      <sc-if value="{{ hasPast }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; margin-top: 6px;">
+          <sc-for list="{{ pastRows }}" as="p" hint-placeholder-count="3">
+            <div style="border-top: 1px solid #F2F0EB; padding: 10px 2px;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #A32E27;">{{ p.lens }}</span>
+                <div style="display: flex; gap: 10px; align-items: baseline;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ p.when }}</span>
+                  <button onClick="{{ p.del }}" title="delete" style="border: none; background: none; color: #C9C7C0; cursor: pointer; font-size: 13px;">×</button>
+                </div>
+              </div>
+              <div style="font-size: 12px; color: #55564F; line-height: 1.55; margin-top: 4px;">{{ p.preview }}</div>
+              <button onClick="{{ p.open }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; border: none; background: none; color: #2E6A86; cursor: pointer; padding: 0; margin-top: 4px;">read in full ↑</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noPast }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 10px; padding: 14px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12px; color: #77786F;">No examinations yet — run the first briefing above.</div>
+      </sc-if>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  KEY = 'ct_examiner_v1';
+  LENSES = [
+    ['sergeant', 'Drill sergeant', 'You are a blunt drill sergeant. No praise unless earned. Call out every gap between stated intentions and logged behavior. Short declarative sentences.'],
+    ['mentor', 'Kind mentor', 'You are a warm, experienced mentor. Honest but encouraging. Notice genuine progress before problems. Speak like someone who wants this person to succeed long-term.'],
+    ['pi', 'Skeptical PI', 'You are a skeptical principal investigator reviewing a student\'s progress report. Interrogate the evidence. Distinguish activity from output. Ask what would convince a committee.']
+  ];
+  state = { tick: 0, lens: 'sergeant', busy: false, busyText: '', err: '', brief: null, q: '', answer: null, filedTs: 0 };
+
+  lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
+  read() { const d = this.lsJson(this.KEY, null); return (d && Array.isArray(d.briefs)) ? d : { briefs: [] }; }
+  write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} this.setState(s => ({ tick: s.tick + 1 })); }
+  num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+  iso(off) { const t = new Date(); t.setDate(t.getDate() + (off || 0)); return t.toISOString().slice(0, 10); }
+  fmtWhen(ts) { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + new Date(ts).toTimeString().slice(0, 5); }
+
+  digest() {
+    const L = [];
+    const today = this.iso(0), from = this.iso(-28);
+    L.push('Today: ' + today + '. Window: last 28 days (' + from + ' onward).');
+    const ll = this.lsJson('ct_lifelog_v1', null);
+    if (ll) {
+      const days = ll.days || {}, sess = ll.sessions || [];
+      const keys = Object.keys(days).filter(k => k >= from).sort();
+      let gym = 0, swim = 0, climb = 0; const slp = [], wt = []; let spend = 0;
+      const stuBy = {};
+      keys.forEach(k => {
+        const dd = days[k] || {};
+        if ((dd.gym || {}).on) gym++; if ((dd.swim || {}).on) swim++; if ((dd.climb || {}).on) climb++;
+        const s = this.num((dd.sleep || {}).asleep); if (s != null) slp.push(s);
+        const w = this.num((dd.weight || {}).kg); if (w != null) wt.push([k, w]);
+        (dd.spends || []).forEach(sp => { spend += this.num(sp.amt) || 0; });
+        const st = dd.study || {};
+        Object.keys(st).forEach(sj => { const ov = st[sj] && st[sj].h; if (ov !== undefined && ov !== null && ov !== '') stuBy[sj] = (stuBy[sj] || 0) + (this.num(ov) || 0); });
+      });
+      sess.forEach(x => {
+        if (x.type !== 'study') return;
+        const k = new Date(x.start).toISOString().slice(0, 10);
+        if (k < from) return;
+        const st = ((days[k] || {}).study || {})[x.subject];
+        if (st && st.h !== undefined && st.h !== null && st.h !== '') return;
+        stuBy[x.subject] = (stuBy[x.subject] || 0) + (x.end - x.start) / 3600000;
+      });
+      const rh = h => Math.round(h * 10) / 10;
+      L.push('Training: gym ' + gym + 'x, swim ' + swim + 'x, climb ' + climb + 'x. Days with any log: ' + keys.length + '/28.');
+      L.push('Study hours by subject: ' + (Object.keys(stuBy).length ? Object.keys(stuBy).map(s => s + ' ' + rh(stuBy[s]) + 'h').join(', ') : 'none logged') + '.');
+      if (slp.length) L.push('Sleep: avg ' + rh(slp.reduce((a, b) => a + b, 0) / slp.length) + 'h over ' + slp.length + ' nights.');
+      if (wt.length) L.push('Weight: ' + wt[0][1] + ' → ' + wt[wt.length - 1][1] + ' kg (' + wt.length + ' weigh-ins).');
+      L.push('Spend: $' + Math.round(spend) + ' in window.');
+      const w = ll.targets || {};
+      L.push('Weekly targets: gym ' + (w.gym || '?') + 'x, swim ' + (w.swim || '?') + 'x, climb ' + (w.climb || '?') + 'x, study ' + (w.studyH || '?') + 'h.');
+    } else L.push('No life log data.');
+    const j = this.lsJson('ct_journal_v1', []);
+    const recent = j.filter(e => e && e.date >= from);
+    L.push('Journal: ' + recent.length + ' entries in window.');
+    const weeklies = j.filter(e => e && e.type === 'weekly').sort((a, b) => (a.date > b.date ? 1 : -1)).slice(-2);
+    weeklies.forEach(wv => { L.push('Weekly review ' + wv.date + ' — "' + String(wv.body || '').replace(/\s+/g, ' ').slice(0, 500) + '"'); });
+    const others = recent.filter(e => e.type !== 'weekly').slice(-5);
+    others.forEach(e => { L.push('Entry ' + e.date + ' [' + (e.type || 'note') + '] ' + (e.title || '') + ': "' + String(e.body || '').replace(/\s+/g, ' ').slice(0, 220) + '"'); });
+    const plan = this.lsJson('ct-master-plan-v2', null);
+    if (plan) {
+      const wkStart = Date.now() - 28 * 86400000;
+      let moves = 0; (plan.history || []).forEach(h => { const ts = h && (h.ts || h.t || h.time); if (ts && ts >= wkStart) moves++; });
+      const HD = window.HUB_DATA || {}; const done = Object.keys(plan.state || {}).filter(k => plan.state[k] === 'done').length;
+      L.push('Master plan: ' + moves + ' item state-changes in window; ' + done + ' items done total' + (HD.items ? ' of ' + HD.items.length : '') + '.');
+    }
+    const dos = this.lsJson('ct_dossier_v1', {});
+    let touches = 0, recentT = 0;
+    Object.keys(dos).forEach(k => ((dos[k] || {}).log || []).forEach(t => { touches++; if (t.ts >= Date.now() - 28 * 86400000) recentT++; }));
+    L.push('Network: ' + recentT + ' people-touches logged in window (' + touches + ' all-time).');
+    const va = this.lsJson('ct_vault_v1', { snaps: [] });
+    const vs = (va.snaps || []).slice().sort((a, b) => (a.m > b.m ? 1 : -1));
+    if (vs.length) { const l = vs[vs.length - 1]; L.push('Money: net ' + Math.round((this.num(l.cash) || 0) + (this.num(l.inv) || 0) - (this.num(l.debt) || 0)) + ' as of ' + l.m + '.'); }
+    const st = this.lsJson('ct_study_v1', { cards: [] });
+    const due = (st.cards || []).filter(c => c && c.due && c.due <= today).length;
+    L.push('Error deck: ' + (st.cards || []).length + ' cards, ' + due + ' overdue.');
+    const lib = this.lsJson('ct_library_v1', { items: [] });
+    const li = lib.items || [];
+    L.push('Library: ' + li.filter(i => i.st === 'done').length + ' read, ' + li.filter(i => i.st === 'done' && !(i.take || '').trim()).length + ' of those missing takeaways, ' + li.filter(i => i.st === 'queue').length + ' queued.');
+    return L.join('\n');
+  }
+
+  async callClaude(system, user, busyText) {
+    this.setState({ busy: true, busyText, err: '' });
+    try {
+      const text = await window.claude.complete({
+        system: system + ' Context is the user\'s complete self-tracking record. Ground every claim in the data given; never invent numbers. Plain text only, no markdown headers or asterisks. Keep it under 250 words.',
+        messages: [{ role: 'user', content: user }],
+        max_tokens: 1200
+      });
+      this.setState({ busy: false, busyText: '' });
+      return String(text || '').trim();
+    } catch (e) {
+      this.setState({ busy: false, busyText: '', err: 'call failed — try again in a minute (rate limit is 15/min)' });
+      return null;
+    }
+  }
+
+  renderVals() {
+    const S = this.state;
+    const mono = "font-family:'IBM Plex Mono',monospace;";
+    const d = this.read();
+    const lensName = {}; this.LENSES.forEach(l => { lensName[l[0]] = l[1]; });
+
+    const lensChips = this.LENSES.map(l => ({
+      label: l[1], go: () => this.setState({ lens: l[0] }),
+      style: mono + 'min-height:38px;padding:0 15px;font-size:10.5px;border-radius:19px;cursor:pointer;' + (S.lens === l[0] ? 'border:1px solid #A32E27;background:#A32E27;color:#FFF;' : 'border:1px solid #E4E2DD;background:#FFF;color:#55564F;')
+    }));
+
+    const runBriefing = async () => {
+      if (S.busy) return;
+      const lens = this.LENSES.find(l => l[0] === S.lens);
+      const text = await this.callClaude(
+        lens[2],
+        'Here is my last 28 days of self-tracking. Give me the weekly examination: (1) what the data actually shows, (2) the sharpest contradiction between what I wrote and what I did, (3) one concrete focus for next week.\n\n' + this.digest(),
+        'the ' + lens[1].toLowerCase() + ' is reading your record…'
+      );
+      if (text == null) return;
+      const brief = { ts: Date.now(), lens: S.lens, text };
+      const nd = this.read();
+      nd.briefs.unshift(brief);
+      nd.briefs = nd.briefs.slice(0, 20);
+      this.setState({ brief });
+      this.write(nd);
+    };
+
+    const ask = async () => {
+      const q = S.q.trim();
+      if (!q || S.busy) return;
+      const text = await this.callClaude(
+        'You answer questions strictly from the user\'s tracking record. If the data cannot answer the question, say exactly what is missing and how to start logging it.',
+        'My question: ' + q + '\n\nMy record:\n' + this.digest(),
+        'cross-examining the record…'
+      );
+      if (text == null) return;
+      this.setState({ answer: { q, text }, q: '' });
+    };
+
+    const fileBrief = () => {
+      const b = S.brief; if (!b) return;
+      const list = this.lsJson('ct_journal_v1', []);
+      list.push({ id: 'j' + Date.now() + Math.floor(Math.random() * 999), type: 'note', date: new Date().toISOString().slice(0, 10), title: 'Examiner briefing — ' + lensName[b.lens], body: b.text, tags: ['examiner', b.lens] });
+      try { localStorage.setItem('ct_journal_v1', JSON.stringify(list)); } catch (e) {}
+      this.setState({ filedTs: b.ts });
+    };
+
+    const pastRows = d.briefs.map(p => ({
+      lens: lensName[p.lens] || p.lens, when: this.fmtWhen(p.ts),
+      preview: String(p.text || '').replace(/\s+/g, ' ').slice(0, 180) + '…',
+      open: () => { this.setState({ brief: p }); },
+      del: () => { const nd = this.read(); nd.briefs = nd.briefs.filter(x => x.ts !== p.ts); if (S.brief && S.brief.ts === p.ts) this.setState({ brief: null }); this.write(nd); }
+    }));
+
+    return {
+      digestSub: 'digest: last 28 days, all rooms',
+      lensChips, busy: S.busy, busyText: S.busyText,
+      runLabel: S.busy ? 'examining…' : 'run the briefing',
+      runStyle: mono + 'font-size:11.5px;letter-spacing:.06em;min-height:46px;padding:0 24px;border-radius:23px;border:1px solid #A32E27;cursor:' + (S.busy ? 'wait' : 'pointer') + ';background:' + (S.busy ? '#FFF' : '#A32E27') + ';color:' + (S.busy ? '#A32E27' : '#FFF') + ';',
+      hasErr: !!S.err, err: S.err,
+      hasBrief: !!S.brief && !S.busy,
+      briefLens: S.brief ? (lensName[S.brief.lens] || '') : '',
+      briefWhen: S.brief ? this.fmtWhen(S.brief.ts) : '',
+      briefText: S.brief ? S.brief.text : '',
+      fileBrief, fileLabel: S.brief && S.filedTs === S.brief.ts ? 'filed to Journal ✓' : 'file to Journal',
+      q: S.q, setQ: (e) => this.setState({ q: e.target.value }),
+      qKey: (e) => { if (e.key === 'Enter') ask(); },
+      ask, hasAnswer: !!S.answer && !S.busy,
+      answerQ: S.answer ? S.answer.q : '', answerText: S.answer ? S.answer.text : '',
+      hasPast: pastRows.length > 0, noPast: pastRows.length === 0, pastRows
+    };
+  }
+}
+</script>
+</body>
+</html>

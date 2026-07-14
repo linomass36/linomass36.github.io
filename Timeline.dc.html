@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#2E6A86"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">TL</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./hub-data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes tlIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div data-screen-label="Timeline" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 72px;">
+
+  <!-- TOP BAR -->
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
+    <div style="max-width: 1120px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 300px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #2E6A86; color: #2E6A86;">← Mission Control</a>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #2E6A86;">Everything on one axis</span>
+        </div>
+        <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 30px; line-height: 1.04; margin: 8px 0 0; letter-spacing: -.01em;">The Collision Timeline</h1>
+        <div style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 580px; line-height: 1.5;">Checkpoints, conferences and deadlines merged onto a single line — so you see the weeks where three things land at once, before they land.</div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">{{ todayLabel }}</div>
+        <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px; justify-content: flex-end;">
+          <span style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; color: #A32E27; line-height: 1;">{{ collisionCount }}</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">collision weeks ahead</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 1120px; margin: 0 auto; padding: 22px 24px 0;">
+
+    <!-- FILTERS -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; animation: tlIn .3s ease;">
+      <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+        <button onClick="{{ f.toggle }}" style="display: flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ f.border }}; color: {{ f.color }}; background: {{ f.bg }};">
+          <span style="width: 8px; height: 8px; border-radius: 2px; background: {{ f.dot }};"></span>{{ f.label }} · {{ f.count }}
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- HORIZONTAL RULER -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px 8px; margin-top: 16px; animation: tlIn .3s ease;">
+      <svg viewBox="0 0 1040 150" style="width: 100%; height: auto; display: block;">
+        <line x1="20" y1="96" x2="1020" y2="96" stroke="#E7E4DE" stroke-width="1.5"></line>
+        <sc-for list="{{ monthTicks }}" as="m" hint-placeholder-count="12">
+          <line x1="{{ m.x }}" y1="92" x2="{{ m.x }}" y2="100" stroke="#D2CFC8" stroke-width="1"></line>
+          <text x="{{ m.x }}" y="118" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9" fill="{{ m.color }}">{{ m.label }}</text>
+        </sc-for>
+        <line x1="{{ nowX }}" y1="30" x2="{{ nowX }}" y2="100" stroke="#A32E27" stroke-width="1.5" stroke-dasharray="3 3"></line>
+        <text x="{{ nowX }}" y="24" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#A32E27">now</text>
+        <sc-for list="{{ dots }}" as="d" hint-placeholder-count="8">
+          <circle cx="{{ d.x }}" cy="{{ d.y }}" r="{{ d.r }}" fill="{{ d.fill }}" stroke="#FFFFFF" stroke-width="1.5"></circle>
+        </sc-for>
+        <sc-for list="{{ collisionMarks }}" as="c" hint-placeholder-count="2">
+          <circle cx="{{ c.x }}" cy="96" r="12" fill="none" stroke="#A32E27" stroke-width="1.5"></circle>
+        </sc-for>
+      </svg>
+    </div>
+
+    <!-- COLLISION CALLOUT -->
+    <sc-if value="{{ hasCollisions }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px solid #EBD7D4; border-radius: 14px; background: #FBF1EF; padding: 14px 20px; margin-top: 16px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A32E27;">⚠ Watch these weeks</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+          <sc-for list="{{ collisionRows }}" as="c" hint-placeholder-count="2">
+            <div style="display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A32E27; min-width: 92px;">{{ c.week }}</span>
+              <span style="flex: 1; font-size: 13px; color: #6e2b25; line-height: 1.4;">{{ c.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- GROUPED LIST -->
+    <div style="margin-top: 20px;">
+      <sc-for list="{{ months }}" as="mo" hint-placeholder-count="6">
+        <div style="margin-bottom: 8px; animation: tlIn .3s ease;">
+          <div style="display: flex; align-items: baseline; gap: 10px; padding: 8px 2px; position: sticky; top: 0; background: #F7F5F1;">
+            <div style="font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500; color: #1A1B1A;">{{ mo.label }}</div>
+            <div style="flex: 1; height: 1px; background: #E4E2DD;"></div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ mo.count }}</span>
+          </div>
+          <sc-for list="{{ mo.rows }}" as="e" hint-placeholder-count="3">
+            <div style="display: flex; gap: 14px; align-items: flex-start; padding: 12px 16px; border: 1px solid {{ e.cardBorder }}; border-left: 3px solid {{ e.color }}; border-radius: 12px; background: {{ e.cardBg }}; margin-bottom: 8px;">
+              <div style="text-align: center; flex: none; width: 54px;">
+                <div style="font-family: 'Newsreader', serif; font-size: 22px; font-weight: 500; line-height: 1; color: {{ e.color }};">{{ e.day }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-top: 2px;">{{ e.mon }}</div>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase; color: {{ e.color }}; border: 1px solid {{ e.color }}; border-radius: 12px; padding: 2px 8px;">{{ e.typeLabel }}</span>
+                  <sc-if value="{{ e.collides }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase; color: #A32E27; background: #FBECEA; border-radius: 12px; padding: 2px 8px;">⚠ collision</span></sc-if>
+                </div>
+                <div style="font-size: 14px; color: #26271F; line-height: 1.35; margin-top: 6px; font-weight: 500;">{{ e.label }}</div>
+                <div style="font-size: 12px; color: #77786F; line-height: 1.45; margin-top: 3px;">{{ e.sub }}</div>
+              </div>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ e.awayColor }}; flex: none; white-space: nowrap;">{{ e.away }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <sc-if value="{{ listEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 24px; border: 1px dashed #DAD7D0; border-radius: 12px; text-align: center; font-size: 13px; color: #77786F; line-height: 1.5;">Nothing in the selected filters. Toggle a lane back on above.</div>
+      </sc-if>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1120,&quot;height&quot;:1600}}">
+class Component extends DCLogic {
+  CKEY = 'hub_confs_v1';
+  SCH = 'hub_scholarships_v1';
+  state = { tick: 0, off: { milestone: false, conf: false, deadline: false } };
+
+  readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
+  toggleFilter(k) { this.setState(s => ({ off: Object.assign({}, s.off, { [k]: !s.off[k] }) })); }
+
+  parseDeadline(str) {
+    if (!str) return null;
+    const m = String(str).match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+    const m2 = String(str).match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/i);
+    if (m2) { const MO = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']; return new Date(+m2[3], MO.indexOf(m2[1].slice(0, 3).toLowerCase()), +m2[2]).getTime(); }
+    return null;
+  }
+
+  renderVals() {
+    this.state.tick;
+    const data = window.HUB_DATA;
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const now = new Date(); const nowMs = now.getTime();
+    const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+    if (!data) return { todayLabel, collisionCount: 0, filters: [], monthTicks: [], dots: [], collisionMarks: [], collisionRows: [], months: [], hasCollisions: false, listEmpty: true, nowX: 20 };
+
+    const ex = data.extras;
+    const off = this.state.off;
+    const typeMeta = {
+      milestone: { label: 'Checkpoints', dot: '#993C1D', color: '#993C1D' },
+      conf: { label: 'Conferences', dot: '#15707e', color: '#15707e' },
+      deadline: { label: 'Deadlines', dot: '#854F0B', color: '#854F0B' },
+    };
+    const relColor = { ctcore: '#15707e', adjacent: '#b0741a', general: '#5c6673' };
+
+    // ---- assemble events ----
+    const all = [];
+    (ex.milestones || []).forEach(m => { const ts = new Date(m.date + 'T12:00').getTime(); all.push({ ts, type: 'milestone', typeLabel: m.kind === 'gate' ? 'the gate' : (m.kind === 'sprint' ? 'sprint' : 'checkpoint'), label: m.label, sub: m.note || '', color: m.color || '#993C1D' }); });
+    const confs = (data.events || []).concat(this.readJSON(this.CKEY, []) || []);
+    confs.forEach(e => {
+      if (!e.start) return;
+      const ts = Date.UTC(e.start[0], e.start[1], e.start[2]);
+      all.push({ ts, type: 'conf', typeLabel: 'conference', label: (e.acronym ? e.acronym + ' · ' : '') + (e.name || ''), sub: (e.city || '') + (e.cost ? ' · ' + e.cost : ''), color: relColor[e.rel] || '#15707e' });
+      const dl = this.parseDeadline(e.deadline);
+      if (dl && dl >= nowMs - 2 * 86400000) all.push({ ts: dl, type: 'deadline', typeLabel: 'deadline', label: (e.acronym || e.name) + ' — ' + e.deadline, sub: 'conference deadline', color: '#854F0B' });
+    });
+    (this.readJSON(this.SCH, []) || []).forEach(g => {
+      const dl = this.parseDeadline(g.deadline);
+      if (dl) all.push({ ts: dl, type: 'deadline', typeLabel: 'deadline', label: g.name + (g.amount ? ' · ' + g.amount : ''), sub: 'scholarship / grant deadline', color: '#854F0B' });
+    });
+
+    // upcoming only, filtered
+    let upcoming = all.filter(e => e.ts >= nowMs - 3 * 86400000 && !off[e.type]).sort((a, b) => a.ts - b.ts);
+
+    // ---- collisions: events within 10 days of each other ----
+    const WIN = 10 * 86400000;
+    upcoming.forEach((e, i) => {
+      e.collides = upcoming.some((o, j) => j !== i && Math.abs(o.ts - e.ts) <= WIN);
+    });
+    const clusters = [];
+    let cur = null;
+    upcoming.forEach(e => {
+      if (!e.collides) { cur = null; return; }
+      if (cur && e.ts - cur.last <= WIN) { cur.items.push(e); cur.last = e.ts; }
+      else { cur = { items: [e], first: e.ts, last: e.ts }; clusters.push(cur); }
+    });
+    const collisionCount = clusters.length;
+    const hasCollisions = collisionCount > 0;
+    const fmtWk = ts => { const d = new Date(ts); return MON[d.getMonth()] + ' ' + d.getDate(); };
+    const collisionRows = clusters.map(cl => ({
+      week: fmtWk(cl.first) + '–' + fmtWk(cl.last),
+      text: cl.items.map(x => x.label.split(' · ')[0].split(' — ')[0]).join('  ×  '),
+    }));
+    const collisionMarks = clusters.map(cl => ({ ts: (cl.first + cl.last) / 2 }));
+
+    // ---- ruler geometry ----
+    const startMs = Date.UTC(now.getFullYear(), now.getMonth(), 1);
+    const maxTs = upcoming.length ? Math.max(...upcoming.map(e => e.ts)) : startMs + 365 * 86400000;
+    const endMs = maxTs + 20 * 86400000;
+    const span = Math.max(1, endMs - startMs);
+    const X0 = 20, X1 = 1020;
+    const xOf = ts => X0 + (Math.max(startMs, Math.min(endMs, ts)) - startMs) / span * (X1 - X0);
+    const nowX = xOf(nowMs).toFixed(1);
+    // month ticks
+    const monthTicks = [];
+    let mc = new Date(startMs);
+    while (mc.getTime() <= endMs) {
+      monthTicks.push({ x: xOf(mc.getTime()).toFixed(1), label: MON[mc.getMonth()] + (mc.getMonth() === 0 ? " '" + String(mc.getFullYear()).slice(2) : ''), color: mc.getMonth() === 0 ? '#55564F' : '#A6A79F' });
+      mc = new Date(mc.getFullYear(), mc.getMonth() + 1, 1);
+    }
+    // dots (stack vertically when near)
+    const dots = [];
+    const placed = [];
+    upcoming.forEach(e => {
+      const x = xOf(e.ts);
+      let lane = 0;
+      while (placed.some(p => Math.abs(p.x - x) < 11 && p.lane === lane)) lane++;
+      placed.push({ x, lane });
+      dots.push({ x: x.toFixed(1), y: (90 - lane * 14).toFixed(1), r: e.collides ? 5 : 4, fill: e.color });
+    });
+    const collisionMarksXY = collisionMarks.map(c => ({ x: xOf(c.ts).toFixed(1) }));
+
+    // ---- grouped list ----
+    const groups = {};
+    upcoming.forEach(e => { const d = new Date(e.ts); const k = d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0'); (groups[k] = groups[k] || { label: MON[d.getMonth()] + ' ' + d.getFullYear(), rows: [] }); });
+    upcoming.forEach(e => {
+      const d = new Date(e.ts); const k = d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0');
+      const away = Math.round((e.ts - nowMs) / 86400000);
+      groups[k].rows.push({
+        day: d.getDate(), mon: MON[d.getMonth()], color: e.color, typeLabel: e.typeLabel, label: e.label, sub: e.sub,
+        collides: e.collides, cardBorder: e.collides ? '#EBD7D4' : '#E4E2DD', cardBg: e.collides ? '#FDF6F5' : '#FFFFFF',
+        away: away <= 0 ? 'now' : 'in ' + away + 'd', awayColor: away <= 14 ? '#A32E27' : '#8a8577',
+      });
+    });
+    const months = Object.keys(groups).sort().map(k => ({ label: groups[k].label, count: groups[k].rows.length + (groups[k].rows.length === 1 ? ' event' : ' events'), rows: groups[k].rows }));
+    const listEmpty = upcoming.length === 0;
+
+    // ---- filters ----
+    const counts = {}; all.forEach(e => { if (e.ts >= nowMs - 3 * 86400000) counts[e.type] = (counts[e.type] || 0) + 1; });
+    const filters = Object.keys(typeMeta).map(k => {
+      const on = !off[k]; const tm = typeMeta[k];
+      return { label: tm.label, count: counts[k] || 0, dot: tm.dot, toggle: () => this.toggleFilter(k),
+        border: on ? tm.color : '#E4E2DD', color: on ? tm.color : '#A6A79F', bg: on ? '#FFFFFF' : '#F2F0EB' };
+    });
+
+    return { todayLabel, collisionCount, filters, monthTicks, nowX, dots, collisionMarks: collisionMarksXY, hasCollisions, collisionRows, months, listEmpty };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="32" y="28" width="36" height="44" rx="4" fill="#FFFFFF" stroke="#0F6E56" stroke-width="2"></rect><line x1="38" y1="40" x2="62" y2="40" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"></line><line x1="38" y1="48" x2="62" y2="48" stroke="#993C1D" stroke-width="2.5" stroke-linecap="round"></line><line x1="38" y1="56" x2="54" y2="56" stroke="#b0741a" stroke-width="2.5" stroke-linecap="round"></line></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./quotes.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  input:focus, textarea:focus { outline: none; border-color: #0F6E56 !important; }
+  @keyframes jIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</helmet>
+<div data-screen-label="Journal" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 64px;">
+
+  <!-- TOP BAR -->
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.9);">
+    <div style="max-width: 1220px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #0F6E56;">04 · The log</div>
+        <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 28px; line-height: 1.05; margin: 6px 0 0; letter-spacing: -.01em;">The Logbook</h1>
+        <div style="font-size: 13px; color: #77786F; margin-top: 6px; max-width: 520px; line-height: 1.5;">Daily notes, weekly summaries, ideas and reflections — written here, stored in this browser, searchable forever.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+          <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .05em; padding: 8px 14px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFFFFF; color: #55564F; display: inline-flex; align-items: center; gap: 6px;" style-hover="border-color: #993C1D; color: #993C1D;"><span style="font-size: 13px; line-height: 1;">⌂</span> Hub</a>
+          <button onClick="{{ openGuide }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .05em; padding: 8px 14px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFFFFF; color: #55564F; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">? How this works</button>
+        </div>
+        <div style="display: flex; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">
+          <span><strong style="color: #1A1B1A; font-size: 13px;">{{ totalCount }}</strong> entries</span>
+          <span><strong style="color: #1A1B1A; font-size: 13px;">{{ weekCount }}</strong> this week</span>
+          <span><strong style="color: {{ streakColor }}; font-size: 13px;">{{ streak }}</strong> day streak</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE OF THE DAY -->
+  <sc-if value="{{ showQuoteBanner }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width: 1220px; margin: 0 auto; padding: 22px 24px 0;">
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 18px 26px; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap;">
+        <span style="font-family: 'Newsreader', serif; font-size: 44px; line-height: .6; color: #993C1D; transform: translateY(10px);">“</span>
+        <div style="flex: 1; min-width: 260px;">
+          <div style="font-family: 'Newsreader', serif; font-style: italic; font-size: 18.5px; line-height: 1.45; color: #26271F;">{{ quoteText }}</div>
+          <div style="margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #77786F;"><span style="color: #993C1D;">— {{ quoteBy }}</span> · {{ quoteSub }}</div>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #BBB9B1;">Quote of the day</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="max-width: 1220px; margin: 0 auto; padding: 20px 24px 0; display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
+
+    <!-- LEFT: COMPOSER -->
+    <div style="flex: 0 1 400px; min-width: 330px; display: flex; flex-direction: column; gap: 14px; position: sticky; top: 16px;">
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; animation: jIn .3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">{{ composerKicker }}</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">{{ composerTitle }}</div>
+          </div>
+          <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ cancelEdit }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A32E27; background: #FBEAE7; border: 1px solid #EFC9C2; border-radius: 6px; padding: 4px 10px; cursor: pointer;">✕ cancel edit</button>
+          </sc-if>
+        </div>
+
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin: 14px 0 6px;">Kind of entry</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <sc-for list="{{ typeChips }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-bottom: 5px;">Date</div>
+            <input type="date" value="{{ fDate }}" onChange="{{ setFDate }}" style="width: 100%; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F;">
+          </div>
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-bottom: 5px;">Title <span style="text-transform: none; letter-spacing: 0;">— optional</span></div>
+            <input value="{{ fTitle }}" onChange="{{ setFTitle }}" placeholder="e.g. First day in the OR" style="width: 100%; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin: 12px 0 5px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F;">The note</div>
+          <sc-if value="{{ isWeekly }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ insertWeeklyTemplate }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #993C1D; background: none; border: none; cursor: pointer; padding: 0;">＋ insert weekly template</button>
+          </sc-if>
+        </div>
+        <textarea value="{{ fBody }}" onChange="{{ setFBody }}" rows="7" placeholder="{{ bodyPlaceholder }}" style="width: 100%; font-size: 13.5px; line-height: 1.55; padding: 10px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; resize: vertical; color: #26271F;"></textarea>
+
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin: 12px 0 5px;">Tags <span style="text-transform: none; letter-spacing: 0;">— comma-separated</span></div>
+        <input value="{{ fTags }}" onChange="{{ setFTags }}" placeholder="e.g. research, anatomy, Dr. Schwaltz" style="width: 100%; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px;">
+          <button onClick="{{ saveEntry }}" style="font-size: 13.5px; font-weight: 600; padding: 10px 20px; border-radius: 9px; border: none; background: #0F6E56; color: #FFFFFF; cursor: pointer;" style-hover="background: #993C1D;">{{ saveLabel }}</button>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #3F6B3A;">{{ saveMsg }}</span>
+        </div>
+        <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Saved in this browser the moment you hit the button. Export a backup now and then from the card below.</div>
+      </div>
+
+      <!-- BACKUP CARD -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 15px 18px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F;">Your data</div>
+        <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+          <button onClick="{{ exportJson }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 8px 12px; border-radius: 8px; border: 1px solid #DAD7D0; background: #FCFBF9; color: #55564F; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">⬇ export backup</button>
+          <button onClick="{{ importClick }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 8px 12px; border-radius: 8px; border: 1px solid #DAD7D0; background: #FCFBF9; color: #55564F; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">⬆ import</button>
+          <button onClick="{{ copyAll }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 8px 12px; border-radius: 8px; border: 1px solid #DAD7D0; background: #FCFBF9; color: {{ copyAllColor }}; cursor: pointer;" style-hover="border-color: #993C1D; color: #993C1D;">{{ copyAllLabel }}</button>
+        </div>
+        <input ref="{{ setFileEl }}" type="file" accept=".json,application/json" onChange="{{ importJson }}" style="display: none;">
+        <div style="font-size: 10.5px; color: #A6A79F; margin-top: 9px; line-height: 1.5;">Notes never leave this machine. The export file moves them into the offline copy — or anywhere else.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CATALOG -->
+    <div style="flex: 1 1 560px; min-width: 0;">
+
+      <!-- CONTROLS -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 14px 18px; animation: jIn .35s ease;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <input value="{{ q }}" onChange="{{ setQ }}" placeholder="⌕ Search titles, notes and tags…" style="flex: 1; min-width: 220px; font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+          <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+            <sc-for list="{{ sortChips }}" as="s" hint-placeholder-count="4">
+              <button onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; align-items: center;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F; margin-right: 3px;">Show</span>
+          <sc-for list="{{ filterChips }}" as="fc" hint-placeholder-count="5">
+            <button onClick="{{ fc.pick }}" style="{{ fc.style }}">{{ fc.label }}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasTags }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; align-items: center;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F; margin-right: 3px;">Tags</span>
+            <sc-for list="{{ tagChips }}" as="tc" hint-placeholder-count="6">
+              <button onClick="{{ tc.pick }}" style="{{ tc.style }}">{{ tc.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- RESULT COUNT -->
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin: 14px 4px 0;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ resultText }}</span>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #BBB9B1;">newest changes sync to the Hub automatically</span>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="border: 1px dashed #DAD7D0; border-radius: 14px; background: #FFFFFF; padding: 34px 30px; margin-top: 12px; text-align: center;">
+          <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500;">An empty logbook, page one</div>
+          <div style="font-size: 13px; color: #77786F; line-height: 1.6; margin-top: 10px; max-width: 460px; margin-left: auto; margin-right: auto;">Write your first entry on the left. A useful rhythm: a two-line <strong style="color: #2E6A86;">daily note</strong> every evening, one <strong style="color: #993C1D;">weekly summary</strong> every Sunday, and an <strong style="color: #b0741a;">idea</strong> whenever one strikes.</div>
+        </div>
+      </sc-if>
+
+      <!-- GROUPED ENTRIES -->
+      <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+        <div style="margin-top: 18px;">
+          <div style="display: flex; align-items: baseline; gap: 10px;">
+            <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500; color: #55564F;">{{ g.label }}</div>
+            <div style="flex: 1; height: 1px; background: #E4E2DD;"></div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ g.count }}</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+            <sc-for list="{{ g.rows }}" as="e" hint-placeholder-count="3">
+              <div style="border: 1px solid #E4E2DD; border-left: 3px solid {{ e.color }}; border-radius: 12px; background: #FFFFFF; padding: 14px 18px;">
+                <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+                  <div style="display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: .08em; color: #FFFFFF; background: {{ e.color }}; border-radius: 4px; padding: 2.5px 7px; text-transform: uppercase;">{{ e.typeLabel }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #77786F;">{{ e.dateLabel }}</span>
+                  </div>
+                  <div style="display: flex; gap: 4px;">
+                    <button onClick="{{ e.edit }}" title="Edit this entry" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; background: none; border: 1px solid #ECEAE4; border-radius: 6px; padding: 3px 9px; cursor: pointer;" style-hover="border-color: #2E6A86; color: #2E6A86;">edit</button>
+                    <button onClick="{{ e.del }}" title="Delete this entry" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ e.delColor }}; background: {{ e.delBg }}; border: 1px solid #ECEAE4; border-radius: 6px; padding: 3px 9px; cursor: pointer;" style-hover="border-color: #A32E27; color: #A32E27;">{{ e.delLabel }}</button>
+                  </div>
+                </div>
+                <sc-if value="{{ e.hasTitle }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500; margin-top: 8px;">{{ e.title }}</div>
+                </sc-if>
+                <div style="font-size: 13px; color: #33342E; line-height: 1.6; margin-top: 6px; white-space: pre-wrap;">{{ e.body }}</div>
+                <sc-if value="{{ e.hasTags }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px;">
+                    <sc-for list="{{ e.tags }}" as="tg" hint-placeholder-count="3">
+                      <button onClick="{{ tg.pick }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #55564F; background: #F7F5F1; border: 1px solid #E4E2DD; border-radius: 20px; padding: 2.5px 9px; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;"># {{ tg.name }}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+
+      <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+        <div style="border: 1px dashed #DAD7D0; border-radius: 14px; padding: 26px; margin-top: 12px; text-align: center; font-size: 12.5px; color: #A6A79F;">Nothing matches that search or filter — clear them above to see everything again.</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- GUIDE MODAL -->
+  <sc-if value="{{ guideOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeGuide }}" style="position: fixed; inset: 0; z-index: 90; background: rgba(26,27,26,.42); display: flex; align-items: center; justify-content: center; padding: 24px; animation: overlayIn .15s ease;">
+      <div onClick="{{ stopClick }}" style="width: 100%; max-width: 560px; max-height: 86vh; overflow-y: auto; background: #FFFFFF; border-radius: 16px; box-shadow: 0 24px 60px rgba(26,27,26,.28); padding: 24px 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div style="font-family: 'Newsreader', serif; font-size: 22px; font-weight: 500;">How the Logbook works</div>
+          <button onClick="{{ closeGuide }}" style="background: none; border: none; font-size: 16px; color: #A6A79F; cursor: pointer;">✕</button>
+        </div>
+        <sc-for list="{{ guideRows }}" as="g" hint-placeholder-count="7">
+          <div style="display: flex; gap: 12px; margin-top: 14px; align-items: flex-start;">
+            <span style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 13px; width: 26px; height: 26px; border-radius: 7px; background: #F2F0EB; color: #0F6E56; display: flex; align-items: center; justify-content: center;">{{ g.icon }}</span>
+            <div style="flex: 1; font-size: 13px; line-height: 1.55; color: #45463F;"><strong style="color: #1A1B1A;">{{ g.head }}</strong> — {{ g.body }}</div>
+          </div>
+        </sc-for>
+        <button onClick="{{ closeGuide }}" style="width: 100%; margin-top: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .06em; padding: 11px; border-radius: 10px; border: none; background: #0F6E56; color: #FFFFFF; cursor: pointer;">GOT IT</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:1100},&quot;showQuote&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Header&quot;},&quot;accentNote&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;null&quot;}}">
+class Component extends DCLogic {
+  KEY = 'ct_journal_v1';
+  state = { tick: 0, guideOpen: false, editingId: null, confirmDelId: null, copied: false, saveMsg: '',
+    fType: 'daily', fDate: '', fTitle: '', fBody: '', fTags: '',
+    q: '', sortBy: 'newest', typeFilter: 'all', tagFilter: null };
+
+  componentDidMount() {
+    this.setState({ fDate: this.todayIso() });
+    this._onStorage = () => this.setState(s => ({ tick: s.tick + 1 }));
+    window.addEventListener('storage', this._onStorage);
+  }
+  componentWillUnmount() { window.removeEventListener('storage', this._onStorage); }
+
+  todayIso() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  load() { try { const raw = localStorage.getItem(this.KEY); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } } catch (e) {} return []; }
+  persist(list) { try { localStorage.setItem(this.KEY, JSON.stringify(list)); } catch (e) {} }
+
+  typeMeta() {
+    return {
+      daily:   { label: 'Daily note',     color: '#2E6A86' },
+      weekly:  { label: 'Weekly summary', color: '#993C1D' },
+      idea:    { label: 'Idea',           color: '#b0741a' },
+      reflect: { label: 'Reflection',     color: '#6E4B8A' }
+    };
+  }
+
+  parseTags(str) { return String(str || '').split(',').map(t => t.trim()).filter(Boolean).slice(0, 12); }
+
+  saveEntryAction = () => {
+    const s = this.state;
+    if (!s.fBody.trim() && !s.fTitle.trim()) { this.setState({ saveMsg: 'Write something first' }); setTimeout(() => this.setState({ saveMsg: '' }), 2500); return; }
+    const list = this.load();
+    if (s.editingId) {
+      const i = list.findIndex(e => e.id === s.editingId);
+      if (i >= 0) list[i] = Object.assign({}, list[i], { type: s.fType, date: s.fDate || this.todayIso(), title: s.fTitle.trim(), body: s.fBody, tags: this.parseTags(s.fTags), updated: Date.now() });
+      this.persist(list);
+      this.setState({ editingId: null, fTitle: '', fBody: '', fTags: '', fDate: this.todayIso(), saveMsg: 'Updated ✓', tick: s.tick + 1 });
+    } else {
+      list.push({ id: 'j' + Date.now() + Math.floor(Math.random() * 999), type: s.fType, date: s.fDate || this.todayIso(), title: s.fTitle.trim(), body: s.fBody, tags: this.parseTags(s.fTags), created: Date.now(), updated: Date.now() });
+      this.persist(list);
+      this.setState({ fTitle: '', fBody: '', fTags: '', saveMsg: 'Saved ✓ — it is in the log', tick: s.tick + 1 });
+    }
+    setTimeout(() => this.setState({ saveMsg: '' }), 3000);
+  };
+
+  startEdit(e) {
+    this.setState({ editingId: e.id, fType: e.type, fDate: e.date, fTitle: e.title || '', fBody: e.body || '', fTags: (e.tags || []).join(', '), confirmDelId: null });
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (err) {}
+  }
+  delEntry(id) {
+    if (this.state.confirmDelId !== id) { this.setState({ confirmDelId: id }); setTimeout(() => { if (this.state.confirmDelId === id) this.setState({ confirmDelId: null }); }, 3500); return; }
+    this.persist(this.load().filter(e => e.id !== id));
+    this.setState(s => ({ confirmDelId: null, tick: s.tick + 1, editingId: s.editingId === id ? null : s.editingId }));
+  }
+
+  exportJsonAction = () => {
+    const blob = new Blob([JSON.stringify(this.load(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ct-journal-backup.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  };
+  importJsonAction = (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const arr = JSON.parse(r.result);
+        if (!Array.isArray(arr)) throw new Error('shape');
+        const ok = arr.every(e => e && typeof e.body !== 'undefined' && e.date);
+        if (!ok) throw new Error('shape');
+        const cur = this.load();
+        const ids = {}; cur.forEach(e => ids[e.id] = 1);
+        const merged = cur.concat(arr.filter(e => !ids[e.id]));
+        this.persist(merged);
+        this.setState(s => ({ tick: s.tick + 1, saveMsg: 'Imported ' + (merged.length - cur.length) + ' entries ✓' }));
+        setTimeout(() => this.setState({ saveMsg: '' }), 3000);
+      } catch (err) {
+        this.setState({ saveMsg: 'Import failed — not a journal file' });
+        setTimeout(() => this.setState({ saveMsg: '' }), 3000);
+      }
+    };
+    r.readAsText(f);
+    ev.target.value = '';
+  };
+  copyAllAction = () => {
+    const meta = this.typeMeta();
+    const list = this.load().slice().sort((a, b) => (b.date > a.date ? 1 : -1));
+    const txt = list.map(e => '## ' + e.date + ' · ' + (meta[e.type] ? meta[e.type].label : e.type) + (e.title ? ' — ' + e.title : '') + ((e.tags || []).length ? '  [' + e.tags.join(', ') + ']' : '') + '\n' + (e.body || '')).join('\n\n');
+    try { navigator.clipboard.writeText(txt || 'The logbook is empty.'); } catch (e) {}
+    this.setState({ copied: true });
+    setTimeout(() => this.setState({ copied: false }), 2000);
+  };
+
+  weekStart(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay()); return d.getTime(); }
+
+  renderVals() {
+    const s = this.state;
+    const meta = this.typeMeta();
+    const entries = this.load();
+    const now = new Date();
+
+    // quote of the day
+    const quotes = window.CT_QUOTES || [];
+    const start = Date.UTC(now.getFullYear(), 0, 0);
+    const doy = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - start) / 86400000);
+    const qt = quotes.length ? quotes[doy % quotes.length] : { q: '', by: '', sub: '' };
+
+    // stats
+    const ws = this.weekStart(now.getTime());
+    const dayMs = 86400000;
+    const dset = {}; entries.forEach(e => { dset[e.date] = 1; });
+    const isoOf = off => { const d = new Date(now.getTime() - off * dayMs); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    let streak = 0; { let i = 0; if (!dset[isoOf(0)] && dset[isoOf(1)]) i = 1; while (dset[isoOf(i)]) { streak++; i++; } }
+    const weekCount = entries.filter(e => { const p = e.date.split('-'); const t = new Date(+p[0], +p[1] - 1, +p[2]).getTime(); return t >= ws; }).length;
+
+    // composer
+    const typeChips = Object.keys(meta).map(k => {
+      const active = s.fType === k;
+      const c = meta[k].color;
+      return { label: meta[k].label, pick: () => this.setState({ fType: k }),
+        style: "font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 6px 11px; border-radius: 8px; cursor: pointer; letter-spacing: .02em; border: 1px solid " + (active ? c : '#DAD7D0') + "; background: " + (active ? c : '#FCFBF9') + "; color: " + (active ? '#FFFFFF' : '#55564F') + ";" };
+    });
+    const weeklyTemplate = 'What moved this week:\n· \n\nWhat stalled (and why):\n· \n\nPeople touched / owed:\n· \n\nNext week\u2019s single most important move:\n· ';
+    const placeholders = {
+      daily: 'Two lines is enough. What happened, what you learned, what is next…',
+      weekly: 'Sunday review — use the template button above, or free-write.',
+      idea: 'The idea, why it matters, and the smallest first step to test it…',
+      reflect: 'Step back. How is the plan feeling — energy, doubts, wins…'
+    };
+
+    // catalog filtering
+    const q = s.q.trim().toLowerCase();
+    let list = entries.slice();
+    if (s.typeFilter !== 'all') list = list.filter(e => e.type === s.typeFilter);
+    if (s.tagFilter) list = list.filter(e => (e.tags || []).some(t => t.toLowerCase() === s.tagFilter));
+    if (q) list = list.filter(e => ((e.title || '') + ' ' + (e.body || '') + ' ' + (e.tags || []).join(' ')).toLowerCase().includes(q));
+
+    if (s.sortBy === 'newest') list.sort((a, b) => (a.date === b.date ? (b.created || 0) - (a.created || 0) : (b.date > a.date ? 1 : -1)));
+    else if (s.sortBy === 'oldest') list.sort((a, b) => (a.date === b.date ? (a.created || 0) - (b.created || 0) : (a.date > b.date ? 1 : -1)));
+    else if (s.sortBy === 'az') list.sort((a, b) => ((a.title || a.body || '').toLowerCase()).localeCompare((b.title || b.body || '').toLowerCase()));
+    else if (s.sortBy === 'type') list.sort((a, b) => (a.type === b.type ? (b.date > a.date ? 1 : -1) : a.type.localeCompare(b.type)));
+
+    const MONF = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const DAYF = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const mkRow = e => {
+      const p = e.date.split('-').map(Number);
+      const d = new Date(p[0], p[1] - 1, p[2]);
+      const m = meta[e.type] || { label: e.type, color: '#8A8B84' };
+      const confirming = s.confirmDelId === e.id;
+      return {
+        id: e.id, color: m.color, typeLabel: m.label,
+        dateLabel: DAYF[d.getDay()] + ' · ' + MONF[d.getMonth()].slice(0, 3) + ' ' + d.getDate() + ', ' + d.getFullYear(),
+        title: e.title || '', hasTitle: !!(e.title || '').trim(),
+        body: e.body || '',
+        tags: (e.tags || []).map(t => ({ name: t, pick: () => this.setState({ tagFilter: t.toLowerCase(), q: '' }) })),
+        hasTags: (e.tags || []).length > 0,
+        edit: () => this.startEdit(e),
+        del: () => this.delEntry(e.id),
+        delLabel: confirming ? 'sure?' : 'delete',
+        delColor: confirming ? '#FFFFFF' : '#A6A79F',
+        delBg: confirming ? '#A32E27' : 'transparent'
+      };
+    };
+
+    // group by month (date sorts) or one flat group
+    let groups = [];
+    if (s.sortBy === 'newest' || s.sortBy === 'oldest') {
+      const map = {}; const order = [];
+      list.forEach(e => {
+        const p = e.date.split('-').map(Number);
+        const k = p[0] + '-' + p[1];
+        if (!map[k]) { map[k] = { label: MONF[p[1] - 1] + ' ' + p[0], rows: [] }; order.push(k); }
+        map[k].rows.push(mkRow(e));
+      });
+      groups = order.map(k => ({ label: map[k].label, rows: map[k].rows, count: map[k].rows.length + (map[k].rows.length === 1 ? ' entry' : ' entries') }));
+    } else if (list.length) {
+      groups = [{ label: s.sortBy === 'type' ? 'Grouped by kind' : 'A to Z', rows: list.map(mkRow), count: list.length + (list.length === 1 ? ' entry' : ' entries') }];
+    }
+
+    // chips
+    const sortDefs = [['newest', 'Newest'], ['oldest', 'Oldest'], ['type', 'By kind'], ['az', 'A–Z']];
+    const chipStyle = active => "font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 10px; border-radius: 20px; cursor: pointer; letter-spacing: .03em; border: 1px solid " + (active ? '#1A1B1A' : '#DAD7D0') + "; background: " + (active ? '#1A1B1A' : '#FCFBF9') + "; color: " + (active ? '#FFFFFF' : '#55564F') + ";";
+    const sortChips = sortDefs.map(d => ({ label: d[1], pick: () => this.setState({ sortBy: d[0] }), style: chipStyle(s.sortBy === d[0]) }));
+
+    const counts = { all: entries.length };
+    entries.forEach(e => { counts[e.type] = (counts[e.type] || 0) + 1; });
+    const filterDefs = [['all', 'Everything']].concat(Object.keys(meta).map(k => [k, meta[k].label]));
+    const filterChips = filterDefs.map(d => {
+      const active = s.typeFilter === d[0];
+      const c = d[0] === 'all' ? '#1A1B1A' : meta[d[0]].color;
+      return { label: d[1] + (counts[d[0]] ? ' · ' + counts[d[0]] : ''), pick: () => this.setState({ typeFilter: d[0] }),
+        style: "font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 10px; border-radius: 20px; cursor: pointer; letter-spacing: .03em; border: 1px solid " + (active ? c : '#E4E2DD') + "; background: " + (active ? c : 'transparent') + "; color: " + (active ? '#FFFFFF' : '#77786F') + ";" };
+    });
+
+    const tagCount = {};
+    entries.forEach(e => (e.tags || []).forEach(t => { const k = t.toLowerCase(); tagCount[k] = tagCount[k] || { n: 0, disp: t }; tagCount[k].n++; }));
+    const topTags = Object.keys(tagCount).sort((a, b) => tagCount[b].n - tagCount[a].n).slice(0, 10);
+    const tagChips = topTags.map(k => {
+      const active = s.tagFilter === k;
+      return { label: '# ' + tagCount[k].disp + ' · ' + tagCount[k].n, pick: () => this.setState({ tagFilter: active ? null : k }),
+        style: "font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 10px; border-radius: 20px; cursor: pointer; border: 1px solid " + (active ? '#0F6E56' : '#E4E2DD') + "; background: " + (active ? '#0F6E56' : 'transparent') + "; color: " + (active ? '#FFFFFF' : '#77786F') + ";" };
+    });
+
+    const filtered = list.length;
+    const guideRows = [
+      { icon: '✎', head: 'Write on the left', body: 'pick the kind of entry, date it, write, tag it, save. Everything is stored instantly in this browser — nothing leaves your machine.' },
+      { icon: '◔', head: 'Four kinds of entry', body: 'Daily note (two lines each evening), Weekly summary (the Sunday review — there is a template button), Idea (capture it before it escapes), Reflection (the bigger-picture check-in).' },
+      { icon: '⌕', head: 'Find anything', body: 'the search box matches titles, note text and tags. The chips below it filter by kind; click any tag to see everything with that tag.' },
+      { icon: '⇅', head: 'Sort it four ways', body: 'Newest and Oldest group entries by month. "By kind" clusters daily / weekly / idea / reflection together. A–Z sorts by title.' },
+      { icon: '✐', head: 'Edit or delete', body: 'every entry has edit and delete buttons. Edit loads it back into the composer; delete asks once, then removes it.' },
+      { icon: '⬇', head: 'Back it up', body: 'export writes all entries to a small file; import merges a backup in (no duplicates). Copy-as-text puts the whole log on the clipboard for pasting anywhere.' },
+      { icon: '⌂', head: 'It feeds the Hub', body: 'the Hub home page shows your entry count, streak and latest note on the Logbook card — they update the moment you save here.' }
+    ];
+
+    return {
+      totalCount: entries.length, weekCount, streak,
+      streakColor: streak > 0 ? '#0F6E56' : '#A6A79F',
+      showQuoteBanner: (this.props.showQuote ?? true) && quotes.length > 0,
+      quoteText: qt.q, quoteBy: qt.by, quoteSub: qt.sub,
+      composerKicker: s.editingId ? 'Editing an entry' : 'New entry',
+      composerTitle: s.editingId ? 'Amend the record' : 'Write it down',
+      isEditing: !!s.editingId,
+      cancelEdit: () => this.setState({ editingId: null, fTitle: '', fBody: '', fTags: '', fDate: this.todayIso() }),
+      typeChips,
+      isWeekly: s.fType === 'weekly',
+      insertWeeklyTemplate: () => this.setState({ fBody: s.fBody ? s.fBody + '\n\n' + weeklyTemplate : weeklyTemplate }),
+      bodyPlaceholder: placeholders[s.fType] || '',
+      fDate: s.fDate, fTitle: s.fTitle, fBody: s.fBody, fTags: s.fTags,
+      setFDate: e => this.setState({ fDate: e.target.value }),
+      setFTitle: e => this.setState({ fTitle: e.target.value }),
+      setFBody: e => this.setState({ fBody: e.target.value }),
+      setFTags: e => this.setState({ fTags: e.target.value }),
+      saveEntry: this.saveEntryAction,
+      saveLabel: s.editingId ? '✓ Update entry' : '＋ Save to the log',
+      saveMsg: s.saveMsg,
+      exportJson: this.exportJsonAction,
+      importClick: () => { if (this.fileEl) this.fileEl.click(); },
+      importJson: this.importJsonAction,
+      setFileEl: el => { this.fileEl = el; },
+      copyAll: this.copyAllAction,
+      copyAllLabel: s.copied ? '✓ copied' : '⧉ copy as text',
+      copyAllColor: s.copied ? '#3F6B3A' : '#55564F',
+      q: s.q, setQ: e => this.setState({ q: e.target.value }),
+      sortChips, filterChips, tagChips, hasTags: topTags.length > 0,
+      groups,
+      resultText: entries.length === 0 ? 'no entries yet' : (filtered === entries.length ? entries.length + ' entries, all showing' : filtered + ' of ' + entries.length + ' entries match'),
+      isEmpty: entries.length === 0,
+      noResults: entries.length > 0 && filtered === 0,
+      guideOpen: s.guideOpen,
+      openGuide: () => this.setState({ guideOpen: true }),
+      closeGuide: () => this.setState({ guideOpen: false }),
+      stopClick: e => e.stopPropagation(),
+      guideRows
+    };
+  }
+}
+</script>
+</body>
+</html>

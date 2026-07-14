@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#4A5B7A"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">RL</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./reading-data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #3B6D11; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  button { font-family: inherit; }
+  @keyframes rlIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div data-screen-label="Reading List" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 90px;">
+
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
+    <div style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 20px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 320px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #4A5B7A; color: #4A5B7A;">← Mission Control</a>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #4A5B7A;">12 · The Reading List</span>
+        </div>
+        <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 32px; line-height: 1.03; margin: 8px 0 0; letter-spacing: -.01em;">Everything worth reading, tracked</h1>
+        <div style="font-size: 13.5px; color: #55564F; margin-top: 8px; max-width: 620px; line-height: 1.55;">The papers that built your field and the wider ideas beside them — and the books a physician-builder should carry for a lifetime. Tap any title to move it: <b>to read → reading → read</b>.</div>
+      </div>
+      <div style="text-align: right; min-width: 220px;">
+        <div style="display: flex; align-items: baseline; gap: 10px; justify-content: flex-end;">
+          <span style="font-family: 'Newsreader', serif; font-size: 36px; font-weight: 500; color: #3B6D11; line-height: 1;">{{ pct }}%</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ readN }} / {{ totalN }} read</span>
+        </div>
+        <div style="height: 6px; width: 220px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px; margin-left: auto;">
+          <div style="height: 100%; border-radius: 3px; background: #3B6D11; width: {{ pct }}%; transition: width .4s ease;"></div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">
+          <span><b style="color: #854F0B; font-weight: 600;">{{ readingN }}</b> reading now</span>
+          <span><b style="color: #4A5B7A; font-weight: 600;">{{ shelfN }}</b> shelves</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 0;">
+
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+      <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="3">
+        <button onClick="{{ f.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ f.border }}; background: {{ f.bg }}; color: {{ f.color }};">{{ f.label }}</button>
+      </sc-for>
+      <span style="flex: 1;"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">progress saves automatically</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <sc-for list="{{ shelves }}" as="s" hint-placeholder-count="6">
+        <div style="border: 1px solid #E4E2DD; border-top: 3px solid {{ s.accent }}; border-radius: 14px; background: #FFFFFF; padding: 18px 20px 8px; animation: rlIn .3s ease;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: {{ s.accent }};">{{ s.kindLabel }}</div>
+              <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px; line-height: 1.15;">{{ s.name }}</div>
+            </div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ s.doneColor }}; white-space: nowrap; flex: none;">{{ s.progress }}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; margin-top: 10px;">
+            <sc-for list="{{ s.items }}" as="it" hint-placeholder-count="6">
+              <button onClick="{{ it.cycle }}" style="display: flex; gap: 13px; align-items: flex-start; text-align: left; padding: 11px 2px; border: none; border-top: 1px solid #F2F0EB; background: {{ it.rowBg }}; cursor: pointer; width: 100%;">
+                <span style="flex: none; margin-top: 1px; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .04em; text-transform: uppercase; padding: 4px 9px; border-radius: 14px; min-width: 74px; text-align: center; color: {{ it.pillColor }}; border: 1px solid {{ it.pillBorder }}; background: {{ it.pillBg }};">{{ it.statusLabel }}</span>
+                <span style="flex: 1; min-width: 0;">
+                  <span style="font-family: 'Newsreader', serif; font-size: 16px; font-weight: 500; color: {{ it.titleColor }}; line-height: 1.25;">{{ it.title }}</span>
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8a8577; margin-top: 3px;">{{ it.by }}</span>
+                  <span style="display: block; font-size: 12.5px; color: #6b6c63; line-height: 1.5; margin-top: 4px; font-style: italic;">{{ it.note }}</span>
+                  <sc-if value="{{ it.isPaper }}" hint-placeholder-val="{{ false }}">
+                    <span style="display: flex; gap: 8px; margin-top: 7px; flex-wrap: wrap;">
+                      <a href="{{ it.searchUrl }}" target="_blank" rel="noopener" onClick="{{ stop }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #4A5B7A; border: 1px solid #D3DAE4; border-radius: 12px; padding: 3px 9px; background: #F4F6FA;" style-hover="border-color: #4A5B7A;">{{ it.searchLabel }}</a>
+                      <sc-if value="{{ it.hasDoi }}" hint-placeholder-val="{{ false }}"><a href="{{ it.doiUrl }}" target="_blank" rel="noopener" onClick="{{ stop }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #534AB7; border: 1px solid #D6D2EC; border-radius: 12px; padding: 3px 9px; background: #F4F2FB;" style-hover="border-color: #534AB7;">DOI ↗</a></sc-if>
+                    </span>
+                  </sc-if>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 16px 22px; margin-top: 22px; font-size: 12.5px; color: #77786F; line-height: 1.55;">
+      A living list, not a syllabus. Add or cut freely — the point is a deliberate diet of reading across the surgeon, the scientist, and the whole educated person. Start where your curiosity is loudest today.
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:1600}}">
+class Component extends DCLogic {
+  KEY = 'ct_reading_v1';
+  state = { tick: 0, filter: 'all' };
+
+  read() {
+    let s = null;
+    try { const raw = localStorage.getItem(this.KEY); if (raw) s = JSON.parse(raw); } catch (e) {}
+    return Object.assign({ status: {} }, s || {});
+  }
+  write(patch) {
+    const cur = this.read();
+    Object.assign(cur, patch);
+    try { localStorage.setItem(this.KEY, JSON.stringify(cur)); } catch (e) {}
+  }
+  cycle(id) {
+    const st = this.read();
+    const status = Object.assign({}, st.status);
+    const cur = status[id] || 'unread';
+    const next = cur === 'unread' ? 'reading' : (cur === 'reading' ? 'read' : 'unread');
+    if (next === 'unread') delete status[id]; else status[id] = next;
+    this.write({ status });
+    this.setState(s => ({ tick: s.tick + 1 }));
+  }
+
+  renderVals() {
+    this.state.tick;
+    const data = window.READING_DATA;
+    const filter = this.state.filter;
+    if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], shelves: [] };
+
+    const store = this.read();
+    const statusOf = id => store.status[id] || 'unread';
+
+    const allShelves = data.shelves || [];
+    const allItems = allShelves.reduce((a, s) => a.concat(s.items), []);
+    const totalN = allItems.length;
+    const readN = allItems.filter(it => statusOf(it.id) === 'read').length;
+    const readingN = allItems.filter(it => statusOf(it.id) === 'reading').length;
+    const pct = totalN ? Math.round(readN / totalN * 100) : 0;
+
+    const chipDefs = [
+      { key: 'all', label: 'Everything' },
+      { key: 'paper', label: 'Publications' },
+      { key: 'book', label: 'Books' },
+    ];
+    const filterChips = chipDefs.map(c => {
+      const on = filter === c.key;
+      return {
+        label: c.label,
+        set: () => this.setState({ filter: c.key }),
+        border: on ? '#4A5B7A' : '#E4E2DD',
+        bg: on ? '#4A5B7A' : '#FFFFFF',
+        color: on ? '#FFFFFF' : '#55564F',
+      };
+    });
+
+    const pill = {
+      unread:  { statusLabel: 'to read', pillColor: '#8a8577', pillBorder: '#DAD7D0', pillBg: '#F6F4EF', rowBg: 'transparent',  titleColor: '#26271F' },
+      reading: { statusLabel: 'reading', pillColor: '#854F0B', pillBorder: '#E6D6B0', pillBg: '#FBF6EA', rowBg: '#FCFAF3',       titleColor: '#26271F' },
+      read:    { statusLabel: 'read ✓',  pillColor: '#3B6D11', pillBorder: '#C9DDB0', pillBg: '#F1F7E9', rowBg: '#F8FBF4',       titleColor: '#7d8a72' },
+    };
+
+    const shelves = allShelves
+      .filter(s => filter === 'all' || s.kind === filter)
+      .map(s => {
+        const done = s.items.filter(it => statusOf(it.id) === 'read').length;
+        return {
+          accent: s.accent,
+          name: s.name,
+          kindLabel: s.kind === 'paper' ? 'Publications' : 'Books',
+          progress: done + ' / ' + s.items.length + ' read',
+          doneColor: done === s.items.length ? '#3B6D11' : '#A6A79F',
+          items: s.items.map(it => {
+            const p = pill[statusOf(it.id)] || pill.unread;
+            const isPaper = s.kind === 'paper';
+            const q = encodeURIComponent(String(it.title || '').replace(/[\u2018\u2019]/g, "'") + ' ' + String(it.by || '').split(',')[0]);
+            const usePubmed = (s.search || 'pubmed') === 'pubmed';
+            return {
+              title: it.title, by: it.by, note: it.note,
+              statusLabel: p.statusLabel, pillColor: p.pillColor, pillBorder: p.pillBorder, pillBg: p.pillBg,
+              rowBg: p.rowBg, titleColor: p.titleColor,
+              isPaper,
+              searchLabel: usePubmed ? 'PubMed ↗' : 'Scholar ↗',
+              searchUrl: usePubmed
+                ? 'https://pubmed.ncbi.nlm.nih.gov/' + (it.pmid ? it.pmid + '/' : '?term=' + q)
+                : 'https://scholar.google.com/scholar?q=' + q,
+              hasDoi: !!it.doi,
+              doiUrl: it.doi ? 'https://doi.org/' + it.doi : '',
+              cycle: () => this.cycle(it.id),
+            };
+          }),
+        };
+      });
+
+    const stop = e => { if (e && e.stopPropagation) e.stopPropagation(); };
+    return { pct, readN, totalN, readingN, shelfN: allShelves.length, filterChips, shelves, stop };
+  }
+}
+</script>
+</body>
+</html>

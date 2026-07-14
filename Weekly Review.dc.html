@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#993C1D"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">WR</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./hub-data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #993C1D; text-decoration: none; }
+  a:hover { color: #2E6A86; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes wrIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div data-screen-label="Weekly Review" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 72px;">
+
+  <!-- TOP BAR -->
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
+    <div style="max-width: 940px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 300px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #993C1D; color: #993C1D;">← Mission Control</a>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #993C1D;">The Sunday ritual</span>
+        </div>
+        <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 30px; line-height: 1.04; margin: 8px 0 0; letter-spacing: -.01em;">Weekly Review</h1>
+        <div style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 560px; line-height: 1.5;">Close the loop on the week that was, then set the week ahead. Five moves, ten minutes.</div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">{{ todayLabel }}</div>
+        <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px; justify-content: flex-end;">
+          <span style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; color: #993C1D; line-height: 1;">{{ ritualDone }}/5</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">steps done</span>
+        </div>
+        <sc-if value="{{ reviewComplete }}" hint-placeholder-val="{{ false }}">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #0F6E56; margin-top: 6px;">✓ reviewed {{ reviewWhen }}</div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 940px; margin: 0 auto; padding: 22px 24px 0;">
+
+    <!-- TODAY STRIP -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: linear-gradient(100deg, #FBF9F4, #FFFFFF); padding: 16px 20px; animation: wrIn .3s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #b0741a;">Right now · {{ dowLabel }}</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ todayStripSummary }}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 12px;">
+        <sc-for list="{{ todayItems }}" as="t" hint-placeholder-count="3">
+          <label style="display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: 11px; border: 1px solid #ECEAE4; background: #FFFFFF; cursor: pointer;" style-hover="border-color: {{ t.color }};">
+            <input type="checkbox" checked="{{ t.checked }}" onChange="{{ t.toggle }}" style="margin-top: 1px; width: 16px; height: 16px; flex-shrink: 0; accent-color: {{ t.color }}; cursor: pointer;">
+            <span style="flex: 1; min-width: 0;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: {{ t.color }};">{{ t.kicker }}</span>
+              <span style="display: block; font-size: 13px; line-height: 1.35; color: #26271F; margin-top: 3px;">{{ t.label }}</span>
+            </span>
+          </label>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- STEP 1 · WINS -->
+    <div style="border: 1px solid #E4E2DD; border-left: 3px solid #0F6E56; border-radius: 14px; background: #FFFFFF; padding: 18px 22px; margin-top: 18px; animation: wrIn .3s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Step 1 · Look back</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px;">What moved this week</div>
+        </div>
+        <button onClick="{{ toggleWins }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 12px; border-radius: 16px; cursor: pointer; border: 1px solid {{ winsBorder }}; color: {{ winsColor }}; background: {{ winsBg }};">{{ winsBtn }}</button>
+      </div>
+      <div style="font-size: 12.5px; color: #77786F; margin-top: 8px;">{{ winsCountText }}</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+        <sc-for list="{{ wins }}" as="w" hint-placeholder-count="4">
+          <div style="display: flex; gap: 10px; align-items: baseline; padding: 8px 12px; border-radius: 9px; background: #F4F8F5;">
+            <span style="color: #0F6E56; flex: none;">✓</span>
+            <span style="flex: 1; font-size: 13px; color: #26271F; line-height: 1.4;">{{ w.label }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #6a9a83; flex: none;">{{ w.when }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ winsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 14px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">No moves checked in the last 7 days. That's the honest signal — the week ahead is where you change it.</div>
+        </sc-if>
+      </div>
+    </div>
+
+    <!-- STEP 2 · OPEN LOOPS + PEOPLE -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+      <div style="border: 1px solid #E4E2DD; border-left: 3px solid #993C1D; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">Step 2 · Open loops</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Nearest unfinished moves</div>
+          </div>
+          <button onClick="{{ toggleLoops }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 12px; border-radius: 16px; cursor: pointer; border: 1px solid {{ loopsBorder }}; color: {{ loopsColor }}; background: {{ loopsBg }};">{{ loopsBtn }}</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 12px;">
+          <sc-for list="{{ loops }}" as="l" hint-placeholder-count="5">
+            <label style="display: flex; gap: 10px; align-items: flex-start; padding: 8px 2px; border-top: 1px solid #F2F0EB; cursor: pointer;">
+              <input type="checkbox" checked="{{ l.checked }}" onChange="{{ l.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: {{ l.color }}; cursor: pointer;">
+              <span style="flex: 1; min-width: 0;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .04em; text-transform: uppercase; color: {{ l.color }};">{{ l.branch }}</span>
+                <span style="display: block; font-size: 12.5px; line-height: 1.4; color: #26271F; margin-top: 2px;">{{ l.label }}</span>
+              </span>
+            </label>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border: 1px solid #E4E2DD; border-left: 3px solid #0F6E56; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Step 3 · The people</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Owed a touch</div>
+          </div>
+          <button onClick="{{ togglePeople }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 12px; border-radius: 16px; cursor: pointer; border: 1px solid {{ peopleBorder }}; color: {{ peopleColor }}; background: {{ peopleBg }};">{{ peopleBtn }}</button>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 12px;">
+          <sc-for list="{{ people }}" as="p" hint-placeholder-count="4">
+            <div style="display: flex; gap: 10px; align-items: baseline; padding: 9px 2px; border-top: 1px solid #F2F0EB;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ p.dot }}; flex: none; transform: translateY(3px);"></span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 13px; color: #26271F;">{{ p.name }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #8a8577; margin-top: 1px;">{{ p.role }} · {{ p.city }}</div>
+              </div>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ p.ageColor }}; flex: none;">{{ p.age }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ peopleEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 6px; padding: 14px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Nobody's owed a touch. The network is warm — <a href="Network Map.dc.html">open the map</a> to keep it that way.</div>
+          </sc-if>
+        </div>
+        <a href="Network Map.dc.html" style="display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86; margin-top: 10px;">open the network map →</a>
+      </div>
+    </div>
+
+    <!-- STEP 4 · REFLECTION -->
+    <div style="border: 1px solid #E4E2DD; border-left: 3px solid #534AB7; border-radius: 14px; background: #FFFFFF; padding: 18px 22px; margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Step 4 · Reflect</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px;">This week's prompt</div>
+        </div>
+        <a href="Journal.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86;">the logbook →</a>
+      </div>
+      <div style="font-family: 'Newsreader', serif; font-style: italic; font-size: 16px; color: #3b357e; margin-top: 10px; line-height: 1.4;">{{ prompt }}</div>
+      <textarea value="{{ reflectText }}" onChange="{{ setReflect }}" placeholder="A few honest lines…" style="width: 100%; margin-top: 12px; min-height: 96px; resize: vertical; font-size: 13.5px; line-height: 1.55; padding: 12px 14px; border: 1px solid #DAD7D0; border-radius: 11px; background: #FCFBF8; color: #26271F;"></textarea>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 8px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #0F6E56; min-height: 14px;">{{ reflectMsg }}</span>
+        <button onClick="{{ saveReflect }}" style="font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 9px; border: none; background: #534AB7; color: #FFF; cursor: pointer;">Save to the logbook</button>
+      </div>
+    </div>
+
+    <!-- STEP 5 · NEXT WEEK -->
+    <div style="border: 1px solid #E4E2DD; border-left: 3px solid #b0741a; border-radius: 14px; background: #FFFFFF; padding: 18px 22px; margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #b0741a;">Step 5 · Look ahead</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px;">Next week's three priorities</div>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ prioWeekLabel }}</span>
+      </div>
+      <sc-if value="{{ prioEditing }}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <input value="{{ prio0 }}" onChange="{{ setPrio0 }}" placeholder="1 · The one thing that matters most" style="font-size: 13.5px; padding: 10px 13px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
+          <input value="{{ prio1 }}" onChange="{{ setPrio1 }}" placeholder="2 · Second priority" style="font-size: 13.5px; padding: 10px 13px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
+          <input value="{{ prio2 }}" onChange="{{ setPrio2 }}" placeholder="3 · Third priority" style="font-size: 13.5px; padding: 10px 13px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
+          <div style="text-align: right;">
+            <button onClick="{{ savePrio }}" style="font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 9px; border: none; background: #b0741a; color: #FFF; cursor: pointer;">Set the week</button>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ prioSet }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <sc-for list="{{ prioRows }}" as="p" hint-placeholder-count="3">
+            <label style="display: flex; gap: 11px; align-items: flex-start; padding: 11px 13px; border-radius: 11px; border: 1px solid #ECEAE4; background: #FBF7EE; cursor: pointer;">
+              <input type="checkbox" checked="{{ p.done }}" onChange="{{ p.toggle }}" style="margin-top: 1px; width: 16px; height: 16px; flex-shrink: 0; accent-color: #b0741a; cursor: pointer;">
+              <span style="flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.4; color: {{ p.textColor }}; text-decoration: {{ p.strike }};"><b style="font-family: 'IBM Plex Mono', monospace; color: #b0741a; margin-right: 6px;">{{ p.num }}</b>{{ p.text }}</span>
+            </label>
+          </sc-for>
+          <div style="text-align: right;">
+            <button onClick="{{ editPrio }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 12px; border-radius: 16px; cursor: pointer; border: 1px solid #E4E2DD; color: #55564F; background: #FFF;" style-hover="border-color: #b0741a; color: #b0741a;">edit</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- STALE + BACKUP + COMPLETE -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 18px 22px; margin-top: 16px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #855; color: #A32E27;">Maintenance</div>
+      <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px;">What's going stale</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
+        <sc-for list="{{ staleRows }}" as="s" hint-placeholder-count="3">
+          <a href="{{ s.href }}" style="display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 20px; border: 1px solid {{ s.border }}; background: #FFF; color: inherit;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ s.dot }}; flex: none;"></span>
+            <span style="font-size: 12px; color: #26271F;">{{ s.label }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ s.dot }};">{{ s.age }}</span>
+          </a>
+        </sc-for>
+        <sc-if value="{{ staleEmpty }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 12.5px; color: #3F6B3A;">Everything's been touched recently. Nothing rotting. 🌿</span>
+        </sc-if>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid #F2F0EB; flex-wrap: wrap; gap: 10px;">
+        <span style="font-size: 12.5px; color: {{ backupColor }};">{{ backupText }}</span>
+        <button onClick="{{ completeReview }}" style="font-size: 13.5px; font-weight: 600; padding: 10px 22px; border-radius: 10px; border: none; background: {{ completeBg }}; color: #FFF; cursor: pointer;">{{ completeLabel }}</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:940,&quot;height&quot;:1700}}">
+class Component extends DCLogic {
+  PKEY = 'ct-master-plan-v2';
+  NKEY = 'nm_nodes_v2';
+  JKEY = 'ct_journal_v1';
+  LKEY = 'ct_lifelog_v1';
+  SKEY = 'ct_summer_v1';
+  WKEY = 'ct_weekly_v1';
+  BMETA = 'ct_backup_meta_v1';
+  state = { tick: 0, reflectText: '', reflectMsg: '', prio0: '', prio1: '', prio2: '', editingPrio: false };
+
+  readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
+  readPlan() { return Object.assign({ checked: {}, meta: {}, history: [] }, this.readJSON(this.PKEY, {}) || {}); }
+  writePlan(patch) { const cur = this.readJSON(this.PKEY, { v: 2, checked: {}, meta: {}, history: [] }) || {}; Object.assign(cur, patch); try { localStorage.setItem(this.PKEY, JSON.stringify(cur)); } catch (e) {} }
+  readW() { return Object.assign({ priorities: {}, prioDone: {}, reviews: {}, steps: {} }, this.readJSON(this.WKEY, {}) || {}); }
+  writeW(patch) { const cur = this.readW(); Object.assign(cur, patch); try { localStorage.setItem(this.WKEY, JSON.stringify(cur)); } catch (e) {} }
+  bump() { this.setState(s => ({ tick: s.tick + 1 })); }
+
+  mondayOf(d) { const x = new Date(d); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day); x.setHours(0, 0, 0, 0); return x; }
+  wkKey(d) { const m = this.mondayOf(d); return m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0') + '-' + String(m.getDate()).padStart(2, '0'); }
+  isoDay(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  toggle(id) {
+    const plan = this.readPlan();
+    const checked = Object.assign({}, plan.checked);
+    const meta = Object.assign({}, plan.meta);
+    const m = Object.assign({}, meta[id] || {});
+    if (checked[id]) { delete checked[id]; delete m.completedAt; } else { checked[id] = 1; m.completedAt = Date.now(); }
+    meta[id] = m;
+    const hist = (plan.history || []).concat([{ id, ts: Date.now(), a: checked[id] ? 1 : 0 }]).slice(-2000);
+    this.writePlan({ checked, meta, history: hist });
+    this.bump();
+  }
+  setStep(key) { const w = this.readW(); const wk = this.wkKey(new Date()); const steps = Object.assign({}, w.steps); const s = Object.assign({}, steps[wk] || {}); s[key] = s[key] ? 0 : 1; steps[wk] = s; this.writeW({ steps }); this.bump(); }
+
+  renderVals() {
+    this.state.tick;
+    const data = window.HUB_DATA;
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const now = new Date(); const nowMs = now.getTime();
+    const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+    const dowLabel = DAYS[now.getDay()];
+    if (!data) return { todayLabel, dowLabel, ritualDone: 0, todayItems: [], wins: [], loops: [], people: [], prioRows: [], staleRows: [], prompt: '' };
+
+    const plan = this.readPlan();
+    const w = this.readW();
+    const wk = this.wkKey(now);
+    const steps = w.steps[wk] || {};
+    const checked = plan.checked, meta = plan.meta, history = plan.history || [];
+    const isChecked = id => !!checked[id];
+    const isKilled = id => !!(meta[id] && meta[id].killed);
+    const itemById = {}; data.items.forEach(it => itemById[it.id] = it);
+    const bMap = {}; data.branches.forEach(b => bMap[b.id] = b);
+    const byBranch = {}; data.items.forEach(it => { (byBranch[it.branchId] = byBranch[it.branchId] || []).push(it); });
+
+    // ---- wins: checked in last 7d ----
+    const weekAgo = nowMs - 7 * 86400000;
+    const winMap = {};
+    history.forEach(h => { if (h.a && h.ts >= weekAgo && itemById[h.id]) winMap[h.id] = h.ts; });
+    const wins = Object.keys(winMap).map(id => ({ id, label: itemById[id].label, ts: winMap[id] }))
+      .sort((a, b) => b.ts - a.ts)
+      .map(x => ({ label: x.label, when: DAYS[new Date(x.ts).getDay()].slice(0, 3) }));
+    const winsEmpty = wins.length === 0;
+    const winsCountText = wins.length + ' move' + (wins.length === 1 ? '' : 's') + ' checked in the last 7 days.';
+
+    // ---- open loops: nearest unchecked in priority order ----
+    const loops = [];
+    for (const bid of (data.priority || data.branches.map(b => b.id))) {
+      for (const it of (byBranch[bid] || [])) {
+        if (!isChecked(it.id) && !isKilled(it.id)) {
+          const b = bMap[bid];
+          loops.push({ id: it.id, label: it.label, branch: b ? b.title : '', color: b ? b.color : '#993C1D', checked: false, toggle: () => this.toggle(it.id) });
+          if (loops.length >= 6) break;
+        }
+      }
+      if (loops.length >= 6) break;
+    }
+
+    // ---- people owed ----
+    const contacts = (this.readJSON(this.NKEY, []) || []).filter(c => c && c.type !== 'you');
+    const owed = contacts.filter(c => c.owed).sort((a, b) => (b.lastDays || 0) - (a.lastDays || 0));
+    const strengthDot = { warm: '#43a06b', dormant: '#b0741a', cold: '#5c6673' };
+    const people = owed.slice(0, 5).map(c => ({ name: c.name, role: c.role || '', city: c.city || '', dot: strengthDot[c.strength] || '#8a8577', age: (c.lastDays || 0) + 'd silent', ageColor: (c.lastDays || 0) >= 90 ? '#b23b2e' : '#8a8577' }));
+    const peopleEmpty = people.length === 0;
+
+    // ---- today strip: 2 nearest loops + owed[0] ----
+    const todayItems = [];
+    loops.slice(0, 2).forEach(l => todayItems.push({ kicker: l.branch, label: l.label, color: l.color, checked: false, toggle: l.toggle }));
+    if (owed[0]) todayItems.push({ kicker: 'reach out', label: 'Message ' + owed[0].name + ' — ' + (owed[0].lastDays || 0) + 'd silent', color: '#0F6E56', checked: false, toggle: () => {} });
+    const todayStripSummary = loops.length + ' loops open · ' + owed.length + ' owed a touch';
+
+    // ---- reflection prompt (rotates weekly) ----
+    const prompts = [
+      'What did you avoid this week, and what was the avoidance protecting you from?',
+      'Which single move this week will still matter in a year?',
+      'Where did you trade long-term leverage for short-term comfort?',
+      'What did you learn that changes how next week should run?',
+      'Who did you become this week — and is that the person the plan needs?',
+      'What would you cut if you were being honest about focus?',
+      'What compounded this week, quietly, that nobody would notice yet?',
+    ];
+    const prompt = prompts[Math.floor(nowMs / (7 * 86400000)) % prompts.length];
+    const setReflect = e => this.setState({ reflectText: e.target.value });
+    const saveReflect = () => {
+      const t = (this.state.reflectText || '').trim();
+      if (!t) { this.setState({ reflectMsg: 'Write a line or two first.' }); setTimeout(() => this.setState({ reflectMsg: '' }), 2500); return; }
+      const j = this.readJSON(this.JKEY, []) || [];
+      j.push({ id: 'wr' + Date.now(), date: this.isoDay(now), type: 'weekly', title: 'Weekly review — ' + MON[now.getMonth()] + ' ' + now.getDate(), body: t, at: nowMs });
+      try { localStorage.setItem(this.JKEY, JSON.stringify(j)); } catch (e) {}
+      const st = Object.assign({}, steps, { reflect: 1 });
+      const allSteps = Object.assign({}, w.steps, { [wk]: st });
+      this.writeW({ steps: allSteps });
+      this.setState({ reflectText: '', reflectMsg: 'Saved to the logbook ✓', tick: this.state.tick + 1 });
+      setTimeout(() => this.setState({ reflectMsg: '' }), 3000);
+    };
+
+    // ---- next week priorities ----
+    const nextWk = this.wkKey(new Date(nowMs + 7 * 86400000));
+    const savedPrio = w.priorities[nextWk] || null;
+    const prioEditing = this.state.editingPrio || !savedPrio;
+    const prioSet = !prioEditing && !!savedPrio;
+    const setPrio0 = e => this.setState({ prio0: e.target.value });
+    const setPrio1 = e => this.setState({ prio1: e.target.value });
+    const setPrio2 = e => this.setState({ prio2: e.target.value });
+    const savePrio = () => {
+      const arr = [this.state.prio0, this.state.prio1, this.state.prio2].map(x => (x || '').trim()).filter(Boolean);
+      if (!arr.length) return;
+      const pr = Object.assign({}, w.priorities, { [nextWk]: arr });
+      const st = Object.assign({}, steps, { priorities: 1 });
+      this.writeW({ priorities: pr, steps: Object.assign({}, w.steps, { [wk]: st }) });
+      this.setState({ editingPrio: false, prio0: '', prio1: '', prio2: '', tick: this.state.tick + 1 });
+    };
+    const editPrio = () => { const p = savedPrio || []; this.setState({ editingPrio: true, prio0: p[0] || '', prio1: p[1] || '', prio2: p[2] || '' }); };
+    const prioRows = (savedPrio || []).map((t, i) => {
+      const doneKey = nextWk + ':' + i;
+      const done = !!w.prioDone[doneKey];
+      return { num: (i + 1), text: t, done, textColor: done ? '#9a9b93' : '#26271F', strike: done ? 'line-through' : 'none',
+        toggle: () => { const pd = Object.assign({}, this.readW().prioDone); pd[doneKey] = pd[doneKey] ? 0 : 1; this.writeW({ prioDone: pd }); this.bump(); } };
+    });
+    const d2 = new Date(this.mondayOf(new Date(nowMs + 7 * 86400000)));
+    const prioWeekLabel = 'wk of ' + MON[d2.getMonth()] + ' ' + d2.getDate();
+
+    // ---- stale check ----
+    const branchLast = {};
+    history.forEach(h => { const it = itemById[h.id]; if (it) branchLast[it.branchId] = Math.max(branchLast[it.branchId] || 0, h.ts); });
+    const staleRows = [];
+    const STALE = 14 * 86400000;
+    // finance / risk branches
+    [['finance', 'Finances', 'CT Master Plan.html'], ['risk', 'Risk register', 'CT Master Plan.html']].forEach(([bid, label, href]) => {
+      const last = branchLast[bid] || 0;
+      const age = last ? Math.floor((nowMs - last) / 86400000) : null;
+      if (!last || (nowMs - last) > STALE) staleRows.push({ label, href, age: last ? age + 'd' : 'never', dot: '#A32E27', border: '#EBD7D4' });
+    });
+    // journal
+    const jj = this.readJSON(this.JKEY, []) || [];
+    const jLast = jj.reduce((m, e) => Math.max(m, e.at || (e.date ? new Date(e.date + 'T12:00').getTime() : 0)), 0);
+    if (!jLast || (nowMs - jLast) > 7 * 86400000) staleRows.push({ label: 'Logbook', href: 'Journal.dc.html', age: jLast ? Math.floor((nowMs - jLast) / 86400000) + 'd' : 'empty', dot: '#b0741a', border: '#EbE0CC' });
+    // lifelog
+    const ll = this.readJSON(this.LKEY, null);
+    let llLast = 0; if (ll && typeof ll === 'object') { Object.keys(ll).forEach(k => { if (/^\d{4}-\d{2}-\d{2}/.test(k)) { const t = new Date(k.slice(0, 10) + 'T12:00').getTime(); if (t) llLast = Math.max(llLast, t); } }); }
+    if (!llLast || (nowMs - llLast) > 7 * 86400000) staleRows.push({ label: 'Life Log', href: 'Life Log.dc.html', age: llLast ? Math.floor((nowMs - llLast) / 86400000) + 'd' : 'empty', dot: '#b0741a', border: '#EbE0CC' });
+    const staleEmpty = staleRows.length === 0;
+
+    // ---- backup age ----
+    const bm = this.readJSON(this.BMETA, null);
+    const bAge = (bm && bm.ts) ? Math.floor((nowMs - bm.ts) / 86400000) : null;
+    let backupText, backupColor;
+    if (bAge === null) { backupText = '⚠ No backup on record — export one from the hub to be safe.'; backupColor = '#A32E27'; }
+    else if (bAge > 7) { backupText = '⚠ Last backup ' + bAge + ' days ago — time for a fresh export.'; backupColor = '#A32E27'; }
+    else { backupText = '✓ Backed up ' + (bAge === 0 ? 'today' : bAge + 'd ago') + '.'; backupColor = '#3F6B3A'; }
+
+    // ---- ritual completion ----
+    const ritualKeys = ['wins', 'loops', 'people', 'reflect', 'priorities'];
+    const ritualDone = ritualKeys.reduce((a, k) => a + (steps[k] ? 1 : 0), 0);
+    const review = w.reviews[wk] || null;
+    const reviewComplete = !!review;
+    const reviewWhen = review ? (MON[new Date(review).getMonth()] + ' ' + new Date(review).getDate()) : '';
+    const completeReview = () => { const r = Object.assign({}, w.reviews, { [wk]: Date.now() }); const st = Object.assign({}, steps, { wins: 1, loops: 1, people: 1 }); this.writeW({ reviews: r, steps: Object.assign({}, w.steps, { [wk]: st }) }); this.bump(); };
+    const completeLabel = reviewComplete ? '✓ Reviewed — mark again' : 'Complete this review';
+    const completeBg = reviewComplete ? '#0F6E56' : '#993C1D';
+
+    const stepBtn = (on) => ({ btn: on ? '✓ done' : 'mark done', border: on ? '#B7D6C6' : '#E4E2DD', color: on ? '#0F6E56' : '#55564F', bg: on ? '#EEF6F1' : '#FFF' });
+    const wb = stepBtn(steps.wins), lb = stepBtn(steps.loops), pb = stepBtn(steps.people);
+
+    return {
+      todayLabel, dowLabel, ritualDone, reviewComplete, reviewWhen,
+      todayItems, todayStripSummary,
+      wins, winsEmpty, winsCountText, toggleWins: () => this.setStep('wins'), winsBtn: wb.btn, winsBorder: wb.border, winsColor: wb.color, winsBg: wb.bg,
+      loops, toggleLoops: () => this.setStep('loops'), loopsBtn: lb.btn, loopsBorder: lb.border, loopsColor: lb.color, loopsBg: lb.bg,
+      people, peopleEmpty, togglePeople: () => this.setStep('people'), peopleBtn: pb.btn, peopleBorder: pb.border, peopleColor: pb.color, peopleBg: pb.bg,
+      prompt, reflectText: this.state.reflectText, setReflect, saveReflect, reflectMsg: this.state.reflectMsg,
+      prioEditing, prioSet, prioWeekLabel, prio0: this.state.prio0, prio1: this.state.prio1, prio2: this.state.prio2,
+      setPrio0, setPrio1, setPrio2, savePrio, editPrio, prioRows,
+      staleRows, staleEmpty, backupText, backupColor,
+      completeReview, completeLabel, completeBg,
+    };
+  }
+}
+</script>
+</body>
+</html>

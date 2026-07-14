@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#4A5B7A"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">LB</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes liIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div data-screen-label="The Library" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 80px;">
+
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.95); position: sticky; top: 0; z-index: 20;">
+    <div style="max-width: 780px; margin: 0 auto; padding: 14px 18px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #4A5B7A;">10 · The shelf</div>
+        <div style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 24px; line-height: 1.05; margin-top: 3px;">The Library</div>
+      </div>
+      <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFF; color: #55564F;">⌂ Hub</a>
+    </div>
+  </div>
+
+  <div style="max-width: 780px; margin: 0 auto; padding: 16px 18px 0; animation: liIn .25s ease;">
+
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 14px 18px; display: flex; gap: 12px; align-items: baseline;">
+      <span style="font-family: 'Newsreader', serif; font-size: 30px; line-height: .6; color: #4A5B7A; transform: translateY(6px); flex: none;">¶</span>
+      <div style="font-size: 12.5px; color: #55564F; line-height: 1.55;">The rule of the shelf: a paper isn't <em>read</em> until its takeaway is written — one line, what it changes for you. Everything else is just eye movement.</div>
+    </div>
+
+    <!-- ADD -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #4A5B7A; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #4A5B7A;">Shelve something</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+        <input value="{{ fT }}" onChange="{{ setFT }}" placeholder="title — paper, chapter, book" style="min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <input value="{{ fBy }}" onChange="{{ setFBy }}" placeholder="authors / journal / year" style="min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 90px; gap: 8px; margin-top: 8px;">
+        <input value="{{ fUrl }}" onChange="{{ setFUrl }}" placeholder="link — doi / pubmed (optional)" style="min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <input value="{{ fTags }}" onChange="{{ setFTags }}" placeholder="tags — e.g. TAVR, outcomes, bet-2" style="min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <button onClick="{{ addItem }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 44px; border-radius: 22px; border: 1px solid #4A5B7A; background: #4A5B7A; color: #FFF; cursor: pointer;">shelve</button>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div style="display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; align-items: center;">
+      <sc-for list="{{ filterChips }}" as="fc" hint-placeholder-count="4">
+        <button onClick="{{ fc.go }}" style="{{ fc.style }}">{{ fc.label }}</button>
+      </sc-for>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-left: auto;">{{ countsText }}</span>
+    </div>
+
+    <!-- LIST -->
+    <sc-if value="{{ hasItems }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <sc-for list="{{ itemRows }}" as="it" hint-placeholder-count="4">
+          <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFF; padding: 14px 16px;">
+            <div style="display: flex; gap: 10px; align-items: baseline;">
+              <button onClick="{{ it.cycle }}" title="click to advance: queue → reading → read" style="{{ it.pillStyle }}">{{ it.st }}</button>
+              <div style="flex: 1; min-width: 0;">
+                <sc-if value="{{ it.hasUrl }}"><a href="{{ it.url }}" target="_blank" style="font-family: 'Newsreader', serif; font-size: 16.5px; font-weight: 500; line-height: 1.3;">{{ it.t }} ↗</a></sc-if>
+                <sc-if value="{{ it.noUrl }}"><span style="font-family: 'Newsreader', serif; font-size: 16.5px; font-weight: 500; line-height: 1.3;">{{ it.t }}</span></sc-if>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 3px;">{{ it.sub }}</div>
+              </div>
+              <button onClick="{{ it.del }}" title="delete" style="border: none; background: none; color: #C9C7C0; cursor: pointer; font-size: 14px; flex: none;">×</button>
+            </div>
+            <sc-if value="{{ it.hasTake }}">
+              <div style="display: flex; gap: 8px; align-items: baseline; margin-top: 9px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3F6B3A; flex: none;">→</span>
+                <span style="font-family: 'Newsreader', serif; font-style: italic; font-size: 14px; line-height: 1.5; color: #26271F;">{{ it.take }}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ it.needsTake }}">
+              <input value="{{ it.take }}" onChange="{{ it.setTake }}" placeholder="{{ it.takePh }}" style="{{ it.takeStyle }}">
+            </sc-if>
+            <sc-if value="{{ it.hasTags }}">
+              <div style="display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap;">
+                <sc-for list="{{ it.tagChips }}" as="tg" hint-placeholder-count="2">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #4A5B7A; border: 1px solid #CDD5E0; background: #EBEEF3; border-radius: 20px; padding: 2px 8px;">{{ tg.label }}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ noItems }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top: 12px; padding: 26px 20px; border: 1px dashed #DAD7D0; border-radius: 14px; text-align: center;">
+        <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500;">{{ emptyTitle }}</div>
+        <div style="font-size: 12px; color: #77786F; margin-top: 6px; line-height: 1.5;">{{ emptySub }}</div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  KEY = 'ct_library_v1';
+  state = { tick: 0, filter: 'all', fT: '', fBy: '', fUrl: '', fTags: '' };
+
+  lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
+  read() { const d = this.lsJson(this.KEY, null); return (d && Array.isArray(d.items)) ? d : { items: [] }; }
+  write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} this.setState(s => ({ tick: s.tick + 1 })); }
+  fmtDay(k) { return new Date(k + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+
+  renderVals() {
+    const S = this.state;
+    const mono = "font-family:'IBM Plex Mono',monospace;";
+    const d = this.read();
+    const items = d.items;
+    const nQ = items.filter(i => i.st === 'queue').length, nR = items.filter(i => i.st === 'reading').length, nD = items.filter(i => i.st === 'done').length;
+
+    const filters = [['all', 'All'], ['queue', 'Queue'], ['reading', 'Reading'], ['done', 'Read']];
+    const filterChips = filters.map(f => ({
+      label: f[1], go: () => this.setState({ filter: f[0] }),
+      style: mono + 'min-height:38px;padding:0 16px;font-size:10.5px;letter-spacing:.06em;border-radius:19px;cursor:pointer;' + (S.filter === f[0] ? 'border:1px solid #1A1B1A;background:#1A1B1A;color:#FFF;' : 'border:1px solid #E4E2DD;background:#FFF;color:#55564F;')
+    }));
+
+    const addItem = () => {
+      const t = S.fT.trim();
+      if (!t) return;
+      const nd = this.read();
+      nd.items.push({
+        id: 'b' + Date.now() + Math.floor(Math.random() * 999),
+        t: t, by: S.fBy.trim(), url: S.fUrl.trim(),
+        tags: S.fTags.split(',').map(x => x.trim()).filter(Boolean),
+        st: 'queue', take: '', added: new Date().toISOString().slice(0, 10)
+      });
+      this.setState({ fT: '', fBy: '', fUrl: '', fTags: '' });
+      this.write(nd);
+    };
+
+    const stMeta = {
+      queue:   { label: 'queued', c: '#4A5B7A', bg: '#EBEEF3', bd: '#CDD5E0' },
+      reading: { label: 'reading', c: '#B0691B', bg: '#FBF3E2', bd: '#EAD9BC' },
+      done:    { label: 'read ✓', c: '#3F6B3A', bg: '#EEF3EC', bd: '#CBDDD3' }
+    };
+    const order = ['queue', 'reading', 'done'];
+
+    const visible = items.filter(i => S.filter === 'all' || i.st === S.filter)
+      .slice().sort((a, b) => {
+        const ao = order.indexOf(a.st), bo = order.indexOf(b.st);
+        const aMiss = (a.st === 'done' && !(a.take || '').trim()) ? 0 : 1;
+        const bMiss = (b.st === 'done' && !(b.take || '').trim()) ? 0 : 1;
+        return aMiss - bMiss || ao - bo || (b.added > a.added ? 1 : -1);
+      });
+
+    const itemRows = visible.map(it => {
+      const m = stMeta[it.st] || stMeta.queue;
+      const take = (it.take || '').trim();
+      const doneNoTake = it.st === 'done' && !take;
+      return {
+        t: it.t, url: it.url || '', hasUrl: !!(it.url || '').trim(), noUrl: !(it.url || '').trim(),
+        sub: [it.by, 'shelved ' + this.fmtDay(it.added)].filter(Boolean).join(' · '),
+        st: m.label,
+        pillStyle: mono + 'font-size:9.5px;letter-spacing:.06em;min-height:26px;padding:0 11px;border-radius:14px;cursor:pointer;flex:none;color:' + m.c + ';background:' + m.bg + ';border:1px solid ' + m.bd + ';',
+        cycle: () => { const nd = this.read(); const x = nd.items.find(y => y.id === it.id); if (x) { x.st = order[(order.indexOf(x.st) + 1) % 3]; this.write(nd); } },
+        del: () => { const nd = this.read(); nd.items = nd.items.filter(y => y.id !== it.id); this.write(nd); },
+        hasTake: !!take, take: take || (it.take || ''),
+        needsTake: !take,
+        takePh: doneNoTake ? '⚠ not read until this is written — one line: what does it change?' : 'takeaway — one line, written when you finish',
+        takeStyle: 'width:100%;min-height:40px;font-size:12.5px;font-style:italic;padding:6px 12px;border-radius:9px;margin-top:9px;background:#FCFBF9;border:1px solid ' + (doneNoTake ? '#DFB27A' : '#EAE7E1') + ';',
+        setTake: (e) => { const nd = this.read(); const x = nd.items.find(y => y.id === it.id); if (x) { x.take = e.target.value; this.write(nd); } },
+        hasTags: (it.tags || []).length > 0,
+        tagChips: (it.tags || []).map(tg => ({ label: tg }))
+      };
+    });
+
+    const filterName = { all: 'shelf', queue: 'queue', reading: 'reading pile', done: 'read stack' };
+
+    return {
+      fT: S.fT, setFT: (e) => this.setState({ fT: e.target.value }),
+      fBy: S.fBy, setFBy: (e) => this.setState({ fBy: e.target.value }),
+      fUrl: S.fUrl, setFUrl: (e) => this.setState({ fUrl: e.target.value }),
+      fTags: S.fTags, setFTags: (e) => this.setState({ fTags: e.target.value }),
+      addItem, filterChips,
+      countsText: nQ + ' queued · ' + nR + ' reading · ' + nD + ' read',
+      hasItems: itemRows.length > 0, noItems: itemRows.length === 0, itemRows,
+      emptyTitle: items.length === 0 ? 'Empty shelf' : 'Nothing in the ' + (filterName[S.filter] || 'shelf'),
+      emptySub: items.length === 0 ? 'Shelve the first paper above — your PubMed alerts are the feeder.' : 'Switch filters or shelve something new.'
+    };
+  }
+}
+</script>
+</body>
+</html>

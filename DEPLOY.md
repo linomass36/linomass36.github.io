@@ -1,0 +1,69 @@
+# Deploy the hub to GitHub Pages (with cross-device sync)
+
+Your workflow forever after: **drop the new export in the repo → `git push` → done.**
+The sync layer lives in the repo, separate from the export, and re-applies itself on every push.
+
+---
+
+## One-time setup (~1 evening)
+
+### 1. Firebase project (5 min)
+1. [console.firebase.google.com](https://console.firebase.google.com) → **Add project** (disable Analytics, it's fine).
+2. **Build → Authentication → Get started → Sign-in method → Google → Enable.**
+3. **Build → Firestore Database → Create database** → *Production mode* → pick a region.
+4. Firestore → **Rules** tab, paste this, **Publish**:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /hubData/{userId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
+     }
+   }
+   ```
+   *(Your data, only you — enforced server-side. This is why the public config key is safe.)*
+5. **Project settings ⚙ → General → Your apps → Web (`</>`)** → register an app → copy the `firebaseConfig` values.
+
+### 2. Fill in `config.js`
+Open `config.js` and set:
+- `authorizedEmail` → your Google address (the only account that gets in).
+- `firebase` → the `apiKey` / `authDomain` / `projectId` / `appId` you just copied.
+
+Commit it. **It is safe to commit** — Firebase web config is public by design; Auth + the Firestore rule above are what protect the data.
+
+### 3. Push to GitHub + turn on Pages
+```bash
+git init && git add . && git commit -m "hub"
+git branch -M main
+git remote add origin https://github.com/<you>/<repo>.git
+git push -u origin main
+```
+- Repo **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+- In Firebase → Authentication → **Settings → Authorized domains**, add `<you>.github.io`.
+
+The **Deploy** Action runs on that push: it renames `index.dc.html` → `index.html` (the gate becomes your front door) and injects `config.js` + `sync.js` into every hub page. Your site goes live at `https://<you>.github.io/<repo>/`.
+
+---
+
+## Adding a new export later
+1. Overwrite the changed `.dc.html` / `.html` files in the repo with your fresh exports.
+2. `git push`.
+
+That's it. The Action re-injects the sync shim automatically — you never hand-patch a file.
+
+---
+
+## How it behaves
+- **You, signed in as `authorizedEmail`** → land in the hub; localStorage syncs to Firestore and across your devices in real time.
+- **Anyone else** → the **ACCESS VIOLATION** prank, then bounced. Hub pages are protected too: opening one directly without the owner session redirects to the gate.
+
+## Files in this system
+- `config.js` — the one place you edit (owner email + Firebase keys).
+- `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages.
+- `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.
+- `.github/workflows/deploy.yml` — builds `_site/` and deploys to Pages on every push.
+- `.github/inject.py` — injects the sync shim into hub pages at build time.
+
+## Local preview without Firebase
+Until `config.js` is filled in, the gate runs in **preview mode**: a "preview the intruder screen" link appears, and `?intruder=1` in the URL jumps straight to the prank. Hub pages run local-only (no cloud sync) — nothing breaks.

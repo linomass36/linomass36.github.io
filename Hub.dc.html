@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="ext-resource-dependency" content="https://unpkg.com/react@18.3.1/umd/react.production.min.js">
+<meta name="ext-resource-dependency" content="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="18" height="18" rx="3" fill="#993C1D"></rect><rect x="52" y="30" width="18" height="18" rx="3" fill="#0F6E56"></rect><rect x="30" y="52" width="18" height="18" rx="3" fill="#b0741a"></rect><rect x="52" y="52" width="18" height="18" rx="3" fill="#1A1B1A"></rect></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./hub-data.js"></script>
+<script src="./quotes.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes hubIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes drawIn { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
+  @keyframes popIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+  @keyframes cellIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(255,138,152,.55); } 70% { box-shadow: 0 0 0 9px rgba(255,138,152,0); } 100% { box-shadow: 0 0 0 0 rgba(255,138,152,0); } }
+  @keyframes svgPulse { 0% { r: 4; opacity: .9; } 70% { r: 11; opacity: 0; } 100% { r: 11; opacity: 0; } }
+  @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+  .cmap-n:hover .cmap-l { opacity: 1 !important; }
+  .cmap-n:hover { z-index: 6 !important; }
+</style>
+</helmet>
+<div data-screen-label="Mission Control" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 64px;">
+
+  <!-- TOP BAR -->
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.9);">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 320px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #993C1D;">Mission Control</div>
+        <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 28px; line-height: 1.05; margin: 6px 0 0; letter-spacing: -.01em;">CT Surgeon-Entrepreneur, by 30</h1>
+        <div style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 560px; line-height: 1.5; font-style: italic;">"{{ positioningNow }}"</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center;">
+          <sc-for list="{{ planViewChips }}" as="v" hint-placeholder-count="6">
+            <a href="CT Master Plan.html" onClick="{{ v.go }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #993C1D; color: #993C1D;">{{ v.label }}</a>
+          </sc-for>
+          <button onClick="{{ openSearch }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #FFFFFF; background: #1A1B1A; border: 1px solid #1A1B1A; border-radius: 20px; padding: 4px 12px; cursor: pointer;">⌕ search everything · ⌘K</button>
+          <button onClick="{{ openGuide }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 12px; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">? what is all this</button>
+          <button onClick="{{ doBackup }}" title="{{ bkTitle }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; background: #FFFFFF; border-radius: 20px; padding: 4px 12px; cursor: pointer; color: {{ bkColor }}; border: 1px solid {{ bkBorder }};">{{ bkLabel }}</button>
+          <button onClick="{{ doRestore }}" title="Restore every log from a backup file" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 12px; cursor: pointer;" style-hover="border-color: #534AB7; color: #534AB7;">⇪ restore</button>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">{{ todayLabel }}</div>
+        <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px; justify-content: flex-end;">
+          <span style="font-family: 'Newsreader', serif; font-size: 34px; font-weight: 500; color: #993C1D; line-height: 1;">{{ pctShow }}%</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ done }} / {{ total }} moves</span>
+        </div>
+        <div style="height: 6px; width: 220px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px;">
+          <div style="height: 100%; border-radius: 3px; background: #993C1D; width: {{ pctBar }}%;"></div>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 7px;">{{ streakText }} · <span style="color: {{ momentumColor }};">{{ momentumText }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE OF THE DAY -->
+  <div style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 0;">
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 15px 24px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; animation: hubIn .3s ease;">
+      <span style="font-family: 'Newsreader', serif; font-size: 42px; line-height: .6; color: #993C1D; transform: translateY(9px); flex: none;">“</span>
+      <div style="flex: 1; min-width: 280px;">
+        <div style="font-family: 'Newsreader', serif; font-style: italic; font-size: 17.5px; line-height: 1.45; color: #26271F;">{{ quoteText }}</div>
+        <div style="margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #77786F;"><span style="color: #993C1D;">— {{ quoteBy }}</span> · {{ quoteSub }}</div>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #BBB9B1; flex: none;">Quote of the day</div>
+    </div>
+  </div>
+
+  <div style="max-width: 1280px; margin: 0 auto; padding: 26px 24px 0;">
+
+    <!-- PROJECT CARDS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; animation: hubIn .3s ease;">
+
+      <a href="CT Master Plan.html" onClick="{{ goToday }}" style="display: block; border: 1px solid #E4E2DD; border-top: 3px solid #993C1D; border-radius: 14px; background: #FFFFFF; padding: 20px 22px; color: inherit; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,27,26,.08); color: inherit;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">01 · The plan</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin-top: 6px;">CT Master Plan</div>
+          </div>
+          <div style="position: relative; width: 54px; height: 54px; flex-shrink: 0;">
+            <svg width="54" height="54" viewBox="0 0 54 54" style="display: block;">
+              <circle cx="27" cy="27" r="23" fill="none" style="stroke: #EAE7E1; stroke-width: 6;"></circle>
+              <circle cx="27" cy="27" r="23" fill="none" style="stroke: #993C1D; stroke-width: 6; stroke-linecap: round; stroke-dasharray: {{ ringDash }}; transform: rotate(-90deg); transform-origin: 27px 27px;"></circle>
+            </svg>
+            <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: #993C1D;">{{ pctShow }}%</div>
+          </div>
+        </div>
+        <div style="font-size: 12.5px; color: #77786F; line-height: 1.5; margin-top: 8px;">{{ branchCount }} branches · {{ total }} tracked moves, from the summer sprint to the 25-year arc.</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #2E6A86; margin-top: 12px;">Open the plan →</div>
+      </a>
+
+      <a href="Network Map.dc.html" style="display: block; border: 1px solid #1b2a42; border-top: 3px solid #43e0b8; border-radius: 14px; background: #0d1626; padding: 20px 22px; color: #e8eef7; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-3px); box-shadow: 0 10px 28px rgba(13,22,38,.35); color: #e8eef7;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #43e0b8;">02 · The people</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin-top: 6px;">Network Map</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: 'Newsreader', serif; font-size: 27px; font-weight: 500; line-height: 1;">{{ contactCount }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; color: #6b86a8; margin-top: 3px;">CONTACTS</div>
+          </div>
+        </div>
+        <div style="font-size: 12.5px; color: #8ba3c2; line-height: 1.5; margin-top: 8px;">The living globe — every surgeon, mentor and open line, plotted where they stand.</div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #7fa8d6;">Spin the globe →</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #ff8a98;">{{ owedCount }} owed a touch</span>
+        </div>
+      </a>
+
+      <a href="Conference Radar.dc.html" style="display: block; border: 1px solid #e6e0d3; border-top: 3px solid #b0741a; border-radius: 14px; background: #fbf9f4; padding: 20px 22px; color: inherit; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,27,26,.08); color: inherit;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #b0741a;">03 · The road</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin-top: 6px;">Conference Radar</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: 'Newsreader', serif; font-size: 27px; font-weight: 500; line-height: 1; color: #b0741a;">{{ nextConfDays }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; color: #8a8577; margin-top: 3px;">DAYS TO {{ nextConfAcr }}</div>
+          </div>
+        </div>
+        <div style="font-size: 12.5px; color: #77786F; line-height: 1.5; margin-top: 8px;">{{ upcomingCount }} meetings ahead — mapped, costed, deadline-tracked, plus your own logged finds.</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #2E6A86; margin-top: 12px;">Scan the radar →</div>
+      </a>
+
+      <a href="Journal.dc.html" style="display: block; border: 1px solid #E4E2DD; border-top: 3px solid #0F6E56; border-radius: 14px; background: #FFFFFF; padding: 20px 22px; color: inherit; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,27,26,.08); color: inherit;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">04 · The log</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin-top: 6px;">The Logbook</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: 'Newsreader', serif; font-size: 27px; font-weight: 500; line-height: 1; color: #0F6E56;">{{ journalCount }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; color: #8a8577; margin-top: 3px;">ENTRIES</div>
+          </div>
+        </div>
+        <div style="font-size: 12.5px; color: #77786F; line-height: 1.5; margin-top: 8px;">
+          <sc-if value="{{ journalHasLast }}"><span>Latest — {{ journalLast }}</span></sc-if>
+          <sc-if value="{{ journalNoLast }}"><span>Daily notes, weekly summaries, ideas — tagged, searchable, stored right here.</span></sc-if>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #2E6A86;">Open the logbook →</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ journalStreakColor }};">{{ journalStreakText }}</span>
+        </div>
+      </a>
+
+      <a href="Life Log.dc.html" style="display: block; border: 1px solid #E4E2DD; border-top: 3px solid #534AB7; border-radius: 14px; background: #FFFFFF; padding: 20px 22px; color: inherit; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,27,26,.08); color: inherit;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">05 · The body &amp; the hours</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin-top: 6px;">Life Log</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: 'Newsreader', serif; font-size: 27px; font-weight: 500; line-height: 1; color: #534AB7;">{{ lifelogDays }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; color: #8a8577; margin-top: 3px;">DAYS THIS WEEK</div>
+          </div>
+        </div>
+        <div style="font-size: 12.5px; color: #77786F; line-height: 1.5; margin-top: 8px;">Sleep, weight, gym, swim, climb, a focus timer and spending — two minutes a day, synthesized on the weekend.</div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #55564F; align-items: baseline;">
+          <span style="color: {{ llStreakColor }};">{{ llStreakText }}</span>
+          <span style="color: #D5D3CC;">·</span>
+          <span>{{ llStudyText }}</span>
+          <sc-if value="{{ llHasKg }}"><span style="color: #D5D3CC;">·</span><span>{{ llKgText }}</span></sc-if>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #2E6A86;">Open the log →</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ lifelogHint2Color }};">{{ lifelogHint }}</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- NEW ROOMS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 14px; animation: hubIn .35s ease;">
+      <sc-for list="{{ roomRows }}" as="r" hint-placeholder-count="5">
+        <a href="{{ r.href }}" style="display: block; border: 1px solid #E4E2DD; border-top: 3px solid {{ r.color }}; border-radius: 12px; background: #FFFFFF; padding: 14px 16px; color: inherit; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-2px); box-shadow: 0 8px 22px rgba(26,27,26,.07); color: inherit;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .13em; text-transform: uppercase; color: {{ r.color }};">{{ r.num }}</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500; margin-top: 4px;">{{ r.name }}</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #77786F; margin-top: 7px;">{{ r.line }}</div>
+        </a>
+      </sc-for>
+    </div>
+
+    <!-- TRIAL MODULES -->
+    <div style="margin-top: 22px; animation: hubIn .35s ease;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #B0691B;">Instruments</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Nudges, iron, and past-you</div>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">all read existing logs · zero new logging</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; align-items: start;">
+
+        <div style="border: 1px solid #E4E2DD; border-top: 3px solid #B0691B; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+            <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Feed the system</div>
+          </div>
+          <div style="font-size: 11.5px; color: #77786F; line-height: 1.5; margin-top: 4px;">The hub is only as honest as its inputs — what's gone quiet:</div>
+          <sc-if value="{{ hasNudges }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 12px;">
+              <sc-for list="{{ nudgeRows }}" as="n" hint-placeholder-count="3">
+                <div style="display: flex; align-items: baseline; gap: 8px;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ n.color }}; flex: none; transform: translateY(-1px);"></span>
+                  <span style="font-size: 12.5px; color: #26271F; line-height: 1.45; flex: 1;">{{ n.text }}</span>
+                  <sc-if value="{{ n.hasHref }}"><a href="{{ n.href }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; flex: none;">fix →</a></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noNudges }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 12px; border: 1px dashed #CBDDD3; border-radius: 10px; background: #F3F8F5; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #0F6E56;">✓ everything fed — nothing stale</div>
+          </sc-if>
+        </div>
+
+        <div style="border: 1px solid #E4E2DD; border-top: 3px solid #993C1D; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+            <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">The iron ledger</div>
+          </div>
+          <div style="font-size: 11.5px; color: #77786F; line-height: 1.5; margin-top: 4px;">All-time bests, mined from your gym entries:</div>
+          <sc-if value="{{ prHas }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+              <sc-for list="{{ prRows }}" as="p" hint-placeholder-count="3">
+                <div style="display: flex; align-items: baseline; gap: 10px; border-top: 1px solid #F2F0EB; padding-top: 10px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #55564F; width: 54px; flex: none;">{{ p.lift }}</span>
+                  <span style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; color: #993C1D; line-height: 1;">{{ p.best }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; flex: 1; text-align: right;">{{ p.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size: 11px; color: #A6A79F; line-height: 1.5; margin-top: 12px;">{{ prFoot }}</div>
+          </sc-if>
+          <sc-if value="{{ prNone }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 12px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12px; color: #77786F; line-height: 1.5;">No lifts on record yet. Log a gym day with bench / squat / OHP in the <a href="Life Log.dc.html">Life Log</a> and PRs appear here on their own.</div>
+          </sc-if>
+        </div>
+
+        <div style="border: 1px solid #E4E2DD; border-top: 3px solid #534AB7; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+            <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">On this day</div>
+          </div>
+          <div style="font-size: 11.5px; color: #77786F; line-height: 1.5; margin-top: 4px;">What you wrote a month, a quarter, half a year ago:</div>
+          <sc-if value="{{ otdHas }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+              <sc-for list="{{ otdRows }}" as="o" hint-placeholder-count="2">
+                <a href="Journal.dc.html" style="display: block; border-top: 1px solid #F2F0EB; padding-top: 10px; color: inherit;">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #534AB7;">{{ o.ago }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ o.dateText }}</span>
+                  </div>
+                  <div style="font-family: 'Newsreader', serif; font-size: 15px; font-weight: 500; margin-top: 3px;">{{ o.title }}</div>
+                  <sc-if value="{{ o.hasSnip }}"><div style="font-size: 11.5px; color: #77786F; line-height: 1.5; margin-top: 2px;">{{ o.snip }}</div></sc-if>
+                </a>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ otdNone }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 12px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12px; color: #77786F; line-height: 1.5;">Nothing from those windows yet — keep the <a href="Journal.dc.html">Journal</a> moving and past-you starts talking back here.</div>
+          </sc-if>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CRITICAL PATH / SPOF -->
+    <div style="margin-top: 22px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A32E27;">The critical path</div>
+      <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">What the whole plan hinges on</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 12px;">
+        <sc-for list="{{ spofRows }}" as="s" hint-placeholder-count="4">
+          <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; padding: 15px 17px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-family: 'Newsreader', serif; font-size: 16px; font-weight: 500;">{{ s.key }}</div>
+            <div style="font-size: 12px; color: #77786F; line-height: 1.5; flex: 1;">{{ s.why }}</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ s.statusColor }};">{{ s.statusText }}</span>
+              <sc-if value="{{ s.hasHref }}"><a href="{{ s.href }}" onClick="{{ s.go }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">open →</a></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- NEXT ACTIONS + DEADLINE RADAR -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start; animation: hubIn .4s ease;">
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">Next actions</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">The nearest unchecked moves</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">synced with the plan</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 7px; margin-top: 14px;">
+          <sc-for list="{{ nextActions }}" as="it" hint-placeholder-count="6">
+            <label style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid #ECEAE4; background: #FFFFFF; cursor: pointer;" style-hover="border-color: #DAD7D0; background: #FCFBF9;">
+              <input type="checkbox" checked="{{ it.checked }}" onChange="{{ it.toggle }}" style="margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; accent-color: {{ it.color }}; cursor: pointer;">
+              <span style="flex: 1; min-width: 0;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; color: {{ it.color }};">{{ it.branchTitle }}</span>
+                <span style="display: block; font-size: 13px; color: #26271F; margin-top: 2px; line-height: 1.4;">{{ it.label }}</span>
+              </span>
+            </label>
+          </sc-for>
+        </div>
+        <div style="font-size: 11px; color: #A6A79F; margin-top: 12px; font-family: 'IBM Plex Mono', monospace;">Checking here checks it in the Master Plan too.</div>
+      </div>
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #4A5B7A;">Deadline radar</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Every clock running at once</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">plan · people · road</span>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 10px;">
+          <sc-for list="{{ radarRows }}" as="r" hint-placeholder-count="9">
+            <a href="{{ r.href }}" onClick="{{ r.go }}" style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 4px; border-bottom: 1px solid #F2F0EB; text-decoration: none; color: inherit;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; font-weight: 600; letter-spacing: .06em; color: #FFFFFF; background: {{ r.color }}; border-radius: 4px; padding: 2px 6px; flex-shrink: 0; margin-top: 2px; white-space: nowrap;">{{ r.source }}</span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: flex; justify-content: space-between; gap: 8px; align-items: baseline;">
+                  <span style="font-size: 13px; font-weight: 600; color: #26271F; line-height: 1.35;">{{ r.label }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ r.whenColor }}; white-space: nowrap;">{{ r.whenText }}</span>
+                </span>
+                <span style="display: block; font-size: 11.5px; color: #77786F; margin-top: 1px;">{{ r.sub }}</span>
+              </span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNIFIED ROADMAP -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px 14px; margin-top: 16px;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #185FA5;">The whole roadmap</div>
+        <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Checkpoints and conferences, one line</div>
+      </div>
+      <div style="position: relative; height: 96px; margin: 18px 4px 8px; border-top: 1px solid #E7E4DE;">
+        <sc-for list="{{ yearTicks }}" as="yt" hint-placeholder-count="6">
+          <div style="position: absolute; top: 0; left: {{ yt.left }}; width: 1px; height: 96px; background: #EDEBE5;"></div>
+          <div style="position: absolute; top: 2px; left: {{ yt.left }}; transform: translateX(3px); font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ yt.label }}</div>
+        </sc-for>
+        <div style="position: absolute; top: 0; left: {{ todayLeft }}; width: 2px; height: 96px; background: #993C1D; animation: breathe 3s ease-in-out infinite;"></div>
+        <sc-for list="{{ milestoneMarks }}" as="m" hint-placeholder-count="6">
+          <div style="position: absolute; left: {{ m.left }}; top: 44px; width: 9px; height: 9px; transform: translate(-50%,-50%) rotate(45deg); background: {{ m.color }};"></div>
+          <div style="position: absolute; left: {{ m.left }}; top: {{ m.labelTop }}; transform: translateX(-50%); font-size: 9.5px; font-family: 'IBM Plex Mono', monospace; color: #55564F; white-space: nowrap;">{{ m.label }}</div>
+        </sc-for>
+        <sc-for list="{{ confMarks }}" as="c" hint-placeholder-count="10">
+          <div title="{{ c.title }}" style="position: absolute; left: {{ c.left }}; top: 78px; width: 6px; height: 6px; border-radius: 50%; transform: translateX(-50%); background: {{ c.color }};"></div>
+        </sc-for>
+      </div>
+      <div style="display: flex; gap: 18px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F; padding: 0 4px; flex-wrap: wrap;">
+        <span>◆ checkpoints &amp; milestones</span>
+        <span>● conferences, colored by relevance — including ones you log below</span>
+        <span style="color: #993C1D;">▮ today</span>
+      </div>
+    </div>
+
+    <!-- ═══════ ANALYTICS ═══════ -->
+    <div style="margin-top: 26px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Analytics</div>
+      <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">The campaign, measured</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 12px; align-items: start;">
+
+      <!-- PROGRESS CURVE + WHAT-IF -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Progress curve</div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">moves completed over time</span>
+        </div>
+        <svg viewBox="0 0 560 180" style="width: 100%; height: auto; display: block; margin-top: 10px;">
+          <line x1="40" y1="150" x2="548" y2="150" style="stroke: #E7E4DE; stroke-width: 1;"></line>
+          <line x1="40" y1="20" x2="40" y2="150" style="stroke: #E7E4DE; stroke-width: 1;"></line>
+          <line x1="{{ curveNowX }}" y1="20" x2="{{ curveNowX }}" y2="150" style="stroke: #993C1D; stroke-width: 1; stroke-dasharray: 2 3; opacity: .6;"></line>
+          <text x="{{ curveNowX }}" y="14" text-anchor="middle" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #993C1D;">today</text>
+          <polyline points="{{ curvePts }}" fill="none" style="stroke: #993C1D; stroke-width: 2.2; stroke-linejoin: round; stroke-dasharray: 1200; animation: drawIn 1.4s ease forwards;"></polyline>
+          <line x1="{{ curveNowX }}" y1="{{ curveNowY }}" x2="{{ whatifX2 }}" y2="{{ whatifY2 }}" style="stroke: #534AB7; stroke-width: 1.8; stroke-dasharray: 5 4;"></line>
+          <circle cx="{{ curveNowX }}" cy="{{ curveNowY }}" r="4" style="fill: #993C1D;"></circle>
+          <text x="44" y="30" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #A6A79F;">{{ curveYMax }} moves</text>
+        </svg>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #55564F; white-space: nowrap;">what-if: <strong style="color: #534AB7;">{{ movesWk }}/week</strong></span>
+          <input type="range" min="1" max="60" step="1" value="{{ movesWk }}" onChange="{{ setMovesWk }}" style="flex: 1; min-width: 120px; accent-color: #534AB7;">
+        </div>
+        <div style="font-size: 12px; color: #55564F; margin-top: 8px; line-height: 1.5;">{{ paceText }}</div>
+        <div style="font-size: 12px; color: #534AB7; margin-top: 2px; line-height: 1.5;">{{ whatifText }}</div>
+      </div>
+
+      <!-- SPRINT BURN-UP -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Sprint burn-up</div>
+          <a href="Summer Sprint.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3B6D11;">day {{ sprintDay }} of {{ sprintDays }} · open →</a>
+        </div>
+        <svg viewBox="0 0 560 180" style="width: 100%; height: auto; display: block; margin-top: 10px;">
+          <line x1="40" y1="150" x2="548" y2="150" style="stroke: #E7E4DE; stroke-width: 1;"></line>
+          <line x1="40" y1="20" x2="40" y2="150" style="stroke: #E7E4DE; stroke-width: 1;"></line>
+          <line x1="40" y1="150" x2="548" y2="24" style="stroke: #D2CFC8; stroke-width: 1.4; stroke-dasharray: 3 4;"></line>
+          <line x1="{{ sprintNowX }}" y1="20" x2="{{ sprintNowX }}" y2="150" style="stroke: #3B6D11; stroke-width: 1; stroke-dasharray: 2 3; opacity: .55;"></line>
+          <polyline points="{{ sprintPts }}" fill="none" style="stroke: #3B6D11; stroke-width: 2.2; stroke-linejoin: round; stroke-dasharray: 1200; animation: drawIn 1.4s ease forwards;"></polyline>
+          <line x1="{{ sprintNowX }}" y1="{{ sprintNowY }}" x2="548" y2="24" style="stroke: #A32E27; stroke-width: 1.6; stroke-dasharray: 5 4;"></line>
+          <circle cx="{{ sprintNowX }}" cy="{{ sprintNowY }}" r="4" style="fill: #3B6D11;"></circle>
+          <text x="44" y="30" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #A6A79F;">{{ sprintTotal }} sprint moves</text>
+          <text x="544" y="164" text-anchor="end" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #A6A79F;">Aug 23</text>
+        </svg>
+        <div style="font-size: 12px; color: #55564F; margin-top: 10px; line-height: 1.5;">{{ sprintText }}</div>
+        <div style="font-size: 12px; color: #A32E27; margin-top: 2px; line-height: 1.5;">{{ sprintNeedText }}</div>
+      </div>
+
+      <!-- RESEARCH RADAR CHART -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">The four bets, scored</div>
+          <a href="CT Master Plan.html" onClick="{{ goDecisions }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">decisions →</a>
+        </div>
+        <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
+          <svg viewBox="0 0 260 224" style="width: 250px; max-width: 100%; height: auto; display: block; flex-shrink: 0;">
+            <sc-for list="{{ radarGrid }}" as="g" hint-placeholder-count="5">
+              <polygon points="{{ g.pts }}" fill="none" style="stroke: #ECEAE4; stroke-width: 1;"></polygon>
+            </sc-for>
+            <sc-for list="{{ radarAxes }}" as="ax" hint-placeholder-count="4">
+              <line x1="130" y1="112" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" style="stroke: #ECEAE4; stroke-width: 1;"></line>
+              <text x="{{ ax.lx }}" y="{{ ax.ly }}" text-anchor="{{ ax.anchor }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #8A8B84;">{{ ax.label }}</text>
+            </sc-for>
+            <sc-for list="{{ radarPolys }}" as="p" hint-placeholder-count="4">
+              <polygon points="{{ p.pts }}" style="fill: {{ p.fill }}; stroke: {{ p.stroke }}; stroke-width: 1.8; opacity: {{ p.opacity }}; transform-origin: 130px 112px; animation: popIn .7s ease backwards; animation-delay: {{ p.delay }};"></polygon>
+            </sc-for>
+          </svg>
+          <div style="flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 7px;">
+            <sc-for list="{{ radarLegend }}" as="t" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 8px; opacity: {{ t.rowOpacity }};">
+                <span style="width: 10px; height: 10px; border-radius: 3px; background: {{ t.color }}; flex-shrink: 0;"></span>
+                <span style="flex: 1; font-size: 11.5px; color: #26271F; line-height: 1.25;">{{ t.short }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #55564F;">{{ t.total }}/20</span>
+              </div>
+            </sc-for>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F; margin-top: 4px;">{{ calibrationText }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKILLS MATRIX -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Skills — current → target</div>
+          <a href="CT Master Plan.html" onClick="{{ goIdentity }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">identity →</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 14px;">
+          <sc-for list="{{ skillRows }}" as="sk" hint-placeholder-count="8">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 11.5px; color: #26271F; width: 148px; flex-shrink: 0; line-height: 1.2;">{{ sk.label }}</span>
+              <span style="flex: 1; position: relative; height: 14px; display: block;">
+                <span style="position: absolute; top: 6px; left: 0; right: 0; height: 3px; border-radius: 2px; background: #EDEBE5;"></span>
+                <span style="position: absolute; top: 6px; left: {{ sk.curPct }}%; width: {{ sk.gapPct }}%; height: 3px; background: #C9D6E8;"></span>
+                <span style="position: absolute; top: 2px; left: {{ sk.curPct }}%; width: 10px; height: 10px; border-radius: 50%; background: #185FA5; transform: translateX(-5px);"></span>
+                <span style="position: absolute; top: 2px; left: {{ sk.tgtPct }}%; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #185FA5; background: #FFFFFF; transform: translateX(-5px);"></span>
+              </span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8A8B84; width: 44px; text-align: right; flex-shrink: 0;">{{ sk.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- ACTIVITY HEATMAP -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Sixteen weeks of motion</div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ heatSummary }}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; margin-top: 14px; max-width: 420px;">
+          <sc-for list="{{ heatCells }}" as="h" hint-placeholder-count="112">
+            <span title="{{ h.tip }}" style="display: block; aspect-ratio: 1; border-radius: 3px; background: {{ h.bg }}; animation: cellIn .5s ease backwards; animation-delay: {{ h.delay }};"></span>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">
+          <span>less</span>
+          <span style="width: 10px; height: 10px; border-radius: 3px; background: #EBE8E2;"></span>
+          <span style="width: 10px; height: 10px; border-radius: 3px; background: #CFE1BE;"></span>
+          <span style="width: 10px; height: 10px; border-radius: 3px; background: #94C46E;"></span>
+          <span style="width: 10px; height: 10px; border-radius: 3px; background: #5E9B2E;"></span>
+          <span>more · each column is a week</span>
+        </div>
+      </div>
+
+      <!-- COUNTDOWN DIALS + BUFFER -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">The clocks that matter</div>
+        <div style="display: flex; gap: 18px; justify-content: space-around; margin-top: 14px; flex-wrap: wrap;">
+          <sc-for list="{{ dials }}" as="d" hint-placeholder-count="3">
+            <div style="text-align: center; width: 110px;">
+              <div style="position: relative; width: 92px; height: 92px; margin: 0 auto;">
+                <svg width="92" height="92" viewBox="0 0 92 92" style="display: block;">
+                  <circle cx="46" cy="46" r="39" fill="none" style="stroke: #EAE7E1; stroke-width: 7;"></circle>
+                  <circle cx="46" cy="46" r="39" fill="none" style="stroke: {{ d.color }}; stroke-width: 7; stroke-linecap: round; stroke-dasharray: {{ d.dash }}; transform: rotate(-90deg); transform-origin: 46px 46px;"></circle>
+                </svg>
+                <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <span style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; color: {{ d.color }}; line-height: 1;">{{ d.days }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: #A6A79F; margin-top: 2px;">DAYS</span>
+                </div>
+              </div>
+              <div style="font-size: 11px; color: #26271F; margin-top: 8px; line-height: 1.3; font-weight: 500;">{{ d.label }}</div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #A6A79F; margin-top: 2px;">{{ d.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top: 16px; border-top: 1px solid #F2F0EB; padding-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-size: 11.5px; color: #55564F;">Schedule buffer burned</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ bufferColor }};">{{ bufferText }}</span>
+          </div>
+          <div style="height: 6px; border-radius: 3px; background: #EDEBE5; overflow: hidden; margin-top: 6px;">
+            <div style="height: 100%; border-radius: 3px; background: {{ bufferColor }}; width: {{ bufferPct }}%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALIBRATION -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Prediction calibration</div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ brierText }}</span>
+        </div>
+        <sc-if value="{{ hasResolvedBets }}">
+          <svg viewBox="0 0 560 150" style="width: 100%; height: auto; display: block; margin-top: 10px;">
+            <line x1="40" y1="45" x2="548" y2="45" style="stroke: #EEF3EC; stroke-width: 22;"></line>
+            <line x1="40" y1="105" x2="548" y2="105" style="stroke: #FBEAE7; stroke-width: 22;"></line>
+            <text x="34" y="49" text-anchor="end" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #3F6B3A;">right</text>
+            <text x="34" y="109" text-anchor="end" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #A32E27;">wrong</text>
+            <line x1="294" y1="20" x2="294" y2="130" style="stroke: #E7E4DE; stroke-width: 1; stroke-dasharray: 3 3;"></line>
+            <text x="294" y="146" text-anchor="middle" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #A6A79F;">50% confidence</text>
+            <sc-for list="{{ betDots }}" as="b" hint-placeholder-count="4">
+              <circle cx="{{ b.x }}" cy="{{ b.y }}" r="6" style="fill: {{ b.color }}; opacity: .85; animation: popIn .5s ease backwards; animation-delay: {{ b.delay }};">
+                <title>{{ b.tip }}</title>
+              </circle>
+            </sc-for>
+          </svg>
+        </sc-if>
+        <sc-if value="{{ noResolvedBets }}">
+          <div style="margin-top: 14px; padding: 18px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center;">
+            <div style="font-size: 12.5px; color: #77786F; line-height: 1.5;">No predictions resolved yet. {{ openBetCount }} open bets are on the clock — when you call them right or wrong in <a href="CT Master Plan.html" onClick="{{ goDecisions }}">Decisions</a>, your calibration curve appears here.</div>
+          </div>
+        </sc-if>
+        <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 12px;">
+          <sc-for list="{{ openBetRows }}" as="b" hint-placeholder-count="4">
+            <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; align-items: baseline;">
+              <span style="color: #45463F; line-height: 1.4;">{{ b.text }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ b.dueColor }}; white-space: nowrap;">{{ b.conf }}% · {{ b.dueText }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- MONDAY BRIEFING -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">The briefing</div>
+          <button onClick="{{ copyBrief }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ copyColor }}; background: transparent; border: 1px solid #DAD7D0; border-radius: 6px; padding: 4px 10px; cursor: pointer;" style-hover="border-color: #993C1D;">{{ copyLabel }}</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <sc-for list="{{ briefLines }}" as="l" hint-placeholder-count="7">
+            <div style="display: flex; gap: 9px; align-items: flex-start;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: {{ l.color }}; margin-top: 3px; letter-spacing: .08em; width: 54px; flex-shrink: 0; text-transform: uppercase;">{{ l.tag }}</span>
+              <span style="font-size: 12.5px; color: #33342E; line-height: 1.5; flex: 1;">{{ l.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #BBB9B1; margin-top: 12px;">regenerated live · copy it into your Monday review</div>
+      </div>
+    </div>
+
+    <!-- ═══════ CONSTELLATION MAP + TRIPS ═══════ -->
+    <div style="border: 1px solid #1b2a42; border-radius: 14px; background: #0d1626; padding: 20px 22px; margin-top: 16px; color: #e8eef7;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #43e0b8;">The constellation</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">People and meetings on one sky</div>
+        </div>
+        <a href="Network Map.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #7fa8d6;">full globe →</a>
+      </div>
+      <div style="display: flex; gap: 22px; margin-top: 14px; flex-wrap: wrap; align-items: flex-start;">
+        <div style="flex: 1.6; min-width: 380px;">
+          <div style="position: relative; width: 100%; aspect-ratio: 1.85; min-height: 320px; border-radius: 10px; background: radial-gradient(ellipse at 40% 40%, #101c30 0%, #0a1322 80%); overflow: hidden;">
+            <img src="network-map-assets/earth-day.jpg" alt="" style="position: absolute; left: {{ mapImgLeft }}; top: {{ mapImgTop }}; width: {{ mapImgW }}; height: {{ mapImgH }}; object-fit: fill; opacity: .52; filter: saturate(.8) brightness(.82);">
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,19,34,.34), rgba(10,19,34,.52)); pointer-events: none;"></div>
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block;">
+              <sc-for list="{{ mapGrid }}" as="g" hint-placeholder-count="10">
+                <line x1="{{ g.x1 }}" y1="{{ g.y1 }}" x2="{{ g.x2 }}" y2="{{ g.y2 }}" vector-effect="non-scaling-stroke" style="stroke: rgba(190,215,245,.10); stroke-width: 1;"></line>
+              </sc-for>
+              <sc-for list="{{ mapArcs }}" as="a" hint-placeholder-count="8">
+                <path d="{{ a.d }}" fill="none" vector-effect="non-scaling-stroke" style="stroke: rgba(127,168,214,.30); stroke-width: 1;"></path>
+              </sc-for>
+            </svg>
+            <sc-for list="{{ mapConfs2 }}" as="c" hint-placeholder-count="8">
+              <div class="cmap-n" title="{{ c.tip }}" style="position: absolute; left: {{ c.left }}; top: {{ c.top }}; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 2; cursor: default;">
+                <span style="width: 8px; height: 8px; background: {{ c.color }}; transform: rotate(45deg); box-shadow: 0 0 8px {{ c.glow }}; flex: none;"></span>
+                <span class="cmap-l" style="opacity: 0; transition: opacity .12s; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .04em; color: #c9b487; background: rgba(9,14,25,.72); border-radius: 4px; padding: 1px 5px; white-space: nowrap;">{{ c.label }} · {{ c.when }}</span>
+              </div>
+            </sc-for>
+            <sc-for list="{{ mapPeople2 }}" as="p" hint-placeholder-count="9">
+              <div class="cmap-n" title="{{ p.tip }}" style="position: absolute; left: {{ p.left }}; top: {{ p.top }}; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 3; cursor: default;">
+                <span style="position: relative; width: 10px; height: 10px; flex: none;">
+                  <sc-if value="{{ p.owed }}"><span style="position: absolute; inset: -4px; border-radius: 50%; border: 1.4px solid #ff8a98; animation: pulseRing 2.2s ease-out infinite;"></span></sc-if>
+                  <span style="position: absolute; inset: 0; border-radius: 50%; background: {{ p.color }}; box-shadow: 0 0 9px {{ p.glow }};"></span>
+                </span>
+                <span class="cmap-l" style="order: {{ p.labelOrder }}; opacity: {{ p.labelOpacity }}; transition: opacity .12s; font-family: 'IBM Plex Sans', sans-serif; font-size: 10px; font-weight: 600; color: #e6eef8; white-space: nowrap; text-shadow: 0 1px 4px #04060d; background: rgba(9,14,25,.72); border-radius: 4px; padding: 1px 6px; line-height: 1.3;">{{ p.name }}</span>
+              </div>
+            </sc-for>
+            <div style="position: absolute; left: {{ youLeft }}; top: {{ youTop }}; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4;">
+              <span style="width: 9px; height: 9px; background: #ffffff; transform: rotate(45deg); box-shadow: 0 0 10px rgba(255,255,255,.8); flex: none;"></span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .08em; color: #ffffff; background: rgba(9,14,25,.72); border-radius: 4px; padding: 1px 6px; white-space: nowrap;">YOU · LUBLIN</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 16px; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #6b86a8; flex-wrap: wrap;">
+            <span><i style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #43e0b8;"></i> warm</span>
+            <span><i style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f2b13a;"></i> dormant</span>
+            <span><i style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #5b93cf;"></i> cold</span>
+            <span style="color: #ff8a98;">◎ pulsing = owed a touch</span>
+            <span><i style="display: inline-block; width: 7px; height: 7px; background: #b0741a; transform: rotate(45deg);"></i> upcoming meeting</span>
+            <span style="color: #8a95ad;">hover a dot for the name & story — only "your move" pins stay labelled</span>
+          </div>
+        </div>
+        <div style="flex: 1; min-width: 280px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #f2b13a;">Trip logic</div>
+          <div style="font-size: 12px; color: #8ba3c2; margin-top: 4px; line-height: 1.5;">Where a meeting and a relationship share geography — fold them into one trip.</div>
+          <div style="display: flex; flex-direction: column; margin-top: 8px;">
+            <sc-for list="{{ tripRows }}" as="t" hint-placeholder-count="6">
+              <div style="padding: 9px 0; border-bottom: 1px solid #1b2a42;">
+                <div style="display: flex; justify-content: space-between; gap: 10px; align-items: baseline;">
+                  <span style="font-size: 12.5px; font-weight: 600; color: #e8eef7; line-height: 1.35;">{{ t.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ t.flagColor }}; white-space: nowrap;">{{ t.flag }}</span>
+                </div>
+                <div style="font-size: 11px; color: #8ba3c2; margin-top: 2px; line-height: 1.45;">{{ t.sub }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ CONFERENCE DESK ═══════ -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
+
+      <!-- LOG A CONFERENCE -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #b0741a;">Conference desk</div>
+        <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Log a meeting you found</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
+          <input value="{{ fName }}" onChange="{{ setFName }}" placeholder="Conference name" style="grid-column: span 2; font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+          <input value="{{ fCity }}" onChange="{{ setFCity }}" placeholder="City (e.g. Boston, MA)" style="font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+          <select value="{{ fRel }}" onChange="{{ setFRel }}" style="font-size: 13px; padding: 9px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F;">
+            <option value="ctcore">CT-core</option>
+            <option value="adjacent">Adjacent</option>
+            <option value="general">General biomed</option>
+          </select>
+          <input type="date" value="{{ fStart }}" onChange="{{ setFStart }}" style="font-size: 13px; padding: 8px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F;">
+          <input type="date" value="{{ fEnd }}" onChange="{{ setFEnd }}" style="font-size: 13px; padding: 8px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F;">
+          <input value="{{ fDeadline }}" onChange="{{ setFDeadline }}" placeholder="Deadline note (optional)" style="font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+          <input value="{{ fCost }}" onChange="{{ setFCost }}" placeholder="Cost, e.g. ~$1,500 (optional)" style="font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
+          <button onClick="{{ addConf }}" style="font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 9px; border: none; background: #b0741a; color: #FFFFFF; cursor: pointer;" style-hover="background: #993C1D;">＋ Log it</button>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #3F6B3A;">{{ confMsg }}</span>
+        </div>
+        <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Logged meetings flow into the deadline radar, the roadmap, the constellation and trip logic — instantly.</div>
+        <sc-if value="{{ hasLogged }}">
+          <div style="margin-top: 14px; border-top: 1px solid #F2F0EB; padding-top: 10px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F;">Your log</div>
+            <div style="display: flex; flex-direction: column; margin-top: 4px;">
+              <sc-for list="{{ loggedRows }}" as="lg" hint-placeholder-count="3">
+                <div style="display: flex; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid #F7F5F1;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; color: #FFFFFF; background: {{ lg.color }}; border-radius: 4px; padding: 2px 6px; flex-shrink: 0;">{{ lg.acronym }}</span>
+                  <span style="flex: 1; font-size: 12.5px; color: #26271F;">{{ lg.name }} <span style="color: #8A8B84; font-size: 11px;">· {{ lg.city }} · {{ lg.dates }}</span></span>
+                  <button onClick="{{ lg.remove }}" title="Remove from log" style="font-size: 12px; color: #A6A79F; background: none; border: none; cursor: pointer; padding: 2px 6px;" style-hover="color: #A32E27;">✕</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- DIRECTORY -->
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #15707e;">Scouted for you</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Verified meetings worth a look</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">researched Jul '26</span>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 8px;">
+          <sc-for list="{{ directoryRows }}" as="d" hint-placeholder-count="7">
+            <div style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #F2F0EB;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; color: #FFFFFF; background: {{ d.color }}; border-radius: 5px; padding: 3px 7px; flex-shrink: 0; margin-top: 1px;">{{ d.acronym }}</span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: flex; justify-content: space-between; gap: 10px; align-items: baseline;">
+                  <span style="font-size: 13px; font-weight: 600; color: #26271F; line-height: 1.3;">{{ d.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8A8B84; white-space: nowrap;">{{ d.dates }}</span>
+                </span>
+                <span style="display: block; font-size: 11.5px; color: #77786F; margin-top: 2px; line-height: 1.45;">{{ d.city }} — {{ d.note }}</span>
+                <span style="display: flex; gap: 10px; margin-top: 6px; align-items: center;">
+                  <sc-if value="{{ d.notLogged }}"><button onClick="{{ d.log }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: #b0741a; background: #FBF3E2; border: 1px solid #ECD9B0; border-radius: 6px; padding: 3px 10px; cursor: pointer;" style-hover="background: #b0741a; color: #FFFFFF;">＋ Log it</button></sc-if>
+                  <sc-if value="{{ d.isLogged }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3F6B3A;">✓ In your log</span></sc-if>
+                  <sc-if value="{{ d.hasLink }}"><a href="{{ d.link }}" target="_blank" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">site ↗</a></sc-if>
+                  <sc-if value="{{ d.hasDeadline }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #b23b2e; background: #f6e2de; border-radius: 4px; padding: 2px 6px;">⚑ {{ d.deadline }}</span></sc-if>
+                </span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top: 12px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F;">Hunt for more</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+            <sc-for list="{{ huntLinks }}" as="h" hint-placeholder-count="4">
+              <a href="{{ h.url }}" target="_blank" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; background: #F7F5F1; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 11px;" style-hover="border-color: #b0741a; color: #b0741a;">⌕ {{ h.label }}</a>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHOLARSHIP GOALS -->
+    <div id="scholarships" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B;">Scholarships &amp; funding</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Scholarship goals</div>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ schSummary }}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 14px;">
+        <input value="{{ schName }}" onChange="{{ setSchName }}" placeholder="Scholarship / grant name" style="font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <input value="{{ schAmount }}" onChange="{{ setSchAmount }}" placeholder="Amount, e.g. $2,000" style="font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <input type="date" value="{{ schDeadline }}" onChange="{{ setSchDeadline }}" title="Application deadline" style="font-size: 13px; padding: 8px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F;">
+        <input value="{{ schNote }}" onChange="{{ setSchNote }}" placeholder="Note — who, why, link (optional)" style="font-size: 13px; padding: 9px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <button onClick="{{ addSch }}" style="font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 9px; border: none; background: #854F0B; color: #FFFFFF; cursor: pointer;" style-hover="background: #993C1D;">＋ Track it</button>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #3F6B3A; margin-top: 8px; min-height: 14px;">{{ schMsg }}</div>
+      <div style="display: flex; flex-direction: column;">
+        <sc-for list="{{ schRows }}" as="g" hint-placeholder-count="3">
+          <div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid #F2F0EB;">
+            <button onClick="{{ g.cycle }}" title="Click to advance: researching → drafting → submitted → won / lost" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: {{ g.stColor }}; background: {{ g.stBg }}; border: 1px solid transparent; border-radius: 5px; padding: 3px 8px; cursor: pointer; margin-top: 1px; width: 88px;">{{ g.status }}</button>
+            <span style="flex: 1; min-width: 0;">
+              <span style="display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 600; color: #26271F;">{{ g.name }}</span>
+                <span style="display: flex; gap: 12px; align-items: baseline;">
+                  <sc-if value="{{ g.hasAmount }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #854F0B;">{{ g.amount }}</span></sc-if>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ g.dueColor }}; white-space: nowrap;">{{ g.dueText }}</span>
+                </span>
+              </span>
+              <sc-if value="{{ g.hasNote }}"><span style="display: block; font-size: 11.5px; color: #77786F; margin-top: 2px; line-height: 1.45;">{{ g.note }}</span></sc-if>
+            </span>
+            <button onClick="{{ g.remove }}" title="Remove this goal" style="flex: none; font-size: 12px; color: #A6A79F; background: none; border: none; cursor: pointer; padding: 2px 4px;" style-hover="color: #A32E27;">✕</button>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ schEmpty }}">
+        <div style="margin-top: 4px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Nothing tracked yet. Add the first scholarship, travel grant or award you are chasing — its deadline joins the radar above automatically.</div>
+      </sc-if>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Click a status pill to advance it: researching → drafting → submitted → won / lost. Open deadlines appear in the deadline radar, tagged FUND.</div>
+    </div>
+
+    <!-- DECISIONS + BRANCHES -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Decisions</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">The four bets, ranked</div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 10px;">
+          <sc-for list="{{ trackRows }}" as="t" hint-placeholder-count="4">
+            <a href="CT Master Plan.html" onClick="{{ t.go }}" style="display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid #F2F0EB; text-decoration: none; color: inherit; opacity: {{ t.rowOpacity }};">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #BBB9B1; width: 14px; flex-shrink: 0;">{{ t.rank }}</span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap;">
+                  <span style="font-size: 13px; font-weight: 600; color: #26271F;">{{ t.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; font-weight: 600; color: {{ t.color }};">{{ t.tag }}</span>
+                </span>
+                <span style="display: block; font-size: 11.5px; color: #77786F; margin-top: 2px; line-height: 1.4;">{{ t.thesis }}</span>
+              </span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; color: {{ t.killColor }}; background: {{ t.killBg }}; border-radius: 5px; padding: 3px 8px; white-space: nowrap; flex-shrink: 0;">{{ t.killStatus }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #2E6A86;">The thirteen branches</div>
+        <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Where the plan stands</div>
+        <div style="column-count: 2; column-gap: 20px; margin-top: 14px;">
+          <sc-for list="{{ branchRows }}" as="b" hint-placeholder-count="13">
+            <a href="CT Master Plan.html" onClick="{{ b.go }}" style="display: flex; align-items: center; gap: 8px; margin-bottom: 9px; break-inside: avoid; text-decoration: none; color: inherit;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #BBB9B1; width: 14px; flex-shrink: 0;">{{ b.num }}</span>
+              <span style="font-size: 11.5px; font-weight: 500; color: #26271F; width: 108px; flex-shrink: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.title }}</span>
+              <span style="flex: 1; height: 5px; border-radius: 3px; background: #EDEBE5; overflow: hidden; display: block; min-width: 30px;">
+                <span style="display: block; height: 100%; border-radius: 3px; background: {{ b.color }}; width: {{ b.pct }}%; transition: width .3s ease;"></span>
+              </span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #8A8B84; width: 40px; text-align: right; flex-shrink: 0;">{{ b.doneLabel }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBTS + HORIZON -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Relationship debts</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">People owed a touch</div>
+          </div>
+          <a href="Network Map.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">globe →</a>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 10px;">
+          <sc-for list="{{ owedList }}" as="c" hint-placeholder-count="5">
+            <div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid #F2F0EB;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ c.dot }}; flex-shrink: 0; margin-top: 5px; animation: pulseRing 2.4s ease-out infinite;"></span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: flex; justify-content: space-between; gap: 10px; align-items: baseline;">
+                  <span style="font-size: 13.5px; font-weight: 600; color: #26271F;">{{ c.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ c.ageColor }}; white-space: nowrap;">{{ c.age }}</span>
+                </span>
+                <span style="display: block; font-size: 11.5px; color: #77786F; margin-top: 1px;">{{ c.role }} · {{ c.city }}</span>
+                <sc-if value="{{ c.nextOp }}"><span style="display: block; font-size: 12px; color: #45463F; margin-top: 4px; line-height: 1.45;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #0F6E56;">opener</span> {{ c.nextOp }}</span></sc-if>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #b0741a;">Conference horizon</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">What's coming up</div>
+          </div>
+          <a href="Conference Radar.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">radar →</a>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 10px;">
+          <sc-for list="{{ confRows }}" as="ev" hint-placeholder-count="7">
+            <div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid #F2F0EB;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: #FFFFFF; background: {{ ev.color }}; border-radius: 5px; padding: 3px 7px; flex-shrink: 0; margin-top: 1px;">{{ ev.acronym }}</span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: flex; justify-content: space-between; gap: 10px; align-items: baseline;">
+                  <span style="font-size: 13px; font-weight: 600; color: #26271F; line-height: 1.3;">{{ ev.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ ev.whenColor }}; white-space: nowrap;">{{ ev.when }}</span>
+                </span>
+                <span style="display: block; font-size: 11.5px; color: #77786F; margin-top: 2px;">{{ ev.city }} · {{ ev.dates }} · {{ ev.cost }}</span>
+                <sc-if value="{{ ev.deadlineHot }}"><span style="display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #b23b2e; background: #f6e2de; border-radius: 4px; padding: 2px 6px; margin-top: 4px;">⚑ {{ ev.deadline }}</span></sc-if>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- THIS WEEK + NEXT CHAPTER -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">This week</div>
+        <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">Rhythm &amp; resilience</div>
+        <div style="font-size: 13px; color: #26271F; margin-top: 12px;">{{ weekText }}</div>
+        <div style="font-size: 12px; color: {{ restStatusColor }}; margin-top: 6px;">{{ restStatusText }}</div>
+        <div style="display: inline-block; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; color: {{ burnoutColor }}; background: {{ burnoutBg }}; border-radius: 6px; padding: 3px 9px;">{{ burnoutText }}</div>
+        <sc-if value="{{ hasSetback }}"><div style="font-size: 11.5px; color: #8A8B84; margin-top: 10px;">Last setback logged: {{ lastSetbackText }}</div></sc-if>
+        <div style="margin-top: 12px;"><a href="CT Master Plan.html" onClick="{{ goResilience }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;">Open Resilience →</a></div>
+      </div>
+
+      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6E4B8A;">Next chapter</div>
+        <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">{{ chapterTitle }}</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 2px;">{{ chapterWhen }}</div>
+        <div style="font-size: 12.5px; color: #45463F; line-height: 1.55; margin-top: 10px;">{{ chapterExcerpt }}</div>
+        <div style="font-size: 11px; color: #8A8B84; margin-top: 10px; font-style: italic;">On track if: {{ chapterOnTrack }}</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 28px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; color: #BBB9B1;">PLAN · PEOPLE · ROAD — everything updates live from the pages themselves.</div>
+  </div>
+
+  <!-- GUIDE MODAL -->
+  <sc-if value="{{ guideOpen }}">
+    <div onClick="{{ closeGuide }}" style="position: fixed; inset: 0; z-index: 95; background: rgba(26,27,26,.42); display: flex; align-items: center; justify-content: center; padding: 24px; animation: overlayIn .15s ease;">
+      <div onClick="{{ stopClick }}" style="width: 100%; max-width: 600px; max-height: 86vh; overflow-y: auto; background: #FFFFFF; border-radius: 16px; box-shadow: 0 24px 60px rgba(26,27,26,.28); padding: 24px 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">The guide</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 22px; font-weight: 500; margin-top: 4px;">What everything here does</div>
+          </div>
+          <button onClick="{{ closeGuide }}" style="background: none; border: none; font-size: 16px; color: #A6A79F; cursor: pointer;">✕</button>
+        </div>
+        <div style="font-size: 12.5px; color: #77786F; line-height: 1.55; margin-top: 8px;">This page is mission control — it reads live from the other four pages. Nothing here needs upkeep; it updates itself. Top to bottom:</div>
+        <sc-for list="{{ guideRows }}" as="g" hint-placeholder-count="10">
+          <div style="display: flex; gap: 12px; margin-top: 13px; align-items: flex-start;">
+            <span style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; width: 26px; height: 26px; border-radius: 7px; background: #F2F0EB; color: #993C1D; display: flex; align-items: center; justify-content: center;">{{ g.icon }}</span>
+            <div style="flex: 1; font-size: 13px; line-height: 1.55; color: #45463F;"><strong style="color: #1A1B1A;">{{ g.head }}</strong> — {{ g.body }}</div>
+          </div>
+        </sc-for>
+        <div style="font-size: 11.5px; color: #A6A79F; line-height: 1.55; margin-top: 16px; border-top: 1px solid #F2F0EB; padding-top: 12px;">Every other page has its own ? guide button. Everything you type anywhere is saved in this browser instantly — use each page's export buttons for backups.</div>
+        <button onClick="{{ closeGuide }}" style="width: 100%; margin-top: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .06em; padding: 11px; border-radius: 10px; border: none; background: #1A1B1A; color: #FFFFFF; cursor: pointer;">GOT IT</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ⌘K SEARCH OVERLAY -->
+  <sc-if value="{{ searchOpen }}">
+    <div onClick="{{ closeSearch }}" style="position: fixed; inset: 0; z-index: 90; background: rgba(26,27,26,.42); display: flex; align-items: flex-start; justify-content: center; padding: 90px 16px 16px; animation: overlayIn .15s ease;">
+      <div onClick="{{ stopClick }}" style="width: 100%; max-width: 620px; background: #FFFFFF; border-radius: 16px; box-shadow: 0 24px 60px rgba(26,27,26,.28); overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid #F2F0EB;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #993C1D;">⌕</span>
+          <input autoFocus value="{{ q }}" onChange="{{ setQ }}" placeholder="Search 371 moves, 9 people, every meeting…" style="flex: 1; font-size: 15px; border: none; outline: none; background: transparent; color: #1A1B1A;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #BBB9B1;">esc to close</span>
+        </div>
+        <div style="max-height: 420px; overflow-y: auto; padding: 6px 8px 10px;">
+          <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="6">
+            <a href="{{ r.href }}" onClick="{{ r.go }}" style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; border-radius: 9px; text-decoration: none; color: inherit;" style-hover="background: #F7F5F1;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; font-weight: 600; letter-spacing: .06em; color: #FFFFFF; background: {{ r.color }}; border-radius: 4px; padding: 2px 6px; flex-shrink: 0; margin-top: 2px;">{{ r.tag }}</span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: block; font-size: 13px; font-weight: 600; color: #26271F; line-height: 1.35;">{{ r.label }}</span>
+                <span style="display: block; font-size: 11px; color: #8A8B84; margin-top: 1px;">{{ r.sub }}</span>
+              </span>
+            </a>
+          </sc-for>
+          <sc-if value="{{ searchEmpty }}">
+            <div style="padding: 22px; text-align: center; font-size: 12.5px; color: #A6A79F;">Nothing yet — try a branch, a surgeon's name, a city, or a meeting.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:1600},&quot;nextActionsCount&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:6,&quot;min&quot;:3,&quot;max&quot;:10,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Lists&quot;},&quot;radarCount&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:9,&quot;min&quot;:5,&quot;max&quot;:14,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Lists&quot;},&quot;owedCount&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:5,&quot;min&quot;:3,&quot;max&quot;:9,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Lists&quot;}}">
+class Component extends DCLogic {
+  PKEY = 'ct-master-plan-v2';
+  NKEY = 'nm_nodes_v2';
+  CKEY = 'hub_confs_v1';
+  SCH = 'hub_scholarships_v1';
+  JKEY = 'ct_journal_v1';
+  state = { tick: 0, boot: 0, searchOpen: false, q: '', movesWk: 12, copied: false, confMsg: '',
+    fName: '', fCity: '', fStart: '', fEnd: '', fRel: 'ctcore', fDeadline: '', fCost: '',
+    guideOpen: false, schName: '', schAmount: '', schDeadline: '', schNote: '', schMsg: '' };
+
+  componentDidMount() {
+    const poke = () => this.setState(s => ({ tick: s.tick + 1 }));
+    this._onStorage = poke; this._onFocus = poke;
+    window.addEventListener('storage', poke);
+    window.addEventListener('focus', poke);
+    this._iv = setInterval(poke, 30000);
+    if (!window.HUB_DATA) { this._boot2 = setInterval(() => { if (window.HUB_DATA) { clearInterval(this._boot2); poke(); } }, 60); }
+    const t0 = Date.now();
+    this._anim = setInterval(() => {
+      const p = Math.min(1, (Date.now() - t0) / 950);
+      this.setState({ boot: 1 - Math.pow(1 - p, 3) });
+      if (p >= 1) clearInterval(this._anim);
+    }, 30);
+    this._key = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); this.setState(s => ({ searchOpen: !s.searchOpen, q: '' })); }
+      else if (e.key === 'Escape') { this.setState({ searchOpen: false }); }
+    };
+    window.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('storage', this._onStorage);
+    window.removeEventListener('focus', this._onFocus);
+    window.removeEventListener('keydown', this._key);
+    [this._iv, this._boot2, this._anim].forEach(t => t && clearInterval(t));
+  }
+
+  readPlan(data) {
+    const empty = { checked: {}, meta: {}, history: [], scores: {}, bets: [], setbacks: [], health: {}, reviews: [], snapshots: [], cuts: {}, skillCur: {}, recovery: false, view: 'today' };
+    let saved = null;
+    try { const raw = localStorage.getItem(this.PKEY); if (raw) saved = JSON.parse(raw); } catch (e) {}
+    const hadSaved = !!saved;
+    const out = Object.assign({}, empty, saved || {});
+    if (!hadSaved && data.defaultChecked && data.defaultChecked.length) {
+      const seed = {}; data.defaultChecked.forEach(id => seed[id] = 1); out.checked = seed;
+    }
+    if ((out.bets || []).length === 0 && data.extras.betSeeds) {
+      out.bets = data.extras.betSeeds.map(b => ({ id: b.id, text: b.text, due: b.due, conf: b.conf, status: 'open', at: Date.now() }));
+    }
+    return out;
+  }
+  writePlan(patch) {
+    try {
+      const raw = localStorage.getItem(this.PKEY);
+      const cur = raw ? JSON.parse(raw) : { v: 2, checked: {}, meta: {}, history: [], scores: {}, bets: [], setbacks: [], health: {}, reviews: [], snapshots: [], cuts: {}, skillCur: {}, recovery: false, view: 'today' };
+      Object.assign(cur, patch);
+      localStorage.setItem(this.PKEY, JSON.stringify(cur));
+    } catch (e) {}
+  }
+  readContacts(data) {
+    try {
+      const raw = localStorage.getItem(this.NKEY);
+      if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length) return p; }
+    } catch (e) {}
+    return data.contacts || [];
+  }
+  readConfs() {
+    try { const raw = localStorage.getItem(this.CKEY); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } } catch (e) {}
+    return [];
+  }
+  writeConfs(list) { try { localStorage.setItem(this.CKEY, JSON.stringify(list)); } catch (e) {} }
+  readSch() { try { const raw = localStorage.getItem(this.SCH); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } } catch (e) {} return []; }
+  writeSch(list) { try { localStorage.setItem(this.SCH, JSON.stringify(list)); } catch (e) {} }
+  readJournal() { try { const raw = localStorage.getItem(this.JKEY); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } } catch (e) {} return []; }
+  addSchAction = () => {
+    const s = this.state;
+    if (!s.schName.trim()) { this.setState({ schMsg: 'Give it a name first' }); setTimeout(() => this.setState({ schMsg: '' }), 2500); return; }
+    this.writeSch(this.readSch().concat([{ id: 'sch' + Date.now(), name: s.schName.trim(), amount: s.schAmount.trim(), deadline: s.schDeadline, note: s.schNote.trim(), status: 'researching', at: Date.now() }]));
+    this.setState({ schName: '', schAmount: '', schDeadline: '', schNote: '', schMsg: 'Tracked ✓ — deadline is on the radar', tick: this.state.tick + 1 });
+    setTimeout(() => this.setState({ schMsg: '' }), 3200);
+  };
+  cycleSch(id) {
+    const order = ['researching', 'drafting', 'submitted', 'won', 'lost'];
+    this.writeSch(this.readSch().map(g => g.id === id ? Object.assign({}, g, { status: order[(order.indexOf(g.status) + 1) % order.length] }) : g));
+    this.setState(s => ({ tick: s.tick + 1 }));
+  }
+  removeSch(id) { this.writeSch(this.readSch().filter(g => g.id !== id)); this.setState(s => ({ tick: s.tick + 1 })); }
+
+  lookupCity(data, city) {
+    if (!city) return null;
+    const k = city.split(',')[0].trim().toLowerCase();
+    return (data.gaz && data.gaz[k]) || null;
+  }
+  haversine(a, b) {
+    const R = 6371, r = x => x * Math.PI / 180;
+    const dLat = r(b[0] - a[0]), dLon = r(b[1] - a[1]);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLon / 2) ** 2;
+    return Math.round(2 * R * Math.asin(Math.sqrt(h)));
+  }
+  pDate(s) { return s ? new Date(s + 'T00:00:00') : null; }
+  daysUntil(s, now) { if (!s) return null; return Math.ceil((this.pDate(s) - now) / 86400000); }
+  fmtDate(s) { if (!s) return ''; return this.pDate(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  weekStart(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay()); return d; }
+  weekKeyOf(ts) { const d = this.weekStart(ts); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+
+  addConfAction = () => {
+    const s = this.state;
+    if (!s.fName.trim() || !s.fStart) { this.setState({ confMsg: 'Name and start date required' }); return; }
+    const data = window.HUB_DATA;
+    const sp = s.fStart.split('-').map(Number), ep = (s.fEnd || s.fStart).split('-').map(Number);
+    const words = s.fName.trim().split(/\s+/).filter(w => /^[A-Za-z]/.test(w));
+    let acr = words.length >= 2 ? words.map(w => w[0]).join('').toUpperCase().slice(0, 5) : s.fName.trim().slice(0, 4).toUpperCase();
+    const coords = this.lookupCity(data, s.fCity);
+    const entry = { id: 'log-' + Date.now(), acronym: acr, name: s.fName.trim(), city: s.fCity.trim(), rel: s.fRel, start: [sp[0], sp[1] - 1, sp[2]], end: [ep[0], ep[1] - 1, ep[2]], cost: s.fCost.trim(), deadline: s.fDeadline.trim(), logged: true };
+    if (coords) { entry.lat = coords[0]; entry.lon = coords[1]; }
+    this.writeConfs(this.readConfs().concat([entry]));
+    this.setState({ fName: '', fCity: '', fStart: '', fEnd: '', fDeadline: '', fCost: '', confMsg: 'Logged ✓ — it is now everywhere', tick: this.state.tick + 1 });
+    setTimeout(() => this.setState({ confMsg: '' }), 3500);
+  };
+  logDirectory(d) {
+    const list = this.readConfs();
+    if (list.some(x => x.id === d.id)) return;
+    this.writeConfs(list.concat([Object.assign({}, d, { logged: true })]));
+    this.setState(s => ({ tick: s.tick + 1 }));
+  }
+  removeConf(id) {
+    this.writeConfs(this.readConfs().filter(x => x.id !== id));
+    this.setState(s => ({ tick: s.tick + 1 }));
+  }
+
+  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_reviewroom_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_library_v1', 'ct_examiner_v1'];
+  doBackupAction = () => {
+    const out = { __ct_hub_backup: 1, ts: Date.now(), data: {} };
+    this.BKEYS.forEach(k => { try { const v = localStorage.getItem(k); if (v != null) out.data[k] = v; } catch (e) {} });
+    const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ct-hub-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    try { localStorage.setItem('ct_backup_meta_v1', JSON.stringify({ ts: Date.now() })); } catch (e) {}
+    this.setState(s => ({ tick: s.tick + 1 }));
+  };
+  doRestoreAction = () => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const p = JSON.parse(rd.result);
+          if (!p || !p.__ct_hub_backup || !p.data) { alert('Not a CT Hub backup file.'); return; }
+          const n = Object.keys(p.data).length;
+          if (!confirm('Restore ' + n + ' stores from ' + new Date(p.ts).toLocaleDateString() + '? This overwrites what is in this browser now.')) return;
+          Object.keys(p.data).forEach(k => { try { localStorage.setItem(k, p.data[k]); } catch (e) {} });
+          location.reload();
+        } catch (e) { alert('Could not read that file.'); }
+      };
+      rd.readAsText(f);
+    };
+    inp.click();
+  };
+
+  renderVals() {
+    const data = window.HUB_DATA;
+    const now = new Date(); const nowMs = now.getTime();
+    const f = this.state.boot;
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+    if (!data) return {
+      todayLabel, pctShow: 0, pctBar: 0, done: 0, total: 0, ringDash: '0 145', branchCount: 0, positioningNow: '', streakText: '', momentumText: '', momentumColor: '#8A8B84',
+      planViewChips: [], contactCount: '—', owedCount: 0, nextConfDays: '—', nextConfAcr: '', upcomingCount: 0,
+      spofRows: [], nextActions: [], radarRows: [], trackRows: [], calibrationText: '', branchRows: [], owedList: [], confRows: [],
+      yearTicks: [], todayLeft: '0%', milestoneMarks: [], confMarks: [],
+      curvePts: '', curveNowX: 40, curveNowY: 150, whatifX2: 40, whatifY2: 150, curveYMax: '', movesWk: 12, setMovesWk: () => {}, paceText: '', whatifText: '',
+      sprintPts: '', sprintNowX: 40, sprintNowY: 150, sprintDay: 0, sprintDays: 52, sprintTotal: 0, sprintText: '', sprintNeedText: '',
+      radarGrid: [], radarAxes: [], radarPolys: [], radarLegend: [], skillRows: [], heatCells: [], heatSummary: '',
+      dials: [], bufferPct: 0, bufferColor: '#3F6B3A', bufferText: '', betDots: [], openBetRows: [], hasResolvedBets: false, noResolvedBets: true, openBetCount: 0, brierText: '',
+      briefLines: [], copyBrief: () => {}, copyLabel: 'copy', copyColor: '#55564F',
+      mapGrid: [], mapArcs: [], mapConfs: [], mapPeople: [], youX: 0, youY: 0, youRx: 0, youRy: 0, youTx: 0, youTy: 0, tripRows: [],
+      fName: '', fCity: '', fStart: '', fEnd: '', fRel: 'ctcore', fDeadline: '', fCost: '', setFName: () => {}, setFCity: () => {}, setFStart: () => {}, setFEnd: () => {}, setFRel: () => {}, setFDeadline: () => {}, setFCost: () => {}, addConf: () => {}, confMsg: '', hasLogged: false, loggedRows: [], directoryRows: [], huntLinks: [],
+      searchOpen: false, openSearch: () => {}, closeSearch: () => {}, stopClick: () => {}, q: '', setQ: () => {}, searchResults: [], searchEmpty: false,
+      weekText: '', restStatusText: '', restStatusColor: '#8A8B84', burnoutText: '', burnoutColor: '#8A8B84', burnoutBg: '#EEEDE8', hasSetback: false, lastSetbackText: '',
+      chapterTitle: '', chapterWhen: '', chapterExcerpt: '', chapterOnTrack: '', goResilience: () => {}, goToday: () => {}, goDecisions: () => {}, goIdentity: () => {},
+      quoteText: '', quoteBy: '', quoteSub: '', guideOpen: false, openGuide: () => {}, closeGuide: () => {}, guideRows: [],
+      journalCount: 0, journalHasLast: false, journalNoLast: true, journalLast: '', journalStreakText: '', journalStreakColor: '#A6A79F',
+      lifelogDays: 0, lifelogHint: 'start today', lifelogHint2Color: '#A6A79F',
+      schRows: [], schEmpty: true, schSummary: '', schMsg: '', schName: '', schAmount: '', schDeadline: '', schNote: '',
+      setSchName: () => {}, setSchAmount: () => {}, setSchDeadline: () => {}, setSchNote: () => {}, addSch: () => {},
+      mapPeople2: [], mapConfs2: [], youLeft: '50%', youTop: '50%',
+      mapImgLeft: '0%', mapImgTop: '0%', mapImgW: '100%', mapImgH: '100%'
+    };
+
+    const extras = data.extras;
+    const plan = this.readPlan(data);
+    const checked = plan.checked, meta = plan.meta;
+    const isChecked = id => !!checked[id];
+    const nextActionsCount = this.props.nextActionsCount ?? 6;
+    const owedCap = this.props.owedCount ?? 5;
+    const radarCap = this.props.radarCount ?? 9;
+
+    // ---- weighted progress ----
+    let wDone = 0, wTotal = 0, doneCount = 0;
+    data.items.forEach(it => { const w = (meta[it.id] && meta[it.id].weight) || 1; wTotal += w; if (isChecked(it.id)) { wDone += w; doneCount++; } });
+    const total = data.items.length;
+    const pct = wTotal ? Math.round(wDone / wTotal * 100) : 0;
+    const RC = 2 * Math.PI * 23;
+    const ringDash = (pct / 100 * RC * f).toFixed(1) + ' ' + RC.toFixed(1);
+
+    // ---- streak / momentum / heat ----
+    const dayKey = ts => { const d = new Date(ts); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+    const history = plan.history || [];
+    const checkEvents = history.filter(h => h.a === 1);
+    const dayset = {}; checkEvents.forEach(h => { const k = dayKey(h.ts); dayset[k] = (dayset[k] || 0) + 1; });
+    let streak = 0; { let i = 0; const has = off => (dayset[dayKey(nowMs - off * 86400000)] || 0) > 0; if (!has(0) && has(1)) i = 1; while (has(i)) { streak++; i++; } }
+    const last7 = checkEvents.filter(h => h.ts >= nowMs - 7 * 86400000).length;
+    const prev7 = checkEvents.filter(h => h.ts < nowMs - 7 * 86400000 && h.ts >= nowMs - 14 * 86400000).length;
+    const momentum = last7 - prev7;
+
+    const HEATCOL = ['#EBE8E2', '#CFE1BE', '#94C46E', '#5E9B2E'];
+    const startSun = this.weekStart(nowMs - 15 * 7 * 86400000);
+    let maxc = 1; for (let d = 0; d < 112; d++) { const c = dayset[dayKey(startSun.getTime() + d * 86400000)] || 0; if (c > maxc) maxc = c; }
+    const heatCells = [];
+    for (let col = 0; col < 16; col++) for (let row = 0; row < 7; row++) {
+      const t = startSun.getTime() + (col * 7 + row) * 86400000;
+      const c = dayset[dayKey(t)] || 0;
+      const lvl = c === 0 ? 0 : (c / maxc > 0.66 ? 3 : (c / maxc > 0.33 ? 2 : 1));
+      const future = t > nowMs;
+      heatCells.push({ tip: new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' — ' + c + ' moves', bg: future ? 'transparent' : HEATCOL[lvl], delay: ((col * 7 + row) * 5) + 'ms' });
+    }
+    const heatSummary = last7 + ' this week · ' + checkEvents.length + ' all-time';
+
+    // ---- branches ----
+    const bMap = {}; data.branches.forEach(b => bMap[b.id] = b);
+    const byBranch = {}; data.items.forEach(it => { (byBranch[it.branchId] = byBranch[it.branchId] || []).push(it); });
+    const branchRows = data.branches.map(b => {
+      const items = byBranch[b.id] || [];
+      const d = items.reduce((a, it) => a + (isChecked(it.id) ? 1 : 0), 0);
+      return { num: b.num, title: b.title, color: b.color, pct: Math.round((items.length ? d / items.length * 100 : 0) * f), doneLabel: d + '/' + items.length, go: () => this.writePlan({ view: b.id }) };
+    });
+
+    // ---- contacts ----
+    const contacts = this.readContacts(data).filter(c => c.type !== 'you');
+    const youC = this.readContacts(data).find(c => c.type === 'you') || { lat: 51.25, lon: 22.57 };
+    const owed = contacts.filter(c => c.owed).sort((a, b) => (b.lastDays || 0) - (a.lastDays || 0));
+    const strengthDot = { warm: '#43a06b', dormant: '#b0741a', cold: '#5c6673' };
+    const strengthMap = { warm: '#43e0b8', dormant: '#f2b13a', cold: '#5b93cf' };
+    const owedList = owed.slice(0, owedCap).map(c => ({
+      name: c.name, role: c.role, city: c.city, dot: strengthDot[c.strength] || '#8a8577',
+      age: (c.lastDays || 0) + 'd silent', ageColor: (c.lastDays || 0) >= 90 ? '#b23b2e' : '#8a8577',
+      nextOp: (c.ops && c.ops[0]) ? String(c.ops[0]).split('·')[0].trim() : ''
+    }));
+
+    // ---- events: base + logged ----
+    const relColor = { ctcore: '#15707e', adjacent: '#b0741a', general: '#5c6673' };
+    const logged = this.readConfs();
+    const loggedIds = {}; logged.forEach(l => loggedIds[l.id] = true);
+    const allBase = data.events.concat(logged);
+    const dnum = d => Date.UTC(d[0], d[1], d[2]);
+    const tnum = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const evs = allBase.map(e => {
+      const s = dnum(e.start), en = dnum(e.end);
+      const daysAway = Math.round((s - tnum) / 86400000);
+      return Object.assign({}, e, { daysAway, live: tnum >= s && tnum <= en, concluded: en < tnum, sMs: s });
+    });
+    const upcoming = evs.filter(e => !e.concluded).sort((a, b) => a.daysAway - b.daysAway);
+    const nextConf = upcoming.find(e => !e.deadlineOnly) || upcoming[0] || null;
+    const fmtD = e => { const sM = MON[e.start[1]]; if (e.end[2] === e.start[2] && e.end[1] === e.start[1]) return sM + ' ' + e.start[2]; if (e.end[1] === e.start[1]) return sM + ' ' + e.start[2] + '–' + e.end[2]; return sM + ' ' + e.start[2] + ' – ' + MON[e.end[1]] + ' ' + e.end[2]; };
+    const confRows = upcoming.slice(0, 7).map(e => ({
+      acronym: e.acronym, name: e.name, city: e.city || '—', cost: e.cost || '—', color: relColor[e.rel] || '#5c6673',
+      dates: fmtD(e) + (e.approx ? ' (approx)' : ''), when: e.deadlineOnly ? 'deadline' : (e.live ? 'happening now' : 'in ' + e.daysAway + 'd'),
+      whenColor: e.live ? '#b23b2e' : (e.daysAway <= 14 ? '#b23b2e' : '#2f7a52'),
+      deadline: e.deadline, deadlineHot: /closes|closing|due|apply/i.test(e.deadline || '')
+    }));
+
+    // ---- next actions ----
+    const nextActions = [];
+    outer:
+    for (const bid of data.priority) {
+      for (const it of (byBranch[bid] || [])) {
+        if (!isChecked(it.id)) {
+          const b = bMap[bid];
+          nextActions.push({
+            id: it.id, label: it.label, branchTitle: b ? b.title : '', color: b ? b.color : '#993C1D', checked: false,
+            toggle: () => {
+              const curChecked = Object.assign({}, this.readPlan(data).checked);
+              const metaAll = Object.assign({}, plan.meta);
+              const m = Object.assign({}, metaAll[it.id] || {});
+              if (curChecked[it.id]) { delete curChecked[it.id]; delete m.completedAt; } else { curChecked[it.id] = 1; m.completedAt = Date.now(); }
+              metaAll[it.id] = m;
+              const hist = (plan.history || []).concat([{ id: it.id, ts: Date.now(), a: curChecked[it.id] ? 1 : 0 }]).slice(-2000);
+              this.writePlan({ checked: curChecked, meta: metaAll, history: hist });
+              this.setState(s => ({ tick: s.tick + 1 }));
+            }
+          });
+          if (nextActions.length >= nextActionsCount) break outer;
+        }
+      }
+    }
+
+    // ---- tracks / decisions ----
+    const axes = extras.scoreAxes;
+    const effCut = t => { const c = plan.cuts[t.id]; if (c === 'restored') return null; if (c) return c; return t.cut || null; };
+    let trackRows = extras.tracks.map(t => {
+      const ov = plan.scores[t.id] || {};
+      const axisVals = axes.map(ax => ov[ax.key] != null ? ov[ax.key] : t.scores[ax.key]);
+      const totalScore = axisVals.reduce((a, v) => a + v, 0);
+      const killDue = t.killDate ? this.daysUntil(t.killDate, nowMs) : null;
+      const cut = effCut(t);
+      const killTriggered = killDue != null && killDue <= 30 && !cut;
+      const killSoon = killDue != null && killDue > 30 && killDue <= 120 && !cut;
+      const killColor = cut ? '#8A8B84' : (killTriggered ? '#A32E27' : (killSoon ? '#B0691B' : '#3F6B3A'));
+      const killBg = cut ? '#EEEDE8' : (killTriggered ? '#FBEAE7' : (killSoon ? '#FBF3E2' : '#EEF3EC'));
+      const killStatus = cut ? 'cut' : (killTriggered ? 'review now' : (t.killDate ? 'by ' + this.fmtDate(t.killDate) : '—'));
+      return { id: t.id, name: t.name, tag: t.tag, color: t.color, thesis: t.thesis, total: totalScore, axisVals, killStatus, killColor, killBg, killDue, cut: !!cut, rowOpacity: cut ? 0.6 : 1, go: () => this.writePlan({ view: 'decisions' }) };
+    }).sort((a, b) => (a.cut ? 1 : 0) - (b.cut ? 1 : 0) || b.total - a.total);
+    trackRows.forEach((r, i) => { r.rank = r.cut ? '—' : String(i + 1); });
+
+    // radar chart geometry
+    const RCX = 130, RCY = 112, RR = 78;
+    const angs = [-90, 0, 90, 180].map(a => a * Math.PI / 180);
+    const ptAt = (ai, val) => (RCX + RR * (val / 5) * Math.cos(angs[ai])).toFixed(1) + ',' + (RCY + RR * (val / 5) * Math.sin(angs[ai])).toFixed(1);
+    const radarGrid = [1, 2, 3, 4, 5].map(v => ({ pts: angs.map((a, i) => ptAt(i, v)).join(' ') }));
+    const axLabel = ['Startability', 'IP', 'Signal', 'Edge'];
+    const radarAxes = angs.map((a, i) => {
+      const x2 = RCX + RR * Math.cos(a), y2 = RCY + RR * Math.sin(a);
+      const lx = RCX + (RR + 12) * Math.cos(a), ly = RCY + (RR + 14) * Math.sin(a) + 3;
+      return { x2: x2.toFixed(1), y2: y2.toFixed(1), lx: lx.toFixed(1), ly: ly.toFixed(1), anchor: i === 1 ? 'start' : (i === 3 ? 'end' : 'middle'), label: axLabel[i] };
+    });
+    const rgba = (hex, a) => { const h = hex.replace('#', ''); const n = parseInt(h, 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
+    const radarPolys = trackRows.map((t, i) => ({ pts: t.axisVals.map((v, ai) => ptAt(ai, v)).join(' '), fill: rgba(t.color, 0.10), stroke: t.color, opacity: t.cut ? 0.25 : 0.95, delay: (i * 140) + 'ms' }));
+    const radarLegend = trackRows.map(t => ({ color: t.color, short: t.name.length > 34 ? t.name.slice(0, 33) + '…' : t.name, total: t.total, rowOpacity: t.cut ? 0.5 : 1 }));
+
+    const bets = plan.bets || [];
+    const resolvedBets = bets.filter(b => b.status === 'correct' || b.status === 'wrong');
+    const hitRate = resolvedBets.length ? Math.round(resolvedBets.filter(b => b.status === 'correct').length / resolvedBets.length * 100) : null;
+    const calibrationText = hitRate == null ? 'no resolved predictions yet' : 'calibration: ' + hitRate + '% right of ' + resolvedBets.length;
+    const brier = resolvedBets.length ? (resolvedBets.reduce((a, b) => { const p = b.conf / 100, o = b.status === 'correct' ? 1 : 0; return a + (p - o) * (p - o); }, 0) / resolvedBets.length) : null;
+    const brierText = brier != null ? 'Brier ' + brier.toFixed(2) + ' · lower is better' : resolvedBets.length + ' resolved';
+    const betDots = resolvedBets.map((b, i) => ({ x: (40 + b.conf / 100 * 508).toFixed(0), y: b.status === 'correct' ? 45 + (i % 3) * 7 - 7 : 105 + (i % 3) * 7 - 7, color: b.status === 'correct' ? '#3F6B3A' : '#A32E27', tip: b.text + ' — ' + b.conf + '%', delay: (i * 90) + 'ms' }));
+    const openBets = bets.filter(b => b.status === 'open');
+    const openBetRows = openBets.slice(0, 4).map(b => { const du = b.due ? this.daysUntil(b.due, nowMs) : null; return { text: b.text, conf: b.conf, dueText: du == null ? 'no date' : (du < 0 ? Math.abs(du) + 'd overdue' : 'in ' + du + 'd'), dueColor: du != null && du < 0 ? '#A32E27' : '#8A8B84' }; });
+
+    // ---- resilience ----
+    const curWk = this.weekKeyOf(nowMs);
+    const hw = plan.health[curWk] || {};
+    const energy = hw.energy != null ? hw.energy : null;
+    const load = hw.load != null ? hw.load : null;
+    let lastRestTs = null;
+    Object.keys(plan.health || {}).forEach(k => { if (plan.health[k].rest) { const p = k.split('-'); const t = new Date(+p[0], +p[1] - 1, +p[2]).getTime(); if (lastRestTs == null || t > lastRestTs) lastRestTs = t; } });
+    const weeksSinceRest = lastRestTs != null ? Math.floor((nowMs - lastRestTs) / (7 * 86400000)) : null;
+    const restOverdue = weeksSinceRest != null && weeksSinceRest >= extras.restCycleWeeks;
+    const energyWarn = energy != null && energy <= 2;
+    const loadWarn = energy != null && load != null && (load - energy) >= 2;
+    const burnoutWarn = restOverdue || energyWarn || loadWarn;
+    const healthLogged = Object.keys(hw).length > 0;
+    const weekText = healthLogged ? ([energy != null ? 'Energy ' + energy + '/5' : null, load != null ? 'Load ' + load + '/5' : null].filter(Boolean).join(' · ') || 'Logged, no energy/load set') : 'No check-in logged this week';
+    const restStatusText = weeksSinceRest == null ? 'No rest week logged yet' : (restOverdue ? weeksSinceRest + ' weeks since rest · overdue' : weeksSinceRest + ' weeks since last rest');
+    const restStatusColor = restOverdue ? '#A32E27' : '#8A8B84';
+    const burnoutText = burnoutWarn ? 'Watch' : (healthLogged ? 'Steady' : 'Not logged');
+    const burnoutColor = burnoutWarn ? '#A32E27' : (healthLogged ? '#3F6B3A' : '#8A8B84');
+    const burnoutBg = burnoutWarn ? '#FBEAE7' : (healthLogged ? '#EEF3EC' : '#EEEDE8');
+    const setbacks = plan.setbacks || [];
+    const hasSetback = setbacks.length > 0;
+    const lastSetbackText = hasSetback ? setbacks[setbacks.length - 1].what : '';
+
+    // ---- SPOF ----
+    const findContactByKey = key => {
+      const k = key.toLowerCase();
+      return contacts.find(c => c.city && k.includes(c.city.split(',')[0].trim().toLowerCase()));
+    };
+    const matchMilestone = extras.milestones.find(m => m.id === 'm-match');
+    const spofRows = extras.spof.map(s => {
+      let statusText = 'No live link yet', statusColor = '#8A8B84', hasHref = false, href = '', go = () => {};
+      if (/burn/i.test(s.key)) {
+        statusText = burnoutWarn ? 'Watch — signals present' : (healthLogged ? 'On track' : 'Not logged yet');
+        statusColor = burnoutWarn ? '#A32E27' : (healthLogged ? '#3F6B3A' : '#8A8B84');
+        hasHref = true; href = 'CT Master Plan.html'; go = () => this.writePlan({ view: 'resilience' });
+      } else if (/match/i.test(s.key) && matchMilestone) {
+        statusText = this.daysUntil(matchMilestone.date, nowMs) + ' days out'; statusColor = '#8A8B84';
+        hasHref = true; href = 'CT Master Plan.html'; go = () => this.writePlan({ view: 'timeline' });
+      } else {
+        const c = findContactByKey(s.key);
+        if (c) {
+          statusText = (c.owed ? 'Owed a touch · ' : '') + (c.lastDays || 0) + 'd silent';
+          statusColor = c.owed ? '#b23b2e' : '#3F6B3A';
+          hasHref = true; href = 'Network Map.dc.html';
+        }
+      }
+      return { key: s.key, why: s.why, statusText, statusColor, hasHref, href, go };
+    });
+
+    // ---- deadline radar ----
+    const radar = [];
+    Object.keys(meta).forEach(id => {
+      const m = meta[id]; if (!m || !m.due || isChecked(id)) return;
+      const it = data.items.find(x => x.id === id); if (!it) return;
+      const b = bMap[it.branchId]; const du = this.daysUntil(m.due, nowMs);
+      radar.push({ source: 'PLAN', color: b ? b.color : '#993C1D', label: it.label, sub: b ? b.title : '', whenText: du < 0 ? Math.abs(du) + 'd overdue' : (du === 0 ? 'today' : 'in ' + du + 'd'), whenColor: du < 0 ? '#A32E27' : (du <= 14 ? '#B0691B' : '#3F6B3A'), score: du, href: 'CT Master Plan.html', go: () => this.writePlan({ view: it.branchId }) });
+    });
+    trackRows.filter(t => !t.cut && t.killDue != null).forEach(t => {
+      radar.push({ source: 'DECISIONS', color: '#534AB7', label: t.name + ' — kill review', sub: t.tag, whenText: t.killDue < 0 ? Math.abs(t.killDue) + 'd overdue' : 'in ' + t.killDue + 'd', whenColor: t.killDue <= 30 ? '#A32E27' : (t.killDue <= 120 ? '#B0691B' : '#3F6B3A'), score: t.killDue, href: 'CT Master Plan.html', go: () => this.writePlan({ view: 'decisions' }) });
+    });
+    openBets.filter(b => b.due).forEach(b => {
+      const du = this.daysUntil(b.due, nowMs);
+      radar.push({ source: 'DECISIONS', color: '#534AB7', label: 'Prediction: ' + b.text, sub: b.conf + '% confidence', whenText: du < 0 ? Math.abs(du) + 'd overdue' : 'in ' + du + 'd', whenColor: du < 0 ? '#A32E27' : (du <= 14 ? '#B0691B' : '#3F6B3A'), score: du, href: 'CT Master Plan.html', go: () => this.writePlan({ view: 'decisions' }) });
+    });
+    upcoming.forEach(e => {
+      radar.push({ source: e.logged ? 'LOGGED' : 'ROAD', color: relColor[e.rel] || '#b0741a', label: e.deadlineOnly ? e.name + ' — deadline' : e.name, sub: [e.city, e.deadline].filter(Boolean).join(' · '), whenText: e.live ? 'happening now' : (e.daysAway <= 0 ? 'today' : 'in ' + e.daysAway + 'd'), whenColor: e.daysAway <= 14 ? '#A32E27' : '#2f7a52', score: e.daysAway, href: 'Conference Radar.dc.html', go: () => {} });
+    });
+    owed.forEach(c => {
+      radar.push({ source: 'PEOPLE', color: '#0F6E56', label: 'Reach out to ' + c.name, sub: c.role + ' · ' + c.city, whenText: (c.lastDays || 0) + 'd silent', whenColor: (c.lastDays || 0) >= 90 ? '#A32E27' : '#B0691B', score: 55 - (c.lastDays || 0), href: 'Network Map.dc.html', go: () => {} });
+    });
+    this.readSch().forEach(g => {
+      if (!g.deadline || g.status === 'won' || g.status === 'lost') return;
+      const du = this.daysUntil(g.deadline, nowMs);
+      radar.push({ source: 'FUND', color: '#854F0B', label: g.name + ' — application', sub: [g.amount, g.status].filter(Boolean).join(' · '), whenText: du < 0 ? Math.abs(du) + 'd overdue' : (du === 0 ? 'due today' : 'in ' + du + 'd'), whenColor: du < 0 ? '#A32E27' : (du <= 14 ? '#B0691B' : '#3F6B3A'), score: du, href: '#scholarships', go: () => {} });
+    });
+    radar.sort((a, b) => a.score - b.score);
+    const radarRows = radar.slice(0, radarCap);
+
+    // ---- roadmap timeline ----
+    const axisStart = this.pDate(extras.timelineStart), axisEnd = this.pDate(extras.timelineEnd);
+    const axisSpan = axisEnd - axisStart;
+    const pctOf = ms => Math.max(0, Math.min(100, (ms - axisStart) / axisSpan * 100)).toFixed(2) + '%';
+    const yearTicks = [];
+    for (let y = axisStart.getFullYear(); y <= axisEnd.getFullYear(); y++) {
+      const d = new Date(y, 0, 1); if (d >= axisStart && d <= axisEnd) yearTicks.push({ left: pctOf(d.getTime()), label: String(y) });
+    }
+    const todayLeft = pctOf(nowMs);
+    const milestoneMarks = extras.milestones.map((m, i) => ({ left: pctOf(this.pDate(m.date).getTime()), color: m.color, label: m.label.split('·')[0].trim(), labelTop: i % 2 === 0 ? '4px' : '66px' }));
+    const confMarks = evs.filter(e => !e.deadlineOnly).map(e => ({ left: pctOf(e.sMs), color: relColor[e.rel] || '#5c6673', title: e.acronym + ' — ' + e.name }));
+
+    // ---- progress curve ----
+    const planStartMs = this.pDate(extras.planStart).getTime();
+    const netAll = history.reduce((a, h) => a + (h.a ? 1 : -1), 0);
+    let curveVal = Math.max(0, doneCount - netAll);
+    const tMin = Math.min(planStartMs, history.length ? history[0].ts : planStartMs);
+    const tMax = nowMs + 120 * 86400000;
+    const X0 = 40, X1 = 548, Y0 = 150, Y1 = 28;
+    const xOf = ts => X0 + (ts - tMin) / (tMax - tMin) * (X1 - X0);
+    const movesWk = this.state.movesWk;
+    const rate14 = checkEvents.filter(h => h.ts >= nowMs - 14 * 86400000).length / 14;
+    const yMaxVal = Math.max(10, doneCount + 2, Math.ceil(doneCount + (movesWk / 7) * 120 * 1.05), Math.ceil(doneCount + rate14 * 120));
+    const yOf = v => Y0 - (v / yMaxVal) * (Y0 - Y1);
+    let pts = [[xOf(tMin), yOf(curveVal)]];
+    history.forEach(h => { const prev = curveVal; curveVal += h.a ? 1 : -1; if (curveVal < 0) curveVal = 0; pts.push([xOf(h.ts), yOf(prev)]); pts.push([xOf(h.ts), yOf(curveVal)]); });
+    pts.push([xOf(nowMs), yOf(doneCount)]);
+    const curvePts = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const curveNowX = xOf(nowMs).toFixed(1), curveNowY = yOf(doneCount).toFixed(1);
+    const whatifEndVal = doneCount + (movesWk / 7) * 120;
+    const whatifX2 = X1, whatifY2 = yOf(Math.min(whatifEndVal, yMaxVal)).toFixed(1);
+    const remaining = total - doneCount;
+    const fmtMonthYear = ms => new Date(ms).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    const paceText = rate14 > 0.01
+      ? 'Actual pace: ' + (rate14 * 7).toFixed(1) + ' moves/week → all ' + total + ' by ' + fmtMonthYear(nowMs + remaining / rate14 * 86400000)
+      : 'No movement in the last 14 days — the curve is flat.';
+    const whatifText = 'At ' + movesWk + '/week you would clear all ' + total + ' moves by ' + fmtMonthYear(nowMs + remaining / (movesWk / 7) * 86400000) + '.';
+
+    // ---- sprint burn-up ----
+    const sprintDays = extras.sprintDays || 52;
+    const sprintIds = {}; (byBranch['summer'] || []).forEach(it => sprintIds[it.id] = true);
+    const sprintTotal = (byBranch['summer'] || []).length;
+    const sDone = (byBranch['summer'] || []).reduce((a, it) => a + (isChecked(it.id) ? 1 : 0), 0);
+    const sHist = history.filter(h => sprintIds[h.id]);
+    const sNet = sHist.reduce((a, h) => a + (h.a ? 1 : -1), 0);
+    let sVal = Math.max(0, sDone - sNet);
+    const sprintDay = Math.max(1, Math.min(sprintDays, Math.floor((nowMs - planStartMs) / 86400000) + 1));
+    const sxOf = day => 40 + (day / sprintDays) * 508;
+    const syOf = v => 150 - (v / Math.max(1, sprintTotal)) * 126;
+    let spts = [[sxOf(0), syOf(sVal)]];
+    sHist.forEach(h => { const day = Math.max(0, Math.min(sprintDays, (h.ts - planStartMs) / 86400000)); const prev = sVal; sVal += h.a ? 1 : -1; if (sVal < 0) sVal = 0; spts.push([sxOf(day), syOf(prev)]); spts.push([sxOf(day), syOf(sVal)]); });
+    spts.push([sxOf(sprintDay), syOf(sDone)]);
+    const sprintPts = spts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const sprintNowX = sxOf(sprintDay).toFixed(1), sprintNowY = syOf(sDone).toFixed(1);
+    const sLeft = sprintTotal - sDone, dLeft = Math.max(1, sprintDays - sprintDay);
+    const sprintText = sDone + ' of ' + sprintTotal + ' sprint moves done · ' + Math.round(sDone / Math.max(1, sprintTotal) * 100) + '%';
+    const sprintNeedText = sLeft <= 0 ? 'Sprint cleared — ahead of the line.' : 'Need ' + (sLeft / dLeft).toFixed(1) + '/day to finish by Aug 23 (dashed red line).';
+
+    // ---- skills ----
+    const skillRows = (extras.skills || []).map(s => {
+      const cur = (s.id in (plan.skillCur || {})) ? plan.skillCur[s.id] : s.cur;
+      return { label: s.label, curPct: (cur / 5 * 100).toFixed(0), tgtPct: (s.tgt / 5 * 100).toFixed(0), gapPct: (Math.max(0, s.tgt - cur) / 5 * 100).toFixed(0), text: cur + ' → ' + s.tgt };
+    });
+
+    // ---- dials + buffer ----
+    const DC2 = 2 * Math.PI * 39;
+    const mkDial = (label, dateStr, color, sub) => {
+      const du = this.daysUntil(dateStr, nowMs);
+      const span = (this.pDate(dateStr) - planStartMs) || 1;
+      const frac = Math.max(0.02, Math.min(1, (nowMs - planStartMs) / span));
+      return { label, days: du, color, sub, dash: (frac * DC2 * f).toFixed(1) + ' ' + DC2.toFixed(1) };
+    };
+    const nextCpMile = extras.milestones.filter(m => m.kind !== 'gate').map(m => ({ m, du: this.daysUntil(m.date, nowMs) })).filter(x => x.du >= 0).sort((a, b) => a.du - b.du)[0];
+    const nextKill = trackRows.filter(t => !t.cut && t.killDue != null && t.killDue >= 0).sort((a, b) => a.killDue - b.killDue)[0];
+    const dials = [];
+    if (nextCpMile) dials.push(mkDial(nextCpMile.m.label.split('·')[0].trim(), nextCpMile.m.date, nextCpMile.m.color, this.fmtDate(nextCpMile.m.date)));
+    if (nextKill) dials.push(mkDial('Kill review: ' + (nextKill.name.length > 22 ? nextKill.name.slice(0, 21) + '…' : nextKill.name), extras.tracks.find(t => t.id === nextKill.id).killDate, '#534AB7', this.fmtDate(extras.tracks.find(t => t.id === nextKill.id).killDate)));
+    if (matchMilestone) dials.push(mkDial('The Match', matchMilestone.date, '#A32E27', this.fmtDate(matchMilestone.date)));
+
+    const branchSlip = {};
+    Object.keys(meta).forEach(id => { const sd = meta[id] && meta[id].slipDays; if (sd > 0) { const it = data.items.find(x => x.id === id); if (it && (!branchSlip[it.branchId] || sd > branchSlip[it.branchId])) branchSlip[it.branchId] = sd; } });
+    const burned = Object.keys(branchSlip).reduce((a, k) => a + branchSlip[k], 0);
+    const bufferPct = Math.min(100, Math.round(burned / 90 * 100)) * f;
+    const bufferColor = bufferPct >= 85 ? '#A32E27' : (bufferPct >= 50 ? '#B0691B' : '#3F6B3A');
+    const bufferText = burned + ' of 90 days';
+
+    // ---- briefing ----
+    const topRadar = radarRows.slice(0, 3).map((r, i) => (i + 1) + ') ' + r.label + ' (' + r.whenText + ')').join('  ');
+    const hotDl = upcoming.filter(e => /closes|due|apply/i.test(e.deadline || '')).slice(0, 2).map(e => e.acronym + ': ' + e.deadline).join(' · ');
+    const briefLines = [
+      { tag: 'sprint', color: '#3B6D11', text: 'Day ' + sprintDay + ' of ' + sprintDays + '. ' + sDone + '/' + sprintTotal + ' sprint moves done; ' + (sLeft <= 0 ? 'sprint cleared.' : (sLeft / dLeft).toFixed(1) + ' a day finishes it.') },
+      { tag: 'plan', color: '#993C1D', text: doneCount + '/' + total + ' overall (' + pct + '%). ' + (momentum >= 0 ? '+' : '') + momentum + ' moves vs last week' + (streak > 0 ? ', ' + streak + '-day streak alive.' : ', no active streak.') },
+      { tag: 'clocks', color: '#4A5B7A', text: topRadar || 'Nothing urgent on the radar.' },
+      { tag: 'people', color: '#0F6E56', text: owed.length + ' owed a touch — lead with ' + (owed[0] ? owed[0].name + ' (' + owed[0].lastDays + 'd silent).' : 'nobody, all clear.') },
+      { tag: 'road', color: '#b0741a', text: nextConf ? ('Next: ' + nextConf.acronym + ' in ' + nextConf.daysAway + 'd (' + (nextConf.city || '—') + ').' + (hotDl ? ' ⚑ ' + hotDl : '')) : 'No meetings on the horizon.' },
+      { tag: 'body', color: '#185FA5', text: (healthLogged ? weekText : 'No health check-in yet this week') + '. ' + restStatusText + '.' },
+      { tag: 'bets', color: '#534AB7', text: openBets.length + ' predictions open' + (openBets[0] && openBets[0].due ? '; nearest due ' + this.fmtDate(openBets[0].due) + '.' : '.') }
+    ];
+    const briefPlain = 'MONDAY BRIEFING — ' + todayLabel + '\n' + briefLines.map(l => '[' + l.tag.toUpperCase() + '] ' + l.text).join('\n');
+    const copyBrief = () => {
+      try { navigator.clipboard.writeText(briefPlain); } catch (e) {}
+      this.setState({ copied: true });
+      setTimeout(() => this.setState({ copied: false }), 2000);
+    };
+
+    // ---- constellation map (projection fitted to your actual points) ----
+    // geocode fallback: contacts saved without coords get placed by city name
+    const geoContacts = contacts.map(c => {
+      if (c.lat != null) return c;
+      const g = this.lookupCity(data, c.city);
+      return g ? Object.assign({}, c, { lat: g[0], lon: g[1] }) : c;
+    });
+    const cPtsAll = geoContacts.filter(c => c.lat != null).map(c => [c.lat, c.lon])
+      .concat(upcoming.filter(e => e.lat != null && !e.deadlineOnly).map(e => [e.lat, e.lon]))
+      .concat([[youC.lat || 51.25, youC.lon || 22.57]]);
+    let laMin = 90, laMax = -90, loMin = 180, loMax = -180;
+    cPtsAll.forEach(p => { if (p[0] < laMin) laMin = p[0]; if (p[0] > laMax) laMax = p[0]; if (p[1] < loMin) loMin = p[1]; if (p[1] > loMax) loMax = p[1]; });
+    const laPad = Math.max(4, (laMax - laMin) * 0.2), loPad = Math.max(5, (loMax - loMin) * 0.08);
+    laMin -= laPad; laMax += laPad; loMin -= loPad; loMax += loPad;
+    const prjX = lon => (lon - loMin) / Math.max(1, loMax - loMin) * 90 + 5;
+    const prjY = lat => (laMax - lat) / Math.max(1, laMax - laMin) * 74 + 10;
+    const mapGrid = [];
+    const loStep = (loMax - loMin) > 80 ? 20 : 10, laStep = (laMax - laMin) > 40 ? 10 : 5;
+    for (let lon = Math.ceil(loMin / loStep) * loStep; lon <= loMax; lon += loStep) mapGrid.push({ x1: prjX(lon).toFixed(1), y1: 0, x2: prjX(lon).toFixed(1), y2: 100 });
+    for (let lat = Math.ceil(laMin / laStep) * laStep; lat <= laMax; lat += laStep) mapGrid.push({ x1: 0, y1: prjY(lat).toFixed(1), x2: 100, y2: prjY(lat).toFixed(1) });
+    const youXn = prjX(youC.lon || 22.57), youYn = prjY(youC.lat || 51.25);
+    const typeTag = { ct: 'CT surgeon', researcher: 'researcher', mentor: 'mentor', program: 'program', other: 'contact' };
+    // real equirectangular map slice, fitted to the same projection window as the dots
+    const spanLo = Math.max(1, loMax - loMin), spanLa = Math.max(1, laMax - laMin);
+    const mapImgW = 360 / spanLo * 90, mapImgH = 180 / spanLa * 74;
+    const mapImgLeft = 5 - (180 + loMin) / spanLo * 90, mapImgTop = 10 - (90 - laMax) / spanLa * 74;
+    const placedPts = [[youXn, youYn]];
+    // gentle spiral fan so co-located contacts stay near their true spot instead of drifting
+    const peopleRaw = geoContacts.filter(c => c.lat != null).map(c => {
+      const bx = prjX(c.lon), by = prjY(c.lat);
+      let x = bx, y = by, guard = 0, ang = 0, rad = 2.4;
+      while (guard++ < 26 && placedPts.some(q => Math.hypot(q[0] - x, q[1] - y) < 3.1)) { ang += 2.0; rad += 0.32; x = bx + rad * Math.cos(ang); y = by + rad * Math.sin(ang); }
+      x = Math.max(3, Math.min(97, x)); y = Math.max(5, Math.min(93, y));
+      placedPts.push([x, y]);
+      return { c, x, y };
+    });
+    let owedRank = 0;
+    const mapPeople2 = peopleRaw.map(p => {
+      const c = p.c;
+      const col = strengthMap[c.strength] || '#8fa3bd';
+      const above = c.owed ? (owedRank++ % 2 === 1) : false;
+      return { left: p.x.toFixed(1) + '%', top: p.y.toFixed(1) + '%', color: col, glow: col + '88',
+        name: c.name, owed: !!c.owed, labelOpacity: c.owed ? 1 : 0, labelOrder: above ? '-1' : '0',
+        tagColor: c.owed ? '#ff8a98' : '#8fa3bd',
+        tip: c.name + ' — ' + (c.role || '') + ' · ' + (c.city || '') + ' · last contact ' + (c.lastDays || 0) + 'd ago' + (c.owed ? ' · OWED A TOUCH' : '') };
+    });
+    const mapArcs = peopleRaw.map(p => {
+      const x1 = youXn, y1 = youYn, x2 = p.x, y2 = p.y;
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2 - Math.min(14, Math.hypot(x2 - x1, y2 - y1) * 0.22);
+      return { d: 'M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Q ' + mx.toFixed(1) + ' ' + my.toFixed(1) + ' ' + x2.toFixed(1) + ' ' + y2.toFixed(1) };
+    });
+    const mapConfs2 = upcoming.filter(e => e.lat != null && !e.deadlineOnly).slice(0, 10).map(e => {
+      const bx = prjX(e.lon), by = prjY(e.lat);
+      let x = bx, y = by, guard = 0, ang = 0.8, rad = 2.8;
+      while (guard++ < 26 && placedPts.some(q => Math.hypot(q[0] - x, q[1] - y) < 3.4)) { ang += 2.0; rad += 0.34; x = bx + rad * Math.cos(ang); y = by + rad * Math.sin(ang); }
+      x = Math.max(3, Math.min(97, x)); y = Math.max(5, Math.min(93, y));
+      placedPts.push([x, y]);
+      return { left: x.toFixed(1) + '%', top: y.toFixed(1) + '%', color: relColor[e.rel] || '#b0741a', glow: (relColor[e.rel] || '#b0741a') + '88',
+        label: e.acronym, when: e.live ? 'now' : 'in ' + e.daysAway + 'd',
+        tip: e.name + ' · ' + (e.city || '') + ' · ' + (e.live ? 'happening now' : 'in ' + e.daysAway + 'd') };
+    });
+
+    // ---- trip logic ----
+    const tripRows = [];
+    contacts.forEach(c => {
+      (c.ops || []).forEach(op => {
+        const parts = String(op).split('·').map(x => x.trim()).filter(Boolean);
+        if (parts.length < 2) return;
+        const datePart = parts.find(p => /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+20\d\d$/.test(p));
+        if (!datePart) return;
+        const mIdx = MON.findIndex(m => datePart.startsWith(m));
+        const yr = parseInt(datePart.match(/20\d\d/)[0], 10);
+        const evMs = Date.UTC(yr, mIdx, 15);
+        if (evMs < tnum - 20 * 86400000) return;
+        const cityPart = parts.find(p => this.lookupCity(data, p));
+        tripRows.push({ name: c.name + ' → ' + parts[0], sub: [cityPart, datePart].filter(Boolean).join(' · ') + ' — from their opener', flag: 'natural overlap', flagColor: '#43e0b8', ms: evMs });
+      });
+    });
+    geoContacts.filter(c => c.owed && c.lat != null).forEach(c => {
+      let best = null;
+      upcoming.filter(e => e.lat != null && !e.deadlineOnly).forEach(e => {
+        const d = this.haversine([c.lat, c.lon], [e.lat, e.lon]);
+        if (!best || d < best.d) best = { e, d };
+      });
+      if (best) tripRows.push({ name: c.name + ' ↔ ' + best.e.acronym, sub: best.e.name + ' · ' + best.e.city + ' · in ' + best.e.daysAway + 'd — ' + best.d + ' km from ' + c.city.split(',')[0], flag: best.d <= 350 ? 'pairable trip' : best.d + ' km apart', flagColor: best.d <= 350 ? '#43e0b8' : '#6b86a8', ms: best.e.sMs });
+    });
+    tripRows.sort((a, b) => a.ms - b.ms);
+    const tripRowsOut = tripRows.slice(0, 6);
+
+    // ---- conference desk ----
+    const loggedRows = logged.map(lg => ({ acronym: lg.acronym, name: lg.name, city: lg.city || '—', dates: fmtD(lg), color: relColor[lg.rel] || '#b0741a', remove: () => this.removeConf(lg.id) }));
+    const directoryRows = (data.directory || []).map(d => ({
+      acronym: d.acronym, name: d.name, city: d.city, note: d.note || '', dates: fmtD(d) + (d.approx ? ' ~' : ''),
+      color: relColor[d.rel] || '#5c6673', deadline: d.deadline, hasDeadline: !!d.deadline, hasLink: !!d.link, link: d.link || '#',
+      isLogged: !!loggedIds[d.id], notLogged: !loggedIds[d.id], log: () => this.logDirectory(d)
+    }));
+    const huntLinks = [
+      { label: 'CT surgery 2027', url: 'https://www.google.com/search?q=cardiothoracic+surgery+conferences+2027' },
+      { label: 'transplant meetings', url: 'https://www.google.com/search?q=heart+transplant+conference+2026+2027+abstract+deadline' },
+      { label: 'EU cardiology', url: 'https://www.google.com/search?q=cardiology+conferences+europe+2026+2027' },
+      { label: 'student-friendly', url: 'https://www.google.com/search?q=medical+student+cardiothoracic+surgery+conference+scholarship+2026' }
+    ];
+
+    // ---- search ----
+    const q = this.state.q.trim().toLowerCase();
+    let searchResults = [];
+    if (this.state.searchOpen && q.length >= 2) {
+      data.items.forEach(it => {
+        if (searchResults.length >= 14) return;
+        if (it.label.toLowerCase().includes(q)) {
+          const b = bMap[it.branchId];
+          searchResults.push({ tag: 'PLAN', color: b ? b.color : '#993C1D', label: it.label, sub: b ? b.title : '', href: 'CT Master Plan.html', go: () => this.writePlan({ view: it.branchId }) });
+        }
+      });
+      contacts.forEach(c => {
+        if (searchResults.length >= 17) return;
+        if ((c.name + ' ' + c.role + ' ' + c.city).toLowerCase().includes(q)) {
+          searchResults.push({ tag: 'PEOPLE', color: '#0F6E56', label: c.name, sub: c.role + ' · ' + c.city, href: 'Network Map.dc.html', go: () => {} });
+        }
+      });
+      evs.concat((data.directory || []).filter(d => !loggedIds[d.id])).forEach(e => {
+        if (searchResults.length >= 20) return;
+        if ((e.name + ' ' + (e.city || '') + ' ' + e.acronym).toLowerCase().includes(q)) {
+          searchResults.push({ tag: 'ROAD', color: relColor[e.rel] || '#b0741a', label: e.name, sub: (e.city || '—') + ' · ' + fmtD(e), href: 'Conference Radar.dc.html', go: () => {} });
+        }
+      });
+      searchResults = searchResults.slice(0, 12);
+    }
+    const searchEmpty = this.state.searchOpen && q.length >= 2 && searchResults.length === 0;
+
+    // ---- next chapter ----
+    const checkpointMs = extras.milestones.filter(m => m.kind === 'checkpoint').map(m => ({ m, du: this.daysUntil(m.date, nowMs) }));
+    const nextCp = checkpointMs.find(x => x.du >= 0) || checkpointMs[checkpointMs.length - 1];
+    const portrait = nextCp ? extras.portraits.find(p => p.id === nextCp.m.id.replace('m-', '')) : null;
+
+    // ---- quote of the day ----
+    const quotes = window.CT_QUOTES || [];
+    const qDoy = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(now.getFullYear(), 0, 0)) / 86400000);
+    const dq = quotes.length ? quotes[qDoy % quotes.length] : { q: '…', by: '', sub: '' };
+
+    // ---- journal (logbook) card ----
+    const jEntries = this.readJournal();
+    const jset = {}; jEntries.forEach(e => { if (e && e.date) jset[e.date] = 1; });
+    const jIso = off => { const d = new Date(nowMs - off * 86400000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    let jStreak = 0; { let i = 0; if (!jset[jIso(0)] && jset[jIso(1)]) i = 1; while (jset[jIso(i)]) { jStreak++; i++; } }
+    // ---- life log stats ----
+    let llDays = 0, llHint = 'start today', llColor = '#A6A79F';
+    let llStreak = 0, llStudyH = 0, llKgText = '', llHasKg = false;
+    try {
+      const ll = JSON.parse(localStorage.getItem('ct_lifelog_v1'));
+      if (ll) {
+        const t0 = new Date(nowMs); const dow = (t0.getDay() + 6) % 7;
+        const anyv = o => o && Object.values(o).some(v => v !== '' && v != null && v !== false);
+        const sessDays = {}; (ll.sessions || []).forEach(s => { sessDays[new Date(s.start).toISOString().slice(0, 10)] = 1; });
+        for (let i = 0; i < 7; i++) {
+          const x = new Date(t0); x.setDate(t0.getDate() - dow + i);
+          const kk = x.toISOString().slice(0, 10); const dd = (ll.days || {})[kk];
+          if ((dd && (anyv(dd.sleep) || anyv(dd.weight) || anyv(dd.gym) || anyv(dd.swim) || anyv(dd.climb) || dd.note || (dd.spends || []).length)) || sessDays[kk]) llDays++;
+        }
+        if (llDays > 0) { llHint = 'week in motion'; llColor = '#0F6E56'; }
+        if (ll.active) { llHint = 'timer running'; llColor = '#0F6E56'; }
+        const logged = kk => { const dd = (ll.days || {})[kk]; return !!((dd && (anyv(dd.sleep) || anyv(dd.weight) || anyv(dd.gym) || anyv(dd.swim) || anyv(dd.climb) || dd.note || (dd.spends || []).length)) || sessDays[kk]); };
+        const isoOff = n => new Date(nowMs - n * 86400000).toISOString().slice(0, 10);
+        { let i = 0; if (!logged(isoOff(0)) && logged(isoOff(1))) i = 1; while (logged(isoOff(i)) && llStreak < 999) { llStreak++; i++; } }
+        const tIso = isoOff(0);
+        (ll.sessions || []).forEach(s => { if (s.type === 'study' && new Date(s.start).toISOString().slice(0, 10) === tIso) llStudyH += (s.end - s.start) / 3600000; });
+        if (ll.active && ll.active.mode === 'study' && new Date(ll.active.start).toISOString().slice(0, 10) === tIso) llStudyH += (Date.now() - ll.active.start) / 3600000;
+        const wKeys = Object.keys(ll.days || {}).filter(kk => ll.days[kk].weight && parseFloat(ll.days[kk].weight.kg)).sort();
+        if (wKeys.length) {
+          const last = parseFloat(ll.days[wKeys[wKeys.length - 1]].weight.kg);
+          llKgText = last.toFixed(1) + ' kg';
+          if (wKeys.length > 1) { const prev = parseFloat(ll.days[wKeys[wKeys.length - 2]].weight.kg); const df = Math.round((last - prev) * 10) / 10; if (df !== 0) llKgText += ' ' + (df > 0 ? '▲' : '▼') + Math.abs(df); }
+          llHasKg = true;
+        }
+      }
+    } catch (e) {}
+    let bkTs = 0; try { const bm = JSON.parse(localStorage.getItem('ct_backup_meta_v1')); if (bm) bkTs = bm.ts || 0; } catch (e) {}
+    const bkDays = bkTs ? Math.floor((nowMs - bkTs) / 86400000) : null;
+    const bkStale = bkDays == null || bkDays >= 7;
+    const jSorted = jEntries.slice().sort((a, b) => (b.date > a.date ? 1 : -1));
+    const jLastE = jSorted[0] || null;
+    const jTypeName = { daily: 'daily note', weekly: 'weekly summary', idea: 'idea', reflect: 'reflection' };
+    const jSnip = jLastE ? String(jLastE.title || jLastE.body || '').trim() : '';
+    const journalLast = jLastE ? ((jTypeName[jLastE.type] || 'entry') + ': “' + jSnip.slice(0, 58) + (jSnip.length > 58 ? '…' : '') + '”') : '';
+
+    // ---- trial modules: nudges / PRs / on this day ----
+    const dAgo = isoStr => Math.floor((nowMs - new Date(isoStr + 'T12:00:00').getTime()) / 86400000);
+    let llD2 = null; try { llD2 = JSON.parse(localStorage.getItem('ct_lifelog_v1')); } catch (e) {}
+    const llDays2 = (llD2 && llD2.days) || {};
+    const llKeys2 = Object.keys(llDays2).sort();
+    const lastKeyWhere = test => { for (let i = llKeys2.length - 1; i >= 0; i--) { if (test(llDays2[llKeys2[i]] || {})) return llKeys2[i]; } return null; };
+
+    const nudgeRows = [];
+    const addNudge = (text, color, href) => nudgeRows.push({ text, color, href: href || '', hasHref: !!href });
+    const wKey2 = lastKeyWhere(dd => dd.weight && dd.weight.kg);
+    if (wKey2 == null) addNudge('No weigh-ins on record yet', '#A32E27', 'Life Log.dc.html');
+    else if (dAgo(wKey2) >= 3) addNudge('No weigh-in in ' + dAgo(wKey2) + ' days', dAgo(wKey2) >= 6 ? '#A32E27' : '#B0691B', 'Life Log.dc.html');
+    const sKey2 = lastKeyWhere(dd => dd.sleep && (dd.sleep.asleep || dd.sleep.from));
+    if (sKey2 == null) addNudge('No sleep logged yet', '#A32E27', 'Life Log.dc.html');
+    else if (dAgo(sKey2) >= 2) addNudge('No sleep logged in ' + dAgo(sKey2) + ' days', dAgo(sKey2) >= 4 ? '#A32E27' : '#B0691B', 'Life Log.dc.html');
+    const lastWeekly = jEntries.filter(e => e && e.type === 'weekly' && e.date).map(e => e.date).sort().pop();
+    if (!lastWeekly) addNudge('No weekly review written yet — Life Log, Week tab', '#B0691B', 'Life Log.dc.html');
+    else if (dAgo(lastWeekly) >= 8) addNudge('Weekly review overdue — last one ' + dAgo(lastWeekly) + ' days ago', '#A32E27', 'Life Log.dc.html');
+    if (jLastE && jLastE.date && dAgo(jLastE.date) >= 4) addNudge('Journal quiet for ' + dAgo(jLastE.date) + ' days', '#B0691B', 'Journal.dc.html');
+    if (bkDays == null) addNudge('No backup ever taken — ⇩ backup, top of page', '#A32E27', '');
+    else if (bkDays >= 7) addNudge('Last backup ' + bkDays + ' days old', bkDays >= 21 ? '#A32E27' : '#B0691B', '');
+
+    const firstNum = s => { const m = String(s == null ? '' : s).match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+    let prGymN = 0; llKeys2.forEach(kk => { if (((llDays2[kk] || {}).gym || {}).on) prGymN++; });
+    const prRows = [];
+    [['bench', 'Bench'], ['squat', 'Squat'], ['ohp', 'OHP']].forEach(L => {
+      let best = null, bestK = null, lastV = null;
+      llKeys2.forEach(kk => {
+        const g = (llDays2[kk] || {}).gym; if (!g || !g.on) return;
+        const v = firstNum(g[L[0]]); if (v == null) return;
+        lastV = v; if (best == null || v >= best) { best = v; bestK = kk; }
+      });
+      if (best == null) return;
+      const when = new Date(bestK + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const next = Math.floor(best / 5) * 5 + 5;
+      prRows.push({ lift: L[1], best: best + ' kg', sub: 'best ' + when + ' · last ' + lastV + ' · next ' + next });
+    });
+    const prFoot = prGymN + ' gym session' + (prGymN === 1 ? '' : 's') + ' on record · reads the first number of each entry (80×5×5 → 80)';
+
+    const otdRows = []; const otdUsed = {};
+    [[28, '1 mo back'], [91, '3 mo back'], [182, '6 mo back']].forEach(w => {
+      const target = nowMs - w[0] * 86400000;
+      let bestE = null, bestD = 4;
+      jEntries.forEach(e => {
+        if (!e || !e.date || otdUsed[e.id]) return;
+        const dd = Math.abs(new Date(e.date + 'T12:00:00').getTime() - target) / 86400000;
+        if (dd <= 3 && dd < bestD) { bestD = dd; bestE = e; }
+      });
+      if (!bestE) return;
+      otdUsed[bestE.id] = 1;
+      const body = String(bestE.body || '').replace(/\s+/g, ' ').trim();
+      otdRows.push({
+        ago: w[1], dateText: new Date(bestE.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        title: String(bestE.title || (jTypeName[bestE.type] || 'entry')).slice(0, 64),
+        snip: body.slice(0, 110) + (body.length > 110 ? '…' : ''), hasSnip: !!body
+      });
+    });
+
+    // ---- new rooms strip ----
+    const lsJson = (kk, fb) => { try { const raw = localStorage.getItem(kk); if (raw) return JSON.parse(raw); } catch (e) {} return fb; };
+    const dosD = lsJson('ct_dossier_v1', {});
+    let dosTouches = 0; Object.keys(dosD || {}).forEach(kk => { dosTouches += ((dosD[kk] || {}).log || []).length; });
+    const vaultD = lsJson('ct_vault_v1', { snaps: [] });
+    const vSnaps = (vaultD.snaps || []).slice().sort((a, b) => (a.m > b.m ? 1 : -1));
+    const vLast = vSnaps[vSnaps.length - 1];
+    const vNet = vLast ? (parseFloat(vLast.cash) || 0) + (parseFloat(vLast.inv) || 0) - (parseFloat(vLast.debt) || 0) : null;
+    const studyD = lsJson('ct_study_v1', { cards: [], exams: [] });
+    const todayIso2 = new Date(nowMs).toISOString().slice(0, 10);
+    const dueN = (studyD.cards || []).filter(c => c && c.due && c.due <= todayIso2).length;
+    const libD = lsJson('ct_library_v1', { items: [] });
+    const libI = libD.items || [];
+    const libLine = libI.length ? (libI.filter(i => i.st === 'queue').length + ' queued · ' + libI.filter(i => i.st === 'reading').length + ' reading · ' + libI.filter(i => i.st === 'done').length + ' read') : 'shelf is empty';
+    const wkR = lsJson('ct_weekly_v1', { reviews: {} });
+    const wkMon = (() => { const x = new Date(nowMs); const d = (x.getDay() + 6) % 7; x.setDate(x.getDate() - d); x.setHours(0, 0, 0, 0); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); })();
+    const wkReviewed = !!(wkR.reviews && wkR.reviews[wkMon]);
+    const roomRows = [
+      { href: 'Summer Sprint.dc.html', color: '#3B6D11', num: '01 · The 52-day sprint', name: 'Summer Sprint', line: 'the 35 moves, habits, guide & capital ladder' },
+      { href: 'Plan Analysis.dc.html', color: '#6E4B8A', num: '01 · The strategic read', name: 'Plan Analysis', line: 'summer → year → decade, examined for gaps' },
+      { href: 'Weekly Review.dc.html', color: '#993C1D', num: '00 · The Sunday ritual', name: 'Weekly Review', line: wkReviewed ? 'done this week ✓' : 'guided — wins, loops, people, next 3' },
+      { href: 'Timeline.dc.html', color: '#2E6A86', num: '00 · One axis', name: 'Collision Timeline', line: 'checkpoints + conferences + deadlines, merged' },
+      { href: 'Review Room.dc.html', color: '#6E4B8A', num: '06 · The ritual', name: 'Review Room', line: lastWeekly ? (dAgo(lastWeekly) === 0 ? 'reviewed today' : dAgo(lastWeekly) + 'd since last review') : 'first ritual pending' },
+      { href: 'Dossiers.dc.html', color: '#185FA5', num: '07 · The people files', name: 'Dossiers', line: contacts.length + ' people · ' + dosTouches + ' touches logged' },
+      { href: 'Vault.dc.html', color: '#854F0B', num: '08 · The money', name: 'The Vault', line: vNet != null ? 'net $' + Math.round(vNet).toLocaleString('en-US') : 'no snapshot yet' },
+      { href: 'Study Engine.dc.html', color: '#3B6D11', num: '09 · The reps', name: 'Study Engine', line: (studyD.cards || []).length ? dueN + ' due today · ' + (studyD.cards || []).length + ' cards' : 'no error cards yet' },
+      { href: 'Library.dc.html', color: '#4A5B7A', num: '10 · The shelf', name: 'The Library', line: libLine },
+      { href: 'Reading List.dc.html', color: '#4A5B7A', num: '12 · The reading list', name: 'Reading List', line: 'papers & books to read — medicine, science & the classics' },
+      { href: 'Examiner.dc.html', color: '#A32E27', num: '11 · The examiner', name: 'The Examiner', line: (() => { const ex = lsJson('ct_examiner_v1', { briefs: [] }); const b = (ex.briefs || [])[0]; return b ? 'last examined ' + Math.floor((nowMs - b.ts) / 86400000) + 'd ago' : 'never examined — run it'; })() }
+    ];
+
+    // ---- scholarship goals ----
+    const schMeta = {
+      researching: { color: '#4A5B7A', bg: '#EBEEF3' },
+      drafting:    { color: '#B0691B', bg: '#FBF3E2' },
+      submitted:   { color: '#185FA5', bg: '#E3EDF7' },
+      won:         { color: '#3F6B3A', bg: '#EEF3EC' },
+      lost:        { color: '#8A8B84', bg: '#EEEDE8' }
+    };
+    const schList = this.readSch().slice().sort((a, b) => {
+      const aDone = (a.status === 'won' || a.status === 'lost') ? 1 : 0, bDone = (b.status === 'won' || b.status === 'lost') ? 1 : 0;
+      const ad = a.deadline || '9999', bd = b.deadline || '9999';
+      return aDone - bDone || (ad > bd ? 1 : ad < bd ? -1 : 0);
+    });
+    const schRows = schList.map(g => {
+      const m = schMeta[g.status] || schMeta.researching;
+      const du = g.deadline ? this.daysUntil(g.deadline, nowMs) : null;
+      const closed = g.status === 'won' || g.status === 'lost';
+      let dueText = 'no deadline', dueColor = '#A6A79F';
+      if (closed) { dueText = g.status === 'won' ? '✓ won' : 'closed'; dueColor = m.color; }
+      else if (du != null) { dueText = du < 0 ? Math.abs(du) + 'd overdue' : (du === 0 ? 'due today' : 'due in ' + du + 'd'); dueColor = du < 0 ? '#A32E27' : (du <= 21 ? '#B0691B' : '#3F6B3A'); }
+      return { name: g.name, note: g.note || '', hasNote: !!(g.note || '').trim(), amount: g.amount || '', hasAmount: !!(g.amount || '').trim(), status: g.status, stColor: m.color, stBg: m.bg, dueText, dueColor, cycle: () => this.cycleSch(g.id), remove: () => this.removeSch(g.id) };
+    });
+    const schActive = schList.filter(g => g.status !== 'won' && g.status !== 'lost').length;
+    const schSummary = schList.length === 0 ? 'nothing tracked yet' : schActive + ' in play · ' + schList.filter(g => g.status === 'submitted').length + ' submitted · ' + schList.filter(g => g.status === 'won').length + ' won';
+
+    // ---- page guide ----
+    const guideRows = [
+      { icon: '％', head: 'The header numbers', body: 'overall progress — every move checked across all 13 branches of the Master Plan, plus your streak and week-over-week momentum.' },
+      { icon: '“', head: 'Quote of the day', body: 'rotates by itself every day — surgeons, physicians and the craft.' },
+      { icon: '▦', head: 'The four big cards', body: 'your four rooms: the Plan (every move), the People (the globe), the Road (conferences) and the Logbook (daily notes & weekly summaries). Their numbers are live — click through.' },
+      { icon: '⚠', head: 'The critical path', body: 'the handful of things the whole plan hinges on, each with a live status.' },
+      { icon: '☑', head: 'Next actions', body: 'the nearest unchecked moves in priority order. Ticking one here ticks it in the Master Plan too.' },
+      { icon: '⏱', head: 'Deadline radar', body: 'every clock from every page in one list, soonest first — plan due-dates, kill reviews, predictions, conferences (ROAD), scholarships (FUND) and people owed a touch.' },
+      { icon: '─', head: 'The roadmap line', body: '2026 → 2031 on one line: diamonds are checkpoints, dots are conferences, the pulsing red bar is today.' },
+      { icon: '↗', head: 'Analytics', body: 'the campaign measured: progress curve with a what-if pace slider, the 52-day sprint burn-up, the four research bets scored, skills, a 16-week heatmap, countdown clocks and prediction calibration.' },
+      { icon: '✉', head: 'The briefing', body: 'a Monday-morning summary generated live from everything above — the copy button puts it on your clipboard.' },
+      { icon: '✦', head: 'The constellation', body: 'people and upcoming meetings on one map, every pin named and tagged. Pulsing rings mean you owe them a touch; trip logic below spots when a meeting and a relationship share geography.' },
+      { icon: '＋', head: 'Conference desk', body: 'log any meeting you find and it instantly flows into the radar, roadmap, constellation and trip logic. Next to it, a scouted directory of verified meetings.' },
+      { icon: '$', head: 'Scholarship goals', body: 'track scholarships, grants and awards with amounts and deadlines. Click a status pill to advance it; open deadlines join the radar automatically.' },
+      { icon: '⌕', head: 'Search everything', body: '⌘K or the search chip finds any move, person or meeting across all pages.' },
+      { icon: '▦', head: 'The five smaller rooms', body: 'below the big cards — Review Room (the Sunday ritual), Dossiers (a file on every person), the Vault (monthly net worth), Study Engine (errors re-asked on a schedule) and the Library (papers with mandatory takeaways). All included in backups.' }
+    ];
+
+    const planViewChips = [
+      { id: 'today', label: 'Today' }, { id: 'map', label: 'Map' }, { id: 'timeline', label: 'Timeline' },
+      { id: 'decisions', label: 'Decisions' }, { id: 'identity', label: 'Identity' }, { id: 'resilience', label: 'Resilience' }
+    ].map(v => ({ label: v.label, go: () => this.writePlan({ view: v.id }) }));
+
+    return {
+      todayLabel, positioningNow: extras.positioning[0].text,
+      pctShow: Math.round(pct * f), pctBar: pct * f, done: doneCount, total, ringDash, branchCount: data.branches.length,
+      streakText: streak > 0 ? streak + '-day streak' : 'no active streak',
+      momentumText: (momentum >= 0 ? '+' : '') + momentum + ' vs prior week', momentumColor: momentum >= 0 ? '#0F6E56' : '#A32E27',
+      planViewChips,
+      contactCount: contacts.length, owedCount: owed.length,
+      nextConfDays: nextConf ? (nextConf.live ? 'now' : nextConf.daysAway) : '—', nextConfAcr: nextConf ? nextConf.acronym : '', upcomingCount: upcoming.length,
+      spofRows, nextActions, branchRows, owedList, confRows, radarRows, trackRows,
+      yearTicks, todayLeft, milestoneMarks, confMarks,
+      curvePts, curveNowX, curveNowY, whatifX2, whatifY2, curveYMax: yMaxVal, movesWk, setMovesWk: (e) => this.setState({ movesWk: Number(e.target.value) }), paceText, whatifText,
+      sprintPts, sprintNowX, sprintNowY, sprintDay, sprintDays, sprintTotal, sprintText, sprintNeedText,
+      radarGrid, radarAxes, radarPolys, radarLegend, calibrationText,
+      skillRows, heatCells, heatSummary,
+      dials, bufferPct, bufferColor, bufferText,
+      betDots, openBetRows, hasResolvedBets: resolvedBets.length > 0, noResolvedBets: resolvedBets.length === 0, openBetCount: openBets.length, brierText,
+      briefLines, copyBrief, copyLabel: this.state.copied ? 'copied ✓' : 'copy', copyColor: this.state.copied ? '#3F6B3A' : '#55564F',
+      mapGrid, mapArcs, mapConfs2, mapPeople2,
+      mapImgLeft: mapImgLeft.toFixed(2) + '%', mapImgTop: mapImgTop.toFixed(2) + '%', mapImgW: mapImgW.toFixed(2) + '%', mapImgH: mapImgH.toFixed(2) + '%',
+      youLeft: youXn.toFixed(1) + '%', youTop: youYn.toFixed(1) + '%',
+      quoteText: dq.q, quoteBy: dq.by, quoteSub: dq.sub,
+      guideOpen: this.state.guideOpen,
+      openGuide: () => this.setState({ guideOpen: true }),
+      closeGuide: () => this.setState({ guideOpen: false }),
+      guideRows,
+      journalCount: jEntries.length,
+      journalHasLast: !!jLastE, journalNoLast: !jLastE, journalLast,
+      journalStreakText: jStreak > 0 ? jStreak + '-day streak' : 'start today',
+      journalStreakColor: jStreak > 0 ? '#0F6E56' : '#A6A79F',
+      lifelogDays: llDays, lifelogHint: llHint, lifelogHint2Color: llColor,
+      nudgeRows, hasNudges: nudgeRows.length > 0, noNudges: nudgeRows.length === 0,
+      prRows, prHas: prRows.length > 0, prNone: prRows.length === 0, prFoot,
+      otdRows, otdHas: otdRows.length > 0, otdNone: otdRows.length === 0,
+      roomRows,
+      llStreakText: llStreak > 0 ? llStreak + '-day streak' : 'no streak yet',
+      llStreakColor: llStreak > 0 ? '#0F6E56' : '#A6A79F',
+      llStudyText: (Math.round(llStudyH * 10) / 10) + 'h study today',
+      llHasKg, llKgText,
+      bkLabel: '⇓ backup · ' + (bkDays == null ? 'never' : (bkDays === 0 ? 'today' : bkDays + 'd ago')),
+      bkColor: bkStale ? '#B0691B' : '#3F6B3A',
+      bkBorder: bkStale ? '#ECD9B8' : '#CFE0CC',
+      bkTitle: bkStale ? 'Everything lives in this browser — download a backup' : 'Backup is fresh',
+      doBackup: this.doBackupAction, doRestore: this.doRestoreAction,
+      schRows, schEmpty: schRows.length === 0, schSummary, schMsg: this.state.schMsg,
+      schName: this.state.schName, schAmount: this.state.schAmount, schDeadline: this.state.schDeadline, schNote: this.state.schNote,
+      setSchName: (e) => this.setState({ schName: e.target.value }),
+      setSchAmount: (e) => this.setState({ schAmount: e.target.value }),
+      setSchDeadline: (e) => this.setState({ schDeadline: e.target.value }),
+      setSchNote: (e) => this.setState({ schNote: e.target.value }),
+      addSch: this.addSchAction,
+      tripRows: tripRowsOut,
+      fName: this.state.fName, fCity: this.state.fCity, fStart: this.state.fStart, fEnd: this.state.fEnd, fRel: this.state.fRel, fDeadline: this.state.fDeadline, fCost: this.state.fCost,
+      setFName: (e) => this.setState({ fName: e.target.value }), setFCity: (e) => this.setState({ fCity: e.target.value }),
+      setFStart: (e) => this.setState({ fStart: e.target.value }), setFEnd: (e) => this.setState({ fEnd: e.target.value }),
+      setFRel: (e) => this.setState({ fRel: e.target.value }), setFDeadline: (e) => this.setState({ fDeadline: e.target.value }), setFCost: (e) => this.setState({ fCost: e.target.value }),
+      addConf: this.addConfAction, confMsg: this.state.confMsg,
+      hasLogged: loggedRows.length > 0, loggedRows, directoryRows, huntLinks,
+      searchOpen: this.state.searchOpen,
+      openSearch: () => this.setState({ searchOpen: true, q: '' }),
+      closeSearch: () => this.setState({ searchOpen: false }),
+      stopClick: (e) => e.stopPropagation(),
+      q: this.state.q, setQ: (e) => this.setState({ q: e.target.value }),
+      searchResults, searchEmpty,
+      weekText, restStatusText, restStatusColor, burnoutText, burnoutColor, burnoutBg, hasSetback, lastSetbackText,
+      chapterTitle: portrait ? portrait.title : '', chapterWhen: portrait ? portrait.when + ' · age ' + portrait.age : '',
+      chapterExcerpt: portrait ? (portrait.body.length > 260 ? portrait.body.slice(0, 260).replace(/\s+\S*$/, '') + '…' : portrait.body) : '',
+      chapterOnTrack: portrait ? portrait.onTrackIf : '',
+      goResilience: () => this.writePlan({ view: 'resilience' }),
+      goToday: () => this.writePlan({ view: 'today' }),
+      goDecisions: () => this.writePlan({ view: 'decisions' }),
+      goIdentity: () => this.writePlan({ view: 'identity' })
+    };
+  }
+}
+</script>
+</body>
+</html>

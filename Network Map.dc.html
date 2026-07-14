@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network Map — Who I've Connected With</title>
+<meta name="ext-resource-dependency" content="https://unpkg.com/react@18.3.1/umd/react.production.min.js">
+<meta name="ext-resource-dependency" content="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js">
+<script src="support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#080d18"></rect><circle cx="50" cy="50" r="26" fill="#0d1626" stroke="#5b93cf" stroke-width="1.5"></circle><ellipse cx="50" cy="50" rx="26" ry="10" fill="none" stroke="#2c4a6e" stroke-width="0.8" opacity="0.4"></ellipse><line x1="50" y1="50" x2="50" y2="24" stroke="#43e0b8" stroke-width="0.8" opacity="0.6"></line><line x1="50" y1="50" x2="70" y2="46" stroke="#f2b13a" stroke-width="0.8" opacity="0.6"></line><circle cx="50" cy="24" r="4" fill="#43e0b8"></circle><circle cx="70" cy="46" r="3.5" fill="#f2b13a"></circle><circle cx="34" cy="60" r="3" fill="#5b93cf"></circle></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="network-map-assets/globe.gl.min.js"></script>
+<script src="network-map-assets/nm-cities.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#04060d;overflow:hidden}
+  @keyframes owedRing{0%{transform:scale(1);opacity:.9}100%{transform:scale(2);opacity:0}}
+  @keyframes pulseYou{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5),0 0 20px 3px rgba(255,255,255,.35)}50%{box-shadow:0 0 0 9px rgba(255,255,255,0),0 0 28px 7px rgba(255,255,255,.2)}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes evtPulse{0%,100%{transform:rotate(45deg) scale(1);box-shadow:0 0 8px 1px rgba(242,177,58,.6)}50%{transform:rotate(45deg) scale(1.18);box-shadow:0 0 14px 3px rgba(242,177,58,.85)}}
+  @keyframes ecgmove{from{stroke-dashoffset:0}to{stroke-dashoffset:-136}}
+  .nmnode{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .nmnode:hover{z-index:6 !important}
+  .nmnode:hover .nmlabel{opacity:1 !important}
+  .nmscroll::-webkit-scrollbar{width:8px}
+  .nmscroll::-webkit-scrollbar-thumb{background:rgba(90,130,180,.35);border-radius:8px}
+  .nmscroll::-webkit-scrollbar-track{background:transparent}
+  .nmrow:hover{background:rgba(90,130,180,.14) !important}
+  a{color:#7fa8d6}
+  a:hover{color:#a9c9ef}
+  input,select,textarea{font-family:'Space Grotesk',sans-serif}
+  input:focus,select:focus,textarea:focus{border-color:rgba(120,180,240,.7) !important}
+</style>
+</helmet>
+<div ref="{{ setRootEl }}" style="position:relative;width:100%;height:100vh;min-height:720px;background:radial-gradient(130% 100% at 55% -10%,#0d1626 0%,#080d18 45%,#03050c 100%);font-family:'Space Grotesk',system-ui,sans-serif;color:#e8eef7;overflow:hidden">
+
+  
+  <div ref="{{ setGlobeEl }}" style="position:absolute;inset:0;z-index:1"></div>
+  <img ref="{{ setTexImg }}" src="network-map-assets/earth-night.jpg" onerror="{{ onTexError }}" alt="" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-10px;top:-10px">
+  <img ref="{{ setDayImg }}" src="network-map-assets/earth-day.jpg" onerror="{{ onDayTexError }}" alt="" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-10px;top:-10px">
+
+  <!-- HEADER -->
+  <div style="position:absolute;top:0;left:0;right:0;padding:20px 32px;display:flex;align-items:flex-start;justify-content:space-between;background:linear-gradient(180deg,rgba(4,6,13,.85),rgba(4,6,13,0));z-index:10;pointer-events:none">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:9px;height:9px;border-radius:50%;background:#43e0b8;box-shadow:0 0 10px #43e0b8;animation:blink 2.4s infinite"></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.34em;color:#7fa8d6;font-weight:500">RELATIONSHIP MAP · LIVE</div>
+        <svg width="54" height="16" viewBox="0 0 54 16" style="overflow:visible;margin-left:2px"><polyline points="0,8 9,8 13,2 17,14 21,8 30,8 34,5 38,11 42,8 54,8" fill="none" stroke="#43e0b8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 3px #43e0b8);stroke-dasharray:16 120;animation:ecgmove 2.2s linear infinite"></polyline></svg>
+      </div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.01em;margin-top:6px">Who I've Connected With</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#5f7ba0;margin-top:4px">DRAG TO SPIN · SNAP THE MOUSE TO FLICK · SCROLL TO ZOOM</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:auto">
+      <div style="text-align:right;font-family:'IBM Plex Mono',monospace">
+        <div style="font-size:11px;letter-spacing:.14em;color:#7fa8d6">{{ stamp }}</div>
+        <div style="font-size:24px;font-weight:600;color:#e8eef7;margin-top:2px">{{ nodeCount }} <span style="font-size:11px;color:#6b86a8;letter-spacing:.1em">CONTACTS</span></div>
+        <div style="font-size:11px;color:#ff8a98;margin-top:2px">{{ owedCount }} owed a touch</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="Hub.dc.html" title="Back to your hub" style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:8px 14px;border-radius:9px;background:rgba(11,17,30,.9);border:1px solid rgba(90,130,180,.3);color:#cdd9e8;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px" style-hover="background:rgba(90,130,180,.2)"><span style="font-size:13px;line-height:1">⌂</span>Hub</a>
+        <div onclick="{{ openGuide }}" title="How this map works" style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:8px 14px;border-radius:9px;background:rgba(11,17,30,.9);border:1px solid rgba(90,130,180,.3);color:#cdd9e8;cursor:pointer" style-hover="background:rgba(90,130,180,.2)">? Guide</div>
+        <div onclick="{{ openSettings }}" title="Settings" style="font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1;padding:8px 11px;border-radius:9px;background:rgba(11,17,30,.9);border:1px solid rgba(90,130,180,.3);color:#cdd9e8;cursor:pointer">⚙</div>
+        <div onclick="{{ toggleOps }}" style="{{ opsBtnStyle }}">◆ Opportunities</div>
+        <div onclick="{{ toggleList }}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:8px 14px;border-radius:9px;background:rgba(11,17,30,.9);border:1px solid rgba(90,130,180,.3);color:#cdd9e8;cursor:pointer">☰ List</div>
+        <div onclick="{{ openAdd }}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:8px 14px;border-radius:9px;background:rgba(67,224,184,.16);border:1px solid rgba(67,224,184,.5);color:#7ff0d0;cursor:pointer">+ Add contact</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME BUTTON -->
+  <div onclick="{{ goHome }}" title="Fly back home" style="position:absolute;right:24px;bottom:24px;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(11,17,30,.92);border:1px solid rgba(90,130,180,.35);color:#9fc0e8;font-size:20px;cursor:pointer;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.4)">⌂</div>
+
+  <!-- LEGEND -->
+  <sc-if value="{{ showLegend }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;left:24px;bottom:24px;width:250px;padding:16px 18px;border-radius:14px;background:rgba(9,14,25,.82);backdrop-filter:blur(8px);border:1px solid rgba(90,130,180,.22);z-index:9;pointer-events:none">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;color:#7fa8d6;margin-bottom:12px">LEGEND</div>
+    <div style="font-size:10px;letter-spacing:.1em;color:#6b86a8;margin-bottom:7px;text-transform:uppercase">Relationship</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:13px">
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:12px;height:12px;border-radius:50%;background:#43e0b8;box-shadow:0 0 8px rgba(67,224,184,.7)"></span><span style="font-size:12px;color:#cdd9e8">Warm / active</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:12px;height:12px;border-radius:50%;background:#f2b13a;box-shadow:0 0 8px rgba(242,177,58,.6)"></span><span style="font-size:12px;color:#cdd9e8">Dormant</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:12px;height:12px;border-radius:50%;background:#5b93cf;box-shadow:0 0 8px rgba(91,147,207,.6)"></span><span style="font-size:12px;color:#cdd9e8">Cold · valuable</span></div>
+    </div>
+    <sc-if value="{{ showOps }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:13px"><span style="width:11px;height:11px;background:#f2b13a;transform:rotate(45deg);box-shadow:0 0 8px rgba(242,177,58,.7)"></span><span style="font-size:12px;color:#cdd9e8">Opportunity / event pin</span></div>
+    </sc-if>
+    <div style="display:flex;align-items:center;gap:9px;padding-top:11px;border-top:1px solid rgba(90,130,180,.18)">
+      <span style="width:13px;height:13px;border-radius:50%;border:1.5px solid #ff8a98;box-shadow:0 0 8px rgba(255,138,152,.5)"></span>
+      <span style="font-size:12px;color:#cdd9e8">Owed a touch — <span style="color:#ff8a98">your move</span></span>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- LIST PANEL -->
+  <sc-if value="{{ listOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:24px;top:112px;bottom:24px;width:340px;display:flex;flex-direction:column;border-radius:16px;background:rgba(9,14,25,.94);backdrop-filter:blur(12px);border:1px solid rgba(90,130,180,.3);box-shadow:0 24px 60px rgba(0,0,0,.5);z-index:18;overflow:hidden">
+      <div style="padding:16px 18px 12px;border-bottom:1px solid rgba(90,130,180,.18)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;color:#7fa8d6">ALL CONTACTS · {{ nodeCount }}</div>
+          <div onclick="{{ toggleList }}" style="cursor:pointer;color:#8ba3c2;font-size:15px;line-height:1">✕</div>
+        </div>
+        <input type="text" value="{{ query }}" oninput="{{ onQuery }}" placeholder="Search name, role, city, notes…" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:8px 11px;border-radius:8px;outline:none;margin-bottom:11px">
+        <div style="font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:7px">Sort by</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ sortBtns }}" as="b" hint-placeholder-count="5">
+            <div onclick="{{ b.onClick }}" style="{{ b.style }}">{{ b.label }}</div>
+          </sc-for>
+        </div>
+      </div>
+      <div class="nmscroll" style="flex:1;overflow-y:auto;padding:8px">
+        <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+          <div class="nmrow" onclick="{{ row.pick }}" style="display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;cursor:pointer;transition:background .12s;{{ row.rowStyle }}">
+            <span style="flex:none;width:12px;height:12px;border-radius:50%;background:{{ row.color }};box-shadow:0 0 8px {{ row.color }}88"></span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;color:#e8eef7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ row.name }}</div>
+              <div style="font-size:11px;color:#8ba3c2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ row.role }} · {{ row.city }}</div>
+            </div>
+            <div style="flex:none;text-align:right">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ row.dotColor }}">{{ row.lastLabel }}</div>
+              <sc-if value="{{ row.owed }}" hint-placeholder-val="{{ false }}"><div style="font-size:9px;letter-spacing:.1em;color:#ff8a98;font-family:'IBM Plex Mono',monospace">OWED ↗</div></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- DETAIL CARD -->
+  <sc-if value="{{ hasSelected }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;right:24px;top:112px;width:340px;max-height:calc(100vh - 200px);overflow-y:auto;padding:22px;border-radius:16px;background:rgba(11,17,30,.94);backdrop-filter:blur(12px);border:1px solid rgba(90,130,180,.3);box-shadow:0 24px 60px rgba(0,0,0,.5);z-index:20" class="nmscroll">
+      <div onclick="{{ clear }}" style="position:absolute;top:14px;right:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#8ba3c2;font-size:16px;border:1px solid rgba(90,130,180,.25)">✕</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px">
+        <span style="width:11px;height:11px;border-radius:50%;background:{{ sel.color }};box-shadow:0 0 10px {{ sel.color }}"></span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:{{ sel.color }}">{{ sel.strengthName }}</span>
+      </div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-.01em">{{ sel.name }}</div>
+      <div style="font-size:13px;color:#9fb4d0;margin-top:1px">{{ sel.role }}</div>
+      <div style="display:flex;gap:8px;margin:14px 0 16px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;padding:4px 9px;border-radius:6px;background:rgba(90,130,180,.16);color:#a9c2e0">{{ sel.typeName }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;padding:4px 9px;border-radius:6px;background:rgba(90,130,180,.16);color:#a9c2e0">◍ {{ sel.city }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;background:rgba(6,10,20,.6);margin-bottom:10px">
+        <span style="width:11px;height:11px;border-radius:50%;background:{{ sel.dotColor }};box-shadow:0 0 8px {{ sel.dotColor }}"></span>
+        <div><div style="font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;font-family:'IBM Plex Mono',monospace">Last contact</div><div style="font-size:14px;color:#e8eef7;font-weight:500">{{ sel.lastLabel }}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:10px;background:{{ sel.owedBg }};margin-bottom:16px">
+        <span style="font-size:14px">{{ sel.owedIcon }}</span>
+        <span style="font-size:13px;color:{{ sel.owedColor }};font-weight:500">{{ sel.owedText }}</span>
+      </div>
+      <div style="font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:5px">How we connected</div>
+      <div style="font-size:13px;color:#c4d3e6;line-height:1.5;margin-bottom:15px">{{ sel.met }}</div>
+      <div style="font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:5px">Notes</div>
+      <div style="font-size:13px;color:#c4d3e6;line-height:1.5;margin-bottom:15px">{{ sel.notes }}</div>
+      <div style="font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:5px">Introductions</div>
+      <div style="font-size:13px;color:#8ba3c2;line-height:1.5;font-style:italic;margin-bottom:16px">{{ sel.introText }}</div>
+
+      <div style="margin:2px 0 16px;padding-top:14px;border-top:1px solid rgba(90,130,180,.18)">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px">
+          <span style="color:#f2b13a;font-size:12px">◆</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#f2b13a;text-transform:uppercase">Opportunities &amp; events</span>
+        </div>
+        <sc-if value="{{ sel.hasOps }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ sel.ops }}" as="op" hint-placeholder-count="2">
+              <div style="display:flex;gap:9px;padding:9px 11px;border-radius:9px;background:rgba(242,177,58,.09);border:1px solid rgba(242,177,58,.22)">
+                <span style="flex:none;font-size:12px;line-height:1.5">{{ op.icon }}</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;color:#e8dcc2;line-height:1.45;font-weight:500">{{ op.text }}</div>
+                  <sc-if value="{{ op.meta }}" hint-placeholder-val="{{ false }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;color:#c79a4e;margin-top:2px">{{ op.meta }}</div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sel.noOps }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12px;color:#7d8ca2;font-style:italic;line-height:1.5">No opportunities logged yet — add asks or events in Edit.</div>
+        </sc-if>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div onclick="{{ editSel }}" style="flex:1;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:9px;border-radius:9px;background:rgba(90,130,180,.16);border:1px solid rgba(90,130,180,.35);color:#cdd9e8;cursor:pointer">EDIT</div>
+        <sc-if value="{{ sel.deletable }}" hint-placeholder-val="{{ true }}">
+          <div onclick="{{ delSel }}" style="flex:none;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:9px 14px;border-radius:9px;background:rgba(255,90,110,.12);border:1px solid rgba(255,138,152,.4);color:#ff8a98;cursor:pointer">DELETE</div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- SETTINGS MODAL -->
+  <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+    <div onclick="{{ closeSettings }}" style="position:absolute;inset:0;background:rgba(3,5,12,.72);backdrop-filter:blur(3px);z-index:45;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div onclick="{{ stop }}" class="nmscroll" style="width:470px;max-width:100%;max-height:88vh;overflow-y:auto;padding:26px 28px;border-radius:18px;background:rgba(11,17,30,.98);border:1px solid rgba(90,130,180,.35);box-shadow:0 30px 80px rgba(0,0,0,.6)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:20px;font-weight:700">Settings</div>
+          <div onclick="{{ closeSettings }}" style="cursor:pointer;color:#8ba3c2;font-size:18px">✕</div>
+        </div>
+        <div style="font-size:12px;color:#7d8ca2;margin-bottom:20px">Saved automatically. Persists between visits.</div>
+
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;color:#7fa8d6;text-transform:uppercase;margin-bottom:6px">Globe</div>
+        <sc-for list="{{ globeToggles }}" as="t" hint-placeholder-count="2">
+          <div onclick="{{ t.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px;cursor:pointer">
+            <div><div style="font-size:14px;color:#e8eef7">{{ t.label }}</div><div style="font-size:11px;color:#7d8ca2;margin-top:1px">{{ t.sub }}</div></div>
+            <div style="{{ t.trackStyle }}"><div style="{{ t.knobStyle }}"></div></div>
+          </div>
+        </sc-for>
+        <div style="padding:10px 2px 4px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#cdd9e8;margin-bottom:6px"><span>Idle spin speed</span><span style="font-family:'IBM Plex Mono',monospace;color:#7fa8d6">{{ idleSpeedLabel }}</span></div>
+          <input type="range" min="0" max="1.5" step="0.05" value="{{ idleSpeed }}" oninput="{{ onIdleSpeed }}" style="width:100%;accent-color:#43e0b8;cursor:pointer">
+        </div>
+        <div style="padding:8px 2px 4px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#cdd9e8;margin-bottom:6px"><span>Flick power</span><span style="font-family:'IBM Plex Mono',monospace;color:#7fa8d6">{{ flickLabel }}</span></div>
+          <input type="range" min="1" max="20" step="0.5" value="{{ flickPower }}" oninput="{{ onFlick }}" style="width:100%;accent-color:#43e0b8;cursor:pointer">
+        </div>
+        <div style="padding:8px 2px 6px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#cdd9e8;margin-bottom:6px"><span>Glide length (how long it coasts)</span><span style="font-family:'IBM Plex Mono',monospace;color:#7fa8d6">{{ glideLabel }}</span></div>
+          <input type="range" min="1" max="10" step="0.5" value="{{ glideLength }}" oninput="{{ onGlide }}" style="width:100%;accent-color:#43e0b8;cursor:pointer">
+        </div>
+
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;color:#7fa8d6;text-transform:uppercase;margin:18px 0 6px;padding-top:16px;border-top:1px solid rgba(90,130,180,.18)">Time</div>
+        <sc-for list="{{ timeToggles }}" as="t" hint-placeholder-count="2">
+          <div onclick="{{ t.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px;cursor:pointer">
+            <div><div style="font-size:14px;color:#e8eef7">{{ t.label }}</div><div style="font-size:11px;color:#7d8ca2;margin-top:1px">{{ t.sub }}</div></div>
+            <div style="{{ t.trackStyle }}"><div style="{{ t.knobStyle }}"></div></div>
+          </div>
+        </sc-for>
+
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;color:#7fa8d6;text-transform:uppercase;margin:18px 0 6px;padding-top:16px;border-top:1px solid rgba(90,130,180,.18)">Fun &amp; easter eggs</div>
+        <sc-for list="{{ funToggles }}" as="t" hint-placeholder-count="6">
+          <div onclick="{{ t.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px;cursor:pointer;opacity:{{ t.opacity }}">
+            <div><div style="font-size:14px;color:#e8eef7">{{ t.label }}</div><div style="font-size:11px;color:#7d8ca2;margin-top:1px">{{ t.sub }}</div></div>
+            <div style="{{ t.trackStyle }}"><div style="{{ t.knobStyle }}"></div></div>
+          </div>
+        </sc-for>
+        <div style="font-size:11px;color:#5f7ba0;margin-top:8px;line-height:1.5;font-style:italic">Psst — two are hidden: the Konami code, and clicking yourself seven times. ⚕️</div>
+
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;color:#7fa8d6;text-transform:uppercase;margin:18px 0 8px;padding-top:16px;border-top:1px solid rgba(90,130,180,.18)">Data</div>
+        <div style="font-size:11px;color:#7d8ca2;margin-bottom:10px;line-height:1.5">The offline file and this editor each keep their own saved contacts. Use export / import to move them across.</div>
+        <div style="display:flex;gap:8px">
+          <div onclick="{{ exportData }}" style="flex:1;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:10px;border-radius:9px;background:rgba(90,130,180,.16);border:1px solid rgba(90,130,180,.35);color:#cdd9e8;cursor:pointer">⬇ EXPORT JSON</div>
+          <div onclick="{{ importClick }}" style="flex:1;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:10px;border-radius:9px;background:rgba(90,130,180,.16);border:1px solid rgba(90,130,180,.35);color:#cdd9e8;cursor:pointer">⬆ IMPORT JSON</div>
+          <div onclick="{{ resetData }}" style="flex:none;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:10px 12px;border-radius:9px;background:rgba(255,90,110,.1);border:1px solid rgba(255,138,152,.35);color:#ff8a98;cursor:pointer">RESET</div>
+        </div>
+        <input ref="{{ setFileEl }}" type="file" accept=".json,application/json" onchange="{{ importData }}" style="display:none">
+
+        <div onclick="{{ closeSettings }}" style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;padding:11px;border-radius:10px;background:rgba(67,224,184,.18);border:1px solid rgba(67,224,184,.55);color:#7ff0d0;cursor:pointer;margin-top:18px">DONE</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- GUIDE MODAL -->
+  <sc-if value="{{ guideOpen }}" hint-placeholder-val="{{ false }}">
+    <div onclick="{{ closeGuide }}" style="position:absolute;inset:0;background:rgba(3,5,12,.72);backdrop-filter:blur(3px);z-index:46;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div onclick="{{ stop }}" class="nmscroll" style="width:540px;max-width:100%;max-height:88vh;overflow-y:auto;padding:26px 28px;border-radius:18px;background:rgba(11,17,30,.98);border:1px solid rgba(90,130,180,.35);box-shadow:0 30px 80px rgba(0,0,0,.6)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:20px;font-weight:700">How this map works</div>
+          <div onclick="{{ closeGuide }}" style="cursor:pointer;color:#8ba3c2;font-size:18px">✕</div>
+        </div>
+        <div style="font-size:12.5px;color:#7d8ca2;margin-bottom:6px;line-height:1.5">Your network as a planet: you in Lublin, every contact pinned where they live. Here's how to read it.</div>
+        <sc-for list="{{ guideSections }}" as="g" hint-placeholder-count="5">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;color:#7fa8d6;text-transform:uppercase;margin:14px 0 6px;padding-top:14px;border-top:1px solid rgba(90,130,180,.18)">{{ g.title }}</div>
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:5px 2px">
+              <div style="flex:none;width:24px;height:20px;display:flex;align-items:center;justify-content:center">
+                <span style="{{ r.sw }}">{{ r.glyph }}</span>
+              </div>
+              <div style="flex:1;font-size:13px;line-height:1.5;color:#c4d3e6"><span style="color:#e8eef7;font-weight:600">{{ r.head }}</span> — {{ r.body }}</div>
+            </div>
+          </sc-for>
+        </sc-for>
+        <div onclick="{{ closeGuide }}" style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;padding:11px;border-radius:10px;background:rgba(67,224,184,.18);border:1px solid rgba(67,224,184,.55);color:#7ff0d0;cursor:pointer;margin-top:20px">GOT IT</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ADD / EDIT FORM -->
+  <sc-if value="{{ formOpen }}" hint-placeholder-val="{{ false }}">
+    <div onclick="{{ closeForm }}" style="position:absolute;inset:0;background:rgba(3,5,12,.72);backdrop-filter:blur(3px);z-index:40;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div onclick="{{ stop }}" class="nmscroll" style="width:520px;max-width:100%;max-height:88vh;overflow-y:auto;padding:26px 28px;border-radius:18px;background:rgba(11,17,30,.98);border:1px solid rgba(90,130,180,.35);box-shadow:0 30px 80px rgba(0,0,0,.6)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div style="font-size:20px;font-weight:700">{{ formTitle }}</div>
+          <div onclick="{{ closeForm }}" style="cursor:pointer;color:#8ba3c2;font-size:18px">✕</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px">
+          <div style="grid-column:1 / 3">
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Name</label>
+            <input type="text" data-field="name" value="{{ draft.name }}" oninput="{{ onField }}" placeholder="Full name" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+          </div>
+          <div style="grid-column:1 / 3">
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Role</label>
+            <input type="text" data-field="role" value="{{ draft.role }}" oninput="{{ onField }}" placeholder="e.g. CT surgeon · UMLub" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+          </div>
+          <div>
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">City / place <span style="color:#5f7ba0;text-transform:none;letter-spacing:0">— type to auto-locate</span></label>
+            <input type="text" data-field="city" value="{{ draft.city }}" oninput="{{ onField }}" list="nmcitylist" autocomplete="off" placeholder="Start typing: Lublin, London…" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+            <datalist id="nmcitylist"><sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="6"><option value="{{ c }}"></option></sc-for></datalist>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:{{ geoColor }};margin-top:4px;min-height:12px">{{ geoHint }}</div>
+          </div>
+          <div>
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Type</label>
+            <sc-raw-select data-field="type" value="{{ draft.type }}" onchange="{{ onField }}" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+              <sc-for list="{{ typeOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+            </sc-raw-select>
+          </div>
+          <div>
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Relationship</label>
+            <sc-raw-select data-field="strength" value="{{ draft.strength }}" onchange="{{ onField }}" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+              <sc-for list="{{ strengthOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+            </sc-raw-select>
+          </div>
+          <div>
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Reach (1–3)</label>
+            <sc-raw-select data-field="reach" value="{{ draft.reach }}" onchange="{{ onField }}" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+              <option value="1">1 · narrow</option><option value="2">2 · solid</option><option value="3">3 · wide</option>
+            </sc-raw-select>
+          </div>
+          <div>
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Last contact (days ago)</label>
+            <input type="number" data-field="lastDays" value="{{ draft.lastDays }}" oninput="{{ onField }}" min="0" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+          </div>
+          <div>
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Latitude</label>
+            <input type="number" data-field="lat" value="{{ draft.lat }}" oninput="{{ onField }}" step="0.01" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+          </div>
+          <div>
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Longitude</label>
+            <input type="number" data-field="lon" value="{{ draft.lon }}" oninput="{{ onField }}" step="0.01" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+          </div>
+          <div style="grid-column:1 / 3">
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Introduced by</label>
+            <sc-raw-select data-field="introById" value="{{ draft.introById }}" onchange="{{ onField }}" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+              <sc-for list="{{ introOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+            </sc-raw-select>
+          </div>
+          <div style="grid-column:1 / 3">
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">How we connected</label>
+            <textarea data-field="met" oninput="{{ onField }}" rows="2" placeholder="Where and how you met" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none;resize:vertical;line-height:1.5">{{ draft.met }}</textarea>
+          </div>
+          <div style="grid-column:1 / 3">
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Notes</label>
+            <textarea data-field="notes" oninput="{{ onField }}" rows="3" placeholder="Strategy, willingness, next move…" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none;resize:vertical;line-height:1.5">{{ draft.notes }}</textarea>
+          </div>
+          <div style="grid-column:1 / 3">
+            <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#f2b13a;text-transform:uppercase;margin-bottom:5px">◆ Opportunities &amp; events <span style="color:#5f7ba0;text-transform:none;letter-spacing:0">— one per line</span></label>
+            <textarea data-field="ops" oninput="{{ onField }}" rows="4" placeholder="Ask for a rec for a local research position
+Meet at ESTS congress · May 2026 · Vienna
+Intro to their fellowship director" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none;resize:vertical;line-height:1.5">{{ draft.ops }}</textarea>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6b86a8;margin-top:4px;line-height:1.6">Format: <span style="color:#c79a4e">Title · Date · City</span>. Any line with a known city drops a pin there; add a date to tag it as an event. e.g. “Coffee at AATS · Apr 2026 · Boston”.</div>
+          </div>
+          <div style="grid-column:1 / 3;display:flex;align-items:center;gap:10px;padding:4px 2px">
+            <input type="checkbox" data-field="owed" checked="{{ draft.owed }}" onchange="{{ onField }}" style="width:18px;height:18px;accent-color:#ff8a98;cursor:pointer">
+            <label style="font-size:13px;color:#cdd9e8;cursor:default">Owed a touch — your move</label>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:22px">
+          <div onclick="{{ closeForm }}" style="flex:none;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;padding:11px 18px;border-radius:10px;background:rgba(90,130,180,.12);border:1px solid rgba(90,130,180,.3);color:#a9c2e0;cursor:pointer">CANCEL</div>
+          <div onclick="{{ saveNode }}" style="flex:1;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;padding:11px;border-radius:10px;background:rgba(67,224,184,.18);border:1px solid rgba(67,224,184,.55);color:#7ff0d0;cursor:pointer">SAVE CONTACT</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="">
+class Component extends DCLogic {
+  KEY = 'nm_nodes_v2';
+  SKEY = 'nm_settings_v2';
+  NIGHT_FALLBACK = 'https://unpkg.com/three-globe/example/img/earth-dark.jpg';
+  DAY_FALLBACK = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+
+  seedData() {
+    return [
+      { id:'you', name:'You', role:'Medical student · home base', city:'Lublin, PL', lat:51.25, lon:22.57, type:'you', strength:'you', reach:3, lastDays:0, owed:false, met:'—', notes:"Home base. Your mother is a physician in Lublin — a live connector into the local surgical community.", introById:null, ops:[] },
+      { id:'polkowski', name:'Prof. Polkowski', role:'Breast cancer surgeon', city:'Lublin, PL', lat:51.95, lon:21.7, type:'mentor', strength:'warm', reach:3, lastDays:30, owed:true, met:'Knows you personally through your mother — adores her, very willing to help.', notes:"High willingness, high reach — but very busy. Reminder that you're your mom's son lands well. Worth a light, specific ask.", introById:null, ops:['Ask for a rec letter for CT electives','Shadow invitation — a day in his OR · Lublin','Intro to the UMLub surgical faculty · Sep 2026 · Lublin'] },
+      { id:'rawicz', name:'Prof. Rawicz', role:'Oncology surgeon', city:'Lublin, PL', lat:50.65, lon:22.0, type:'mentor', strength:'warm', reach:2, lastDays:40, owed:false, met:'Knows you personally and likes you.', notes:"Genuine warmth. A reliable local mentor — keep the relationship warm with occasional check-ins.", introById:null, ops:['Ask to co-author a case report','Oncology Society meeting · Sep 2026 · Kraków'] },
+      { id:'barczewski', name:'Dr. Barczewski', role:'CT surgeon · UMLub', city:'Lublin, PL', lat:50.85, lon:23.5, type:'ct', strength:'warm', reach:2, lastDays:120, owed:true, met:'Co-organized a suturing competition with you — he shook your hand.', notes:"Local CT foothold. The shared event is a strong opener. Follow up while the competition is still fresh in memory.", introById:null, ops:['Ask about a summer research position in his lab','Suturing competition · Mar 2026 · Lublin','Recommendation for a CT observership'] },
+      { id:'zembala', name:'Dr. Zembala', role:'CT surgeon', city:'Warsaw, PL', lat:52.23, lon:21.01, type:'ct', strength:'dormant', reach:3, lastDays:90, owed:true, met:'Cold-approached on Instagram — an open line of communication resulted.', notes:"Established surgeon, big reach nationally. Line is open but cooling — send something concrete to reactivate.", introById:null, ops:['Ask to visit his department for a day · Warsaw','Polish CT Surgery Congress · Oct 2026 · Wrocław'] },
+      { id:'houston', name:'CT Resident', role:'CT surgery resident', city:'Houston, TX', lat:29.76, lon:-95.37, type:'ct', strength:'dormant', reach:1, lastDays:25, owed:false, met:'Cold-approached on Instagram; almost met in Warsaw. Open communication line.', notes:"Polish CT resident in Texas — a peer, close in age. Ball is currently in their court. Keep it casual.", introById:null, ops:['Ask what US CT residency applications really look for','Grab coffee if he visits Poland this summer'] },
+      { id:'schwaltz', name:'Dr. Schwaltz', role:'Pediatric CT surgeon', city:'Boston, MA', lat:42.36, lon:-71.06, type:'ct', strength:'warm', reach:2, lastDays:60, owed:true, met:'Family friend — a genuinely warm connection.', notes:"Pediatric CT in Boston. Real relationship, low friction. Overdue for a personal note.", introById:null, ops:['Ask about a research elective at his hospital','AATS Annual Meeting · May 2026 · Boston','Intro to his pediatric CT fellows'] },
+      { id:'cleveland', name:'CT Surgeon', role:'CT surgeon', city:'Cleveland, OH', lat:41.5, lon:-81.69, type:'ct', strength:'cold', reach:1, lastDays:200, owed:false, met:'Family friend, but a more formal relationship — does not really know you yet.', notes:"Valuable on paper but distant. Needs a proper introduction before any ask. Warm this up slowly via family.", introById:null, ops:['Get a proper warm intro through family first','Observership at Cleveland Clinic · Cleveland'] },
+      { id:'researcher', name:'Med Researcher', role:'Medical researcher', city:'Toronto, CA', lat:43.65, lon:-79.38, type:'researcher', strength:'cold', reach:1, lastDays:150, owed:true, met:'Met on a plane — you have her email.', notes:"Serendipitous contact. You hold the email but have never followed up. A quick, warm note could still land.", introById:null, ops:['Send the overdue follow-up email','Ask if she takes remote research collaborators'] }
+    ];
+  }
+
+  allCities() { return window.NM_CITIES || { 'lublin, pl':[51.25,22.57] }; }
+  lookupCity(str){
+    if(!str) return null;
+    const G = this.allCities();
+    const k = str.trim().toLowerCase();
+    if(!k) return null;
+    if(G[k]) return G[k];
+    const keys = Object.keys(G);
+    let hit = keys.find(key => key.split(',')[0]===k.split(',')[0].trim());
+    if(!hit) hit = keys.find(key => key.startsWith(k));
+    return hit ? G[hit] : null;
+  }
+
+  loadNodes() {
+    try {
+      const raw = localStorage.getItem(this.KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (Array.isArray(p) && p.length) {
+          const seedMap = {}; this.seedData().forEach(s=>seedMap[s.id]=s);
+          let changed = false;
+          const migrated = p.map(n => {
+            if (!Array.isArray(n.ops)) { changed = true; return { ...n, ops: (seedMap[n.id] && seedMap[n.id].ops) || [] }; }
+            return n;
+          });
+          if (changed) this.persist(migrated);
+          return migrated;
+        }
+      }
+    } catch(e) {}
+    const seed = this.seedData();
+    this.persist(seed);
+    return seed;
+  }
+  persist(nodes) { try { localStorage.setItem(this.KEY, JSON.stringify(nodes)); } catch(e) {} }
+
+  defaultSettings() {
+    return { autoRotate:true, idleSpeed:0.3, flickPower:8, glideLength:7, showArcs:true, dayNight:false, timezones:false,
+             eggs:true, eggSatellite:true, eggHelix:true, eggRockets:true, eggComets:true, eggHeartbeat:true, eggFlick:true };
+  }
+  loadSettings() {
+    try { const raw = localStorage.getItem(this.SKEY); if(raw) return Object.assign(this.defaultSettings(), JSON.parse(raw)); } catch(e) {}
+    return this.defaultSettings();
+  }
+  saveSettings() { try { localStorage.setItem(this.SKEY, JSON.stringify(this.state.settings)); } catch(e) {} }
+  get settings() { return this.state.settings; }
+
+  state = { guideOpen:false, selectedId:null, listOpen:false, sortBy:'recent', query:'', formOpen:false, editingId:null, showOps:false, geoHint:'', geoFound:false, settingsOpen:false, draft:this.blankDraft(), nodes:this.loadNodes(), settings:this.loadSettings() };
+
+  blankDraft() {
+    return { name:'', role:'', city:'', type:'ct', strength:'dormant', reach:'2', lastDays:'0', owed:false, lat:'40', lon:'0', met:'', notes:'', introById:'', ops:'' };
+  }
+
+  typeName(t){ return {ct:'CT SURGEON',researcher:'RESEARCHER',mentor:'MENTOR',program:'PROGRAM',you:'YOU',other:'CONTACT'}[t]||String(t).toUpperCase(); }
+  strengthName(s){ return {warm:'WARM · ACTIVE',dormant:'DORMANT',cold:'COLD · VALUABLE',you:'ANCHOR'}[s]||s; }
+
+  parseOp(op) {
+    const parts = String(op).split('·').map(x=>x.trim()).filter(Boolean);
+    const title = parts[0] || '';
+    const rest = parts.slice(1);
+    let place=null, coords=null; const meta=[];
+    rest.forEach(part=>{
+      const c = this.lookupCity(part);
+      if (c && !coords) { coords=c; place=part; } else { meta.push(part); }
+    });
+    return { title, place, coords, meta: meta.join(' · '), isEvent: rest.length>0 };
+  }
+
+  decorate() {
+    const raw = this.state.nodes;
+    const strengthColor = { warm:'#43e0b8', dormant:'#f2b13a', cold:'#5b93cf', you:'#ffffff' };
+    const lastColor = d => d<45 ? '#3ad07f' : (d<120 ? '#f5a623' : '#ef4d5f');
+    const lastLabel = d => { if(d===0) return 'active now'; if(d<30) return d+' days ago'; const m=Math.round(d/30); return m<12 ? '~'+m+' months ago' : '~'+Math.round(d/365)+' yr ago'; };
+    return raw.map(c => {
+      const introducedTo = raw.filter(o=>o.introById===c.id).map(o=>o.name);
+      const introById = c.introById ? (raw.find(r=>r.id===c.introById)||{}).name : null;
+      return { ...c,
+        color: strengthColor[c.strength]||'#8fa3bd',
+        dotColor: lastColor(c.lastDays),
+        lastLabel: lastLabel(c.lastDays),
+        typeName: this.typeName(c.type),
+        strengthName: this.strengthName(c.strength),
+        deletable: c.id!=='you',
+        owedText: c.owed ? 'Owed a touch — your move' : (c.type==='you' ? 'This is you' : 'Current / ball in their court'),
+        owedIcon: c.owed ? '↗' : (c.type==='you' ? '◎' : '✓'),
+        owedColor: c.owed ? '#ff8a98' : '#7fd6a8',
+        owedBg: c.owed ? 'rgba(255,90,110,.12)' : 'rgba(70,200,140,.10)',
+        introText: introducedTo.length ? ('Connected you to '+introducedTo.join(', ')+'.') : (introById ? ('Introduced through '+introById+'.') : 'None logged yet — add who they connected you to.'),
+        ops: (c.ops||[]).map(t=>{ const p=this.parseOp(t); return { text:p.title, meta:[p.meta,p.place].filter(Boolean).join(' · '), icon:p.isEvent?'📅':'↗' }; }),
+        hasOps: (c.ops||[]).length>0,
+        noOps: (c.ops||[]).length===0,
+        opsCount: (c.ops||[]).length
+      };
+    });
+  }
+
+  buildEvents() {
+    const evs = [];
+    this.state.nodes.filter(n=>n.type!=='you').forEach(c=>{
+      (c.ops||[]).forEach((op,i)=>{
+        const p = this.parseOp(op);
+        const base = p.coords ? { lat:p.coords[0], lon:p.coords[1] } : { lat:c.lat, lon:c.lon };
+        const ang = i*2.399; const r = p.coords ? 0.6 : 1.5;
+        const lat = base.lat + r*Math.cos(ang);
+        const lon = base.lon + r*Math.sin(ang)/Math.max(0.3,Math.cos(base.lat*Math.PI/180));
+        evs.push({ kind:'event', id:'ev_'+c.id+'_'+i, lat, lon, title:p.title, meta:[p.meta,p.place].filter(Boolean).join(' · '), contactId:c.id });
+      });
+    });
+    return evs;
+  }
+  buildHtmlData() {
+    const nodes = this.decorate();
+    return this.state.showOps ? nodes.concat(this.buildEvents()) : nodes;
+  }
+
+  makeEventEl(ev) {
+    const wrap = document.createElement('div');
+    wrap.className = 'nmnode';
+    wrap.style.cssText = 'width:16px;height:16px;pointer-events:auto';
+    const dia = document.createElement('div');
+    dia.style.cssText = "width:12px;height:12px;background:linear-gradient(135deg,#ffd27a,#f2b13a);border:1px solid #ffe0a0;animation:evtPulse 2.4s ease-in-out infinite";
+    wrap.appendChild(dia);
+    const label = document.createElement('div');
+    label.className='nmlabel';
+    label.style.cssText = "position:absolute;left:50%;top:calc(100% + 3px);transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity .15s;max-width:150px";
+    label.innerHTML = `<div style="font-family:'Space Grotesk';font-weight:600;font-size:11px;line-height:1.2;color:#ffe0a0;text-shadow:0 1px 4px #04060d">${ev.title||''}</div>`+(ev.meta?`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(242,190,110,.8);text-shadow:0 1px 3px #04060d">${ev.meta}</div>`:'');
+    wrap.appendChild(label);
+    wrap.addEventListener('click', e=>{ e.stopPropagation(); this.select(ev.contactId); });
+    return wrap;
+  }
+
+  makeNodeEl(n) {
+    if (n.kind==='event') return this.makeEventEl(n);
+    const isYou = n.type==='you';
+    const dia = isYou ? 32 : (22 + n.reach*8);
+    const wrap = document.createElement('div');
+    wrap.className = 'nmnode';
+    wrap.style.width = (dia+6)+'px';
+    wrap.style.height = (dia+6)+'px';
+    wrap.style.pointerEvents = 'auto';
+    const core = document.createElement('div');
+    if (isYou) {
+      core.style.cssText = `position:relative;width:${dia}px;height:${dia}px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#b9c8dc);border:2px solid #fff;animation:pulseYou 2.6s ease-in-out infinite`;
+    } else {
+      const selRing = n.id===this.state.selectedId ? ',0 0 0 3px rgba(255,255,255,.7)' : '';
+      core.style.cssText = `position:relative;width:${dia}px;height:${dia}px;border-radius:50%;background:radial-gradient(circle at 34% 30%,${n.color},color-mix(in oklab,${n.color},#04070e 55%));border:1.5px solid ${n.color};box-shadow:0 0 14px 1px ${n.color}66,inset 0 0 6px rgba(6,10,20,.55)${selRing}`;
+    }
+    const dot = document.createElement('div');
+    dot.style.cssText = `position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:${n.dotColor};border:1.5px solid #0a1120;box-shadow:0 0 6px ${n.dotColor}`;
+    core.appendChild(dot);
+    if (this.state.showOps && !isYou && n.opsCount>0) {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position:absolute;bottom:-3px;left:-3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:#f2b13a;color:#231803;font:600 9px/15px \'IBM Plex Mono\',monospace;text-align:center;border:1.5px solid #0a1120;box-shadow:0 0 8px rgba(242,177,58,.7)';
+      badge.textContent = '◆'+n.opsCount;
+      core.appendChild(badge);
+    }
+    if (n.owed) {
+      const ring = document.createElement('div');
+      ring.style.cssText = 'position:absolute;inset:-5px;border-radius:50%;border:1.5px solid #ff8a98;animation:owedRing 2s ease-out infinite';
+      core.appendChild(ring);
+    }
+    wrap.appendChild(core);
+    const label = document.createElement('div');
+    label.className = 'nmlabel';
+    const showLabel = isYou || n.id===this.state.selectedId;
+    label.style.cssText = `position:absolute;left:50%;top:calc(100% + 3px);transform:translateX(-50%);text-align:center;pointer-events:none;opacity:${showLabel?1:0};transition:opacity .15s`;
+    label.innerHTML = `<div style="font-family:'Space Grotesk';font-weight:600;font-size:12px;line-height:1.15;color:#e6eef8;white-space:nowrap;text-shadow:0 1px 4px #04060d">${n.name}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.04em;color:${isYou?'rgba(255,255,255,.75)':n.color};white-space:nowrap;text-shadow:0 1px 3px #04060d">${n.typeName}${n.owed?' · YOUR MOVE':''}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(170,195,225,.75);white-space:nowrap;text-shadow:0 1px 3px #04060d">${n.city}</div>`;
+    wrap.appendChild(label);
+    wrap.addEventListener('click', (e)=>{ e.stopPropagation(); this.select(n.id); });
+    return wrap;
+  }
+
+  componentDidMount() {
+    window.__nm = this;
+    this._tries = 0;
+    const tick = () => {
+      if (this.globe) return;
+      if (window.Globe && this.globeEl) { this.initGlobe(); return; }
+      if (this._tries++ < 300) setTimeout(tick, 60);
+    };
+    tick();
+    if (!window.NM_CITIES) { let t=0; const p=setInterval(()=>{ if(window.NM_CITIES||t++>60){ clearInterval(p); this.forceUpdate(); } }, 200); }
+    this._onKey = (e)=>this.onKey(e);
+    window.addEventListener('keydown', this._onKey);
+    try { if (!localStorage.getItem('nm_guide_seen_v1')) { setTimeout(()=>this.setState({ guideOpen:true }), 1200); } } catch(e) {}
+  }
+
+  guideSections() {
+    const dot = (c)=>'flex:none;width:13px;height:13px;border-radius:50%;background:'+c+';box-shadow:0 0 8px '+c;
+    const mono = "flex:none;font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1;color:#9fc0e8";
+    return [
+      { title:'Moving around', rows:[
+        { sw:mono, glyph:'↻', head:'Drag to spin', body:'flick and let go to send the globe gliding. Scroll to zoom in and out.' },
+        { sw:mono, glyph:'◍', head:'Click a dot', body:'the camera flies to that person and their card opens. Click open ocean to put it away.' },
+        { sw:mono, glyph:'⌂', head:'Round button, bottom right', body:'flies you back to your home base in Lublin. The ⌂ Hub button up top goes back to your hub page.' }
+      ]},
+      { title:'Reading a contact dot', rows:[
+        { sw:dot('#43e0b8'), glyph:'', head:'Green', body:'warm and active — the relationship is alive.' },
+        { sw:dot('#f2b13a'), glyph:'', head:'Amber', body:'dormant — cooling off, worth a nudge.' },
+        { sw:dot('#5b93cf'), glyph:'', head:'Blue', body:'cold but valuable — needs a proper warm-up before any ask.' },
+        { sw:'flex:none;width:13px;height:13px;border-radius:50%;border:1.5px solid #ff8a98;box-shadow:0 0 8px rgba(255,138,152,.6)', glyph:'', head:'Pulsing red ring', body:'owed a touch — your move. Their arc to you also turns red and starts flowing.' },
+        { sw:mono, glyph:'⬤', head:'Size', body:'bigger dot = wider reach — how far their network can carry you.' },
+        { sw:'flex:none;width:8px;height:8px;border-radius:50%;background:#3ad07f;box-shadow:0 0 6px #3ad07f', glyph:'', head:'Tiny corner dot', body:'how recently you talked. Green is fresh, amber is aging, red is overdue.' }
+      ]},
+      { title:'The buttons up top', rows:[
+        { sw:'flex:none;width:10px;height:10px;background:linear-gradient(135deg,#ffd27a,#f2b13a);transform:rotate(45deg);box-shadow:0 0 8px rgba(242,177,58,.7)', glyph:'', head:'◆ Opportunities', body:'turns every ask and event you\u2019ve logged into amber pins on the map, with a count badge on each person.' },
+        { sw:mono, glyph:'☰', head:'List', body:'search everyone by name, role, city or notes; sort by recent, overdue, reach, name or strength.' },
+        { sw:mono, glyph:'+', head:'Add contact', body:'type a city and the form finds the spot on the globe by itself.' },
+        { sw:mono, glyph:'⚙', head:'Settings', body:'spin speed, real-time day & night, time-zone lines, easter eggs, and your data.' }
+      ]},
+      { title:'Your data', rows:[
+        { sw:mono, glyph:'✓', head:'Saves itself', body:'every change is stored in this browser automatically — nothing leaves your machine.' },
+        { sw:mono, glyph:'⇅', head:'Export / import', body:'in ⚙ Settings. Moves your contacts as a small file between this editor and your offline copy.' }
+      ]},
+      { title:'The sky', rows:[
+        { sw:mono, glyph:'🛰', head:'Company in orbit', body:'a satellite, a DNA helix, rockets and comets keep you company. Switch any off in ⚙.' },
+        { sw:mono, glyph:'♥', head:'Two secrets', body:'the Konami code, and clicking yourself seven times.' }
+      ]}
+    ];
+  }
+
+  buildArcs(nodes) {
+    const you = nodes.find(n=>n.type==='you') || nodes[0];
+    if (!you) return [];
+    return nodes.filter(n=>n.id!==you.id && n.kind!=='event').map(n=>({
+      startLat: you.lat, startLng: you.lon, endLat: n.lat, endLng: n.lon,
+      colors: n.owed ? ['rgba(255,122,138,.9)','rgba(255,122,138,.12)'] : ['rgba(96,150,210,.55)','rgba(96,150,210,.08)'],
+      owed: n.owed
+    }));
+  }
+
+  nightSrc(){ return (this.texImg && this.texImg.getAttribute('src')) || this.NIGHT_FALLBACK; }
+  daySrc(){ return (this.dayImg && this.dayImg.getAttribute('src')) || this.DAY_FALLBACK; }
+
+  initGlobe() {
+    const g = window.Globe()(this.globeEl)
+      .backgroundColor('rgba(0,0,0,0)')
+      .globeImageUrl(this.daySrc())
+      .showGraticules(true)
+      .showAtmosphere(true).atmosphereColor('#5b93cf').atmosphereAltitude(0.16)
+      .arcColor('colors').arcStroke(0.55)
+      .arcDashLength(d=>d.owed?0.5:0.35).arcDashGap(d=>d.owed?0.15:1.4)
+      .arcDashAnimateTime(d=>d.owed?1400:0).arcAltitudeAutoScale(0.45)
+      .htmlLat('lat').htmlLng('lon').htmlAltitude(0.012).htmlElement(d=>this.makeNodeEl(d))
+      .polygonCapColor(()=>'rgba(4,7,20,0.60)').polygonSideColor(()=>'rgba(0,0,0,0)').polygonStrokeColor(()=>'rgba(0,0,0,0)').polygonAltitude(0.006)
+      .pathPointLat(p=>p[0]).pathPointLng(p=>p[1]).pathPointAlt(p=>p[2]).pathColor(()=>'rgba(120,175,235,0.42)').pathStroke(0.7).pathDashLength(0.03).pathDashGap(0.02).pathTransitionDuration(0)
+      .labelLat('lat').labelLng('lng').labelText('t').labelSize(1.05).labelDotRadius(0).labelColor(()=>'rgba(150,200,245,0.85)').labelResolution(2)
+      .ringLat('lat').ringLng('lng').ringMaxRadius('maxR').ringPropagationSpeed('speed').ringRepeatPeriod('period').ringColor(d=>d.color).ringAltitude(0.002)
+      .onGlobeClick(()=>this.clear());
+    this.globe = g;
+    g.pointOfView({ lat: 46, lng: -22, altitude: 1.9 }, 0);
+    const c = g.controls();
+    c.enableDamping = true;
+    c.dampingFactor = 0.18;
+    c.rotateSpeed = 1.15;
+    c.enableZoom = true; c.zoomSpeed = 1.15;
+    c.minDistance = 101; c.maxDistance = 700;
+    this.applyGlobeData(true);
+    this.syncGlobeProps();
+    this.updateDayNight();
+    this.updateTimezones();
+    this.setupFlick();
+    const resize = () => { if(this.globeEl){ g.width(this.globeEl.clientWidth); g.height(this.globeEl.clientHeight); } };
+    resize(); window.addEventListener('resize', resize); this._resize = resize;
+    this._dnTimer = setInterval(()=>{ if(this.settings.dayNight) this.updateDayNight(); }, 60000);
+    this.startFx();
+  }
+
+  onTexError() {
+    if (this.texImg && this.texImg.getAttribute('src')!==this.NIGHT_FALLBACK) this.texImg.setAttribute('src', this.NIGHT_FALLBACK);
+  }
+  onDayTexError() {
+    if (this.dayImg && this.dayImg.getAttribute('src')!==this.DAY_FALLBACK) this.dayImg.setAttribute('src', this.DAY_FALLBACK);
+    if (this.globe && this.settings.dayNight) this.globe.globeImageUrl(this.DAY_FALLBACK);
+  }
+
+  applyGlobeData(rebuild) {
+    if (!this.globe) return;
+    this.globe.arcsData(this.settings.showArcs===false ? [] : this.buildArcs(this.decorate()));
+    if (rebuild) {
+      this.globe.htmlElementsData([]);
+      requestAnimationFrame(()=>{ if(this.globe) this.globe.htmlElementsData(this.buildHtmlData()); });
+    } else {
+      this.globe.htmlElementsData(this.buildHtmlData());
+    }
+    this.updateRings();
+  }
+
+  syncGlobeProps() {
+    if (!this.globe) return;
+    const c = this.globe.controls();
+    c.autoRotate = this.settings.autoRotate!==false && this.state.selectedId===null;
+    c.autoRotateSpeed = (this.settings.idleSpeed!=null ? this.settings.idleSpeed : 0.3) * 1.4;
+  }
+
+  /* ---------- Momentum flick ---------- */
+  setupFlick() {
+    const el = this.globeEl;
+    this._flickPts = [];
+    this._onPDown = (e)=>{ this.killGlide(); this._pressed = true; this._flickPts = [[e.clientX, e.clientY, performance.now()]]; };
+    this._onPMove = (e)=>{ if(!this._pressed) return; const now = performance.now(); this._flickPts.push([e.clientX, e.clientY, now]); while(this._flickPts.length>2 && now-this._flickPts[0][2]>130) this._flickPts.shift(); };
+    this._onPUp = ()=>{
+      if(!this._pressed) return;
+      this._pressed = false;
+      const now = performance.now();
+      const pts = this._flickPts.filter(p=>now-p[2]<150);
+      if (pts.length>=2) {
+        const a = pts[0], b = pts[pts.length-1];
+        const dt = (b[2]-a[2])/1000;
+        if (dt>0.004) this.startGlide((b[0]-a[0])/dt, (b[1]-a[1])/dt);
+      }
+    };
+    el.addEventListener('pointerdown', this._onPDown, { capture:true });
+    window.addEventListener('pointermove', this._onPMove, { passive:true });
+    window.addEventListener('pointerup', this._onPUp);
+  }
+  killGlide() { this._glideVel = null; if (this._glideRaf) { cancelAnimationFrame(this._glideRaf); this._glideRaf = null; } }
+  startGlide(vxPx, vyPx) {
+    const S = this.settings, g = this.globe;
+    if (!g) return;
+    const pov = g.pointOfView();
+    const k = 0.10 * Math.max(0.2, pov.altitude) * (S.flickPower!=null ? S.flickPower : 8);
+    let vLng = -vxPx * k;
+    let vLat = vyPx * k * 0.45;
+    vLng = Math.max(-2600, Math.min(2600, vLng));
+    vLat = Math.max(-380, Math.min(380, vLat));
+    if (Math.abs(vLng)<12 && Math.abs(vLat)<12) return;
+    this._glideVel = { vLng, vLat };
+    this.runGlide();
+  }
+  runGlide() {
+    const g = this.globe;
+    const friction = 2.6 / Math.max(1, this.settings.glideLength!=null ? this.settings.glideLength : 7);
+    let last = performance.now();
+    const step = ()=>{
+      if (!this._glideVel || this._pressed || !this.globe) { this._glideRaf=null; return; }
+      const now = performance.now();
+      const dt = Math.min(0.05, (now-last)/1000); last = now;
+      const pv = g.pointOfView();
+      let lat = pv.lat + this._glideVel.vLat*dt;
+      if (lat>85){ lat=85; this._glideVel.vLat=0; }
+      if (lat<-85){ lat=-85; this._glideVel.vLat=0; }
+      g.pointOfView({ lat, lng: pv.lng + this._glideVel.vLng*dt, altitude: pv.altitude }, 0);
+      const dec = Math.exp(-friction*dt);
+      this._glideVel.vLng *= dec; this._glideVel.vLat *= dec;
+      if (Math.abs(this._glideVel.vLng)<0.7 && Math.abs(this._glideVel.vLat)<0.7) { this._glideVel=null; this._glideRaf=null; return; }
+      this._glideRaf = requestAnimationFrame(step);
+    };
+    this._glideRaf = requestAnimationFrame(step);
+  }
+  doFlick() {
+    const dir = Math.random()<0.5 ? -1 : 1;
+    this._glideVel = { vLng: dir*(600+Math.random()*700), vLat: (Math.random()-0.5)*70 };
+    this.runGlide();
+  }
+
+  /* ---------- Day/night + timezones ---------- */
+  d2r(d){ return d*Math.PI/180; } r2d(r){ return r*180/Math.PI; }
+  computeNightFeature() {
+    const now = new Date();
+    const utcH = now.getUTCHours()+now.getUTCMinutes()/60+now.getUTCSeconds()/3600;
+    const start = Date.UTC(now.getUTCFullYear(),0,0);
+    const doy = Math.floor((Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-start)/86400000);
+    const decl = -23.44*Math.cos(this.d2r(360/365*(doy+10)));
+    let subLon = -15*(utcH-12);
+    let clat = -decl, clon = subLon+180;
+    while(clon>180) clon-=360; while(clon<-180) clon+=360;
+    const r = this.d2r(89.5), la1 = this.d2r(clat), lo1 = this.d2r(clon);
+    const ring = [];
+    for (let b=0; b<=360; b+=5) {
+      const brng = this.d2r(b);
+      const la2 = Math.asin(Math.sin(la1)*Math.cos(r)+Math.cos(la1)*Math.sin(r)*Math.cos(brng));
+      const lo2 = lo1 + Math.atan2(Math.sin(brng)*Math.sin(r)*Math.cos(la1), Math.cos(r)-Math.sin(la1)*Math.sin(la2));
+      ring.push([this.r2d(lo2), this.r2d(la2)]);
+    }
+    return { geometry: { type:'Polygon', coordinates:[ring] } };
+  }
+  updateDayNight() {
+    if (!this.globe) return;
+    this.globe.globeImageUrl(this.daySrc());
+    if (this.settings.dayNight) {
+      this.globe.polygonsData([this.computeNightFeature()]);
+    } else {
+      this.globe.polygonsData([]);
+    }
+  }
+  updateTimezones() {
+    if (!this.globe) return;
+    if (this.settings.timezones) {
+      const paths=[], labels=[];
+      for (let lon=-180; lon<180; lon+=45) {
+        const pts=[]; for(let lat=-84; lat<=84; lat+=4) pts.push([lat,lon,0.004]);
+        paths.push(pts);
+        const off = Math.round(lon/15);
+        labels.push({ lat:2, lng:lon, t:'UTC'+(off>=0?'+':'')+off });
+      }
+      this.globe.pathsData(paths).labelsData(labels);
+    } else {
+      this.globe.pathsData([]).labelsData([]);
+    }
+  }
+
+  componentDidUpdate() { this.syncGlobeProps(); }
+
+  flyTo(n) { this.killGlide(); if (this.globe && n) this.globe.pointOfView({ lat:n.lat, lng:n.lon, altitude:0.75 }, 900); }
+  goHome() {
+    this.killGlide();
+    const you = this.state.nodes.find(n=>n.type==='you');
+    if (this.globe) this.globe.pointOfView({ lat: you?you.lat:46, lng: you?you.lon:-22, altitude: 1.9 }, 1000);
+  }
+
+  select(id) {
+    if (id==='you') {
+      this._youC = (this._youC||0)+1; clearTimeout(this._youT);
+      this._youT = setTimeout(()=>{ this._youC=0; }, 1600);
+      if (this._youC>=7) { this._youC=0; if(this.settings.eggs!==false) this.vitals(); }
+    }
+    this.setState({ selectedId: id });
+    if (this.globe) this.globe.controls().autoRotate = false;
+    this.applyGlobeData();
+    this.flyTo(this.state.nodes.find(x=>x.id===id));
+  }
+  clear() {
+    if (this.state.selectedId===null) return;
+    this.setState({ selectedId: null });
+    if (this.globe && this.settings.autoRotate!==false) this.globe.controls().autoRotate = true;
+    this.applyGlobeData();
+  }
+
+  toggleList() { this.setState(s=>({ listOpen: !s.listOpen })); }
+  toggleOps() { this.setState(s=>({ showOps: !s.showOps }), ()=>this.applyGlobeData(true)); }
+  setSort(k) { this.setState({ sortBy: k }); }
+  openSettings() { this.setState({ settingsOpen:true }); }
+  closeSettings() { this.setState({ settingsOpen:false }); }
+
+  setSetting(key, val) {
+    this.setState(s=>({ settings: { ...s.settings, [key]: val } }), ()=>{
+      this.saveSettings();
+      if (key==='showArcs') this.applyGlobeData();
+      else if (key==='dayNight') this.updateDayNight();
+      else if (key==='timezones') this.updateTimezones();
+      else if (key==='eggs' || key.indexOf('egg')===0) this.refreshAmbientFx();
+      else this.syncGlobeProps();
+    });
+  }
+  resetData() {
+    const seed = this.seedData();
+    this.persist(seed);
+    this.setState({ nodes: seed, selectedId:null }, ()=>{ this.applyGlobeData(true); this.showToast('Contacts reset to sample set'); });
+  }
+  exportData() {
+    const blob = new Blob([JSON.stringify(this.state.nodes, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'network-contacts.json';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+    this.showToast('Contacts exported as JSON');
+  }
+  importClick() { if (this.fileEl) this.fileEl.click(); }
+  importData(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{
+      try {
+        const arr = JSON.parse(r.result);
+        if (!Array.isArray(arr) || !arr.length) throw new Error('empty');
+        const ok = arr.every(n=>n && typeof n.name==='string' && isFinite(n.lat) && isFinite(n.lon));
+        if (!ok) throw new Error('shape');
+        const norm = arr.map(n=>({ ...n, ops: Array.isArray(n.ops)?n.ops:[] }));
+        this.persist(norm);
+        this.setState({ nodes:norm, selectedId:null }, ()=>{ this.applyGlobeData(true); this.showToast('Imported '+norm.length+' contacts'); });
+      } catch(err) {
+        this.showToast('Import failed — not a valid contacts file', '#ff8a98', 'rgba(90,20,32,.92)');
+      }
+    };
+    r.readAsText(f);
+    e.target.value = '';
+  }
+
+  openAdd() { this.setState({ formOpen:true, editingId:null, draft:this.blankDraft(), geoHint:'', geoFound:false }); }
+  openEdit(id) {
+    const n = this.state.nodes.find(x=>x.id===id); if (!n) return;
+    this.setState({ formOpen:true, editingId:id, draft:{
+      name:n.name||'', role:n.role||'', city:n.city||'', type:n.type||'other', strength:n.strength||'dormant',
+      reach:String(n.reach||1), lastDays:String(n.lastDays||0), owed:!!n.owed,
+      lat:String(n.lat||0), lon:String(n.lon||0), met:n.met||'', notes:n.notes||'', introById:n.introById||'', ops:(n.ops||[]).join('\n')
+    }, geoHint:'', geoFound:false});
+  }
+  closeForm() { this.setState({ formOpen:false, geoHint:'', geoFound:false }); }
+  onField(e) {
+    const f = e.target.dataset.field;
+    const v = e.target.type==='checkbox' ? e.target.checked : e.target.value;
+    if (f==='city') {
+      const hit = this.lookupCity(v);
+      this.setState(s=>({
+        draft: { ...s.draft, city:v, ...(hit ? { lat:String(hit[0]), lon:String(hit[1]) } : {}) },
+        geoHint: hit ? ('📍 located → '+hit[0].toFixed(2)+', '+hit[1].toFixed(2)) : (v.trim() ? 'not in the atlas — set lat/lon by hand below' : ''),
+        geoFound: !!hit
+      }));
+      return;
+    }
+    this.setState(s=>({ draft: { ...s.draft, [f]: v } }));
+  }
+  saveNode() {
+    const d = this.state.draft;
+    const isEdit = !!this.state.editingId;
+    const existing = isEdit ? this.state.nodes.find(x=>x.id===this.state.editingId) : null;
+    const node = {
+      id: this.state.editingId || ('n'+Date.now().toString(36)),
+      name: (d.name||'').trim() || 'Untitled',
+      role: (d.role||'').trim(), city: (d.city||'').trim(),
+      lat: parseFloat(d.lat)||0, lon: parseFloat(d.lon)||0,
+      type: existing && existing.type==='you' ? 'you' : (d.type||'other'),
+      strength: existing && existing.type==='you' ? 'you' : (d.strength||'dormant'),
+      reach: parseInt(d.reach)||1, lastDays: Math.max(0, parseInt(d.lastDays)||0),
+      owed: !!d.owed, met: (d.met||'').trim(), notes: (d.notes||'').trim(),
+      introById: d.introById || null,
+      ops: (d.ops||'').split('\n').map(x=>x.trim()).filter(Boolean)
+    };
+    const nodes = isEdit ? this.state.nodes.map(x=>x.id===node.id ? node : x) : [...this.state.nodes, node];
+    this.persist(nodes);
+    this.setState({ nodes, formOpen:false, selectedId: node.id });
+    setTimeout(()=>{ this.applyGlobeData(true); this.flyTo(this.decorate().find(x=>x.id===node.id)); }, 0);
+  }
+  deleteNode(id) {
+    if (id==='you') return;
+    const nodes = this.state.nodes.filter(x=>x.id!==id).map(x=> x.introById===id ? {...x, introById:null} : x);
+    this.persist(nodes);
+    this.setState({ nodes, selectedId: (this.state.selectedId===id?null:this.state.selectedId) });
+    setTimeout(()=>this.applyGlobeData(true), 0);
+  }
+
+  sortNodes(list) {
+    const s = this.state.sortBy;
+    const rank = { warm:0, dormant:1, cold:2, you:-1 };
+    const a = [...list];
+    if (s==='recent') a.sort((x,y)=>x.lastDays-y.lastDays);
+    else if (s==='overdue') a.sort((x,y)=>(y.owed-x.owed)||(y.lastDays-x.lastDays));
+    else if (s==='reach') a.sort((x,y)=>(y.reach-x.reach)||x.name.localeCompare(y.name));
+    else if (s==='name') a.sort((x,y)=>x.name.localeCompare(y.name));
+    else if (s==='strength') a.sort((x,y)=>(rank[x.strength]-rank[y.strength])||x.lastDays-y.lastDays);
+    return a;
+  }
+
+  /* ---------- 3D FX engine ---------- */
+  kit() {
+    if (this._K) return this._K;
+    if (!this.globe) return null;
+    const scene = this.globe.scene();
+    let sphere=null;
+    scene.traverse(o=>{ if(!sphere && o.isMesh && o.geometry && o.geometry.type==='SphereGeometry' && o.material && o.material.isMeshPhongMaterial) sphere=o; });
+    if (!sphere) return null;
+    const Mesh = sphere.constructor;
+    const SphereGeometry = sphere.geometry.constructor;
+    const Mat = sphere.material.constructor;
+    let O3D = Object.getPrototypeOf(Mesh);
+    try { const t = new O3D(); if (!t || !t.position || !t.add || !t.lookAt) O3D = null; } catch(e) { O3D = null; }
+    const group = O3D
+      ? ()=>new O3D()
+      : ()=>{ const m = new Mesh(new SphereGeometry(0.01, 4, 4), new Mat({ visible:false })); return m; };
+    this._K = { Mesh, SphereGeometry, Mat, V3: sphere.position.constructor, group };
+    return this._K;
+  }
+  mkMat(K, color, emissive, opacity) {
+    const m = new K.Mat({ color, emissive: emissive!=null?emissive:0x000000, shininess: 60 });
+    if (opacity!=null && opacity<1) { m.transparent = true; m.opacity = opacity; }
+    return m;
+  }
+  mkBall(K, r, color, emissive, opacity, seg) {
+    return new K.Mesh(new K.SphereGeometry(r, seg||10, seg||10), this.mkMat(K, color, emissive, opacity));
+  }
+  orbitPos(r, ang, incl) {
+    const ci = Math.cos(incl), si = Math.sin(incl);
+    return [ r*Math.cos(ang), r*Math.sin(ang)*si, r*Math.sin(ang)*ci ];
+  }
+
+  buildSatellite(K) {
+    const grp = K.group();
+    const body = this.mkBall(K, 2.1, 0xaebfd6, 0x1c2c40, 1, 12);
+    body.scale.set(1, 1.25, 1);
+    const panelL = this.mkBall(K, 1, 0x2a6fdb, 0x122e66, 0.95, 8); panelL.scale.set(4.6, 1.7, 0.22); panelL.position.set(-5.4, 0, 0);
+    const panelR = this.mkBall(K, 1, 0x2a6fdb, 0x122e66, 0.95, 8); panelR.scale.set(4.6, 1.7, 0.22); panelR.position.set(5.4, 0, 0);
+    const dish = this.mkBall(K, 0.85, 0xd8e2ee, 0x2c3c52, 1, 8); dish.scale.set(1, 0.5, 1); dish.position.set(0, 1.9, 0);
+    const beacon = this.mkBall(K, 0.55, 0xff5566, 0xff2244, 1, 8); beacon.position.set(0, -1.9, 0);
+    grp.add(body); grp.add(panelL); grp.add(panelR); grp.add(dish); grp.add(beacon);
+    // faint orbit path dots
+    const ringGrp = K.group();
+    const R = 126, incl = 0.6;
+    for (let i=0;i<64;i++){
+      const d = this.mkBall(K, 0.42, 0x7fa8d6, 0x30507a, 0.14, 5);
+      const p = this.orbitPos(R, i/64*Math.PI*2, incl);
+      d.position.set(p[0], p[1], p[2]);
+      ringGrp.add(d);
+    }
+    const st = { ang: Math.random()*Math.PI*2 };
+    return {
+      obj: grp, extra: ringGrp,
+      tick: (now, dt)=>{
+        st.ang += dt*0.16;
+        const p = this.orbitPos(R, st.ang, incl);
+        grp.position.set(p[0], p[1], p[2]);
+        grp.lookAt(0,0,0);
+        beacon.material.emissiveIntensity = 1.2 + Math.sin(now/160)*1.2;
+      }
+    };
+  }
+
+  buildHelix(K) {
+    const grp = K.group();
+    const inner = K.group();
+    const n = 24, H = 24, rb = 3.9;
+    for (let i=0;i<n;i++){
+      const t = i/(n-1), y = (t-0.5)*H, a = t*Math.PI*2*2.4;
+      const s1 = this.mkBall(K, 0.8, 0x43e0b8, 0x1a5a48, 1, 8);
+      s1.position.set(Math.cos(a)*rb, y, Math.sin(a)*rb);
+      const s2 = this.mkBall(K, 0.8, 0xf2b13a, 0x6b4a12, 1, 8);
+      s2.position.set(Math.cos(a+Math.PI)*rb, y, Math.sin(a+Math.PI)*rb);
+      inner.add(s1); inner.add(s2);
+      if (i%3===1) {
+        const rung = this.mkBall(K, 1, 0xb9c8dc, 0x2c3c52, 0.8, 6);
+        rung.scale.set(rb, 0.2, 0.2);
+        rung.position.set(0, y, 0);
+        rung.rotation.y = -a;
+        inner.add(rung);
+      }
+    }
+    grp.add(inner);
+    const st = { ang: Math.random()*Math.PI*2 };
+    const R = 152, incl = -0.45;
+    return {
+      obj: grp,
+      tick: (now, dt)=>{
+        st.ang -= dt*0.07;
+        const p = this.orbitPos(R, st.ang, incl);
+        grp.position.set(p[0], p[1], p[2]);
+        inner.rotation.y += dt*0.7;
+      }
+    };
+  }
+
+  launchRocket() {
+    const K = this.kit(); if(!K || !this.globe) return;
+    const scene = this.globe.scene();
+    const contacts = this.state.nodes.filter(n=>n.type!=='you');
+    const c = contacts[Math.floor(Math.random()*contacts.length)]; if(!c) return;
+    const S0 = this.globe.getCoords(c.lat, c.lon, 0.004);
+    const S = new K.V3(S0.x, S0.y, S0.z);
+    const N = S.clone().normalize();
+    let E = new K.V3(0,1,0).cross(N);
+    if (E.length()<0.01) E = new K.V3(1,0,0);
+    E.normalize();
+    const grp = K.group();
+    const ori = K.group(); ori.rotation.x = Math.PI/2; grp.add(ori);
+    const body = this.mkBall(K, 1.15, 0xe8eef7, 0x3a4a5e, 1, 10); body.scale.set(1, 2.9, 1); ori.add(body);
+    const nose = this.mkBall(K, 0.7, 0xff8a98, 0x7e2230, 1, 8); nose.position.set(0, 3.4, 0); ori.add(nose);
+    const flame = this.mkBall(K, 0.95, 0xffc86e, 0xffa018, 0.95, 8); flame.position.set(0, -3.6, 0); ori.add(flame);
+    scene.add(grp);
+    // smoke puffs at pad
+    const puffs = [];
+    for (let i=0;i<6;i++){
+      const p = this.mkBall(K, 0.9+Math.random()*0.8, 0x9aa8ba, 0x222a34, 0.5, 6);
+      p.position.set(S.x, S.y, S.z);
+      const dir = new K.V3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).normalize().multiplyScalar(0.5).add(N.clone().multiplyScalar(0.3));
+      scene.add(p);
+      puffs.push({ m:p, dir, life:1 });
+    }
+    this.burst(c.lat, c.lon, '242,177,58');
+    const trail = [];
+    const st = { t:0, lastTrail:0 };
+    const dur = 4.6;
+    const path = (t)=>{
+      const h = 118*t*t;
+      const drift = 30*t*t*t;
+      return S.clone().add(N.clone().multiplyScalar(h)).add(E.clone().multiplyScalar(drift));
+    };
+    this._projectiles.push({
+      dead:false,
+      tick:(now,dt)=>{
+        st.t += dt/dur;
+        puffs.forEach(pf=>{ pf.life-=dt/1.7; pf.m.position.add(pf.dir.clone().multiplyScalar(dt*8)); pf.m.scale.multiplyScalar(1+dt*1.1); pf.m.material.opacity=Math.max(0,pf.life)*0.5; });
+        if (st.t>=1) {
+          scene.remove(grp);
+          trail.forEach(tr=>scene.remove(tr.m));
+          puffs.forEach(pf=>scene.remove(pf.m));
+          return true;
+        }
+        const cur = path(st.t), nxt = path(Math.min(1, st.t+0.02));
+        grp.position.set(cur.x, cur.y, cur.z);
+        grp.lookAt(nxt.x, nxt.y, nxt.z);
+        flame.material.emissiveIntensity = 1.4 + Math.random()*1.4;
+        flame.scale.set(1+Math.random()*0.3, 1+Math.random()*0.6, 1+Math.random()*0.3);
+        if (now-st.lastTrail>55 && st.t>0.03) {
+          st.lastTrail = now;
+          const d = this.mkBall(K, 0.55, 0xffc86e, 0xcc7d10, 0.8, 5);
+          d.position.set(cur.x, cur.y, cur.z);
+          scene.add(d);
+          trail.push({ m:d, life:1 });
+        }
+        trail.forEach(tr=>{ tr.life-=dt/1.3; tr.m.material.opacity=Math.max(0,tr.life)*0.8; tr.m.scale.multiplyScalar(1+dt*0.9); });
+        for (let i=trail.length-1;i>=0;i--){ if(trail[i].life<=0){ scene.remove(trail[i].m); trail.splice(i,1); } }
+        return false;
+      }
+    });
+  }
+
+  spawnComet() {
+    const K = this.kit(); if(!K || !this.globe) return;
+    const scene = this.globe.scene();
+    let A, B, tries=0;
+    do {
+      A = new K.V3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize().multiplyScalar(270);
+      B = new K.V3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize().multiplyScalar(270);
+      const mid = A.clone().add(B).multiplyScalar(0.5);
+      if (mid.length()>135 && A.distanceTo(B)>250) break;
+    } while (++tries<20);
+    if (tries>=20) return;
+    const head = this.mkBall(K, 1.3, 0xdcecff, 0x8ab8ff, 1, 10);
+    scene.add(head);
+    const trail = [];
+    const st = { t:0, lastTrail:0 };
+    this._projectiles.push({
+      dead:false,
+      tick:(now,dt)=>{
+        st.t += dt/2.6;
+        if (st.t>=1) {
+          scene.remove(head);
+          trail.forEach(tr=>scene.remove(tr.m));
+          return true;
+        }
+        const pos = A.clone().lerp(B, st.t);
+        head.position.set(pos.x, pos.y, pos.z);
+        if (now-st.lastTrail>40) {
+          st.lastTrail = now;
+          const d = this.mkBall(K, 0.7, 0xa8ccff, 0x4a7ecc, 0.6, 5);
+          d.position.set(pos.x, pos.y, pos.z);
+          scene.add(d);
+          trail.push({ m:d, life:1 });
+        }
+        trail.forEach(tr=>{ tr.life-=dt/0.9; tr.m.material.opacity=Math.max(0,tr.life)*0.6; tr.m.scale.multiplyScalar(Math.max(0.2,1-dt*1.4)); });
+        for (let i=trail.length-1;i>=0;i--){ if(trail[i].life<=0){ scene.remove(trail[i].m); trail.splice(i,1); } }
+        return false;
+      }
+    });
+  }
+
+  refreshAmbientFx() {
+    if (!this.globe) return;
+    const K = this.kit();
+    if (!K) { setTimeout(()=>this.refreshAmbientFx(), 600); return; }
+    const scene = this.globe.scene();
+    const S = this.settings;
+    const on = S.eggs!==false;
+    const wantSat = on && S.eggSatellite!==false;
+    if (wantSat && !this._sat) { this._sat = this.buildSatellite(K); scene.add(this._sat.obj); scene.add(this._sat.extra); }
+    if (!wantSat && this._sat) { scene.remove(this._sat.obj); scene.remove(this._sat.extra); this._sat = null; }
+    const wantHelix = on && S.eggHelix!==false;
+    if (wantHelix && !this._helix) { this._helix = this.buildHelix(K); scene.add(this._helix.obj); }
+    if (!wantHelix && this._helix) { scene.remove(this._helix.obj); this._helix = null; }
+    this.updateRings();
+  }
+
+  updateRings() {
+    if (!this.globe) return;
+    const S = this.settings;
+    const arr = [];
+    if (S.eggs!==false && S.eggHeartbeat!==false) {
+      const you = this.state.nodes.find(n=>n.type==='you');
+      if (you) arr.push({ lat:you.lat, lng:you.lon, maxR:5, speed:4.5, period:1150, color: t=>`rgba(67,224,184,${Math.max(0, 0.55*(1-t))})` });
+    }
+    arr.push(...(this._burstRings||[]));
+    this.globe.ringsData(arr);
+  }
+  burst(lat, lng, rgb) {
+    this._burstRings = this._burstRings || [];
+    const ring = { lat, lng, maxR:9, speed:9, period:2400, color: t=>`rgba(${rgb},${Math.max(0, 0.8*(1-t))})` };
+    this._burstRings.push(ring);
+    this.updateRings();
+    setTimeout(()=>{ this._burstRings = this._burstRings.filter(r=>r!==ring); this.updateRings(); }, 2600);
+  }
+
+  startFx() {
+    this.stopFx();
+    this._projectiles = [];
+    this.refreshAmbientFx();
+    this._lastFx = performance.now();
+    const loop = (now)=>{
+      const dt = Math.min(0.05, (now-this._lastFx)/1000); this._lastFx = now;
+      if (this._sat) this._sat.tick(now, dt);
+      if (this._helix) this._helix.tick(now, dt);
+      for (let i=this._projectiles.length-1; i>=0; i--) {
+        if (this._projectiles[i].tick(now, dt)) this._projectiles.splice(i, 1);
+      }
+      this._fxRaf = requestAnimationFrame(loop);
+    };
+    this._fxRaf = requestAnimationFrame(loop);
+    this._eggTimers = [
+      setInterval(()=>this.maybe('eggRockets', 0.55, ()=>this.launchRocket()), 14000),
+      setInterval(()=>this.maybe('eggComets', 0.5, ()=>this.spawnComet()), 11000),
+      setInterval(()=>this.maybe('eggFlick', 0.4, ()=>{ if(!this._pressed && !this.state.selectedId) this.doFlick(); }), 16000)
+    ];
+  }
+  stopFx() {
+    if (this._fxRaf) cancelAnimationFrame(this._fxRaf);
+    (this._eggTimers||[]).forEach(clearInterval);
+    this._eggTimers = [];
+  }
+  maybe(key, prob, fn) { if (this.settings.eggs!==false && this.settings[key]!==false && Math.random()<prob) fn(); }
+
+  /* ---------- Hidden eggs ---------- */
+  codeBlue() {
+    const g = this.globe; if (!g) return;
+    this.showToast('⚡ CODE BLUE — crash cart to the globe', '#7fb3ff', 'rgba(20,40,90,.94)');
+    this.decorate().filter(n=>n.owed).forEach((n,i)=>setTimeout(()=>this.burst(n.lat, n.lon, '90,140,255'), i*140));
+    let k=0;
+    const flash = setInterval(()=>{
+      g.atmosphereColor(k%2 ? '#5b93cf' : '#4d8dff');
+      g.atmosphereAltitude(k%2 ? 0.16 : 0.30);
+      if (++k>7) { clearInterval(flash); g.atmosphereColor('#5b93cf'); g.atmosphereAltitude(0.16); }
+    }, 170);
+    let j=0;
+    const shake = setInterval(()=>{
+      const p = g.pointOfView();
+      g.pointOfView({ lat:p.lat+(Math.random()-0.5)*1.2, lng:p.lng+(Math.random()-0.5)*1.2, altitude:p.altitude }, 0);
+      if (++j>15) clearInterval(shake);
+    }, 42);
+  }
+  vitals() {
+    this.showToast('Vitals: HR 72 · BP 118/76 · SpO₂ 99% — stable ♥');
+    const you = this.state.nodes.find(n=>n.type==='you');
+    if (you) this.burst(you.lat, you.lon, '67,224,184');
+    const host = this.rootEl; if (!host) return;
+    const w = host.clientWidth || 1200;
+    const div = document.createElement('div');
+    div.style.cssText = 'position:absolute;inset:0;z-index:26;pointer-events:none;display:flex;align-items:center';
+    let d = 'M 0 0 ', x = 0; const unit = 190;
+    while (x < w+unit) { d += `L ${x+44} 0 L ${x+56} -7 L ${x+66} 0 L ${x+78} 5 L ${x+86} -48 L ${x+94} 40 L ${x+102} -5 L ${x+116} 0 L ${x+138} -11 L ${x+158} 0 `; x += unit; }
+    div.innerHTML = `<svg width="100%" height="150" viewBox="0 -75 ${w} 150" preserveAspectRatio="none" style="overflow:visible"><path d="${d}" fill="none" stroke="#43e0b8" stroke-width="2.4" stroke-linejoin="round" style="filter:drop-shadow(0 0 9px #43e0b8)"/></svg>`;
+    host.appendChild(div);
+    const path = div.querySelector('path');
+    const len = w + unit + 400;
+    path.style.strokeDasharray = len+' '+len;
+    path.style.strokeDashoffset = len;
+    path.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 1900, easing: 'linear', fill: 'forwards' }).onfinish = ()=>{
+      div.animate([{ opacity:1 }, { opacity:0 }], { duration: 700, fill:'forwards' }).onfinish = ()=>div.remove();
+    };
+  }
+  showToast(text, color, bg) {
+    const host = this.rootEl; if (!host) return;
+    const el = document.createElement('div');
+    el.textContent = text;
+    el.style.cssText = `position:absolute;left:50%;bottom:84px;transform:translateX(-50%);z-index:30;pointer-events:none;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:${color||'#7ff0d0'};background:${bg||'rgba(10,20,30,.94)'};border:1px solid ${color?color+'66':'rgba(67,224,184,.5)'};padding:11px 20px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);white-space:nowrap`;
+    host.appendChild(el);
+    const a = el.animate([{opacity:0,transform:'translateX(-50%) translateY(12px)'},{opacity:1,transform:'translateX(-50%) translateY(0)',offset:.12},{opacity:1,transform:'translateX(-50%) translateY(0)',offset:.8},{opacity:0,transform:'translateX(-50%) translateY(-10px)'}],{duration:3000,easing:'ease-out'});
+    a.onfinish = ()=>el.remove();
+  }
+  onKey(e) {
+    if (this.settings.eggs===false) return;
+    const seq = ['arrowup','arrowup','arrowdown','arrowdown','arrowleft','arrowright','arrowleft','arrowright','b','a'];
+    this._konami = this._konami || [];
+    this._konami.push(String(e.key).toLowerCase());
+    if (this._konami.length>seq.length) this._konami.shift();
+    if (this._konami.length===seq.length && seq.every((k,i)=>k===this._konami[i])) { this._konami=[]; this.codeBlue(); }
+  }
+
+  componentWillUnmount() {
+    if (this._resize) window.removeEventListener('resize', this._resize);
+    if (this._onKey) window.removeEventListener('keydown', this._onKey);
+    if (this._onPMove) window.removeEventListener('pointermove', this._onPMove);
+    if (this._onPUp) window.removeEventListener('pointerup', this._onPUp);
+    if (this._dnTimer) clearInterval(this._dnTimer);
+    this.killGlide();
+    this.stopFx();
+  }
+
+  renderVals() {
+    const nodes = this.decorate();
+    const sel = this.state.selectedId ? nodes.find(n=>n.id===this.state.selectedId) : null;
+    const S = this.settings;
+    const modes = [ ['recent','Recent'], ['overdue','Overdue'], ['reach','Reach'], ['name','Name'], ['strength','Strength'] ];
+    const base = "font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;padding:6px 11px;border-radius:8px;cursor:pointer;transition:all .12s;";
+    const sortBtns = modes.map(([k,label])=>({
+      label, onClick: ()=>this.setSort(k),
+      style: base + (this.state.sortBy===k ? 'background:rgba(67,224,184,.18);border:1px solid rgba(67,224,184,.5);color:#7ff0d0' : 'background:rgba(90,130,180,.1);border:1px solid rgba(90,130,180,.25);color:#9fb4d0')
+    }));
+    const q = this.state.query.trim().toLowerCase();
+    const filtered = nodes.filter(n=>n.type!=='you').filter(n=>{
+      if (!q) return true;
+      return [n.name, n.role, n.city, n.notes, n.met, (n.ops||[]).map(o=>o.text).join(' ')].join(' ').toLowerCase().indexOf(q)>=0;
+    });
+    const rows = this.sortNodes(filtered).map(n=>({
+      ...n, pick: ()=>this.select(n.id),
+      rowStyle: n.id===this.state.selectedId ? 'background:rgba(90,130,180,.16)' : ''
+    }));
+    const introOpts = [{v:'',label:'— none —'}].concat(nodes.filter(n=>n.id!==this.state.editingId).map(n=>({v:n.id,label:n.name})));
+    const mkToggle = (key, label, sub, enabled)=>{
+      const on = S[key]!==false;
+      return {
+        label, sub,
+        onClick: ()=>this.setSetting(key, !on),
+        trackStyle: `position:relative;flex:none;width:42px;height:23px;border-radius:12px;transition:background .15s;background:${on?'#43e0b8':'rgba(90,130,180,.3)'}`,
+        knobStyle: `position:absolute;top:2.5px;left:${on?21:2.5}px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.4)`,
+        opacity: enabled===false ? 0.45 : 1
+      };
+    };
+    const eggsOn = S.eggs!==false;
+    return {
+      setGlobeEl:(el)=>{ this.globeEl=el; }, setRootEl:(el)=>{ this.rootEl=el; },
+      setTexImg:(el)=>{ this.texImg=el; }, setDayImg:(el)=>{ this.dayImg=el; }, setFileEl:(el)=>{ this.fileEl=el; },
+      onTexError:()=>this.onTexError(), onDayTexError:()=>this.onDayTexError(),
+      hasSelected:!!sel, sel: sel || { deletable:false },
+      clear:()=>this.clear(), editSel:()=>this.openEdit(this.state.selectedId), delSel:()=>this.deleteNode(this.state.selectedId),
+      nodeCount: nodes.length-1, owedCount: nodes.filter(n=>n.owed).length,
+      stamp: 'LUBLIN · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase(),
+      showLegend: !this.state.listOpen,
+      listOpen: this.state.listOpen, toggleList:()=>this.toggleList(),
+      showOps: this.state.showOps, toggleOps:()=>this.toggleOps(),
+      opsBtnStyle: "font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;padding:8px 14px;border-radius:9px;cursor:pointer;" + (this.state.showOps ? 'background:rgba(242,177,58,.2);border:1px solid rgba(242,177,58,.55);color:#f5c96e' : 'background:rgba(11,17,30,.9);border:1px solid rgba(90,130,180,.3);color:#cdd9e8'),
+      query: this.state.query, onQuery:(e)=>this.setState({ query:e.target.value }),
+      goHome: ()=>this.goHome(),
+      guideOpen: this.state.guideOpen, openGuide:()=>this.setState({ guideOpen:true }), closeGuide:()=>{ try { localStorage.setItem('nm_guide_seen_v1','1'); } catch(e) {} this.setState({ guideOpen:false }); }, guideSections: this.guideSections(),
+      geoHint: this.state.geoHint, geoColor: this.state.geoFound ? '#7fd6a8' : '#c79a4e',
+      cityOpts: Object.keys(this.allCities()).map(k=>k.replace(/\b\w/g,m=>m.toUpperCase()).replace(/, (\w+)$/,(_,c)=>', '+c.toUpperCase())),
+      sortBtns, rows,
+      settingsOpen: this.state.settingsOpen, openSettings:()=>this.openSettings(), closeSettings:()=>this.closeSettings(),
+      globeToggles: [ mkToggle('autoRotate','Auto-rotate','Idle spin when nothing is selected'), mkToggle('showArcs','Connection arcs','Lines from you to each contact') ],
+      timeToggles: [ mkToggle('dayNight','Real-time day & night','Sunlit map with a live night shadow'), mkToggle('timezones','Time-zone lines','Meridians every 3 hours (UTC)') ],
+      funToggles: [
+        mkToggle('eggs','Easter eggs','Master switch for everything below'),
+        mkToggle('eggSatellite','🛰 Research satellite','3D sat in low orbit, blinking beacon', eggsOn),
+        mkToggle('eggHelix','🧬 Orbiting DNA helix','A slow double helix in high orbit', eggsOn),
+        mkToggle('eggRockets','🚀 Rocket launches','3D lift-offs from your contacts\u2019 cities', eggsOn),
+        mkToggle('eggComets','☄ Comet flybys','Icy visitors streaking past', eggsOn),
+        mkToggle('eggHeartbeat','💓 Heartbeat at home','Sonar pulse from your home base', eggsOn),
+        mkToggle('eggFlick','🌍 Random globe flicks','It spins itself now and then', eggsOn)
+      ],
+      idleSpeed: S.idleSpeed, idleSpeedLabel: (S.idleSpeed||0).toFixed(2), onIdleSpeed:(e)=>this.setSetting('idleSpeed', parseFloat(e.target.value)),
+      flickPower: S.flickPower, flickLabel: '×'+S.flickPower, onFlick:(e)=>this.setSetting('flickPower', parseFloat(e.target.value)),
+      glideLength: S.glideLength, glideLabel: '×'+S.glideLength, onGlide:(e)=>this.setSetting('glideLength', parseFloat(e.target.value)),
+      resetData:()=>this.resetData(), exportData:()=>this.exportData(), importClick:()=>this.importClick(), importData:(e)=>this.importData(e),
+      formOpen: this.state.formOpen, formTitle: this.state.editingId ? 'Edit contact' : 'Add a contact',
+      draft: this.state.draft, onField:(e)=>this.onField(e), saveNode:()=>this.saveNode(), closeForm:()=>this.closeForm(),
+      stop:(e)=>e.stopPropagation(), openAdd:()=>this.openAdd(),
+      typeOpts: [ {v:'ct',label:'CT surgeon'},{v:'mentor',label:'Mentor'},{v:'researcher',label:'Researcher'},{v:'program',label:'Program'},{v:'other',label:'Other contact'} ],
+      strengthOpts: [ {v:'warm',label:'Warm / active'},{v:'dormant',label:'Dormant'},{v:'cold',label:'Cold · valuable'} ],
+      introOpts
+    };
+  }
+}
+</script>
+
+
+</body></html>

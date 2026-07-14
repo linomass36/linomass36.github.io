@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#3B6D11"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">SE</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  a { color: #2E6A86; text-decoration: none; }
+  a:hover { color: #993C1D; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes seIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div data-screen-label="Study Engine" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 80px;">
+
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.95); position: sticky; top: 0; z-index: 20;">
+    <div style="max-width: 700px; margin: 0 auto; padding: 14px 18px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #3B6D11;">09 · The reps</div>
+        <div style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 24px; line-height: 1.05; margin-top: 3px;">Study Engine</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="Life Log.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFF; color: #55564F;">⏱ timer</a>
+        <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFF; color: #55564F;">⌂ Hub</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 700px; margin: 0 auto; padding: 16px 18px 0; animation: seIn .25s ease;">
+
+    <!-- DUE TODAY -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #3B6D11; border-radius: 14px; background: #FFF; padding: 16px 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #3B6D11;">Due today</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ dueCountColor }};">{{ dueCountText }}</span>
+      </div>
+      <sc-if value="{{ hasDue }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 14px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: {{ curSubjColor }}; border: 1px solid {{ curSubjBorder }}; background: {{ curSubjBg }}; border-radius: 20px; padding: 2px 10px;">{{ curSubj }}</span>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; line-height: 1.4; margin-top: 10px;">{{ curQ }}</div>
+          <sc-if value="{{ revealed }}" hint-placeholder-val="{{ false }}">
+            <div style="border: 1px solid #E1EAD8; background: #F4F8EF; border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.55; color: #26271F; margin-top: 12px;">{{ curA }}</div>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button onClick="{{ gotIt }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; flex: 1; min-height: 46px; border-radius: 12px; border: 1px solid #0F6E56; background: #0F6E56; color: #FFF; cursor: pointer;">got it → box {{ nextBox }} · re-ask in {{ nextGap }}</button>
+              <button onClick="{{ missedIt }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; flex: 1; min-height: 46px; border-radius: 12px; border: 1px solid #A32E27; background: #FFF; color: #A32E27; cursor: pointer;">missed → box 1 · tomorrow</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ notRevealed }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ reveal }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; width: 100%; min-height: 46px; margin-top: 12px; border-radius: 12px; border: 1px solid #1A1B1A; background: #1A1B1A; color: #FFF; cursor: pointer;">answer first, then reveal</button>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noDue }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 12px; padding: 18px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">{{ noDueText }}</div>
+      </sc-if>
+    </div>
+
+    <!-- ADD ERROR -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #A32E27; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A32E27;">Log an error</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">the moment it happens</span>
+      </div>
+      <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+        <sc-for list="{{ subjChips }}" as="sj" hint-placeholder-count="4">
+          <button onClick="{{ sj.go }}" style="{{ sj.style }}">{{ sj.label }}</button>
+        </sc-for>
+      </div>
+      <input value="{{ fQ }}" onChange="{{ setFQ }}" placeholder="what went wrong — the question you'd ask yourself" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; margin-top: 10px;">
+      <div style="display: flex; gap: 8px; margin-top: 8px;">
+        <input value="{{ fA }}" onChange="{{ setFA }}" placeholder="the correction — the answer you should have had" style="flex: 1; min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <button onClick="{{ addCard }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #A32E27; background: #A32E27; color: #FFF; cursor: pointer; flex: none;">add</button>
+      </div>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 8px; line-height: 1.5;">Errors get re-asked on a schedule — 1, 3, 7, 14, then 30 days. Miss one and it starts over. This is the highest-yield studying you can do per minute.</div>
+    </div>
+
+    <!-- PACING -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #185FA5; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #185FA5;">Exam pacing</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ weekHrsText }} studied this week</span>
+      </div>
+      <sc-if value="{{ hasExams }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; margin-top: 6px;">
+          <sc-for list="{{ examRows }}" as="ex" hint-placeholder-count="2">
+            <div style="border-top: 1px solid #F2F0EB; padding: 11px 0;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+                <span style="font-family: 'Newsreader', serif; font-size: 15.5px; font-weight: 500;">{{ ex.name }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ ex.daysColor }}; flex: none;">{{ ex.daysText }}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-top: 7px;">
+                <div style="flex: 1; height: 6px; border-radius: 3px; background: #E7E4DE; overflow: hidden;">
+                  <div style="height: 100%; border-radius: 3px; background: {{ ex.barColor }}; width: {{ ex.barPct }}%;"></div>
+                </div>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; flex: none;">{{ ex.paceText }}</span>
+                <button onClick="{{ ex.del }}" title="delete" style="border: none; background: none; color: #C9C7C0; cursor: pointer; font-size: 13px; flex: none;">×</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="display: grid; grid-template-columns: 1fr 130px 90px 70px; gap: 8px; margin-top: 12px;">
+        <input value="{{ eName }}" onChange="{{ setEName }}" placeholder="exam / deadline — e.g. anatomy midterm" style="min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <input type="date" value="{{ eDate }}" onChange="{{ setEDate }}" style="min-height: 44px; font-size: 12px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <input type="number" inputmode="decimal" value="{{ eHrs }}" onChange="{{ setEHrs }}" placeholder="hrs/wk" title="target hours per week" style="min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <button onClick="{{ addExam }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 44px; border-radius: 22px; border: 1px solid #185FA5; background: #185FA5; color: #FFF; cursor: pointer;">add</button>
+      </div>
+      <div style="font-size: 11px; color: #A6A79F; margin-top: 8px; line-height: 1.5;">Hours come straight from the Life Log focus timer — the bar is this week's actual vs your target.</div>
+    </div>
+
+    <!-- THE DECK -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFF; padding: 16px 18px; margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #55564F;">The deck</div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ deckSummary }}</span>
+      </div>
+      <sc-if value="{{ hasCards }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+          <sc-for list="{{ boxChips }}" as="bx" hint-placeholder-count="5">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; border: 1px solid #E4E2DD; background: #FCFBF9; border-radius: 20px; padding: 4px 10px;">{{ bx.label }}</span>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 8px;">
+          <sc-for list="{{ cardRows }}" as="c" hint-placeholder-count="4">
+            <div style="display: flex; gap: 10px; align-items: baseline; border-top: 1px solid #F2F0EB; padding: 9px 2px;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: {{ c.sColor }}; flex: none; width: 56px;">{{ c.subj }}</span>
+              <span style="font-size: 12.5px; color: #26271F; line-height: 1.45; flex: 1;">{{ c.q }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F; flex: none;">box {{ c.box }} · {{ c.dueText }}</span>
+              <button onClick="{{ c.del }}" title="delete" style="border: none; background: none; color: #C9C7C0; cursor: pointer; font-size: 13px; flex: none;">×</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noCards }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 12px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12px; color: #77786F;">Empty deck. The first error you log starts it.</div>
+      </sc-if>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;listCount&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 8, &quot;min&quot;: 4, &quot;max&quot;: 30, &quot;step&quot;: 1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Study Engine&quot;}}">
+class Component extends DCLogic {
+  KEY = 'ct_study_v1';
+  INTERVALS = [1, 3, 7, 14, 30];
+  SUBJ = { anatomy: '#993C1D', math: '#185FA5', python: '#0F6E56', other: '#6E4B8A' };
+  state = { tick: 0, revealed: false, fS: 'anatomy', fQ: '', fA: '', eName: '', eDate: '', eHrs: '' };
+
+  lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
+  read() { const d = this.lsJson(this.KEY, null); return (d && typeof d === 'object') ? { cards: d.cards || [], exams: d.exams || [] } : { cards: [], exams: [] }; }
+  write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} this.setState(s => ({ tick: s.tick + 1 })); }
+  iso(off) { const t = new Date(); t.setDate(t.getDate() + (off || 0)); return t.toISOString().slice(0, 10); }
+  num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+  fmtDay(k) { return new Date(k + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+
+  weekStudyHours() {
+    const ll = this.lsJson('ct_lifelog_v1', null);
+    if (!ll) return 0;
+    const days = ll.days || {}, sess = ll.sessions || [];
+    const t = new Date(); const dow = (t.getDay() + 6) % 7; const wk = [];
+    for (let i = 0; i < 7; i++) { const x = new Date(t); x.setDate(t.getDate() - dow + i); wk.push(x.toISOString().slice(0, 10)); }
+    let h = 0;
+    wk.forEach(k => {
+      const st = (days[k] || {}).study || {};
+      ['anatomy', 'math', 'python', 'research', 'other'].forEach(s => {
+        const ov = st[s] && st[s].h;
+        if (ov !== undefined && ov !== null && ov !== '') { h += this.num(ov) || 0; }
+        else { sess.forEach(x => { if (x.type === 'study' && x.subject === s && new Date(x.start).toISOString().slice(0, 10) === k) h += (x.end - x.start) / 3600000; }); }
+      });
+    });
+    if (ll.active && ll.active.mode === 'study' && wk.indexOf(new Date(ll.active.start).toISOString().slice(0, 10)) >= 0) h += (Date.now() - ll.active.start) / 3600000;
+    return h;
+  }
+
+  renderVals() {
+    const S = this.state;
+    const mono = "font-family:'IBM Plex Mono',monospace;";
+    const d = this.read();
+    const today = this.iso(0);
+    const due = d.cards.filter(c => c && c.due && c.due <= today).sort((a, b) => (a.due > b.due ? 1 : -1));
+    const cur = due[0] || null;
+    const stMeta = { anatomy: ['#993C1D', '#F9EFE9', '#E7CFC4'], math: ['#185FA5', '#EFF4FA', '#D8E4F0'], python: ['#0F6E56', '#F3F8F5', '#CBDDD3'], other: ['#6E4B8A', '#F4F1F8', '#DCD4E6'] };
+    const cm = stMeta[cur && cur.s] || stMeta.other;
+
+    const bump = ok => {
+      if (!cur) return;
+      const nd = this.read();
+      const c = nd.cards.find(x => x.id === cur.id);
+      if (c) {
+        if (ok) { c.box = Math.min(5, (c.box || 1) + 1); c.due = this.iso(this.INTERVALS[c.box - 1]); }
+        else { c.box = 1; c.due = this.iso(1); }
+      }
+      this.setState({ revealed: false });
+      this.write(nd);
+    };
+
+    const subjChips = Object.keys(this.SUBJ).map(s => ({
+      label: s, go: () => this.setState({ fS: s }),
+      style: mono + 'min-height:36px;padding:0 14px;font-size:10.5px;border-radius:18px;cursor:pointer;' + (S.fS === s ? 'border:1px solid ' + this.SUBJ[s] + ';background:' + this.SUBJ[s] + ';color:#FFF;' : 'border:1px solid #E4E2DD;background:#FFF;color:#55564F;')
+    }));
+
+    const addCard = () => {
+      const q = S.fQ.trim(), a = S.fA.trim();
+      if (!q) return;
+      const nd = this.read();
+      nd.cards.push({ id: 'c' + Date.now() + Math.floor(Math.random() * 999), s: S.fS, q: q, a: a || '—', box: 1, due: today, added: today });
+      this.setState({ fQ: '', fA: '' });
+      this.write(nd);
+    };
+
+    const addExam = () => {
+      const n = S.eName.trim();
+      if (!n || !S.eDate) return;
+      const nd = this.read();
+      nd.exams.push({ id: 'e' + Date.now(), name: n, date: S.eDate, hrsWk: this.num(S.eHrs) });
+      this.setState({ eName: '', eDate: '', eHrs: '' });
+      this.write(nd);
+    };
+
+    const wkH = Math.round(this.weekStudyHours() * 10) / 10;
+    const examRows = d.exams.slice().sort((a, b) => (a.date > b.date ? 1 : -1)).map(ex => {
+      const days = Math.ceil((new Date(ex.date + 'T12:00:00').getTime() - Date.now()) / 86400000);
+      const tgt = this.num(ex.hrsWk);
+      const pct = tgt ? Math.min(100, Math.round((wkH / tgt) * 100)) : (wkH > 0 ? 100 : 0);
+      return {
+        name: ex.name,
+        daysText: days < 0 ? 'passed' : (days === 0 ? 'today' : days + 'd left'),
+        daysColor: days < 0 ? '#A6A79F' : (days <= 14 ? '#A32E27' : (days <= 45 ? '#B0691B' : '#3F6B3A')),
+        barPct: pct, barColor: tgt ? (pct >= 100 ? '#0F6E56' : (pct >= 60 ? '#B0691B' : '#A32E27')) : '#185FA5',
+        paceText: tgt ? (wkH + 'h / ' + tgt + 'h wk') : (wkH + 'h this wk'),
+        del: () => { const nd = this.read(); nd.exams = nd.exams.filter(x => x.id !== ex.id); this.write(nd); }
+      };
+    });
+
+    const boxN = [0, 0, 0, 0, 0];
+    d.cards.forEach(c => { const b = Math.min(5, Math.max(1, c.box || 1)); boxN[b - 1]++; });
+    const boxChips = boxN.map((n, i) => ({ label: 'box ' + (i + 1) + ' · ' + n + ' · every ' + this.INTERVALS[i] + 'd' }));
+    const cardRows = d.cards.slice().sort((a, b) => (a.due > b.due ? 1 : -1)).slice(0, this.props.listCount ?? 8).map(c => ({
+      subj: c.s, sColor: this.SUBJ[c.s] || '#6E4B8A', q: c.q, box: c.box || 1,
+      dueText: c.due <= today ? 'due now' : this.fmtDay(c.due),
+      del: () => { const nd = this.read(); nd.cards = nd.cards.filter(x => x.id !== c.id); this.write(nd); }
+    }));
+
+    const tomorrow = this.iso(1);
+    const dueTomorrowN = d.cards.filter(c => c.due === tomorrow).length;
+
+    return {
+      dueCountText: due.length ? due.length + ' waiting' : 'clear', dueCountColor: due.length ? '#A32E27' : '#0F6E56',
+      hasDue: !!cur, noDue: !cur,
+      noDueText: d.cards.length ? ('Nothing due — ' + (dueTomorrowN ? dueTomorrowN + ' come back tomorrow.' : 'the schedule is ahead of you.') + ' Log errors as you study and they queue here.') : 'No error cards yet. Every mistake you log below becomes a scheduled re-ask — 1, 3, 7, 14, 30 days.',
+      curSubj: cur ? cur.s : '', curSubjColor: cm[0], curSubjBg: cm[1], curSubjBorder: cm[2],
+      curQ: cur ? cur.q : '', curA: cur ? cur.a : '',
+      revealed: S.revealed && !!cur, notRevealed: !S.revealed && !!cur,
+      reveal: () => this.setState({ revealed: true }),
+      gotIt: () => bump(true), missedIt: () => bump(false),
+      nextBox: cur ? Math.min(5, (cur.box || 1) + 1) : 2,
+      nextGap: cur ? this.INTERVALS[Math.min(4, (cur.box || 1))] + 'd' : '3d',
+      subjChips, fQ: S.fQ, setFQ: (e) => this.setState({ fQ: e.target.value }),
+      fA: S.fA, setFA: (e) => this.setState({ fA: e.target.value }), addCard,
+      weekHrsText: wkH + 'h',
+      hasExams: examRows.length > 0, examRows,
+      eName: S.eName, setEName: (e) => this.setState({ eName: e.target.value }),
+      eDate: S.eDate, setEDate: (e) => this.setState({ eDate: e.target.value }),
+      eHrs: S.eHrs, setEHrs: (e) => this.setState({ eHrs: e.target.value }), addExam,
+      deckSummary: d.cards.length + ' cards · ' + due.length + ' due · ' + dueTomorrowN + ' tomorrow',
+      hasCards: d.cards.length > 0, noCards: d.cards.length === 0, boxChips, cardRows
+    };
+  }
+}
+</script>
+</body>
+</html>
