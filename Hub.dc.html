@@ -6,6 +6,8 @@
 <meta name="ext-resource-dependency" content="https://unpkg.com/react@18.3.1/umd/react.production.min.js">
 <meta name="ext-resource-dependency" content="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js">
 <script src="./support.js"></script>
+
+<meta name="NetsparkQuiltingResult" total-length="159990" removed="0" rules-found="w73,w3573,w3509,w8931,w7394,w10821,w10822,w6243,w2656,w6238,w6522,w6431,w4829,w4830,w6877,w11400,w4835,w9996,w3931,w3932,w6524,w5503,w5595,w3429,w7666,w11433,w3700,w4399,w2764,w7667,w8715,w9768" />
 </head>
 <body>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="18" height="18" rx="3" fill="#993C1D"></rect><rect x="52" y="30" width="18" height="18" rx="3" fill="#0F6E56"></rect><rect x="30" y="52" width="18" height="18" rx="3" fill="#b0741a"></rect><rect x="52" y="52" width="18" height="18" rx="3" fill="#1A1B1A"></rect></svg></template>
@@ -32,18 +34,35 @@
   @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
   .cmap-n:hover .cmap-l { opacity: 1 !important; }
   .cmap-n:hover { z-index: 6 !important; }
+  /* ── Phone layout (rework, not just shrink) ─────────────────── */
+  @media (max-width: 640px) {
+    [data-mhide] { display: none !important; }
+    .hw { padding-left: 14px !important; padding-right: 14px !important; }
+    [data-mtop] { flex-direction: column !important; gap: 14px !important; padding-top: 14px !important; padding-bottom: 14px !important; }
+    [data-mtop] > div:first-child { min-width: 0 !important; width: 100% !important; }
+    [data-mtop] h1 { font-size: 23px !important; }
+    /* progress panel: full-width, left-aligned, glanceable at top of its column */
+    [data-mprogress] { text-align: left !important; width: 100% !important; order: -1; padding: 12px 14px; border: 1px solid #E7E4DE; border-radius: 12px; background: #FFFDF8; }
+    [data-mprogress] > div { justify-content: flex-start !important; }
+    [data-mprogress] [style*="width: 220px"] { width: 100% !important; }
+    /* chip row becomes a horizontal scroller with real tap targets */
+    [data-mchips] { flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden; -webkit-overflow-scrolling: touch; margin: 12px -14px 0 !important; padding: 0 14px 8px !important; }
+    [data-mchips]::-webkit-scrollbar { display: none; }
+    [data-mchips] > * { flex: 0 0 auto !important; padding-top: 9px !important; padding-bottom: 9px !important; }
+    input, select, textarea { font-size: 16px !important; }
+  }
 </style>
 </helmet>
 <div data-screen-label="Mission Control" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; min-height: 100vh; padding-bottom: 64px;">
 
   <!-- TOP BAR -->
   <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.9);">
-    <div style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+    <div class="hw" data-mtop style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
       <div style="flex: 1; min-width: 320px;">
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #993C1D;">Mission Control</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #993C1D;">Mission Control <span style="color: #C9C8C1;">· v3.0</span></div>
         <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 28px; line-height: 1.05; margin: 6px 0 0; letter-spacing: -.01em;">CT Surgeon-Entrepreneur, by 30</h1>
         <div style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 560px; line-height: 1.5; font-style: italic;">"{{ positioningNow }}"</div>
-        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center;">
+        <div data-mchips style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center;">
           <sc-for list="{{ planViewChips }}" as="v" hint-placeholder-count="6">
             <a href="CT Master Plan.html" onClick="{{ v.go }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #993C1D; color: #993C1D;">{{ v.label }}</a>
           </sc-for>
@@ -53,7 +72,7 @@
           <button onClick="{{ doRestore }}" title="Restore every log from a backup file" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 12px; cursor: pointer;" style-hover="border-color: #534AB7; color: #534AB7;">⇪ restore</button>
         </div>
       </div>
-      <div style="text-align: right;">
+      <div data-mprogress style="text-align: right;">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">{{ todayLabel }}</div>
         <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px; justify-content: flex-end;">
           <span style="font-family: 'Newsreader', serif; font-size: 34px; font-weight: 500; color: #993C1D; line-height: 1;">{{ pctShow }}%</span>
@@ -68,7 +87,7 @@
   </div>
 
   <!-- QUOTE OF THE DAY -->
-  <div style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 0;">
+  <div class="hw" style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 0;">
     <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 15px 24px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; animation: hubIn .3s ease;">
       <span style="font-family: 'Newsreader', serif; font-size: 42px; line-height: .6; color: #993C1D; transform: translateY(9px); flex: none;">“</span>
       <div style="flex: 1; min-width: 280px;">
@@ -79,7 +98,7 @@
     </div>
   </div>
 
-  <div style="max-width: 1280px; margin: 0 auto; padding: 26px 24px 0;">
+  <div class="hw" style="max-width: 1280px; margin: 0 auto; padding: 26px 24px 0;">
 
     <!-- PROJECT CARDS -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; animation: hubIn .3s ease;">
@@ -377,7 +396,7 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 12px; align-items: start;">
 
       <!-- PROGRESS CURVE + WHAT-IF -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+      <div data-mhide style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
           <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Progress curve</div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">moves completed over time</span>
@@ -401,7 +420,7 @@
       </div>
 
       <!-- SPRINT BURN-UP -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+      <div data-mhide style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
           <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Sprint burn-up</div>
           <a href="Summer Sprint.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3B6D11;">day {{ sprintDay }} of {{ sprintDays }} · open →</a>
@@ -422,7 +441,7 @@
       </div>
 
       <!-- RESEARCH RADAR CHART -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+      <div data-mhide style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
           <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">The four bets, scored</div>
           <a href="CT Master Plan.html" onClick="{{ goDecisions }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">decisions →</a>
@@ -454,7 +473,7 @@
       </div>
 
       <!-- SKILLS MATRIX -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+      <div data-mhide style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
           <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Skills — current → target</div>
           <a href="CT Master Plan.html" onClick="{{ goIdentity }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px;">identity →</a>
@@ -476,7 +495,7 @@
       </div>
 
       <!-- ACTIVITY HEATMAP -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+      <div data-mhide style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
           <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Sixteen weeks of motion</div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ heatSummary }}</span>
@@ -529,7 +548,7 @@
       </div>
 
       <!-- CALIBRATION -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+      <div data-mhide style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
           <div style="font-family: 'Newsreader', serif; font-size: 17px; font-weight: 500;">Prediction calibration</div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ brierText }}</span>
