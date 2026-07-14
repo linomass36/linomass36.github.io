@@ -89,22 +89,29 @@
     return changed;
   }
 
+  // Apply a remote doc if its revision is newer than what this device last saw.
+  // Reloads once so the app re-reads localStorage. The revision guard replaces
+  // the old per-session flag, so a fresh cloud update lands on EVERY device.
+  function applyIfNewer(snap) {
+    if (!snap.exists) return false;
+    var data = snap.data() || {};
+    var rev = String(data.updatedAt || '');
+    var store = data.store || {};
+    if (rev && rev === localStorage.getItem('__sync_rev')) return false; // already applied
+    applyingRemote = true;
+    var changed = applyToLocal(store);
+    localStorage.setItem('__sync_rev', rev);
+    applyingRemote = false;
+    return changed;
+  }
+
   function hydrate() {
     docRef().get().then(function (snap) {
       if (snap.exists) {
-        var store = (snap.data() && snap.data().store) || {};
-        applyingRemote = true;
-        var changed = applyToLocal(store);
-        applyingRemote = false;
-        if (changed && !sessionStorage.getItem('__sync_ok')) {
-          sessionStorage.setItem('__sync_ok', '1'); // guard against reload loop
-          location.reload();
-          return;
-        }
+        if (applyIfNewer(snap)) { location.reload(); return; }
       } else {
         pushNow(); // first run for this account: seed the cloud from local
       }
-      sessionStorage.setItem('__sync_ok', '1');
       watch();
       patch();
     }).catch(function (e) {
@@ -115,7 +122,9 @@
 
   function pushNow() {
     if (!uid) return;
-    docRef().set({ store: localSnapshot(), updatedAt: Date.now() })
+    var rev = Date.now();
+    localStorage.setItem('__sync_rev', String(rev)); // our own write — don't echo-reload
+    docRef().set({ store: localSnapshot(), updatedAt: rev })
       .catch(function (e) { console.error('[sync] push failed', e); });
   }
   function pushSoon() { clearTimeout(pushTimer); pushTimer = setTimeout(pushNow, 800); }
@@ -138,11 +147,7 @@
     unsub = docRef().onSnapshot(function (snap) {
       if (!snap.exists) return;
       if (snap.metadata && snap.metadata.hasPendingWrites) return; // our own write echoing back
-      var store = (snap.data() && snap.data().store) || {};
-      applyingRemote = true;
-      var changed = applyToLocal(store);
-      applyingRemote = false;
-      if (changed) location.reload();
+      if (applyIfNewer(snap)) location.reload();
     }, function (e) { console.error('[sync] listener', e); });
   }
 })();
