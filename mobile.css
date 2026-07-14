@@ -1,0 +1,58 @@
+/* ─────────────────────────────────────────────────────────────
+   mobile.css — phone optimization layer for every hub page.
+   Loaded from each page's <head>; also re-applied by the deploy
+   Action so future exports keep it. Desktop is untouched — all
+   layout rules live inside the max-width:640px query.
+
+   To stamp a new version everywhere, change ONE string: the
+   `content:"vX.X"` in the badge rule below.
+   ───────────────────────────────────────────────────────────── */
+
+/* Version badge — visible on all sizes so you can confirm a deploy landed. */
+body::after {
+  content: "v3.0";
+  position: fixed; right: 8px; bottom: 7px; z-index: 2147483000;
+  font: 600 9.5px/1 'IBM Plex Mono', ui-monospace, monospace;
+  letter-spacing: .12em; color: #9C9B93;
+  background: rgba(255, 253, 248, .82); border: 1px solid #E4E2DD;
+  padding: 3px 7px; border-radius: 20px; pointer-events: none;
+  -webkit-backdrop-filter: saturate(1.1) blur(2px);
+  backdrop-filter: saturate(1.1) blur(2px);
+}
+
+@media (max-width: 640px) {
+  /* No accidental sideways scroll. */
+  html, body { max-width: 100%; overflow-x: hidden; }
+
+  /* Tighter page gutters than the desktop 24–28px. */
+  [style*="max-width: 1280px"], [style*="max-width: 1220px"],
+  [style*="max-width: 1180px"], [style*="max-width: 1120px"],
+  [style*="max-width: 1080px"], [style*="max-width: 1000px"],
+  [style*="max-width: 780px"] {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Collapse fixed multi-column layouts that don't auto-reflow. */
+  [style*="grid-template-columns: 320px 1fr"],
+  [style*="grid-template-columns: 300px 1fr"],
+  [style*="grid-template-columns: 1fr 320px"],
+  [style*="grid-template-columns: 1fr 1fr 90px"],
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Reading List: pull the stats block full-width & left-aligned
+     instead of a cramped right rail. */
+  [style*="text-align: right"][style*="min-width: 220px"] {
+    text-align: left !important; min-width: 0 !important; width: 100% !important;
+    margin-top: 4px;
+  }
+  [style*="min-width: 220px"] [style*="justify-content: flex-end"] {
+    justify-content: flex-start !important;
+  }
+  [style*="min-width: 220px"] [style*="margin-left: auto"] { margin-left: 0 !important; }
+
+  /* 16px inputs so iOS Safari doesn't zoom on focus. */
+  input, select, textarea { font-size: 16px !important; }
+}
