@@ -6,7 +6,7 @@
    ───────────────────────────────────────────────────────────── */
 window.APP_CONFIG = {
   // The ONLY Google account allowed in. Everyone else gets the prank.
-  authorizedEmail: 'you@gmail.com',
+  authorizedEmail: 'staniszewski.gabriel.k@gmail.com',
 
   // Where the owner lands after signing in, and where intruders are bounced back to.
   hubUrl: 'Hub.dc.html',
@@ -14,9 +14,9 @@ window.APP_CONFIG = {
 
   // Firebase → Project settings → General → "Your apps" → Web app → SDK config.
   firebase: {
-    apiKey: 'PASTE_FIREBASE_API_KEY',
-    authDomain: 'PASTE_PROJECT_ID.firebaseapp.com',
-    projectId: 'PASTE_PROJECT_ID',
-    appId: 'PASTE_APP_ID'
+    apiKey: "AIzaSyAFOnOR32sfUEqN7jYkxLJnNuj2fiaXJRM",
+    authDomain: "master-648ee.firebaseapp.com",
+    projectId: "master-648ee",
+    appId: "1:73939921858:web:1dc53474505b5319cc045b"
   }
 };
