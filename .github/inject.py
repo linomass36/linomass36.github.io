@@ -38,6 +38,27 @@ SHIM = (
     '<script src="./sync.js"></script>\n'
 )
 
+# Written to the site root at build time; the freshest version number, fetched
+# with cache:'no-store' so it always bypasses the browser cache.
+VERSION_FILE = "version.txt"
+
+# Injected into every hub page. Mobile browsers cache the HTML aggressively, so
+# a page can keep showing an old version after a deploy. This checks the live
+# version.txt (uncached) against the version baked into THIS page and, if they
+# differ, reloads once with a cache-busting query so fresh HTML is fetched.
+# The sessionStorage guard makes it reload at most once per version per session,
+# so it can never loop.
+VERSION_CHECK = (
+    "<script>(function(){var B=\"__APP_VERSION__\";try{"
+    "fetch(\"version.txt?_=\"+Date.now(),{cache:\"no-store\"})"
+    ".then(function(r){return r.ok?r.text():null;})"
+    ".then(function(v){if(!v)return;v=v.trim();if(!v||v===B)return;"
+    "var k=\"__ver_reload_\"+v;if(sessionStorage.getItem(k))return;"
+    "sessionStorage.setItem(k,\"1\");"
+    "location.replace(location.pathname+\"?v=\"+encodeURIComponent(v)+location.hash);"
+    "}).catch(function(){});}catch(e){}})();</script>\n"
+)
+
 
 def read_version():
     env = os.environ.get("APP_VERSION")
@@ -55,24 +76,28 @@ def stamp_version(text, version):
 
 
 def inject_shim(text):
-    """Insert config.js + sync.js once, as late in <head> as possible."""
+    """Insert config.js + sync.js + the version self-heal check once, as late
+    in <head> as possible. Leaves the __APP_VERSION__ token for stamp_version."""
     if "./sync.js" in text:
         return text  # already injected — stay idempotent
+    payload = SHIM + VERSION_CHECK
     # Prefer the very end of <head>; fall back to the </helmet> block the
     # DC runtime hoists into <head>.
     for anchor in ("</head>", "</helmet>"):
         idx = text.lower().find(anchor)
         if idx != -1:
-            return text[:idx] + SHIM + text[idx:]
+            return text[:idx] + payload + text[idx:]
     return text  # no head at all — leave it untouched
 
 
 def process_html(path, version, is_gate):
     with open(path, "r", encoding="utf-8") as f:
         text = f.read()
-    text = stamp_version(text, version)
+    # Inject first (the shim carries a __APP_VERSION__ token), then stamp so the
+    # injected version-check gets the real number too.
     if not is_gate:
         text = inject_shim(text)
+    text = stamp_version(text, version)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
 
@@ -105,6 +130,10 @@ def build():
             shutil.copytree(src, dst)
         else:
             shutil.copy2(src, dst)
+
+    # Drop the freshest version number at the site root for the self-heal check.
+    with open(os.path.join(SITE, VERSION_FILE), "w", encoding="utf-8") as f:
+        f.write(version + "\n")
 
     # Gate: index.dc.html becomes index.html (overwriting the committed copy).
     gate_src = os.path.join(SITE, GATE_SOURCE)
