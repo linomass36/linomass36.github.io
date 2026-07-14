@@ -46,11 +46,33 @@ The **Deploy** Action runs on that push: it renames `index.dc.html` → `index.h
 
 ---
 
+> **Pages source must be _GitHub Actions_** (Settings → Pages → Source). The
+> sync shim + version stamp are applied at build time, so the site has to be
+> served from the Action's build — not straight from the branch.
+
 ## Adding a new export later
 1. Overwrite the changed `.dc.html` / `.html` files in the repo with your fresh exports.
 2. `git push`.
 
 That's it. The Action re-injects the sync shim automatically — you never hand-patch a file.
+
+## Versioning (automatic)
+The `VERSION` file holds the current number (e.g. `3.1`). On every push to `main`
+the Deploy Action **bumps the last component** (`3.1 → 3.2 → 3.3 …`), commits the
+new `VERSION` back, and stamps it into every page — the "· vX.Y" next to *Mission
+Control* on the Hub, and `window.APP_CONFIG.version` everywhere. You never edit it
+by hand for routine pushes. To jump a major version, edit `VERSION` yourself (e.g.
+set `4.0`); the next push continues from there (`4.1`, `4.2` …).
+
+*(The bump commit is pushed with the built-in `GITHUB_TOKEN`, which by design does
+not trigger another workflow run — so it can't loop.)*
+
+## Adding books yourself
+The **Reading List** page has a **＋ Add a book** button (top-right of the shelf
+filters). Enter a title (author + note optional) and it lands in an **Added by
+you** shelf, cycles through *to read → reading → read* like any other, and can be
+removed via the **remove** link on the row. Your additions live in `localStorage`
+under `ct_reading_books_v1`, so once sync is on they follow you across devices.
 
 ---
 

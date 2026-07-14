@@ -1,0 +1,77 @@
+name: Deploy hub to Pages
+
+# Runs on every push to main. It bumps the version, injects the sync shim into
+# the hub pages, and deploys the built _site/ to GitHub Pages.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time; let a newer push cancel an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: write   # to commit the bumped VERSION back
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Bump the last numeric component of VERSION (e.g. 3.1 -> 3.2) on every
+      # push, then commit it back. Pushes made with GITHUB_TOKEN do NOT trigger
+      # another workflow run, so this can't loop.
+      - name: Bump version
+        id: bump
+        run: |
+          cur=$(cat VERSION 2>/dev/null | tr -d '[:space:]')
+          [ -z "$cur" ] && cur="0.0"
+          base="${cur%.*}"
+          last="${cur##*.}"
+          case "$last" in
+            ''|*[!0-9]*) next="${cur}.1" ;;   # non-numeric tail → start a patch
+            *)           next="${base}.$((last + 1))" ;;
+          esac
+          echo "$next" > VERSION
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+          echo "Bumped $cur -> $next"
+
+      - name: Commit bumped version
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- VERSION; then
+            git add VERSION
+            git commit -m "chore: bump version to v${{ steps.bump.outputs.version }} [skip ci]"
+            git push
+          fi
+
+      - name: Build _site (inject sync shim + stamp version)
+        env:
+          APP_VERSION: ${{ steps.bump.outputs.version }}
+        run: python3 .github/inject.py
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
