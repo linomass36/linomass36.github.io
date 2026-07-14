@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
+
+<meta name="NetsparkQuiltingResult" total-length="16653" removed="0" rules-found="w3573,w3509,w6243,w8931,w6193,w2656,w3144,w3139,w3429,w3430,w10821,w10822,w11212,w5472" />
 </head>
 <body>
 <x-dc>
@@ -58,6 +60,10 @@
           <span style="width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; color: #1A1B1A; display: inline-flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;">G</span>
           Sign in with Google
         </button>
+
+        <sc-if value="{{ hasErr }}">
+          <div style="margin-top: 14px; background: #FBEDE8; border: 1px solid #E8C4B6; border-radius: 10px; padding: 10px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.5; color: #993C1D;">{{ err }}</div>
+        </sc-if>
 
         <div style="margin-top: 18px; display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .05em; color: #A6A79F;">
           <span style="width: 6px; height: 6px; border-radius: 50%; background: #0F6E56;"></span>
@@ -159,6 +165,7 @@ class Component extends DCLogic {
 
     this.waitFor(() => window.firebase && firebase.auth, () => {
       if (!firebase.apps.length) firebase.initializeApp(cfg);
+      firebase.auth().getRedirectResult().catch((e) => this.showErr(e));
       firebase.auth().onAuthStateChanged((u) => {
         if (!u) { this.setState({ phase: 'gate' }); return; }
         const ok = u.email && u.email.toLowerCase() === this.AUTHORIZED_EMAIL.toLowerCase();
@@ -178,8 +185,26 @@ class Component extends DCLogic {
     if (this.state.demo || !window.firebase || !firebase.auth) { this.startPrank(); return; }
     const p = new firebase.auth.GoogleAuthProvider();
     p.setCustomParameters({ prompt: 'select_account' });
-    firebase.auth().signInWithPopup(p).catch(() => {});
+    this.setState({ err: '' });
+    firebase.auth().signInWithPopup(p).catch((e) => {
+      console.error('[gate] popup sign-in failed:', e && e.code, e && e.message);
+      // Popup blocked / unsupported → fall back to full-page redirect.
+      if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+        firebase.auth().signInWithRedirect(p).catch((e2) => this.showErr(e2));
+      } else {
+        this.showErr(e);
+      }
+    });
   };
+
+  showErr(e) {
+    var code = (e && e.code) || '';
+    var msg = 'Sign-in failed.';
+    if (code === 'auth/unauthorized-domain') msg = 'This domain isn\u2019t authorized in Firebase → Auth → Settings → Authorized domains.';
+    else if (code === 'auth/configuration-not-found') msg = 'Google sign-in isn\u2019t enabled in Firebase → Authentication → Sign-in method.';
+    else if (code) msg = 'Sign-in failed (' + code + ').';
+    this.setState({ err: msg });
+  }
 
   previewPrank = (e) => { if (e) e.preventDefault(); this.startPrank(); };
   backToGate = (e) => { if (e) e.preventDefault(); if (this.timer) clearInterval(this.timer); this.setState({ phase: 'gate', lines: [], revealed: false, typing: false }); };
@@ -222,6 +247,8 @@ class Component extends DCLogic {
       lines: this.state.lines,
       typing: this.state.typing,
       showReveal: this.state.revealed,
+      err: this.state.err || '',
+      hasErr: !!this.state.err,
       sessionId: this.sessionId || '——',
       fakeIp: this.fakeIp || '0.0.0.0',
       prankShake: this.state.revealed ? 'none' : 'shake .5s ease-in-out 3',
