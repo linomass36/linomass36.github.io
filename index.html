@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
 
-<meta name="NetsparkQuiltingResult" total-length="16653" removed="0" rules-found="w3573,w3509,w6243,w8931,w6193,w2656,w3144,w3139,w3429,w3430,w10821,w10822,w11212,w5472" />
+<meta name="NetsparkQuiltingResult" total-length="17073" removed="0" rules-found="w3573,w3509,w6243,w8931,w6193,w2656,w3144,w3139,w3429,w3430,w10821,w10822,w11212,w5472" />
 </head>
 <body>
 <x-dc>
@@ -69,6 +69,7 @@
           <span style="width: 6px; height: 6px; border-radius: 50%; background: #0F6E56;"></span>
           Authorized access only · every attempt is logged
         </div>
+        <div style="margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .04em; color: #C9C8C1;">{{ diag }}</div>
 
         <sc-if value="{{ demo }}">
           <div style="margin-top: 22px; padding-top: 16px; border-top: 1px dashed #E4E2DD; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #BBB9B1; line-height: 1.6;">
@@ -249,6 +250,9 @@ class Component extends DCLogic {
       showReveal: this.state.revealed,
       err: this.state.err || '',
       hasErr: !!this.state.err,
+      diag: 'fb:' + (window.firebase && firebase.auth ? 'ok' : 'MISSING')
+          + ' · cfg:' + (this.FIREBASE_CONFIG.apiKey && this.FIREBASE_CONFIG.apiKey.indexOf('PASTE') !== 0 ? 'ok' : 'PLACEHOLDER')
+          + ' · mode:' + (this.state.demo ? 'demo' : 'live'),
       sessionId: this.sessionId || '——',
       fakeIp: this.fakeIp || '0.0.0.0',
       prankShake: this.state.revealed ? 'none' : 'shake .5s ease-in-out 3',
