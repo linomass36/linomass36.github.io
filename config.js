@@ -5,6 +5,11 @@
    not from hiding these values.
    ───────────────────────────────────────────────────────────── */
 window.APP_CONFIG = {
+  // Build version, stamped by the deploy Action on every push. If you ever open
+  // a page straight from the repo (no build step) this literal token shows —
+  // that's expected; the live site always has the real number.
+  version: '__APP_VERSION__',
+
   // The ONLY Google account allowed in. Everyone else gets the prank.
   authorizedEmail: 'staniszewski.gabriel.k@gmail.com',
 

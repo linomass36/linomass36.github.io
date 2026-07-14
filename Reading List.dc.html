@@ -58,6 +58,7 @@
         <button onClick="{{ f.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ f.border }}; background: {{ f.bg }}; color: {{ f.color }};">{{ f.label }}</button>
       </sc-for>
       <span style="flex: 1;"></span>
+      <button onClick="{{ addBook }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #3B6D11; background: #3B6D11; color: #FFFFFF;">＋ Add a book</button>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">progress saves automatically</span>
     </div>
 
@@ -85,6 +86,11 @@
                       <sc-if value="{{ it.hasDoi }}" hint-placeholder-val="{{ false }}"><a href="{{ it.doiUrl }}" target="_blank" rel="noopener" onClick="{{ stop }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #534AB7; border: 1px solid #D6D2EC; border-radius: 12px; padding: 3px 9px; background: #F4F2FB;" style-hover="border-color: #534AB7;">DOI ↗</a></sc-if>
                     </span>
                   </sc-if>
+                  <sc-if value="{{ it.canRemove }}" hint-placeholder-val="{{ false }}">
+                    <span style="display: flex; margin-top: 7px;">
+                      <a onClick="{{ it.remove }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #A32E27; border: 1px solid #E7C9C6; border-radius: 12px; padding: 3px 9px; background: #FBF1F0; cursor: pointer;" style-hover="border-color: #A32E27;">remove</a>
+                    </span>
+                  </sc-if>
                 </span>
               </button>
             </sc-for>
@@ -103,6 +109,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:1600}}">
 class Component extends DCLogic {
   KEY = 'ct_reading_v1';
+  KEY_BOOKS = 'ct_reading_books_v1';   // books you add yourself (syncs across devices)
   state = { tick: 0, filter: 'all' };
 
   read() {
@@ -115,6 +122,13 @@ class Component extends DCLogic {
     Object.assign(cur, patch);
     try { localStorage.setItem(this.KEY, JSON.stringify(cur)); } catch (e) {}
   }
+  readBooks() {
+    try { const raw = localStorage.getItem(this.KEY_BOOKS); if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) return a; } } catch (e) {}
+    return [];
+  }
+  writeBooks(list) {
+    try { localStorage.setItem(this.KEY_BOOKS, JSON.stringify(list)); } catch (e) {}
+  }
   cycle(id) {
     const st = this.read();
     const status = Object.assign({}, st.status);
@@ -125,16 +139,45 @@ class Component extends DCLogic {
     this.setState(s => ({ tick: s.tick + 1 }));
   }
 
+  addBook() {
+    const title = (window.prompt('Book title?') || '').trim();
+    if (!title) return;
+    const by = (window.prompt('Author? (optional)') || '').trim();
+    const note = (window.prompt('A one-line note? (optional)') || '').trim();
+    const books = this.readBooks();
+    books.push({ id: 'usr-' + Date.now().toString(36), title, by, note });
+    this.writeBooks(books);
+    this.setState(s => ({ tick: s.tick + 1 }));
+  }
+
+  removeBook(id, e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    this.writeBooks(this.readBooks().filter(b => b.id !== id));
+    const st = this.read();
+    if (st.status && st.status[id]) {
+      const status = Object.assign({}, st.status);
+      delete status[id];
+      this.write({ status });
+    }
+    this.setState(s => ({ tick: s.tick + 1 }));
+  }
+
   renderVals() {
     this.state.tick;
     const data = window.READING_DATA;
     const filter = this.state.filter;
-    if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], shelves: [] };
+    if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], shelves: [], addBook: () => this.addBook() };
 
     const store = this.read();
     const statusOf = id => store.status[id] || 'unread';
 
-    const allShelves = data.shelves || [];
+    // Static shelves from reading-data.js + the books you've added yourself.
+    const myBooks = this.readBooks();
+    const myShelf = myBooks.length ? [{
+      id: 'b-mine', kind: 'book', accent: '#3B6D11', name: 'Added by you',
+      items: myBooks.map(b => ({ id: b.id, title: b.title, by: b.by, note: b.note })),
+    }] : [];
+    const allShelves = (data.shelves || []).concat(myShelf);
     const allItems = allShelves.reduce((a, s) => a.concat(s.items), []);
     const totalN = allItems.length;
     const readN = allItems.filter(it => statusOf(it.id) === 'read').length;
@@ -189,6 +232,8 @@ class Component extends DCLogic {
                 : 'https://scholar.google.com/scholar?q=' + q,
               hasDoi: !!it.doi,
               doiUrl: it.doi ? 'https://doi.org/' + it.doi : '',
+              canRemove: String(it.id).indexOf('usr-') === 0,
+              remove: (e) => this.removeBook(it.id, e),
               cycle: () => this.cycle(it.id),
             };
           }),
@@ -196,7 +241,7 @@ class Component extends DCLogic {
       });
 
     const stop = e => { if (e && e.stopPropagation) e.stopPropagation(); };
-    return { pct, readN, totalN, readingN, shelfN: allShelves.length, filterChips, shelves, stop };
+    return { pct, readN, totalN, readingN, shelfN: allShelves.length, filterChips, shelves, stop, addBook: () => this.addBook() };
   }
 }
 </script>
