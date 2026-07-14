@@ -75,6 +75,16 @@ def stamp_version(text, version):
     return text.replace("__APP_VERSION__", version)
 
 
+# Local .js/.css references get a per-version query so a new deploy always
+# fetches fresh assets (e.g. the version badge in mobile.css) instead of a
+# stale cached copy. External URLs (https:, //) are left alone.
+ASSET_RE = re.compile(r'(src|href)="(?!https?:|//)([^"?]+\.(?:js|css))"')
+
+
+def cachebust(text):
+    return ASSET_RE.sub(r'\1="\2?v=__APP_VERSION__"', text)
+
+
 def inject_shim(text):
     """Insert config.js + sync.js + the version self-heal check once, as late
     in <head> as possible. Leaves the __APP_VERSION__ token for stamp_version."""
@@ -93,10 +103,11 @@ def inject_shim(text):
 def process_html(path, version, is_gate):
     with open(path, "r", encoding="utf-8") as f:
         text = f.read()
-    # Inject first (the shim carries a __APP_VERSION__ token), then stamp so the
-    # injected version-check gets the real number too.
+    # Inject first (the shim carries a __APP_VERSION__ token), cache-bust local
+    # asset URLs, then stamp so everything gets the real version number.
     if not is_gate:
         text = inject_shim(text)
+    text = cachebust(text)
     text = stamp_version(text, version)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
