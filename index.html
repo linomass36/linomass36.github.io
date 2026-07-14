@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
 
-<meta name="NetsparkQuiltingResult" total-length="17073" removed="0" rules-found="w3573,w3509,w6243,w8931,w6193,w2656,w3144,w3139,w3429,w3430,w10821,w10822,w11212,w5472" />
+<meta name="NetsparkQuiltingResult" total-length="16808" removed="0" rules-found="w3573,w3509,w6243,w8931,w6193,w2656,w3144,w3139,w3429,w3430,w10821,w10822,w11212,w5472" />
 </head>
 <body>
 <x-dc>
@@ -184,18 +184,13 @@ class Component extends DCLogic {
 
   signIn = () => {
     if (this.state.demo || !window.firebase || !firebase.auth) { this.startPrank(); return; }
-    const p = new firebase.auth.GoogleAuthProvider();
-    p.setCustomParameters({ prompt: 'select_account' });
-    this.setState({ err: '' });
-    firebase.auth().signInWithPopup(p).catch((e) => {
-      console.error('[gate] popup sign-in failed:', e && e.code, e && e.message);
-      // Popup blocked / unsupported → fall back to full-page redirect.
-      if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/operation-not-supported-in-this-environment')) {
-        firebase.auth().signInWithRedirect(p).catch((e2) => this.showErr(e2));
-      } else {
-        this.showErr(e);
-      }
-    });
+    this.setState({ err: 'Redirecting to Google\u2026' });
+    try {
+      const p = new firebase.auth.GoogleAuthProvider();
+      p.setCustomParameters({ prompt: 'select_account' });
+      // Full-page redirect is the reliable flow on GitHub Pages (no popup/COOP issues).
+      firebase.auth().signInWithRedirect(p).catch((e) => this.showErr(e));
+    } catch (e) { this.showErr(e); }
   };
 
   showErr(e) {
