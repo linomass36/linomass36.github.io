@@ -42,49 +42,29 @@
       var s = document.createElement('script');
       s.src = urls[i];
       s.onload = function () { i++; next(); };
-      s.onerror = function () { console.error('[sync] failed to load', urls[i]); status('SDK load failed', '#C0392B'); };
+      s.onerror = function () { console.error('[sync] failed to load', urls[i]); };
       document.head.appendChild(s);
     })();
   }
 
   var db, uid, unsub, pushTimer, applyingRemote = false;
 
-  // On-screen status chip (tap for details) so sync problems are visible per device.
-  var _st = '';
-  function status(txt, color) {
-    _st = txt;
-    var el = document.getElementById('__sync_status');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = '__sync_status';
-      el.style.cssText = 'position:fixed;left:8px;bottom:7px;z-index:2147483000;font:600 9.5px/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.1em;padding:3px 7px;border-radius:20px;border:1px solid #E4E2DD;background:rgba(255,253,248,.9);cursor:pointer;';
-      el.title = 'tap for sync details';
-      el.onclick = function () { alert('SYNC\n' + _st + '\n\nuid: ' + (uid || '—') + '\ndomain: ' + location.hostname); };
-      (document.body || document.documentElement).appendChild(el);
-    }
-    el.textContent = 'sync: ' + txt;
-    el.style.color = color || '#9C9B93';
-  }
-  status('starting…');
-
   function start() {
     try {
       if (!firebase.apps.length) firebase.initializeApp(FB);
       firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
       db = firebase.firestore();
-    } catch (e) { console.error('[sync] init', e); status('init error', '#C0392B'); return; }
+    } catch (e) { console.error('[sync] init', e); return; }
 
     firebase.auth().onAuthStateChanged(function (u) {
       var owner = u && u.email && (!EMAIL || u.email.toLowerCase() === EMAIL);
       if (!owner) {
-        status(u ? 'wrong account' : 'signed out', '#B7791F');
         // Not the owner (or not signed in) → send them to the gate.
         var here = location.pathname.split('/').pop();
         if (here !== GATE) location.replace(GATE);
         return;
       }
       uid = u.uid;
-      status('signed in…', '#0F6E56');
       hydrate();
     });
   }
@@ -128,9 +108,7 @@
   function hydrate() {
     docRef().get().then(function (snap) {
       if (snap.exists) {
-        var n = Object.keys((snap.data() && snap.data().store) || {}).length;
-        if (applyIfNewer(snap)) { status('updating…', '#0F6E56'); location.reload(); return; }
-        status('synced ✓ (' + n + ')', '#0F6E56');
+        if (applyIfNewer(snap)) { location.reload(); return; }
       } else {
         pushNow(); // first run for this account: seed the cloud from local
       }
@@ -138,7 +116,6 @@
       patch();
     }).catch(function (e) {
       console.error('[sync] hydrate failed', e);
-      status('read ERR: ' + (e && e.code || 'x'), '#C0392B');
       watch(); patch();
     });
   }
@@ -147,10 +124,8 @@
     if (!uid) return;
     var rev = Date.now();
     localStorage.setItem('__sync_rev', String(rev)); // our own write — don't echo-reload
-    var n = Object.keys(localSnapshot()).length;
     docRef().set({ store: localSnapshot(), updatedAt: rev })
-      .then(function () { status('saved ✓ (' + n + ')', '#0F6E56'); })
-      .catch(function (e) { console.error('[sync] push failed', e); status('save ERR: ' + (e && e.code || 'x'), '#C0392B'); });
+      .catch(function (e) { console.error('[sync] push failed', e); });
   }
   function pushSoon() { clearTimeout(pushTimer); pushTimer = setTimeout(pushNow, 800); }
 
@@ -172,7 +147,7 @@
     unsub = docRef().onSnapshot(function (snap) {
       if (!snap.exists) return;
       if (snap.metadata && snap.metadata.hasPendingWrites) return; // our own write echoing back
-      if (applyIfNewer(snap)) { status('updating…', '#0F6E56'); location.reload(); }
-    }, function (e) { console.error('[sync] listener', e); status('watch ERR: ' + (e && e.code || 'x'), '#C0392B'); });
+      if (applyIfNewer(snap)) location.reload();
+    }, function (e) { console.error('[sync] listener', e); });
   }
 })();
