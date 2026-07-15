@@ -24,6 +24,17 @@ body::after {
   backdrop-filter: saturate(1.1) blur(2px);
 }
 
+/* Installed-app (home screen) only: with viewport-fit=cover the web view goes
+   edge-to-edge, so content would slide under the status bar / notch and clip at
+   the top. Pad the page down past the safe area. Only applies in standalone —
+   in a normal browser tab these insets are 0. */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
 /* Global niceties (all sizes, no layout impact):
    - stop iOS from auto-inflating text
    - momentum scrolling
