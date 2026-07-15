@@ -6,7 +6,7 @@
    builds its own styles + DOM, no framework.
 
    What it gives you:
-     • A floating button (bottom-left) that opens a slide-in drawer.
+     • A floating button (top-right) that opens a slide-in drawer.
      • Every hub page listed, with the current page highlighted.
      • A "Bookmarks" section you can add your own links to. They live
        in localStorage ('hub_bookmarks_v1'), so sync.js carries them
@@ -67,8 +67,8 @@
   }
 
   var CSS =
-    '#hbnav-btn{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));' +
-    'bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483200;' +
+    '#hbnav-btn{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));' +
+    'top:calc(12px + env(safe-area-inset-top,0px));z-index:2147483200;' +
     'width:44px;height:44px;border-radius:50%;border:1px solid #E4E2DD;cursor:pointer;' +
     'background:#993C1D;color:#fff;font-size:18px;line-height:1;display:flex;' +
     'align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(26,27,26,.22);' +
@@ -76,9 +76,9 @@
     '#hbnav-btn:hover{background:#7f3016;}' +
     '#hbnav-back{position:fixed;inset:0;z-index:2147483210;background:rgba(20,20,22,.42);' +
     'opacity:0;visibility:hidden;transition:opacity .22s ease;}' +
-    '#hbnav-panel{position:fixed;top:0;left:0;bottom:0;z-index:2147483220;width:82%;max-width:288px;' +
-    'background:#F7F5F1;border-right:1px solid #E4E2DD;box-shadow:6px 0 28px rgba(26,27,26,.18);' +
-    'transform:translateX(-100%);transition:transform .24s cubic-bezier(.4,0,.2,1);' +
+    '#hbnav-panel{position:fixed;top:0;right:0;bottom:0;z-index:2147483220;width:82%;max-width:288px;' +
+    'background:#F7F5F1;border-left:1px solid #E4E2DD;box-shadow:-6px 0 28px rgba(26,27,26,.18);' +
+    'transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);' +
     'display:flex;flex-direction:column;font-family:"IBM Plex Sans",system-ui,sans-serif;' +
     'padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}' +
     '#hbnav.open #hbnav-panel{transform:none;}' +
