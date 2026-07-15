@@ -1,0 +1,16 @@
+{
+  "name": "CT Mission Control",
+  "short_name": "CT Hub",
+  "description": "Your private command center — plans, reading, journal, and more.",
+  "start_url": "./Hub.dc.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F7F5F1",
+  "theme_color": "#993C1D",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -6,7 +6,7 @@
    builds its own styles + DOM, no framework.
 
    What it gives you:
-     • A floating button (bottom-left) that opens a slide-in drawer.
+     • A floating button (top-right) that opens a slide-in drawer.
      • Every hub page listed, with the current page highlighted.
      • A "Bookmarks" section you can add your own links to. They live
        in localStorage ('hub_bookmarks_v1'), so sync.js carries them
@@ -54,6 +54,15 @@
   function writeBookmarks(list) {
     try { localStorage.setItem(BM_KEY, JSON.stringify(list)); } catch (e) {}
   }
+
+  var THEME_KEY = 'hub_theme_v1';
+  function isDark() {
+    try { return localStorage.getItem(THEME_KEY) === 'dark'; } catch (e) { return false; }
+  }
+  function applyTheme(dark) {
+    document.documentElement.classList.toggle('hb-dark', !!dark);
+    try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (e) {}
+  }
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -67,8 +76,8 @@
   }
 
   var CSS =
-    '#hbnav-btn{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));' +
-    'bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483200;' +
+    '#hbnav-btn{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));' +
+    'top:calc(12px + env(safe-area-inset-top,0px));z-index:2147483200;' +
     'width:44px;height:44px;border-radius:50%;border:1px solid #E4E2DD;cursor:pointer;' +
     'background:#993C1D;color:#fff;font-size:18px;line-height:1;display:flex;' +
     'align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(26,27,26,.22);' +
@@ -76,9 +85,9 @@
     '#hbnav-btn:hover{background:#7f3016;}' +
     '#hbnav-back{position:fixed;inset:0;z-index:2147483210;background:rgba(20,20,22,.42);' +
     'opacity:0;visibility:hidden;transition:opacity .22s ease;}' +
-    '#hbnav-panel{position:fixed;top:0;left:0;bottom:0;z-index:2147483220;width:82%;max-width:288px;' +
-    'background:#F7F5F1;border-right:1px solid #E4E2DD;box-shadow:6px 0 28px rgba(26,27,26,.18);' +
-    'transform:translateX(-100%);transition:transform .24s cubic-bezier(.4,0,.2,1);' +
+    '#hbnav-panel{position:fixed;top:0;right:0;bottom:0;z-index:2147483220;width:82%;max-width:288px;' +
+    'background:#F7F5F1;border-left:1px solid #E4E2DD;box-shadow:-6px 0 28px rgba(26,27,26,.18);' +
+    'transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);' +
     'display:flex;flex-direction:column;font-family:"IBM Plex Sans",system-ui,sans-serif;' +
     'padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}' +
     '#hbnav.open #hbnav-panel{transform:none;}' +
@@ -105,6 +114,15 @@
     'font-size:11px;color:#3B6D11;background:#F1F7E9;border:1px dashed #C9DDB0;border-radius:9px;' +
     'padding:9px;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
     '.hbnav-add:hover{background:#e8f2dc;}' +
+    '.hbnav-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;' +
+    'margin:2px 8px 6px;padding:9px 10px;border:1px solid #E4E2DD;border-radius:9px;' +
+    'background:#fff;cursor:pointer;font-size:13px;color:#26271F;width:calc(100% - 16px);' +
+    '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}' +
+    '.hbnav-toggle:hover{background:#EFEDE7;}' +
+    '.hbnav-sw{flex:none;width:34px;height:20px;border-radius:20px;background:#D8D5CE;position:relative;transition:background .18s;}' +
+    '.hbnav-sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .18s;}' +
+    '.hbnav-toggle.on .hbnav-sw{background:#3B6D11;}' +
+    '.hbnav-toggle.on .hbnav-sw::after{transform:translateX(14px);}' +
     '@media (max-width:640px){#hbnav-panel{width:86%;}}';
 
   function build() {
@@ -154,11 +172,17 @@
       panel.innerHTML =
         '<div class="hbnav-hd"><b>Bookmarks</b><span>' + (VERSION ? 'v' + esc(VERSION) : '') + '</span></div>' +
         '<div class="hbnav-scroll">' +
+          '<button class="hbnav-toggle' + (isDark() ? ' on' : '') + '" id="hbnav-theme">' +
+            '<span>Dark mode</span><span class="hbnav-sw"></span></button>' +
           '<div class="hbnav-sec">Pages</div>' + pageLinks +
           '<div class="hbnav-sec">Saved</div>' + bmLinks +
           '<button class="hbnav-add" id="hbnav-add">+ Add bookmark</button>' +
         '</div>';
 
+      panel.querySelector('#hbnav-theme').addEventListener('click', function () {
+        applyTheme(!isDark());
+        render();
+      });
       panel.querySelector('#hbnav-add').addEventListener('click', function () {
         var url = normUrl(window.prompt('Bookmark URL (or a page like Vault.dc.html)?'));
         if (!url) return;
@@ -187,6 +211,27 @@
     });
     back.addEventListener('click', close);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+    // Edge-swipe: drag in from the right edge to open; swipe right to close.
+    var sx = 0, sy = 0, tracking = false;
+    document.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) { tracking = false; return; }
+      var t = e.touches[0];
+      sx = t.clientX; sy = t.clientY;
+      var open_ = root.classList.contains('open');
+      // start only from the right edge (to open) or anywhere while open (to close)
+      tracking = open_ || sx >= window.innerWidth - 28;
+    }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+      if (!tracking) return;
+      tracking = false;
+      var t = (e.changedTouches && e.changedTouches[0]) || null;
+      if (!t) return;
+      var dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) < 45 || Math.abs(dy) > Math.abs(dx)) return; // mostly-horizontal only
+      if (dx < 0 && !root.classList.contains('open')) open();      // swipe left → open
+      else if (dx > 0 && root.classList.contains('open')) close(); // swipe right → close
+    }, { passive: true });
 
     render();
     document.body.appendChild(btn);
