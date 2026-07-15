@@ -86,28 +86,69 @@ def cachebust(text):
     return ASSET_RE.sub(r'\1="\2?v=__APP_VERSION__"', text)
 
 
+# PWA head + service-worker registration. Goes on EVERY page (gate included)
+# so the hub is installable to the home screen and updates in place.
+PWA_HEAD = (
+    '<link rel="manifest" href="manifest.json">\n'
+    '<meta name="theme-color" content="#993C1D">\n'
+    '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+    '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
+    '<meta name="apple-mobile-web-app-title" content="CT Hub">\n'
+    '<link rel="apple-touch-icon" href="icons/apple-touch-180.png">\n'
+    "<script>if('serviceWorker' in navigator){addEventListener('load',function(){"
+    "navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>\n"
+)
+
+# Applies the saved theme before first paint (no flash), on hub pages.
+THEME_BOOT = (
+    "<script>try{if(localStorage.getItem('hub_theme_v1')==='dark')"
+    "document.documentElement.classList.add('hb-dark');}catch(e){}</script>\n"
+)
+
+# Add viewport-fit=cover so the CSS env(safe-area-inset-*) values become live
+# on notched phones (otherwise they resolve to 0 and the insets do nothing).
+VIEWPORT_RE = re.compile(
+    r'(<meta[^>]*name="viewport"[^>]*content=")([^"]*)(")', re.IGNORECASE
+)
+
+
+def add_viewport_fit(text):
+    def repl(m):
+        content = m.group(2)
+        if "viewport-fit" in content:
+            return m.group(0)
+        return m.group(1) + content + ", viewport-fit=cover" + m.group(3)
+    return VIEWPORT_RE.sub(repl, text)
+
+
+def insert_head(text, payload):
+    """Insert payload as late in <head> as possible."""
+    for anchor in ("</head>", "</helmet>"):
+        idx = text.lower().find(anchor)
+        if idx != -1:
+            return text[:idx] + payload + text[idx:]
+    return text
+
+
 def inject_shim(text):
     """Insert config.js + sync.js + the version self-heal check once, as late
     in <head> as possible. Leaves the __APP_VERSION__ token for stamp_version."""
     if "./sync.js" in text:
         return text  # already injected — stay idempotent
-    payload = SHIM + VERSION_CHECK
-    # Prefer the very end of <head>; fall back to the </helmet> block the
-    # DC runtime hoists into <head>.
-    for anchor in ("</head>", "</helmet>"):
-        idx = text.lower().find(anchor)
-        if idx != -1:
-            return text[:idx] + payload + text[idx:]
-    return text  # no head at all — leave it untouched
+    return insert_head(text, SHIM + VERSION_CHECK)
 
 
 def process_html(path, version, is_gate):
     with open(path, "r", encoding="utf-8") as f:
         text = f.read()
-    # Inject first (the shim carries a __APP_VERSION__ token), cache-bust local
-    # asset URLs, then stamp so everything gets the real version number.
+    # Inject first (shims carry __APP_VERSION__ tokens), cache-bust local asset
+    # URLs, then stamp so everything gets the real version number.
+    text = add_viewport_fit(text)
+    if "manifest.json" not in text:
+        text = insert_head(text, PWA_HEAD)
     if not is_gate:
         text = inject_shim(text)
+        text = insert_head(text, THEME_BOOT)
     text = cachebust(text)
     text = stamp_version(text, version)
     with open(path, "w", encoding="utf-8") as f:

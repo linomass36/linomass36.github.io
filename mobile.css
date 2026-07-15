@@ -111,3 +111,44 @@ img, video { max-width: 100%; height: auto; }
   [style*="font-size: 32px"] { font-size: 27px !important; }
   [style*="font-size: 30px"] { font-size: 26px !important; }
 }
+
+/* ── Readability: nudge small body/meta text up a notch on phones, where the
+   desktop 10–13px sizes read too small. Gentle (+~1px) so nothing reflows. ── */
+@media (max-width: 640px) {
+  [style*="font-size: 13.5px"] { font-size: 14.5px !important; }
+  [style*="font-size: 13px"]   { font-size: 14px !important; }
+  [style*="font-size: 12.5px"] { font-size: 13.5px !important; }
+  [style*="font-size: 12px"]   { font-size: 13px !important; }
+  [style*="font-size: 9.5px"]  { font-size: 10.5px !important; }
+  [style*="font-size: 9px"]    { font-size: 10px !important; }
+}
+
+/* ── Tactile feedback: controls dip slightly when pressed. ── */
+button:active, a:active, [role="button"]:active, [onclick]:active {
+  transform: scale(0.975);
+}
+
+/* ── Respect the OS "reduce motion" setting. ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Opt-in dark mode (toggled from the bookmark sidebar; saved per device and
+   synced). A global invert+hue-rotate flips the light UI to dark without
+   touching the exports; media is re-inverted so photos/diagrams look right.
+   Note: pages that are already dark (e.g. Network Map) will read light while
+   this is on — toggle it off there. ── */
+html.hb-dark {
+  filter: invert(1) hue-rotate(180deg);
+  background: #0f0f10;
+}
+html.hb-dark img, html.hb-dark video, html.hb-dark canvas,
+html.hb-dark svg, html.hb-dark iframe,
+html.hb-dark [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg);
+}
