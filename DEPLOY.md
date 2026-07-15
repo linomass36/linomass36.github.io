@@ -83,6 +83,7 @@ under `ct_reading_books_v1`, so once sync is on they follow you across devices.
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys).
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages.
+- `nav.js` — the bookmark sidebar: a slide-in drawer listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Injected on hub pages.
 - `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.
 - `.github/workflows/deploy.yml` — builds `_site/` and deploys to Pages on every push.
 - `.github/inject.py` — injects the sync shim into hub pages at build time.
