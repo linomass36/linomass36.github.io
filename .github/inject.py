@@ -86,17 +86,23 @@ def cachebust(text):
     return ASSET_RE.sub(r'\1="\2?v=__APP_VERSION__"', text)
 
 
-# PWA head + service-worker registration. Goes on EVERY page (gate included)
-# so the hub is installable to the home screen and updates in place.
+# PWA head. Goes on EVERY page (gate included) so the hub is installable to
+# the home screen (icon + full-screen launch). We deliberately do NOT register
+# a caching service worker — it made installed apps serve stale content. Any
+# worker left over from before is torn down by sw.js (see that file); this
+# snippet actively unregisters it too, so recovery doesn't wait on the browser's
+# own update check.
 PWA_HEAD = (
     '<link rel="manifest" href="manifest.json">\n'
     '<meta name="theme-color" content="#993C1D">\n'
     '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+    '<meta name="mobile-web-app-capable" content="yes">\n'
     '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
     '<meta name="apple-mobile-web-app-title" content="CT Hub">\n'
     '<link rel="apple-touch-icon" href="icons/apple-touch-180.png">\n'
-    "<script>if('serviceWorker' in navigator){addEventListener('load',function(){"
-    "navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>\n"
+    "<script>if('serviceWorker' in navigator){try{"
+    "navigator.serviceWorker.getRegistrations().then(function(rs){"
+    "rs.forEach(function(r){r.unregister();});});}catch(e){}}</script>\n"
 )
 
 # Applies the saved theme before first paint (no flash), on hub pages.
