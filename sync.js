@@ -108,6 +108,24 @@
 
   var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0;
 
+  // Turn a Firebase error into a pill label that says what's actually wrong.
+  // "permission-denied" is the big one: Firestore created in production mode
+  // ships rules that deny EVERYONE (including the owner) until the rules from
+  // DEPLOY.md are published — sync then fails silently on every device.
+  function fail(stage, e) {
+    var code = (e && e.code) || '';
+    console.error('[sync] ' + stage + ' failed', e);
+    if (code === 'permission-denied') {
+      UI.set('offline', 'Blocked: publish Firestore rules');
+    } else if (code === 'unauthenticated') {
+      UI.set('off', 'Sign in to sync');
+    } else if (code === 'unavailable') {
+      UI.set('offline', 'Offline');
+    } else {
+      UI.set('offline', 'Sync error: ' + (code || 'unknown'));
+    }
+  }
+
   function start() {
     try {
       if (!firebase.apps.length) firebase.initializeApp(FB);
@@ -178,8 +196,7 @@
       patch();
       syncedLabel();
     }).catch(function (e) {
-      console.error('[sync] hydrate failed', e);
-      UI.set('offline', 'Offline');
+      fail('hydrate', e);
       watch(); patch();
     });
   }
@@ -191,7 +208,7 @@
     UI.set('saving', 'Saving…');
     return docRef().set({ store: localSnapshot(), updatedAt: rev })
       .then(function () { syncedLabel(); })
-      .catch(function (e) { console.error('[sync] push failed', e); UI.set('offline', 'Offline'); });
+      .catch(function (e) { fail('push', e); });
   }
   function pushSoon() { clearTimeout(pushTimer); UI.set('saving', 'Saving…'); pushTimer = setTimeout(pushNow, 800); }
 
@@ -215,6 +232,6 @@
       if (snap.metadata && snap.metadata.hasPendingWrites) return; // our own write echoing back
       if (applyIfNewer(snap)) { location.reload(); return; }
       syncedLabel();
-    }, function (e) { console.error('[sync] listener', e); UI.set('offline', 'Offline'); });
+    }, function (e) { fail('listener', e); });
   }
 })();
