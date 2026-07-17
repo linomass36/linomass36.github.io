@@ -123,6 +123,37 @@ img, video { max-width: 100%; height: auto; }
   [style*="font-size: 30px"] { font-size: 26px !important; }
 }
 
+/* ── CT Master Plan on phones. These selectors match only that page. ── */
+@media (max-width: 640px) {
+  /* The sticky command bar (title + tabs + controls) wraps to ~half the screen
+     and stays pinned — let it scroll away instead. */
+  [style*="position: sticky"][style*="z-index: 50"] {
+    position: static !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  /* …and tighten its rows while we're at it. */
+  [style*="position: sticky"][style*="z-index: 50"] > div,
+  [style*="position: static"][style*="z-index: 50"] > div {
+    gap: 10px !important;
+    padding: 10px 14px !important;
+  }
+  /* Tab strip: all tabs stay reachable by swiping sideways instead of the row
+     clipping at the screen edge (this was the page's horizontal overflow).
+     React serializes the color as rgb(), so match both spellings. */
+  [style*="gap: 2px"][style*="background: #EFEDE7"][style*="border-radius: 10px"],
+  [style*="gap: 2px"][style*="background: rgb(239, 237, 231)"][style*="border-radius: 10px"] {
+    overflow-x: auto !important;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* "Today" view: task list + momentum card side by side leave ~180px per
+     column and words wrap one-per-line — stack them instead. */
+  [style*="1.15fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ── Readability: nudge small body/meta text up a notch on phones, where the
    desktop 10–13px sizes read too small. Gentle (+~1px) so nothing reflows. ── */
 @media (max-width: 640px) {

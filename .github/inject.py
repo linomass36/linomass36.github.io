@@ -136,6 +136,61 @@ def insert_head(text, payload):
     return text
 
 
+# ── Bundler pages (CT Master Plan) ───────────────────────────────
+# These pages carry their real document as JSON in a
+# <script type="__bundler/template"> block; at boot the runtime parses it and
+# replaces document.documentElement with it, wiping the outer <head> — and with
+# it mobile.css and every shim we injected there. Links load and scripts are
+# re-created & executed by the runtime, so the fix is to inject our payload
+# into the INNER template head, JSON-escaped. The outer page then only needs
+# the PWA/viewport tags (it's on screen for a second while unpacking).
+BUNDLER_MARK = '<script type="__bundler/template">'
+
+# The inner payload. Cache-busting is written literally (?v=token) because the
+# outer cachebust() regex can't see through JSON escaping; stamp_version() runs
+# on the whole file afterwards, so the token resolves inside the JSON too.
+# The viewport meta re-declares viewport-fit=cover — a later meta wins, which
+# saves us from regex-editing the escaped inner one.
+BUNDLER_HEAD = (
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+    '<link rel="stylesheet" href="./mobile.css?v=__APP_VERSION__">\n'
+    '<script src="./config.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./sync.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./nav.js?v=__APP_VERSION__"></script>\n'
+)
+
+
+def esc_json(s):
+    """Escape a fragment for insertion inside a JSON string literal. Every '/'
+    becomes the (legal) '\\/' escape, which also neutralizes '</script>' for
+    the outer HTML parser."""
+    return (s.replace("\\", "\\\\")
+             .replace('"', '\\"')
+             .replace("/", "\\/")
+             .replace("\n", "\\n"))
+
+
+def inject_into_bundler(text):
+    start = text.find(BUNDLER_MARK)
+    if start == -1:
+        return text
+    start += len(BUNDLER_MARK)
+    end = text.find("</script>", start)  # JSON escapes its own </script>s
+    if end == -1:
+        return text
+    block = text[start:end]
+    if "sync.js" in block:
+        return text  # already injected — stay idempotent
+    payload = esc_json(BUNDLER_HEAD + THEME_BOOT + VERSION_CHECK)
+    idx = block.find("</head>")
+    if idx == -1:
+        idx = block.find("<\\/head>")
+    if idx == -1:
+        return text
+    block = block[:idx] + payload + block[idx:]
+    return text[:start] + block + text[end:]
+
+
 def inject_shim(text):
     """Insert config.js + sync.js + the version self-heal check once, as late
     in <head> as possible. Leaves the __APP_VERSION__ token for stamp_version."""
@@ -149,12 +204,18 @@ def process_html(path, version, is_gate):
         text = f.read()
     # Inject first (shims carry __APP_VERSION__ tokens), cache-bust local asset
     # URLs, then stamp so everything gets the real version number.
+    is_bundler = BUNDLER_MARK in text
     text = add_viewport_fit(text)
     if "manifest.json" not in text:
         text = insert_head(text, PWA_HEAD)
     if not is_gate:
-        text = inject_shim(text)
-        text = insert_head(text, THEME_BOOT)
+        if is_bundler:
+            # The runtime rewrites the document from the inner template, so the
+            # shims must live THERE (outer copies would be wiped / double-run).
+            text = inject_into_bundler(text)
+        else:
+            text = inject_shim(text)
+            text = insert_head(text, THEME_BOOT)
     text = cachebust(text)
     text = stamp_version(text, version)
     with open(path, "w", encoding="utf-8") as f:
