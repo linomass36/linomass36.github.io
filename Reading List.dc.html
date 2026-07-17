@@ -86,6 +86,13 @@
                       <sc-if value="{{ it.hasDoi }}" hint-placeholder-val="{{ false }}"><a href="{{ it.doiUrl }}" target="_blank" rel="noopener" onClick="{{ stop }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #534AB7; border: 1px solid #D6D2EC; border-radius: 12px; padding: 3px 9px; background: #F4F2FB;" style-hover="border-color: #534AB7;">DOI ↗</a></sc-if>
                     </span>
                   </sc-if>
+                  <sc-if value="{{ it.hasFiles }}" hint-placeholder-val="{{ false }}">
+                    <span style="display: flex; flex-direction: column; gap: 6px; margin-top: 7px;">
+                      <sc-for list="{{ it.files }}" as="f" hint-placeholder-count="1">
+                        <a href="{{ f.url }}" target="_blank" rel="noopener" onClick="{{ stop }}" style="display: inline-flex; align-items: flex-start; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; line-height: 1.4; letter-spacing: .02em; color: #993C1D; border: 1px solid #E6C9BF; border-radius: 12px; padding: 5px 10px; background: #FBF2EE; align-self: flex-start; max-width: 100%;" style-hover="border-color: #993C1D;">⤓ {{ f.label }}</a>
+                      </sc-for>
+                    </span>
+                  </sc-if>
                   <sc-if value="{{ it.isRead }}" hint-placeholder-val="{{ false }}">
                     <span style="display: flex; gap: 8px; margin-top: 7px; align-items: center; flex-wrap: wrap;">
                       <a onClick="{{ it.openLog }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #3B6D11; border: 1px solid #C9DDB0; border-radius: 12px; padding: 3px 9px; background: #F1F7E9; cursor: pointer;" style-hover="border-color: #3B6D11;">{{ it.logLabel }}</a>
@@ -317,6 +324,8 @@ class Component extends DCLogic {
               doiUrl: it.doi ? 'https://doi.org/' + it.doi : '',
               canRemove: String(it.id).indexOf('usr-') === 0,
               remove: (e) => this.removeBook(it.id, e),
+              hasFiles: !!(it.files && it.files.length),
+              files: (it.files || []).map(f => ({ label: f.label, url: f.url })),
               isRead,
               readDate: hist.readAt ? this.fmtDate(hist.readAt) : '',
               logLabel: hasNotes ? 'journal ✓' : 'journal',

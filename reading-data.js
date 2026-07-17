@@ -2,19 +2,19 @@ window.READING_DATA = {
   themes: { ct:'#993C1D', med:'#0F6E56', method:'#534AB7', phys:'#185FA5', tech:'#4A5B7A', lit:'#6E4B8A', phil:'#854F0B', venture:'#3B6D11', hist:'#2E6A86' },
   shelves: [
     { id:'p-ct', kind:'paper', accent:'#993C1D', name:'Cardiothoracic & transplant — the canon of your field', items:[
-      {id:'ct1', title:'The transplantation of blood vessels', by:'Carrel & Guthrie, 1906', note:'The anastomosis technique every transplant since is built on. Nobel, 1912.'},
+      {id:'ct1', title:'The transplantation of blood vessels', by:'Carrel & Guthrie, 1906', note:'The anastomosis technique every transplant since is built on. Nobel, 1912.', files:[{label:'Alexis Carrel: Father of Vascular Anastomosis (review PDF)', url:'papers/ct1-carrel-vascular-anastomosis.pdf'}]},
       {id:'ct2', title:'A human cardiac transplant: an interim report', by:'Barnard, S. Afr. Med. J., 1967', note:'The first human heart transplant. Read it for nerve as much as method.'},
       {id:'ct3', title:'A mechanical heart–lung apparatus for cardiac surgery', by:'Gibbon, 1954', note:'Cardiopulmonary bypass — the machine that made open-heart surgery possible.'},
-      {id:'ct4', title:'Surgical repair of tricuspid atresia (the Fontan)', by:'Fontan & Baudet, Thorax, 1971', note:'The single-ventricle palliation that defines modern congenital surgery.'},
+      {id:'ct4', title:'Surgical repair of tricuspid atresia (the Fontan)', by:'Fontan & Baudet, Thorax, 1971', note:'The single-ventricle palliation that defines modern congenital surgery.', files:[{label:'Fontan & Baudet, Thorax 1971 (full text PDF)', url:'papers/ct4-fontan-tricuspid-atresia.pdf'}]},
       {id:'ct5', title:'Physiologic repair of HLHS (the Norwood)', by:'Norwood et al., NEJM, 1983', note:'Staged palliation of hypoplastic left heart — the hardest congenital problem.'},
-      {id:'ct6', title:'Aortic/mitral replacement with a pulmonary autograft (Ross)', by:'Ross, Lancet, 1967', note:'The living-valve idea — a growing autograft, directly upstream of your track.'},
+      {id:'ct6', title:'Aortic/mitral replacement with a pulmonary autograft (Ross)', by:'Ross, Lancet, 1967', note:'The living-valve idea — a growing autograft, directly upstream of your track.', files:[{label:'Ross, Lancet 1967 (full text PDF)', url:'papers/ct6-ross-pulmonary-autograft.pdf'}]},
       {id:'ct7', title:'Partial heart transplantation for growing valves', by:'Turek et al., JAMA, 2024', doi:'10.1001/jama.2023.5049', note:'Your lead track, in print. The clearest current statement of the thesis.'},
       {id:'ct8', title:'Aortic valve neocuspidization (Ozaki)', by:'Ozaki et al., 2011–', note:'Reconstructing valves from pericardium — the durability question you care about.'},
       {id:'ct9', title:'Coronary artery bypass grafting (first series)', by:'Favaloro, 1968', note:'The operation that made cardiac surgery a volume specialty. Know its origin.'},
       {id:'ct10', title:'Percutaneous transcatheter aortic valve implantation (first-in-man)', by:'Cribier et al., 2002', doi:'10.1161/01.CIR.0000047200.36165.B8', note:'TAVR — how a catheter began replacing the sternotomy. The disruption to watch.'},
       {id:'ct11', title:'Left ventricular assist device as destination therapy (REMATCH)', by:'Rose et al., NEJM, 2001', doi:'10.1056/NEJMoa012175', note:'Mechanical circulatory support as a real alternative to transplant.'},
-      {id:'ct12', title:'Arterial switch operation for transposition (Jatene)', by:'Jatene et al., 1976', note:'Anatomic correction of TGA — a landmark in congenital repair.'},
-      {id:'ct13', title:'Genetically modified pig-to-human heart xenotransplant', by:'Griffith et al., NEJM, 2022', doi:'10.1056/NEJMoa2201422', note:'The Maryland xenotransplant — the donor-shortage endgame, and its ethics.'}
+      {id:'ct12', title:'Arterial switch operation for transposition (Jatene)', by:'Jatene et al., 1976', note:'Anatomic correction of TGA — a landmark in congenital repair.', files:[{label:'Albert et al., 1973 — Surgical correction of transposition of the great vessels: technical considerations (atrial-switch technique, PDF)', url:'papers/ct12-albert-transposition.pdf'}]},
+      {id:'ct13', title:'Genetically modified pig-to-human heart xenotransplant', by:'Griffith et al., NEJM, 2022', doi:'10.1056/NEJMoa2201422', note:'The Maryland xenotransplant — the donor-shortage endgame, and its ethics.', files:[{label:'Griffith et al., NEJM 2022 (full text PDF)', url:'papers/ct13-griffith-xenotransplant.pdf'}]}
     ] },
     { id:'p-preserv', kind:'paper', accent:'#993C1D', name:'Preservation, perfusion & allograft vasculopathy', items:[
       {id:'pv1', title:'Ex-vivo perfusion of donor hearts (PROCEED II)', by:'Ardehali et al., Lancet, 2015', doi:'10.1016/S0140-6736(15)60261-6', note:'The machine-perfusion trial behind the "keep hearts viable longer" line.'},
