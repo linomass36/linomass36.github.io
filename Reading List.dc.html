@@ -86,6 +86,12 @@
                       <sc-if value="{{ it.hasDoi }}" hint-placeholder-val="{{ false }}"><a href="{{ it.doiUrl }}" target="_blank" rel="noopener" onClick="{{ stop }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #534AB7; border: 1px solid #D6D2EC; border-radius: 12px; padding: 3px 9px; background: #F4F2FB;" style-hover="border-color: #534AB7;">DOI ↗</a></sc-if>
                     </span>
                   </sc-if>
+                  <sc-if value="{{ it.isRead }}" hint-placeholder-val="{{ false }}">
+                    <span style="display: flex; gap: 8px; margin-top: 7px; align-items: center; flex-wrap: wrap;">
+                      <a onClick="{{ it.openLog }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #3B6D11; border: 1px solid #C9DDB0; border-radius: 12px; padding: 3px 9px; background: #F1F7E9; cursor: pointer;" style-hover="border-color: #3B6D11;">{{ it.logLabel }}</a>
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ it.readDate }}</span>
+                    </span>
+                  </sc-if>
                   <sc-if value="{{ it.canRemove }}" hint-placeholder-val="{{ false }}">
                     <span style="display: flex; margin-top: 7px;">
                       <a onClick="{{ it.remove }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #A32E27; border: 1px solid #E7C9C6; border-radius: 12px; padding: 3px 9px; background: #FBF1F0; cursor: pointer;" style-hover="border-color: #A32E27;">remove</a>
@@ -104,13 +110,37 @@
     </div>
 
   </div>
+
+  <sc-if value="{{ showLog }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ saveLog }}" style="position: fixed; inset: 0; z-index: 900; background: rgba(20,20,22,.45);"></div>
+    <div style="position: fixed; z-index: 901; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92vw, 560px); max-height: 86vh; overflow-y: auto; background: #FFFDF8; border: 1px solid #E4E2DD; border-radius: 16px; padding: 20px 22px 18px; animation: rlIn .25s ease;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: #3B6D11;">Reading log · {{ logDate }}</div>
+      <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; line-height: 1.2; margin: 6px 0 4px;">{{ logTitle }}</div>
+      <div style="font-size: 12px; color: #77786F; margin-bottom: 12px;">A note to your future self. Answer any of these — or none — and it stays with this book.</div>
+      <sc-for list="{{ logFields }}" as="f" hint-placeholder-count="4">
+        <div style="margin-bottom: 11px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .05em; color: #55564F; margin-bottom: 4px;">{{ f.label }}</div>
+          <textarea value="{{ f.val }}" onChange="{{ f.set }}" placeholder="{{ f.ph }}" rows="2" style="width: 100%; font-size: 13px; line-height: 1.5; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; resize: vertical; color: #26271F;"></textarea>
+        </div>
+      </sc-for>
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+        <button onClick="{{ saveLog }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 40px; padding: 0 18px; border-radius: 20px; border: 1px solid #3B6D11; background: #3B6D11; color: #FFF; cursor: pointer;">Save to history</button>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">saved with the {{ logDate }} date stamp</span>
+      </div>
+    </div>
+  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:1600}}">
 class Component extends DCLogic {
   KEY = 'ct_reading_v1';
   KEY_BOOKS = 'ct_reading_books_v1';   // books you add yourself (syncs across devices)
-  state = { tick: 0, filter: 'all' };
+  state = { tick: 0, filter: 'all', logId: null, logTitle: '', draft: null };
+
+  fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    catch (e) { return ''; }
+  }
 
   read() {
     let s = null;
@@ -129,14 +159,64 @@ class Component extends DCLogic {
   writeBooks(list) {
     try { localStorage.setItem(this.KEY_BOOKS, JSON.stringify(list)); } catch (e) {}
   }
-  cycle(id) {
+  // Per-book history: { [id]: { readAt, found, takeaway, thoughts, action } }.
+  // Lives in the same synced store, so it follows you across devices.
+  FIELDS = [
+    { key: 'found',    label: 'How did you find it?',                 ph: 'recommended by…, cited in…, stumbled on…' },
+    { key: 'takeaway', label: 'The main takeaway?',                   ph: 'the one idea worth keeping' },
+    { key: 'thoughts', label: 'Thoughts, quotes, lines worth saving', ph: 'anything you want your future self to reread' },
+    { key: 'action',   label: 'What will you do because of it?',      ph: 'a habit, an experiment, the next book…' },
+  ];
+
+  historyOf(id) {
+    const st = this.read();
+    return Object.assign({}, (st.history || {})[id]);
+  }
+  writeHistory(id, entry) {
+    const st = this.read();
+    const history = Object.assign({}, st.history);
+    history[id] = entry;
+    this.write({ history });
+  }
+
+  cycle(id, title) {
     const st = this.read();
     const status = Object.assign({}, st.status);
     const cur = status[id] || 'unread';
     const next = cur === 'unread' ? 'reading' : (cur === 'reading' ? 'read' : 'unread');
     if (next === 'unread') delete status[id]; else status[id] = next;
     this.write({ status });
+    if (next === 'read') {
+      // Date-stamp the finish and open the reflection prompt.
+      const entry = this.historyOf(id);
+      entry.readAt = new Date().toISOString();
+      this.writeHistory(id, entry);
+      this.openLog(id, title);
+      return;
+    }
     this.setState(s => ({ tick: s.tick + 1 }));
+  }
+
+  openLog(id, title, e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const entry = this.historyOf(id);
+    const draft = {};
+    this.FIELDS.forEach(f => { draft[f.key] = entry[f.key] || ''; });
+    this.setState({ logId: id, logTitle: title, draft });
+  }
+  saveLog() {
+    const id = this.state.logId;
+    if (id) {
+      const entry = this.historyOf(id);
+      const draft = this.state.draft || {};
+      this.FIELDS.forEach(f => {
+        const v = (draft[f.key] || '').trim();
+        if (v) entry[f.key] = v; else delete entry[f.key];
+      });
+      entry.readAt = entry.readAt || new Date().toISOString();
+      this.writeHistory(id, entry);
+    }
+    this.setState(s => ({ logId: null, logTitle: '', draft: null, tick: s.tick + 1 }));
   }
 
   addBook() {
@@ -219,6 +299,9 @@ class Component extends DCLogic {
           items: s.items.map(it => {
             const p = pill[statusOf(it.id)] || pill.unread;
             const isPaper = s.kind === 'paper';
+            const isRead = statusOf(it.id) === 'read';
+            const hist = (store.history || {})[it.id] || {};
+            const hasNotes = this.FIELDS.some(f => hist[f.key]);
             const q = encodeURIComponent(String(it.title || '').replace(/[\u2018\u2019]/g, "'") + ' ' + String(it.by || '').split(',')[0]);
             const usePubmed = (s.search || 'pubmed') === 'pubmed';
             return {
@@ -234,14 +317,40 @@ class Component extends DCLogic {
               doiUrl: it.doi ? 'https://doi.org/' + it.doi : '',
               canRemove: String(it.id).indexOf('usr-') === 0,
               remove: (e) => this.removeBook(it.id, e),
-              cycle: () => this.cycle(it.id),
+              isRead,
+              readDate: hist.readAt ? this.fmtDate(hist.readAt) : '',
+              logLabel: hasNotes ? 'journal ✓' : 'journal',
+              openLog: (e) => this.openLog(it.id, it.title, e),
+              cycle: () => this.cycle(it.id, it.title),
             };
           }),
         };
       });
 
     const stop = e => { if (e && e.stopPropagation) e.stopPropagation(); };
-    return { pct, readN, totalN, readingN, shelfN: allShelves.length, filterChips, shelves, stop, addBook: () => this.addBook() };
+
+    // Reading-log modal
+    const showLog = !!this.state.logId;
+    const logEntry = showLog ? this.historyOf(this.state.logId) : {};
+    const draft = this.state.draft || {};
+    const logFields = this.FIELDS.map(f => ({
+      label: f.label, ph: f.ph, val: draft[f.key] || '',
+      set: (e) => {
+        const d = Object.assign({}, this.state.draft);
+        d[f.key] = e.target.value;
+        this.setState({ draft: d });
+      },
+    }));
+
+    return {
+      pct, readN, totalN, readingN, shelfN: allShelves.length, filterChips, shelves, stop,
+      addBook: () => this.addBook(),
+      showLog,
+      logTitle: this.state.logTitle,
+      logDate: this.fmtDate(logEntry.readAt || new Date().toISOString()),
+      logFields,
+      saveLog: () => this.saveLog(),
+    };
   }
 }
 </script>

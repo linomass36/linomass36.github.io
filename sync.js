@@ -45,7 +45,7 @@
       dot.style.cssText = 'width:7px;height:7px;border-radius:50%;flex:none;background:' + COLORS.off + ';';
       txt = document.createElement('span');
       el.appendChild(dot); el.appendChild(txt);
-      el.addEventListener('click', function () { if (typeof window.hubSync === 'object') window.hubSync.syncNow(); });
+      el.addEventListener('click', function () { if (typeof window.hubSync === 'object') window.hubSync.panel(); });
       document.body.appendChild(el);
       apply();
     }
@@ -75,7 +75,60 @@
 
   window.hubSync = {
     get state() { return window.__syncState; },
-    syncNow: function () { console.log('[sync] manual sync requested'); }
+    syncNow: function () { console.log('[sync] manual sync requested'); },
+    // Tap the pill → a small panel with everything needed to debug sync from a
+    // phone (no console needed): account, device/cloud revision, whether the
+    // cloud copy actually holds data, and the last error.
+    panel: function () {
+      var old = document.getElementById('hub-sync-panel');
+      if (old) { old.remove(); return; }
+      var p = document.createElement('div');
+      p.id = 'hub-sync-panel';
+      p.style.cssText = 'position:fixed;left:calc(9px + env(safe-area-inset-left,0px));' +
+        'bottom:calc(44px + env(safe-area-inset-bottom,0px));z-index:2147483001;max-width:88vw;' +
+        'font:11px/1.6 "IBM Plex Mono",ui-monospace,monospace;color:#26271F;background:#FFFDF8;' +
+        'border:1px solid #E4E2DD;border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(26,27,26,.18);white-space:pre-wrap;';
+      function row(k, v) { return k + ': ' + v + String.fromCharCode(10); }
+      function render(extra) {
+        var u = null;
+        try { u = firebase.auth().currentUser; } catch (e) {}
+        var rev = localStorage.getItem('__sync_rev');
+        var txt = '';
+        txt += row('state', window.__syncState || '?');
+        txt += row('version', (window.APP_CONFIG && window.APP_CONFIG.version) || '?');
+        txt += row('account', u ? u.email : 'NOT SIGNED IN');
+        txt += row('uid', u ? u.uid.slice(0, 10) + '…' : '—');
+        txt += row('device rev', rev ? new Date(+rev).toLocaleString() : 'none');
+        txt += extra;
+        txt += row('last error', lastErr || 'none');
+        p.textContent = txt;
+        var btn = document.createElement('button');
+        btn.textContent = 'Sync now';
+        btn.style.cssText = 'margin-top:8px;margin-right:8px;font:600 11px "IBM Plex Mono",monospace;padding:6px 12px;border-radius:16px;border:1px solid #3B6D11;background:#3B6D11;color:#fff;cursor:pointer;';
+        btn.onclick = function () { window.hubSync.syncNow(); };
+        var cls = document.createElement('button');
+        cls.textContent = 'Close';
+        cls.style.cssText = 'margin-top:8px;font:600 11px "IBM Plex Mono",monospace;padding:6px 12px;border-radius:16px;border:1px solid #DAD7D0;background:#fff;color:#55564F;cursor:pointer;';
+        cls.onclick = function () { p.remove(); };
+        p.appendChild(btn); p.appendChild(cls);
+      }
+      render(row('cloud', 'checking…'));
+      document.body.appendChild(p);
+      try {
+        docRef().get().then(function (snap) {
+          if (!snap.exists) { render(row('cloud', 'NO DOC — never pushed')); return; }
+          var d = snap.data() || {}; var store = d.store || {};
+          var extra = row('cloud rev', d.updatedAt ? new Date(+d.updatedAt).toLocaleString() : '?');
+          extra += row('cloud keys', Object.keys(store).length);
+          extra += row('cloud has library', store.ct_library_v1 ? ('yes (' + store.ct_library_v1.length + ' chars)') : 'NO');
+          render(extra);
+        }).catch(function (e) {
+          render(row('cloud', 'READ FAILED: ' + ((e && e.code) || (e && e.message) || e)));
+        });
+      } catch (e) {
+        render(row('cloud', 'unavailable: ' + e.message));
+      }
+    }
   };
 
   if (!FB.apiKey || FB.apiKey.indexOf('PASTE') === 0) {
@@ -106,7 +159,7 @@
     })();
   }
 
-  var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0;
+  var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0, lastErr = '';
 
   // Turn a Firebase error into a pill label that says what's actually wrong.
   // "permission-denied" is the big one: Firestore created in production mode
@@ -114,6 +167,7 @@
   // DEPLOY.md are published — sync then fails silently on every device.
   function fail(stage, e) {
     var code = (e && e.code) || '';
+    lastErr = stage + ': ' + (code || (e && e.message) || 'unknown');
     console.error('[sync] ' + stage + ' failed', e);
     if (code === 'permission-denied') {
       UI.set('offline', 'Blocked: publish Firestore rules');

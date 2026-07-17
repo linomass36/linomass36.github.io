@@ -166,7 +166,9 @@ class Component extends DCLogic {
       this.ensureApp();
       firebase.auth().getRedirectResult().catch((e) => this.showErr(e));
       firebase.auth().onAuthStateChanged((u) => {
-        if (!u) { this.setState({ phase: 'gate' }); return; }
+        // The intruder flow calls signOut(), which re-fires this handler with
+        // null — don't let that yank the prank off the screen mid-performance.
+        if (!u) { if (this.state.phase !== 'prank') this.setState({ phase: 'gate' }); return; }
         const ok = u.email && u.email.toLowerCase() === this.AUTHORIZED_EMAIL.toLowerCase();
         if (ok) { window.location.href = this.HUB_URL; }
         else { this.startPrank(); try { firebase.auth().signOut(); } catch (e) {} }
