@@ -55,34 +55,71 @@
 
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
       <input onInput="{{ setQuery }}" placeholder="Search titles, authors, notes, tags…" style="flex: 1; min-width: 0; font-size: 14px; padding: 10px 14px; border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; color: #26271F;">
-      <sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ hasFilterInfo }}" hint-placeholder-val="{{ false }}">
         <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; white-space: nowrap;">{{ searchInfo }}</span>
       </sc-if>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
       <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="3">
         <button onClick="{{ f.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ f.border }}; background: {{ f.bg }}; color: {{ f.color }};">{{ f.label }}</button>
       </sc-for>
+      <span style="width: 1px; height: 20px; background: #E4E2DD; margin: 0 3px;"></span>
+      <sc-for list="{{ viewChips }}" as="v" hint-placeholder-count="2">
+        <button onClick="{{ v.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ v.border }}; background: {{ v.bg }}; color: {{ v.color }};">{{ v.label }}</button>
+      </sc-for>
       <span style="flex: 1;"></span>
+      <button onClick="{{ surprise }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #E6D6B0; background: #FBF6EA; color: #854F0B;">🎲 Surprise me</button>
       <button onClick="{{ addBook }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #3B6D11; background: #3B6D11; color: #FFFFFF;">＋ Add a book</button>
-      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">progress saves automatically</span>
     </div>
+
+    <sc-if value="{{ hasTags }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F;">tags</span>
+        <sc-for list="{{ tagChips }}" as="t" hint-placeholder-count="4">
+          <button onClick="{{ t.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 16px; cursor: pointer; border: 1px solid {{ t.border }}; background: {{ t.bg }}; color: {{ t.color }};">{{ t.label }}</button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasPick }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px solid #E6D6B0; border-left: 3px solid #854F0B; border-radius: 12px; background: #FBF6EA; padding: 12px 16px; margin-bottom: 16px; animation: rlIn .25s ease;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B;">your pick</span>
+        <span style="font-family: 'Newsreader', serif; font-size: 17px; flex: 1; min-width: 150px; line-height: 1.2;">{{ pickTitle }} <span style="font-size: 10px; color: #A6A79F; font-family: 'IBM Plex Mono', monospace;">· {{ pickShelf }}</span></span>
+        <button onClick="{{ pickRead }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 6px 12px; border-radius: 16px; border: 1px solid #854F0B; background: #854F0B; color: #fff; cursor: pointer;">Start reading</button>
+        <button onClick="{{ surprise }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 6px 12px; border-radius: 16px; border: 1px solid #E6D6B0; background: #fff; color: #854F0B; cursor: pointer;">Again</button>
+        <button onClick="{{ clearPick }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; border: none; background: none; color: #A6A79F; cursor: pointer; line-height: 1;">×</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasOnDeck }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px solid #E6D6B0; border-radius: 14px; background: #FCFAF3; padding: 14px 18px; margin-bottom: 16px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B; margin-bottom: 6px;">On deck · reading now</div>
+        <sc-for list="{{ onDeck }}" as="d" hint-placeholder-count="2">
+          <button onClick="{{ d.cycle }}" style="display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; border: none; background: none; padding: 7px 0; border-top: 1px solid #F2ECDD; cursor: pointer;">
+            <span style="font-family: 'Newsreader', serif; font-size: 15px; color: #26271F; flex: 1; min-width: 0;">{{ d.title }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #A6A79F; white-space: nowrap;">{{ d.shelfName }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
 
     <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
       <div style="border: 1px dashed #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 28px 22px; text-align: center; font-size: 13.5px; color: #77786F;">Nothing matches your search. Try a shorter word, or clear the box.</div>
     </sc-if>
 
+    <sc-if value="{{ isListView }}" hint-placeholder-val="{{ true }}">
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <sc-for list="{{ shelves }}" as="s" hint-placeholder-count="6">
         <div style="border: 1px solid #E4E2DD; border-top: 3px solid {{ s.accent }}; border-radius: 14px; background: #FFFFFF; padding: 18px 20px 8px; animation: rlIn .3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-            <div>
-              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: {{ s.accent }};">{{ s.kindLabel }}</div>
-              <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px; line-height: 1.15;">{{ s.name }}</div>
-            </div>
+          <button onClick="{{ s.toggle }}" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; width: 100%; text-align: left; background: none; border: none; padding: 0; cursor: pointer;">
+            <span style="min-width: 0;">
+              <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: {{ s.accent }};">{{ s.kindLabel }}</span>
+              <span style="display: block; font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px; line-height: 1.15;">{{ s.caret }} {{ s.name }}</span>
+            </span>
             <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ s.doneColor }}; white-space: nowrap; flex: none;">{{ s.progress }}</span>
-          </div>
+          </button>
+          <sc-if value="{{ s.open }}" hint-placeholder-val="{{ true }}">
           <div style="display: flex; flex-direction: column; margin-top: 10px;">
             <sc-for list="{{ s.items }}" as="it" hint-placeholder-count="6">
               <button onClick="{{ it.cycle }}" style="display: flex; gap: 13px; align-items: flex-start; text-align: left; padding: 11px 2px; border: none; border-top: 1px solid #F2F0EB; background: {{ it.rowBg }}; cursor: pointer; width: 100%;">
@@ -110,6 +147,14 @@
                       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ it.readDate }}</span>
                     </span>
                   </sc-if>
+                  <span style="display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; align-items: center;">
+                    <sc-if value="{{ it.hasTags }}" hint-placeholder-val="{{ false }}">
+                      <sc-for list="{{ it.tags }}" as="t" hint-placeholder-count="1">
+                        <a onClick="{{ t.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .02em; color: #534AB7; border: 1px solid #D6D2EC; border-radius: 10px; padding: 2px 7px; background: #F4F2FB; cursor: pointer;">{{ t.t }}</a>
+                      </sc-for>
+                    </sc-if>
+                    <a onClick="{{ it.editTags }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .02em; color: #A6A79F; border: 1px dashed #DAD7D0; border-radius: 10px; padding: 2px 7px; background: #FCFBF9; cursor: pointer;" style-hover="border-color: #534AB7; color: #534AB7;">＋ tag</a>
+                  </span>
                   <sc-if value="{{ it.canRemove }}" hint-placeholder-val="{{ false }}">
                     <span style="display: flex; margin-top: 7px;">
                       <a onClick="{{ it.remove }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .03em; color: #A32E27; border: 1px solid #E7C9C6; border-radius: 12px; padding: 3px 9px; background: #FBF1F0; cursor: pointer;" style-hover="border-color: #A32E27;">remove</a>
@@ -119,9 +164,32 @@
               </button>
             </sc-for>
           </div>
+          </sc-if>
         </div>
       </sc-for>
     </div>
+    </sc-if>
+
+    <sc-if value="{{ isShelfView }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <sc-for list="{{ shelves }}" as="s" hint-placeholder-count="6">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px;">
+              <div style="font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500; line-height: 1.15;">{{ s.name }}</div>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ s.doneColor }}; white-space: nowrap;">{{ s.progress }}</span>
+            </div>
+            <div style="display: flex; align-items: flex-end; gap: 5px; flex-wrap: wrap; background: linear-gradient(#F4EFE7, #E8E0D3); border: 1px solid #E4E2DD; border-bottom: 6px solid #8a6d4b; border-radius: 8px 8px 4px 4px; padding: 16px 12px 12px;">
+              <sc-for list="{{ s.items }}" as="it" hint-placeholder-count="8">
+                <button onClick="{{ it.cycle }}" title="{{ it.title }}" style="position: relative; width: 30px; height: 108px; flex: none; border: none; border-radius: 2px 2px 1px 1px; cursor: pointer; background: {{ it.spineColor }}; box-shadow: inset -3px 0 6px rgba(0,0,0,.16), inset 3px 0 0 rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                  <span style="writing-mode: vertical-rl; transform: rotate(180deg); font-family: 'Newsreader', serif; font-size: 9.5px; line-height: 1; color: {{ it.spineText }}; white-space: nowrap; max-height: 92px; overflow: hidden; text-overflow: ellipsis; padding: 4px 0;">{{ it.title }}</span>
+                  <span style="position: absolute; top: 3px; left: 0; right: 0; text-align: center; font-size: 8px; color: {{ it.spineText }};">{{ it.spineMark }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
 
     <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 16px 22px; margin-top: 22px; font-size: 12.5px; color: #77786F; line-height: 1.55;">
       A living list, not a syllabus. Add or cut freely — the point is a deliberate diet of reading across the surgeon, the scientist, and the whole educated person. Start where your curiosity is loudest today.
@@ -153,9 +221,42 @@
 class Component extends DCLogic {
   KEY = 'ct_reading_v1';
   KEY_BOOKS = 'ct_reading_books_v1';   // books you add yourself (syncs across devices)
-  state = { tick: 0, filter: 'all', query: '', logId: null, logTitle: '', draft: null };
+  state = { tick: 0, filter: 'all', query: '', tag: '', pick: null, logId: null, logTitle: '', draft: null };
 
+  bump() { this.setState(s => ({ tick: s.tick + 1 })); }
   setQuery(e) { this.setState({ query: e && e.target ? e.target.value : '' }); }
+
+  // ── UI prefs: list/shelf view + collapsed shelves, persisted & synced ──
+  readUI() { const st = this.read(); return Object.assign({ view: 'list', collapsed: {} }, st.ui || {}); }
+  setView(v) { const ui = this.readUI(); ui.view = v; this.write({ ui }); this.bump(); }
+  toggleCollapse(id, e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const ui = this.readUI(); const c = Object.assign({}, ui.collapsed);
+    c[id] = !c[id]; ui.collapsed = c; this.write({ ui }); this.bump();
+  }
+
+  // ── Tags per item, stored in the synced store ──
+  tagsOf(id) { const st = this.read(); return ((st.tags || {})[id]) || []; }
+  editTags(id, e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const inp = window.prompt('Tags — comma separated:', this.tagsOf(id).join(', '));
+    if (inp === null) return;
+    const tags = inp.split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+    const st = this.read(); const all = Object.assign({}, st.tags);
+    if (tags.length) all[id] = tags; else delete all[id];
+    this.write({ tags: all }); this.bump();
+  }
+  pickTag(t, e) { if (e && e.stopPropagation) e.stopPropagation(); this.setState(s => ({ tag: s.tag === t ? '' : t })); }
+
+  // ── Surprise me: a random unread pick ──
+  surprise() {
+    const data = window.READING_DATA; if (!data) return;
+    const store = this.read();
+    const all = (data.shelves || []).reduce((a, s) => a.concat(s.items.map(it => ({ id: it.id, title: it.title, _shelf: s.name }))), [])
+      .concat(this.readBooks().map(b => ({ id: b.id, title: b.title, _shelf: 'Added by you' })));
+    const unread = all.filter(it => (store.status[it.id] || 'unread') === 'unread');
+    this.setState({ pick: unread.length ? unread[Math.floor(Math.random() * unread.length)] : null });
+  }
 
   fmtDate(iso) {
     try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
@@ -266,10 +367,14 @@ class Component extends DCLogic {
     this.state.tick;
     const data = window.READING_DATA;
     const filter = this.state.filter;
-    if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], shelves: [], addBook: () => this.addBook() };
+    const ui = this.readUI();
+    const view = ui.view || 'list';
+    const collapsed = ui.collapsed || {};
+    if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], viewChips: [], tagChips: [], shelves: [], onDeck: [], isListView: true, isShelfView: false, addBook: () => this.addBook() };
 
     const store = this.read();
     const statusOf = id => store.status[id] || 'unread';
+    const tagsOf = id => (store.tags || {})[id] || [];
 
     // Static shelves from reading-data.js + the books you've added yourself.
     const myBooks = this.readBooks();
@@ -300,6 +405,12 @@ class Component extends DCLogic {
       };
     });
 
+    const viewChips = [{ key: 'list', label: '☰ List' }, { key: 'shelf', label: '▦ Shelf' }].map(v => {
+      const on = view === v.key;
+      return { label: v.label, set: () => this.setView(v.key),
+        border: on ? '#993C1D' : '#E4E2DD', bg: on ? '#993C1D' : '#FFFFFF', color: on ? '#FFFFFF' : '#55564F' };
+    });
+
     const pill = {
       unread:  { statusLabel: 'to read', pillColor: '#8a8577', pillBorder: '#DAD7D0', pillBg: '#F6F4EF', rowBg: 'transparent',  titleColor: '#26271F' },
       reading: { statusLabel: 'reading', pillColor: '#854F0B', pillBorder: '#E6D6B0', pillBg: '#FBF6EA', rowBg: '#FCFAF3',       titleColor: '#26271F' },
@@ -307,9 +418,18 @@ class Component extends DCLogic {
     };
 
     const qy = (this.state.query || '').toLowerCase().trim();
-    const matches = it => !qy ||
-      (String(it.title || '') + ' ' + String(it.by || '') + ' ' + String(it.note || '') + ' ' + (it.tags || []).join(' '))
-        .toLowerCase().indexOf(qy) !== -1;
+    const tag = this.state.tag || '';
+    const matches = it => (!qy ||
+      (String(it.title || '') + ' ' + String(it.by || '') + ' ' + String(it.note || '') + ' ' + tagsOf(it.id).join(' '))
+        .toLowerCase().indexOf(qy) !== -1) && (!tag || tagsOf(it.id).indexOf(tag) !== -1);
+
+    // tag chips from tags actually in use
+    const tagCount = {};
+    allItems.forEach(it => tagsOf(it.id).forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; }));
+    const tagChips = Object.keys(tagCount).sort().map(t => { const on = tag === t; return {
+      label: '#' + t + ' ' + tagCount[t], set: (e) => this.pickTag(t, e),
+      border: on ? '#534AB7' : '#E4E2DD', bg: on ? '#EEE9FB' : '#FFFFFF', color: on ? '#534AB7' : '#55564F' }; });
+
     let matchN = 0;
 
     const shelves = allShelves
@@ -319,16 +439,19 @@ class Component extends DCLogic {
       .map(({ s, matched }) => {
         matchN += matched.length;
         const done = matched.filter(it => statusOf(it.id) === 'read').length;
+        const open = !collapsed[s.id];
         return {
-          accent: s.accent,
-          name: s.name,
+          id: s.id, accent: s.accent, name: s.name,
           kindLabel: s.kind === 'paper' ? 'Publications' : 'Books',
-          progress: done + ' / ' + matched.length + (qy ? ' shown' : ' read'),
+          progress: done + ' / ' + matched.length + (qy || tag ? ' shown' : ' read'),
           doneColor: done === matched.length ? '#3B6D11' : '#A6A79F',
+          open, caret: open ? '▾' : '▸', toggle: (e) => this.toggleCollapse(s.id, e),
           items: matched.map(it => {
-            const p = pill[statusOf(it.id)] || pill.unread;
+            const st = statusOf(it.id);
+            const p = pill[st] || pill.unread;
             const isPaper = s.kind === 'paper';
-            const isRead = statusOf(it.id) === 'read';
+            const isRead = st === 'read';
+            const itags = tagsOf(it.id);
             const hist = (store.history || {})[it.id] || {};
             const hasNotes = this.FIELDS.some(f => hist[f.key]);
             const q = encodeURIComponent(String(it.title || '').replace(/[\u2018\u2019]/g, "'") + ' ' + String(it.by || '').split(',')[0]);
@@ -352,11 +475,24 @@ class Component extends DCLogic {
               readDate: hist.readAt ? this.fmtDate(hist.readAt) : '',
               logLabel: hasNotes ? 'journal ✓' : 'journal',
               openLog: (e) => this.openLog(it.id, it.title, e),
+              hasTags: itags.length > 0,
+              tags: itags.map(t => ({ t: '#' + t, set: (e) => this.pickTag(t, e) })),
+              editTags: (e) => this.editTags(it.id, e),
+              spineColor: st === 'unread' ? '#ECE7DE' : s.accent,
+              spineText: st === 'unread' ? '#9a9488' : '#FBF7F0',
+              spineMark: st === 'read' ? '✓' : (st === 'reading' ? '‣' : ''),
               cycle: () => this.cycle(it.id, it.title),
             };
           }),
         };
       });
+
+    // On deck — what you're reading right now
+    const onDeck = allShelves.reduce((a, s) => a.concat(
+      s.items.filter(it => statusOf(it.id) === 'reading').map(it => ({
+        title: it.title, shelfName: s.name, cycle: () => this.cycle(it.id, it.title),
+      }))
+    ), []);
 
     const stop = e => { if (e && e.stopPropagation) e.stopPropagation(); };
 
@@ -373,12 +509,22 @@ class Component extends DCLogic {
       },
     }));
 
+    const pick = this.state.pick;
+
     return {
-      pct, readN, totalN, readingN, shelfN: allShelves.length, filterChips, shelves, stop,
+      pct, readN, totalN, readingN, shelfN: allShelves.length,
+      filterChips, viewChips, tagChips, hasTags: tagChips.length > 0,
+      shelves, stop, isListView: view === 'list', isShelfView: view === 'shelf',
+      onDeck, hasOnDeck: onDeck.length > 0,
+      surprise: () => this.surprise(),
+      hasPick: !!pick, pickTitle: pick ? pick.title : '', pickShelf: pick ? pick._shelf : '',
+      pickRead: () => { if (this.state.pick) this.cycle(this.state.pick.id, this.state.pick.title); },
+      clearPick: () => this.setState({ pick: null }),
       setQuery: (e) => this.setQuery(e),
       hasQuery: !!qy,
+      hasFilterInfo: !!(qy || tag),
       noResults: shelves.length === 0,
-      searchInfo: qy ? (matchN + ' match' + (matchN === 1 ? '' : 'es') + ' for “' + this.state.query.trim() + '”') : '',
+      searchInfo: (qy || tag) ? (matchN + ' match' + (matchN === 1 ? '' : 'es') + (qy ? (' for “' + this.state.query.trim() + '”') : '') + (tag ? (' #' + tag) : '')) : '',
       addBook: () => this.addBook(),
       showLog,
       logTitle: this.state.logTitle,
