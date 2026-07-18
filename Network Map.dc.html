@@ -412,6 +412,11 @@ class Component extends DCLogic {
           let changed = false;
           const migrated = p.map(n => {
             if (!Array.isArray(n.ops)) { changed = true; return { ...n, ops: (seedMap[n.id] && seedMap[n.id].ops) || [] }; }
+            // Repair ops that were stored as objects → back to canonical strings.
+            if (n.ops.some(o => o && typeof o === 'object')) {
+              changed = true;
+              return { ...n, ops: n.ops.map(o => this.opToString(o)).filter(Boolean) };
+            }
             return n;
           });
           if (changed) this.persist(migrated);
@@ -436,7 +441,7 @@ class Component extends DCLogic {
   saveSettings() { try { localStorage.setItem(this.SKEY, JSON.stringify(this.state.settings)); } catch(e) {} }
   get settings() { return this.state.settings; }
 
-  state = { guideOpen:false, selectedId:null, listOpen:false, sortBy:'recent', query:'', formOpen:false, editingId:null, showOps:false, geoHint:'', geoFound:false, settingsOpen:false, draft:this.blankDraft(), nodes:this.loadNodes(), settings:this.loadSettings() };
+  state = { guideOpen:false, selectedId:null, listOpen:false, sortBy:'recent', query:'', formOpen:false, editingId:null, showOps:false, geoHint:'', geoFound:false, settingsOpen:false, expandedCluster:null, draft:this.blankDraft(), nodes:this.loadNodes(), settings:this.loadSettings() };
 
   blankDraft() {
     return { name:'', role:'', city:'', type:'ct', strength:'dormant', reach:'2', lastDays:'0', owed:false, lat:'40', lon:'0', met:'', notes:'', introById:'', ops:'' };
@@ -445,8 +450,22 @@ class Component extends DCLogic {
   typeName(t){ return {ct:'CT SURGEON',researcher:'RESEARCHER',mentor:'MENTOR',program:'PROGRAM',you:'YOU',other:'CONTACT'}[t]||String(t).toUpperCase(); }
   strengthName(s){ return {warm:'WARM · ACTIVE',dormant:'DORMANT',cold:'COLD · VALUABLE',you:'ANCHOR'}[s]||s; }
 
+  // Opportunities are stored as strings ("Title · Date · City"). Older data
+  // (or an import) may hold them as objects; coerce any shape back to a string
+  // so nothing ever renders as "[object Object]".
+  opToString(op) {
+    if (op == null) return '';
+    if (typeof op === 'string') return op;
+    if (typeof op === 'object') {
+      const title = op.text || op.title || op.label || op.name || '';
+      const extra = [op.meta, op.place, op.date, op.city].filter(Boolean);
+      return [title].concat(extra).filter(Boolean).join(' · ');
+    }
+    return String(op);
+  }
+
   parseOp(op) {
-    const parts = String(op).split('·').map(x=>x.trim()).filter(Boolean);
+    const parts = this.opToString(op).split('·').map(x=>x.trim()).filter(Boolean);
     const title = parts[0] || '';
     const rest = parts.slice(1);
     let place=null, coords=null; const meta=[];
@@ -457,7 +476,62 @@ class Component extends DCLogic {
     return { title, place, coords, meta: meta.join(' · '), isEvent: rest.length>0 };
   }
 
+  /* ---------- Location clustering ---------- */
+  // People at the same place (same city, or same rounded coords) group under one
+  // marker with a count. Tapping it fans them out in a ring ("spider") so each is
+  // individually visible and its connections read clearly. 'you' is never grouped.
+  clusterKeyOf(n) {
+    if (n.type === 'you') return '__you_' + n.id;
+    const city = (n.city || '').trim().toLowerCase();
+    if (city) return 'city:' + city;
+    return 'geo:' + (Math.round((+n.lat || 0) * 2) / 2) + ',' + (Math.round((+n.lon || 0) * 2) / 2);
+  }
+  clusters() {
+    const map = {}, keyOfNode = {};
+    (this.state.nodes || []).forEach(n => {
+      const k = this.clusterKeyOf(n);
+      keyOfNode[n.id] = k;
+      const g = map[k] || (map[k] = { key: k, ids: [], city: n.city || '', latSum: 0, lonSum: 0 });
+      g.ids.push(n.id); g.latSum += (+n.lat || 0); g.lonSum += (+n.lon || 0);
+    });
+    Object.keys(map).forEach(k => { const g = map[k]; g.count = g.ids.length; g.lat = g.latSum / g.count; g.lon = g.lonSum / g.count; });
+    return { map, keyOfNode };
+  }
+  // The cluster currently fanned out: an explicit tap, or the group of a selected person.
+  expandedKey() {
+    if (this.state.expandedCluster) return this.state.expandedCluster;
+    const sel = this.state.selectedId;
+    if (sel) {
+      const cl = this.clusters(); const k = cl.keyOfNode[sel];
+      const selNode = (this.state.nodes || []).find(n => n.id === sel);
+      if (k && cl.map[k] && cl.map[k].count > 1 && selNode && selNode.type !== 'you') return k;
+    }
+    return null;
+  }
+  spreadOffsets() {
+    const key = this.expandedKey(); if (!key) return {};
+    const cl = this.clusters(); const g = cl.map[key]; if (!g || g.count < 2) return {};
+    const off = {}; const R = Math.min(9, 2.6 + g.count * 0.5);
+    const lonScale = Math.max(0.35, Math.cos(g.lat * Math.PI / 180));
+    g.ids.forEach((id, i) => {
+      const th = (i / g.count) * Math.PI * 2 - Math.PI / 2;
+      off[id] = { lat: g.lat + R * Math.sin(th) * 0.72, lon: g.lon + (R * Math.cos(th)) / lonScale };
+    });
+    return off;
+  }
+  expandCluster(key) {
+    this.setState({ expandedCluster: key, selectedId: null }, () => {
+      this.applyGlobeData(true);
+      const g = this.clusters().map[key]; if (g) this.flyTo({ lat: g.lat, lon: g.lon });
+    });
+  }
+  collapseCluster() {
+    if (!this.state.expandedCluster && !this.expandedKey()) return;
+    this.setState({ expandedCluster: null, selectedId: null }, () => this.applyGlobeData(true));
+  }
+
   decorate() {
+    const off = this.spreadOffsets();
     const raw = this.state.nodes;
     const strengthColor = { warm:'#43e0b8', dormant:'#f2b13a', cold:'#5b93cf', you:'#ffffff' };
     const lastColor = d => d<45 ? '#3ad07f' : (d<120 ? '#f5a623' : '#ef4d5f');
@@ -465,7 +539,9 @@ class Component extends DCLogic {
     return raw.map(c => {
       const introducedTo = raw.filter(o=>o.introById===c.id).map(o=>o.name);
       const introById = c.introById ? (raw.find(r=>r.id===c.introById)||{}).name : null;
+      const o = off[c.id];
       return { ...c,
+        lat: o ? o.lat : c.lat, lon: o ? o.lon : c.lon, _spread: !!o,
         color: strengthColor[c.strength]||'#8fa3bd',
         dotColor: lastColor(c.lastDays),
         lastLabel: lastLabel(c.lastDays),
@@ -501,7 +577,22 @@ class Component extends DCLogic {
   }
   buildHtmlData() {
     const nodes = this.decorate();
-    return this.state.showOps ? nodes.concat(this.buildEvents()) : nodes;
+    const cl = this.clusters();
+    const expanded = this.expandedKey();
+    const out = [], done = {};
+    nodes.forEach(n => {
+      const k = cl.keyOfNode[n.id]; const g = cl.map[k];
+      if (g && g.count > 1 && k !== expanded && n.type !== 'you') {
+        if (!done[k]) { done[k] = 1; out.push({ kind: 'cluster', clusterKey: k, lat: g.lat, lon: g.lon, count: g.count, city: g.city }); }
+        return;
+      }
+      out.push(n);
+    });
+    if (expanded && cl.map[expanded] && cl.map[expanded].count > 1) {
+      const g = cl.map[expanded];
+      out.push({ kind: 'clusterCenter', clusterKey: expanded, lat: g.lat, lon: g.lon, count: g.count });
+    }
+    return this.state.showOps ? out.concat(this.buildEvents()) : out;
   }
 
   makeEventEl(ev) {
@@ -520,7 +611,43 @@ class Component extends DCLogic {
     return wrap;
   }
 
+  makeClusterEl(n) {
+    const size = 30 + Math.min(20, n.count * 2);
+    const wrap = document.createElement('div');
+    wrap.className = 'nmnode';
+    wrap.style.cssText = `width:${size+8}px;height:${size+8}px;pointer-events:auto`;
+    const core = document.createElement('div');
+    core.style.cssText = `position:relative;width:${size}px;height:${size}px;border-radius:28%;background:radial-gradient(circle at 34% 30%,#8fb4e6,#1f3f66);border:1.5px solid #bcd4f0;box-shadow:0 0 16px 2px rgba(96,150,210,.5),inset 0 0 6px rgba(6,10,20,.55);display:flex;align-items:center;justify-content:center;color:#eef4fc;font:700 ${Math.round(size*0.42)}px/1 'Space Grotesk',sans-serif;cursor:pointer`;
+    core.textContent = n.count;
+    const hint = document.createElement('div');
+    hint.style.cssText = 'position:absolute;bottom:-4px;right:-4px;width:17px;height:17px;border-radius:50%;background:#0a1120;border:1.5px solid #5b93cf;display:flex;align-items:center;justify-content:center;color:#9fc0ea;font:700 12px/1 sans-serif';
+    hint.textContent = '⋯';
+    core.appendChild(hint);
+    wrap.appendChild(core);
+    const label = document.createElement('div');
+    label.className = 'nmlabel';
+    label.style.cssText = "position:absolute;left:50%;top:calc(100% + 3px);transform:translateX(-50%);text-align:center;pointer-events:none;opacity:1;transition:opacity .15s;white-space:nowrap";
+    label.innerHTML = `<div style="font-family:'Space Grotesk';font-weight:600;font-size:11px;color:#dfeaf7;text-shadow:0 1px 4px #04060d">${n.city || (n.count + ' contacts')}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:rgba(150,190,235,.85);text-shadow:0 1px 3px #04060d">${n.count} people · tap to expand</div>`;
+    wrap.appendChild(label);
+    wrap.addEventListener('click', e => { e.stopPropagation(); this.expandCluster(n.clusterKey); });
+    return wrap;
+  }
+  makeClusterCenterEl(n) {
+    const wrap = document.createElement('div');
+    wrap.className = 'nmnode';
+    wrap.style.cssText = 'width:22px;height:22px;pointer-events:auto';
+    const d = document.createElement('div');
+    d.title = 'Collapse';
+    d.style.cssText = "width:16px;height:16px;border-radius:50%;background:rgba(16,26,44,.85);border:1.5px dashed #6f9fd6;display:flex;align-items:center;justify-content:center;color:#9fc0ea;font:700 12px/1 sans-serif;cursor:pointer";
+    d.textContent = '×';
+    wrap.appendChild(d);
+    wrap.addEventListener('click', e => { e.stopPropagation(); this.collapseCluster(); });
+    return wrap;
+  }
+
   makeNodeEl(n) {
+    if (n.kind==='cluster') return this.makeClusterEl(n);
+    if (n.kind==='clusterCenter') return this.makeClusterCenterEl(n);
     if (n.kind==='event') return this.makeEventEl(n);
     const isYou = n.type==='you';
     const dia = isYou ? 32 : (22 + n.reach*8);
@@ -613,11 +740,23 @@ class Component extends DCLogic {
   buildArcs(nodes) {
     const you = nodes.find(n=>n.type==='you') || nodes[0];
     if (!you) return [];
-    return nodes.filter(n=>n.id!==you.id && n.kind!=='event').map(n=>({
+    const arcs = nodes.filter(n=>n.id!==you.id && n.kind!=='event').map(n=>({
       startLat: you.lat, startLng: you.lon, endLat: n.lat, endLng: n.lon,
       colors: n.owed ? ['rgba(255,122,138,.9)','rgba(255,122,138,.12)'] : ['rgba(96,150,210,.55)','rgba(96,150,210,.08)'],
       owed: n.owed
     }));
+    // Faint "legs" from the cluster centre to each fanned-out member.
+    const key = this.expandedKey();
+    if (key) {
+      const cl = this.clusters(); const g = cl.map[key];
+      if (g && g.count > 1) {
+        nodes.filter(n => cl.keyOfNode[n.id] === key && n.type !== 'you').forEach(n => {
+          arcs.push({ startLat: g.lat, startLng: g.lon, endLat: n.lat, endLng: n.lon,
+            colors: ['rgba(150,190,235,.5)', 'rgba(150,190,235,.14)'], owed: false });
+        });
+      }
+    }
+    return arcs;
   }
 
   nightSrc(){ return (this.texImg && this.texImg.getAttribute('src')) || this.NIGHT_FALLBACK; }
@@ -812,6 +951,11 @@ class Component extends DCLogic {
     this.flyTo(this.state.nodes.find(x=>x.id===id));
   }
   clear() {
+    if (this.state.expandedCluster) {
+      this.setState({ expandedCluster: null, selectedId: null }, () => this.applyGlobeData(true));
+      if (this.globe && this.settings.autoRotate!==false) this.globe.controls().autoRotate = true;
+      return;
+    }
     if (this.state.selectedId===null) return;
     this.setState({ selectedId: null });
     if (this.globe && this.settings.autoRotate!==false) this.globe.controls().autoRotate = true;
@@ -876,7 +1020,7 @@ class Component extends DCLogic {
     this.setState({ formOpen:true, editingId:id, draft:{
       name:n.name||'', role:n.role||'', city:n.city||'', type:n.type||'other', strength:n.strength||'dormant',
       reach:String(n.reach||1), lastDays:String(n.lastDays||0), owed:!!n.owed,
-      lat:String(n.lat||0), lon:String(n.lon||0), met:n.met||'', notes:n.notes||'', introById:n.introById||'', ops:(n.ops||[]).join('\n')
+      lat:String(n.lat||0), lon:String(n.lon||0), met:n.met||'', notes:n.notes||'', introById:n.introById||'', ops:(n.ops||[]).map(o=>this.opToString(o)).join('\n')
     }, geoHint:'', geoFound:false});
   }
   closeForm() { this.setState({ formOpen:false, geoHint:'', geoFound:false }); }
@@ -1278,7 +1422,7 @@ class Component extends DCLogic {
     const q = this.state.query.trim().toLowerCase();
     const filtered = nodes.filter(n=>n.type!=='you').filter(n=>{
       if (!q) return true;
-      return [n.name, n.role, n.city, n.notes, n.met, (n.ops||[]).map(o=>o.text).join(' ')].join(' ').toLowerCase().indexOf(q)>=0;
+      return [n.name, n.role, n.city, n.notes, n.met, (n.ops||[]).map(o=>this.opToString(o)).join(' ')].join(' ').toLowerCase().indexOf(q)>=0;
     });
     const rows = this.sortNodes(filtered).map(n=>({
       ...n, pick: ()=>this.select(n.id),
