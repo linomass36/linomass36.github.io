@@ -412,6 +412,11 @@ class Component extends DCLogic {
           let changed = false;
           const migrated = p.map(n => {
             if (!Array.isArray(n.ops)) { changed = true; return { ...n, ops: (seedMap[n.id] && seedMap[n.id].ops) || [] }; }
+            // Repair ops that were stored as objects → back to canonical strings.
+            if (n.ops.some(o => o && typeof o === 'object')) {
+              changed = true;
+              return { ...n, ops: n.ops.map(o => this.opToString(o)).filter(Boolean) };
+            }
             return n;
           });
           if (changed) this.persist(migrated);
@@ -445,8 +450,22 @@ class Component extends DCLogic {
   typeName(t){ return {ct:'CT SURGEON',researcher:'RESEARCHER',mentor:'MENTOR',program:'PROGRAM',you:'YOU',other:'CONTACT'}[t]||String(t).toUpperCase(); }
   strengthName(s){ return {warm:'WARM · ACTIVE',dormant:'DORMANT',cold:'COLD · VALUABLE',you:'ANCHOR'}[s]||s; }
 
+  // Opportunities are stored as strings ("Title · Date · City"). Older data
+  // (or an import) may hold them as objects; coerce any shape back to a string
+  // so nothing ever renders as "[object Object]".
+  opToString(op) {
+    if (op == null) return '';
+    if (typeof op === 'string') return op;
+    if (typeof op === 'object') {
+      const title = op.text || op.title || op.label || op.name || '';
+      const extra = [op.meta, op.place, op.date, op.city].filter(Boolean);
+      return [title].concat(extra).filter(Boolean).join(' · ');
+    }
+    return String(op);
+  }
+
   parseOp(op) {
-    const parts = String(op).split('·').map(x=>x.trim()).filter(Boolean);
+    const parts = this.opToString(op).split('·').map(x=>x.trim()).filter(Boolean);
     const title = parts[0] || '';
     const rest = parts.slice(1);
     let place=null, coords=null; const meta=[];
@@ -876,7 +895,7 @@ class Component extends DCLogic {
     this.setState({ formOpen:true, editingId:id, draft:{
       name:n.name||'', role:n.role||'', city:n.city||'', type:n.type||'other', strength:n.strength||'dormant',
       reach:String(n.reach||1), lastDays:String(n.lastDays||0), owed:!!n.owed,
-      lat:String(n.lat||0), lon:String(n.lon||0), met:n.met||'', notes:n.notes||'', introById:n.introById||'', ops:(n.ops||[]).join('\n')
+      lat:String(n.lat||0), lon:String(n.lon||0), met:n.met||'', notes:n.notes||'', introById:n.introById||'', ops:(n.ops||[]).map(o=>this.opToString(o)).join('\n')
     }, geoHint:'', geoFound:false});
   }
   closeForm() { this.setState({ formOpen:false, geoHint:'', geoFound:false }); }
@@ -1278,7 +1297,7 @@ class Component extends DCLogic {
     const q = this.state.query.trim().toLowerCase();
     const filtered = nodes.filter(n=>n.type!=='you').filter(n=>{
       if (!q) return true;
-      return [n.name, n.role, n.city, n.notes, n.met, (n.ops||[]).map(o=>o.text).join(' ')].join(' ').toLowerCase().indexOf(q)>=0;
+      return [n.name, n.role, n.city, n.notes, n.met, (n.ops||[]).map(o=>this.opToString(o)).join(' ')].join(' ').toLowerCase().indexOf(q)>=0;
     });
     const rows = this.sortNodes(filtered).map(n=>({
       ...n, pick: ()=>this.select(n.id),
