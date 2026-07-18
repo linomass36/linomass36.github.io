@@ -53,6 +53,13 @@
 
   <div style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 0;">
 
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <input onInput="{{ setQuery }}" placeholder="Search titles, authors, notes, tags…" style="flex: 1; min-width: 0; font-size: 14px; padding: 10px 14px; border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; color: #26271F;">
+      <sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; white-space: nowrap;">{{ searchInfo }}</span>
+      </sc-if>
+    </div>
+
     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
       <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="3">
         <button onClick="{{ f.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ f.border }}; background: {{ f.bg }}; color: {{ f.color }};">{{ f.label }}</button>
@@ -61,6 +68,10 @@
       <button onClick="{{ addBook }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #3B6D11; background: #3B6D11; color: #FFFFFF;">＋ Add a book</button>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">progress saves automatically</span>
     </div>
+
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px dashed #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 28px 22px; text-align: center; font-size: 13.5px; color: #77786F;">Nothing matches your search. Try a shorter word, or clear the box.</div>
+    </sc-if>
 
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <sc-for list="{{ shelves }}" as="s" hint-placeholder-count="6">
@@ -142,7 +153,9 @@
 class Component extends DCLogic {
   KEY = 'ct_reading_v1';
   KEY_BOOKS = 'ct_reading_books_v1';   // books you add yourself (syncs across devices)
-  state = { tick: 0, filter: 'all', logId: null, logTitle: '', draft: null };
+  state = { tick: 0, filter: 'all', query: '', logId: null, logTitle: '', draft: null };
+
+  setQuery(e) { this.setState({ query: e && e.target ? e.target.value : '' }); }
 
   fmtDate(iso) {
     try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
@@ -293,17 +306,26 @@ class Component extends DCLogic {
       read:    { statusLabel: 'read ✓',  pillColor: '#3B6D11', pillBorder: '#C9DDB0', pillBg: '#F1F7E9', rowBg: '#F8FBF4',       titleColor: '#7d8a72' },
     };
 
+    const qy = (this.state.query || '').toLowerCase().trim();
+    const matches = it => !qy ||
+      (String(it.title || '') + ' ' + String(it.by || '') + ' ' + String(it.note || '') + ' ' + (it.tags || []).join(' '))
+        .toLowerCase().indexOf(qy) !== -1;
+    let matchN = 0;
+
     const shelves = allShelves
       .filter(s => filter === 'all' || s.kind === filter)
-      .map(s => {
-        const done = s.items.filter(it => statusOf(it.id) === 'read').length;
+      .map(s => ({ s, matched: s.items.filter(matches) }))
+      .filter(x => x.matched.length > 0)
+      .map(({ s, matched }) => {
+        matchN += matched.length;
+        const done = matched.filter(it => statusOf(it.id) === 'read').length;
         return {
           accent: s.accent,
           name: s.name,
           kindLabel: s.kind === 'paper' ? 'Publications' : 'Books',
-          progress: done + ' / ' + s.items.length + ' read',
-          doneColor: done === s.items.length ? '#3B6D11' : '#A6A79F',
-          items: s.items.map(it => {
+          progress: done + ' / ' + matched.length + (qy ? ' shown' : ' read'),
+          doneColor: done === matched.length ? '#3B6D11' : '#A6A79F',
+          items: matched.map(it => {
             const p = pill[statusOf(it.id)] || pill.unread;
             const isPaper = s.kind === 'paper';
             const isRead = statusOf(it.id) === 'read';
@@ -353,6 +375,10 @@ class Component extends DCLogic {
 
     return {
       pct, readN, totalN, readingN, shelfN: allShelves.length, filterChips, shelves, stop,
+      setQuery: (e) => this.setQuery(e),
+      hasQuery: !!qy,
+      noResults: shelves.length === 0,
+      searchInfo: qy ? (matchN + ' match' + (matchN === 1 ? '' : 'es') + ' for “' + this.state.query.trim() + '”') : '',
       addBook: () => this.addBook(),
       showLog,
       logTitle: this.state.logTitle,

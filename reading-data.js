@@ -110,6 +110,37 @@ window.READING_DATA = {
       {id:'pubh1', title:'On the mode of communication of cholera (the Broad Street pump)', by:'John Snow, 1855', note:'The founding act of epidemiology — a map, a pump handle, a hypothesis.'},
       {id:'pubh2', title:'The Global Burden of Disease study', by:'Murray & Lopez, Lancet, 1997', doi:'10.1016/S0140-6736(96)07492-2', note:'How the world measures what actually harms populations. DALYs begin here.'}
     ] },
+    { id:'b-heart', kind:'book', accent:'#993C1D', name:'The heart & the transplant surgeon — your field', items:[
+      {id:'bhs1', title:'Fragile Lives', by:'Stephen Westaby', note:'A British heart surgeon\u2019s memoir — the closest thing to sitting in the OR you\u2019ll get on paper. Read this one soon.'},
+      {id:'bhs2', title:'King of Hearts', by:'G. Wayne Miller', note:'The birth of open-heart surgery through C. Walton Lillehei — where your whole specialty came from.'},
+      {id:'bhs3', title:'The Puzzle People', by:'Thomas Starzl', note:'Memoir of the man who made transplantation work. Directly your ambition.'},
+      {id:'bhs4', title:'Walk on Water', by:'Michael Ruhlman', note:'A year inside a pediatric cardiac unit — speaks straight to your growing-valve track.'},
+      {id:'bhs5', title:'One Hundred Thousand Hearts', by:'Denton Cooley', note:'The Texas lineage you\u2019re already networking into.'}
+    ] },
+    { id:'b-faith', kind:'book', accent:'#854F0B', name:'Faith & the interior life', items:[
+      {id:'bfa1', title:'Mere Christianity', by:'C.S. Lewis', note:'The clearest modern case for the faith. Foundational.'},
+      {id:'bfa2', title:'A Grief Observed', by:'C.S. Lewis', note:'Lewis on losing his wife — faith meeting real grief, unguarded.'},
+      {id:'bfa3', title:'The Cost of Discipleship', by:'Dietrich Bonhoeffer', note:'On costly grace, by a man who paid for it. Bracing.'},
+      {id:'bfa4', title:'The Cross of Christ (or Basic Christianity)', by:'John Stott', note:'Anglican, fits your tradition closely — the heart of the gospel, carefully argued.'},
+      {id:'bfa5', title:'Gilead', by:'Marilynne Robinson', note:'A dying pastor writing to his young son — vocation, mortality, and fatherhood in one book.'},
+      {id:'bfa6', title:'My Utmost for His Highest (or the Psalms)', by:'Oswald Chambers', note:'A daily anchor for the rest days, not the backlog — a page a day, not a read.'}
+    ] },
+    { id:'b-marriage', kind:'book', accent:'#6E4B8A', name:'Marriage, fatherhood & the long game', items:[
+      {id:'bmr1', title:'The Meaning of Marriage', by:'Timothy Keller', note:'Analytical and Christian — built for how you actually think about this.'},
+      {id:'bmr2', title:'The Seven Principles for Making Marriage Work', by:'John Gottman', note:'The empirical, evidence-based angle to set beside Keller.'}
+    ] },
+    { id:'b-polish', kind:'book', accent:'#A32E27', name:'The Polish shelf — your heritage', items:[
+      {id:'bpl1', title:'Quo Vadis', by:'Henryk Sienkiewicz', note:'Nobel; Christian Rome — faith and heritage at once.'},
+      {id:'bpl2', title:'Collected Poems', by:'Wis\u0142awa Szymborska', note:'Nobel, accessible, quietly astonishing.'},
+      {id:'bpl3', title:'Mr Cogito', by:'Zbigniew Herbert', note:'Moral clarity in verse — a conscience you can carry.'},
+      {id:'bpl4', title:'The Captive Mind', by:'Czes\u0142aw Mi\u0142osz', note:'How ideology captures people. Nonfiction; permanently relevant.'},
+      {id:'bpl5', title:'Solaris', by:'Stanis\u0142aw Lem', note:'The science side of the Polish canon — the limits of understanding.'}
+    ] },
+    { id:'b-rest', kind:'book', accent:'#0F6E56', name:'The body, rest & endurance', items:[
+      {id:'brs1', title:'Rest: Why You Get More Done When You Work Less', by:'Alex Soojung-Kim Pang', note:'Almost prescriptive for someone who hasn\u2019t genuinely rested in months.'},
+      {id:'brs2', title:'Why We Sleep', by:'Matthew Walker', note:'The science of sleep — the recovery your training quietly depends on.'},
+      {id:'brs3', title:'Endure', by:'Alex Hutchinson', note:'The real limits of human performance — ties straight to your training.'}
+    ] },
     { id:'b-med', kind:'book', accent:'#0F6E56', name:"Medicine & the surgeon's mind", items:[
       {id:'bm1', title:'Gray\u2019s Anatomy for Students', by:'Drake, Vogl & Mitchell', note:'The working anatomy reference for the years ahead.'},
       {id:'bm2', title:'Guyton & Hall Medical Physiology', by:'John Hall', note:'The physiology bible — your Year-2 main campaign leans on it.'},
@@ -119,7 +150,8 @@ window.READING_DATA = {
       {id:'bm6', title:'Complications / Better', by:'Atul Gawande', note:'The surgeon\u2019s honest account of fallibility and improvement.'},
       {id:'bm7', title:'When Breath Becomes Air', by:'Paul Kalanithi', note:'A neurosurgeon facing his own mortality. On vocation and meaning.'},
       {id:'bm8', title:'Do No Harm', by:'Henry Marsh', note:'A neurosurgeon on the weight of the knife. Unsparing and humane.'},
-      {id:'bm9', title:'The Man Who Mistook His Wife for a Hat', by:'Oliver Sacks', note:'The mind through its breakages — the physician as storyteller.'}
+      {id:'bm9', title:'The Man Who Mistook His Wife for a Hat', by:'Oliver Sacks', note:'The mind through its breakages — the physician as storyteller.'},
+      {id:'bm10', title:'On Writing Well', by:'William Zinsser', note:'The craft of clear nonfiction — every physician-writer you admire earned it here.'}
     ] },
     { id:'b-classics', kind:'book', accent:'#6E4B8A', name:'Classic literature', items:[
       {id:'bc1', title:'The Brothers Karamazov', by:'Dostoevsky', note:'Faith, doubt, patricide, freedom. Arguably the deepest novel written.'},
@@ -190,7 +222,8 @@ window.READING_DATA = {
       {id:'bh3', title:'Guns, Germs, and Steel', by:'Jared Diamond', note:'Why history unfolded unevenly — geography as destiny (argue with it).'},
       {id:'bh4', title:'A History of Western Philosophy', by:'Bertrand Russell', note:'One brilliant mind\u2019s tour of all the others. Opinionated and readable.'},
       {id:'bh5', title:'The Wright Brothers', by:'David McCullough', note:'Two bicycle makers who solved flight — persistence and first principles.'},
-      {id:'bh6', title:'Team of Rivals', by:'Doris Kearns Goodwin', note:'Lincoln\u2019s leadership through opposition. A masterclass in temperament.'}
+      {id:'bh6', title:'Team of Rivals', by:'Doris Kearns Goodwin', note:'Lincoln\u2019s leadership through opposition. A masterclass in temperament.'},
+      {id:'bh7', title:'Travels with Herodotus (or The Emperor)', by:'Ryszard Kapu\u015bci\u0144ski', note:'Reportage as literature — the world seen with a historian\u2019s eye.'}
     ]}
   ]
 };
