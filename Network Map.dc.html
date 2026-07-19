@@ -410,13 +410,16 @@ class Component extends DCLogic {
         if (Array.isArray(p) && p.length) {
           const seedMap = {}; this.seedData().forEach(s=>seedMap[s.id]=s);
           let changed = false;
+          const hasJunk = v => typeof v === 'string' && v.indexOf('[object Object]') !== -1;
           const migrated = p.map(n => {
             let m = n;
             if (!Array.isArray(m.ops)) { changed = true; m = { ...m, ops: (seedMap[m.id] && seedMap[m.id].ops) || [] }; }
-            else if (m.ops.some(o => o && typeof o === 'object')) { changed = true; m = { ...m, ops: m.ops.map(o => this.opToString(o)).filter(Boolean) }; }
-            // Repair any text field stored as a non-string (→ would show [object Object]).
+            else if (m.ops.some(o => (o && typeof o === 'object') || hasJunk(o))) { changed = true; m = { ...m, ops: m.ops.map(o => this.opToString(o)).filter(Boolean) }; }
+            // Repair any text field stored as a non-string, or as the literal
+            // "[object Object]" string a prior bug saved (→ would show [object Object]).
             ['name','role','city','met','notes'].forEach(k => {
               if (m[k] != null && typeof m[k] !== 'string') { changed = true; m = { ...m, [k]: this.asStr(m[k]) }; }
+              else if (hasJunk(m[k])) { changed = true; m = { ...m, [k]: this.cleanStr(m[k]) }; }
             });
             return m;
           });
@@ -456,30 +459,39 @@ class Component extends DCLogic {
   // so nothing ever renders as "[object Object]".
   opToString(op) {
     if (op == null) return '';
-    if (typeof op === 'string') return op;
+    if (typeof op === 'string') return this.cleanStr(op);
     if (typeof op === 'object') {
       const title = op.text || op.title || op.label || op.name || '';
       const extra = [op.meta, op.place, op.date, op.city].filter(Boolean);
-      return [title].concat(extra).filter(Boolean).join(' · ');
+      return this.cleanStr([title].concat(extra).filter(Boolean).join(' · '));
     }
     return String(op);
   }
 
+  // Strip the literal "[object Object]" text that an earlier bug persisted into
+  // string fields (opening the broken editor and saving wrote it in as text).
+  // The original value is unrecoverable, so we clear the junk to leave the
+  // field editable rather than showing garbage.
+  cleanStr(s) {
+    s = String(s == null ? '' : s);
+    if (s.indexOf('[object Object]') === -1) return s;
+    return s.replace(/\[object Object\]/g, '').replace(/^[\s,·|]+|[\s,·|]+$/g, '').trim();
+  }
   // Coerce any value to a display string — nothing should ever render as
-  // "[object Object]" (notes/met/etc. that were stored as objects).
+  // "[object Object]" (fields that were stored as objects, or as that literal).
   asStr(v) {
     if (v == null) return '';
-    if (typeof v === 'string') return v;
+    if (typeof v === 'string') return this.cleanStr(v);
     if (Array.isArray(v)) return v.map(x => this.asStr(x)).filter(Boolean).join(', ');
     if (typeof v === 'object') {
       return this.opToString(v) ||
-        [v.text, v.title, v.label, v.value, v.body, v.content].filter(x => typeof x === 'string').join(' ') || '';
+        this.cleanStr([v.text, v.title, v.label, v.value, v.body, v.content].filter(x => typeof x === 'string').join(' '));
     }
     return String(v);
   }
 
   parseOp(op) {
-    const parts = this.opToString(op).split('·').map(x=>x.trim()).filter(Boolean);
+    const parts = this.opToString(op).split('·').map(x=>this.cleanStr(x).trim()).filter(Boolean);
     const title = parts[0] || '';
     const rest = parts.slice(1);
     let place=null, coords=null; const meta=[];
