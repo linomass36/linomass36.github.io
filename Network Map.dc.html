@@ -411,13 +411,14 @@ class Component extends DCLogic {
           const seedMap = {}; this.seedData().forEach(s=>seedMap[s.id]=s);
           let changed = false;
           const migrated = p.map(n => {
-            if (!Array.isArray(n.ops)) { changed = true; return { ...n, ops: (seedMap[n.id] && seedMap[n.id].ops) || [] }; }
-            // Repair ops that were stored as objects → back to canonical strings.
-            if (n.ops.some(o => o && typeof o === 'object')) {
-              changed = true;
-              return { ...n, ops: n.ops.map(o => this.opToString(o)).filter(Boolean) };
-            }
-            return n;
+            let m = n;
+            if (!Array.isArray(m.ops)) { changed = true; m = { ...m, ops: (seedMap[m.id] && seedMap[m.id].ops) || [] }; }
+            else if (m.ops.some(o => o && typeof o === 'object')) { changed = true; m = { ...m, ops: m.ops.map(o => this.opToString(o)).filter(Boolean) }; }
+            // Repair any text field stored as a non-string (→ would show [object Object]).
+            ['name','role','city','met','notes'].forEach(k => {
+              if (m[k] != null && typeof m[k] !== 'string') { changed = true; m = { ...m, [k]: this.asStr(m[k]) }; }
+            });
+            return m;
           });
           if (changed) this.persist(migrated);
           return migrated;
@@ -462,6 +463,19 @@ class Component extends DCLogic {
       return [title].concat(extra).filter(Boolean).join(' · ');
     }
     return String(op);
+  }
+
+  // Coerce any value to a display string — nothing should ever render as
+  // "[object Object]" (notes/met/etc. that were stored as objects).
+  asStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v;
+    if (Array.isArray(v)) return v.map(x => this.asStr(x)).filter(Boolean).join(', ');
+    if (typeof v === 'object') {
+      return this.opToString(v) ||
+        [v.text, v.title, v.label, v.value, v.body, v.content].filter(x => typeof x === 'string').join(' ') || '';
+    }
+    return String(v);
   }
 
   parseOp(op) {
@@ -520,14 +534,15 @@ class Component extends DCLogic {
     return off;
   }
   expandCluster(key) {
+    this._justExpanded = Date.now();
     this.setState({ expandedCluster: key, selectedId: null }, () => {
-      this.applyGlobeData(true);
+      this.applyGlobeData();
       const g = this.clusters().map[key]; if (g) this.flyTo({ lat: g.lat, lon: g.lon });
     });
   }
   collapseCluster() {
     if (!this.state.expandedCluster && !this.expandedKey()) return;
-    this.setState({ expandedCluster: null, selectedId: null }, () => this.applyGlobeData(true));
+    this.setState({ expandedCluster: null, selectedId: null }, () => this.applyGlobeData());
   }
 
   decorate() {
@@ -542,6 +557,7 @@ class Component extends DCLogic {
       const o = off[c.id];
       return { ...c,
         lat: o ? o.lat : c.lat, lon: o ? o.lon : c.lon, _spread: !!o,
+        name: this.asStr(c.name), role: this.asStr(c.role), city: this.asStr(c.city), met: this.asStr(c.met), notes: this.asStr(c.notes),
         color: strengthColor[c.strength]||'#8fa3bd',
         dotColor: lastColor(c.lastDays),
         lastLabel: lastLabel(c.lastDays),
@@ -951,8 +967,11 @@ class Component extends DCLogic {
     this.flyTo(this.state.nodes.find(x=>x.id===id));
   }
   clear() {
+    // Ignore the globe-surface click that rides along with the tap that just
+    // expanded a cluster (otherwise it collapses immediately — the "flash").
+    if (this._justExpanded && Date.now() - this._justExpanded < 450) return;
     if (this.state.expandedCluster) {
-      this.setState({ expandedCluster: null, selectedId: null }, () => this.applyGlobeData(true));
+      this.setState({ expandedCluster: null, selectedId: null }, () => this.applyGlobeData());
       if (this.globe && this.settings.autoRotate!==false) this.globe.controls().autoRotate = true;
       return;
     }
@@ -1018,9 +1037,9 @@ class Component extends DCLogic {
   openEdit(id) {
     const n = this.state.nodes.find(x=>x.id===id); if (!n) return;
     this.setState({ formOpen:true, editingId:id, draft:{
-      name:n.name||'', role:n.role||'', city:n.city||'', type:n.type||'other', strength:n.strength||'dormant',
+      name:this.asStr(n.name), role:this.asStr(n.role), city:this.asStr(n.city), type:n.type||'other', strength:n.strength||'dormant',
       reach:String(n.reach||1), lastDays:String(n.lastDays||0), owed:!!n.owed,
-      lat:String(n.lat||0), lon:String(n.lon||0), met:n.met||'', notes:n.notes||'', introById:n.introById||'', ops:(n.ops||[]).map(o=>this.opToString(o)).join('\n')
+      lat:String(n.lat||0), lon:String(n.lon||0), met:this.asStr(n.met), notes:this.asStr(n.notes), introById:n.introById||'', ops:(n.ops||[]).map(o=>this.opToString(o)).join('\n')
     }, geoHint:'', geoFound:false});
   }
   closeForm() { this.setState({ formOpen:false, geoHint:'', geoFound:false }); }
