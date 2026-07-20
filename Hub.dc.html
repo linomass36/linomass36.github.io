@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
 <script src="./hub-data.js"></script>
 <script src="./quotes.js"></script>
+<script src="./reading-data.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; background: #F7F5F1; }
@@ -24,6 +25,17 @@
   a:hover { color: #993C1D; }
   input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
   @keyframes hubIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  html { scroll-behavior: smooth; }
+  [data-quicknav] { position: sticky; top: 0; z-index: 60; border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  [data-quicknav] > div { max-width: 1280px; margin: 0 auto; padding: 8px 24px; display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  [data-quicknav] > div::-webkit-scrollbar { display: none; }
+  [data-quicknav] a { flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .05em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 6px 12px; white-space: nowrap; }
+  [data-quicknav] a:hover { border-color: #993C1D; color: #993C1D; }
+  [data-deck] { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  [data-decktile] { display: block; border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 14px 16px 12px; color: inherit; transition: transform .15s ease, box-shadow .15s ease; min-width: 0; }
+  [data-decktile]:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(26,27,26,.08); color: inherit; }
+  .anchor { scroll-margin-top: 64px; }
+  @media (max-width: 900px) { [data-deck] { grid-template-columns: repeat(2, 1fr); } }
   @keyframes drawIn { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
   @keyframes popIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
   @keyframes cellIn { from { opacity: 0; } to { opacity: 1; } }
@@ -73,15 +85,42 @@
       </div>
       <div data-mprogress style="text-align: right;">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">{{ todayLabel }}</div>
-        <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px; justify-content: flex-end;">
-          <span style="font-family: 'Newsreader', serif; font-size: 34px; font-weight: 500; color: #993C1D; line-height: 1;">{{ pctShow }}%</span>
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ done }} / {{ total }} moves</span>
-        </div>
-        <div style="height: 6px; width: 220px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px;">
-          <div style="height: 100%; border-radius: 3px; background: #993C1D; width: {{ pctBar }}%;"></div>
-        </div>
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 7px;">{{ streakText }} · <span style="color: {{ momentumColor }};">{{ momentumText }}</span></div>
       </div>
+    </div>
+  </div>
+
+  <!-- QUICK NAV (sticky) -->
+  <div data-quicknav>
+    <div>
+      <a href="#sec-deck">◎ Overview</a>
+      <a href="#sec-rooms">▦ Rooms</a>
+      <a href="#sec-actions">→ Next actions</a>
+      <a href="#sec-analytics">∿ Analytics</a>
+      <a href="#sec-confs">✈ Conferences</a>
+      <a href="#sec-week">▤ This week</a>
+    </div>
+  </div>
+
+  <!-- MISSION DECK — the whole system at a glance -->
+  <div class="hw anchor" id="sec-deck" style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 0;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #993C1D;">The state of the mission</div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">every system · live</div>
+    </div>
+    <div data-deck style="animation: hubIn .3s ease;">
+      <sc-for list="{{ deck }}" as="d" hint-placeholder-count="8">
+        <a href="{{ d.href }}" data-decktile style="border-top: 3px solid {{ d.color }};">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: {{ d.color }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ d.label }}</div>
+          <div style="display: flex; align-items: baseline; gap: 7px; margin-top: 7px;">
+            <span style="font-family: 'Newsreader', serif; font-size: 26px; font-weight: 500; line-height: 1; color: #1A1B1A;">{{ d.big }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ d.accentColor }}; white-space: nowrap;">{{ d.badge }}</span>
+          </div>
+          <div style="height: 4px; border-radius: 2px; background: #EFECE6; overflow: hidden; margin-top: 8px;">
+            <div style="height: 100%; border-radius: 2px; background: {{ d.color }}; width: {{ d.bar }}%;"></div>
+          </div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #77786F; margin-top: 7px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.sub }}</div>
+        </a>
+      </sc-for>
     </div>
   </div>
 
@@ -100,6 +139,7 @@
   <div class="hw" style="max-width: 1280px; margin: 0 auto; padding: 26px 24px 0;">
 
     <!-- PROJECT CARDS -->
+    <div class="anchor" id="sec-rooms"></div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; animation: hubIn .3s ease;">
 
       <a href="CT Master Plan.html" onClick="{{ goToday }}" style="display: block; border: 1px solid #E4E2DD; border-top: 3px solid #993C1D; border-radius: 14px; background: #FFFFFF; padding: 20px 22px; color: inherit; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,27,26,.08); color: inherit;">
@@ -310,6 +350,7 @@
     </div>
 
     <!-- NEXT ACTIONS + DEADLINE RADAR -->
+    <div class="anchor" id="sec-actions"></div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start; animation: hubIn .4s ease;">
 
       <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
@@ -387,6 +428,7 @@
     </div>
 
     <!-- ═══════ ANALYTICS ═══════ -->
+    <div class="anchor" id="sec-analytics"></div>
     <div style="margin-top: 26px;">
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Analytics</div>
       <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">The campaign, measured</div>
@@ -670,6 +712,7 @@
     </div>
 
     <!-- ═══════ CONFERENCE DESK ═══════ -->
+    <div class="anchor" id="sec-confs"></div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
 
       <!-- LOG A CONFERENCE -->
@@ -891,6 +934,7 @@
     </div>
 
     <!-- THIS WEEK + NEXT CHAPTER -->
+    <div class="anchor" id="sec-week"></div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
 
       <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
@@ -1817,7 +1861,72 @@ class Component extends DCLogic {
       { id: 'decisions', label: 'Decisions' }, { id: 'identity', label: 'Identity' }, { id: 'resilience', label: 'Resilience' }
     ].map(v => ({ label: v.label, go: () => this.writePlan({ view: v.id }) }));
 
+    // ── Mission deck: one holistic tile per subsystem ──────────────
+    const deck = (() => {
+      const tiles = [];
+      const pctOf = (n, d) => d ? Math.round(n / d * 100) : 0;
+      // 1 · Master plan
+      tiles.push({ label: '01 · Master plan', href: 'CT Master Plan.html', color: '#993C1D',
+        big: Math.round(pct * f) + '%', badge: streak > 0 ? streak + 'd streak' : '', accentColor: '#0F6E56',
+        bar: pct * f, sub: doneCount + '/' + total + ' moves · ' + (momentum >= 0 ? '+' : '') + momentum + ' wk' });
+      // 2 · Summer sprint
+      tiles.push({ label: 'Summer sprint', href: 'Summer Sprint.dc.html', color: '#3B6D11',
+        big: 'D' + sprintDay, badge: 'of ' + sprintDays, accentColor: '#77786F',
+        bar: pctOf(sprintDay, sprintDays), sub: sDone + '/' + sprintTotal + ' sprint moves done' });
+      // 3 · Reading list
+      try {
+        const rd = window.READING_DATA || { shelves: [] };
+        const baseN = rd.shelves.reduce((a2, sh) => a2 + sh.items.length, 0);
+        const myBooks = lsJson('ct_reading_books_v1', []);
+        const rTotal = baseN + (Array.isArray(myBooks) ? myBooks.length : 0);
+        const rSt = lsJson('ct_reading_v1', { status: {} }).status || {};
+        const vals = Object.keys(rSt).map(k => rSt[k]);
+        const rRead = vals.filter(v => v === 'read').length, rNow = vals.filter(v => v === 'reading').length;
+        tiles.push({ label: 'Reading list', href: 'Reading List.dc.html', color: '#4A5B7A',
+          big: rRead + '/' + rTotal, badge: rNow ? rNow + ' open' : '', accentColor: '#854F0B',
+          bar: pctOf(rRead, rTotal), sub: rNow ? rNow + ' in progress right now' : 'nothing in progress — pick one' });
+      } catch (e) {}
+      // 4 · Library
+      try {
+        const li = (lsJson('ct_library_v1', { items: [] }).items) || [];
+        const lDone = li.filter(x => x.st === 'done').length, lNow = li.filter(x => x.st === 'reading').length;
+        tiles.push({ label: 'Library intake', href: 'Library.dc.html', color: '#0F6E56',
+          big: lDone + '/' + li.length, badge: lNow ? lNow + ' open' : '', accentColor: '#854F0B',
+          bar: pctOf(lDone, li.length), sub: li.length ? (li.length - lDone - lNow) + ' queued · ' + lNow + ' reading' : 'shelf is empty' });
+      } catch (e) {}
+      // 5 · Journal
+      try {
+        const jn = this.readJournal();
+        let lastTxt = 'no entries yet', jBar = 0;
+        if (jn.length) {
+          const newest = jn.map(x => x.date).sort().pop();
+          const dAgo = Math.max(0, Math.round((nowMs - new Date(newest + 'T12:00:00').getTime()) / 86400000));
+          lastTxt = dAgo === 0 ? 'wrote today' : 'last entry ' + dAgo + 'd ago';
+          jBar = Math.max(6, 100 - dAgo * 14);
+        }
+        tiles.push({ label: 'Journal', href: 'Journal.dc.html', color: '#534AB7',
+          big: String(jn.length), badge: 'entries', accentColor: '#77786F', bar: jBar, sub: lastTxt });
+      } catch (e) {}
+      // 6 · Network
+      tiles.push({ label: 'Network', href: 'Network Map.dc.html', color: '#B07A1E',
+        big: String(owed.length), badge: 'your move', accentColor: owed.length ? '#A32E27' : '#0F6E56',
+        bar: contacts.length ? Math.round((contacts.length - owed.length) / contacts.length * 100) : 0,
+        sub: owed.length ? 'of ' + contacts.length + ' contacts need a touch' : 'all ' + contacts.length + ' contacts current' });
+      // 7 · Conferences
+      tiles.push({ label: 'Conferences', href: '#sec-confs', color: '#2E6A86',
+        big: nextConf ? (nextConf.live ? 'LIVE' : nextConf.daysAway + 'd') : '—',
+        badge: nextConf ? nextConf.acronym : '', accentColor: '#2E6A86',
+        bar: nextConf ? Math.max(6, 100 - Math.min(100, nextConf.daysAway)) : 0,
+        sub: nextConf ? 'until ' + nextConf.acronym + ' · ' + upcoming.length + ' on the radar' : 'none logged yet' });
+      // 8 · Weekly review
+      tiles.push({ label: 'Weekly review', href: 'Weekly Review.dc.html', color: '#A32E27',
+        big: wkReviewed ? '✓' : 'DUE', badge: wkReviewed ? 'done' : 'this week', accentColor: wkReviewed ? '#0F6E56' : '#A32E27',
+        bar: wkReviewed ? 100 : 8, sub: wkReviewed ? 'this week is reviewed' : 'the plan lives on this cadence' });
+      return tiles;
+    })();
+
     return {
+      deck,
       todayLabel, positioningNow: extras.positioning[0].text,
       pctShow: Math.round(pct * f), pctBar: pct * f, done: doneCount, total, ringDash, branchCount: data.branches.length,
       streakText: streak > 0 ? streak + '-day streak' : 'no active streak',
