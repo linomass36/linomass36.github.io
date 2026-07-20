@@ -92,12 +92,9 @@
   <!-- QUICK NAV (sticky) -->
   <div data-quicknav>
     <div>
-      <a href="#sec-deck">◎ Overview</a>
-      <a href="#sec-rooms">▦ Rooms</a>
-      <a href="#sec-actions">→ Next actions</a>
-      <a href="#sec-analytics">∿ Analytics</a>
-      <a href="#sec-confs">✈ Conferences</a>
-      <a href="#sec-week">▤ This week</a>
+      <sc-for list="{{ quickNav }}" as="q" hint-placeholder-count="7">
+        <a href="#" onClick="{{ q.go }}">{{ q.label }}</a>
+      </sc-for>
     </div>
   </div>
 
@@ -124,6 +121,21 @@
     </div>
   </div>
 
+  <!-- DO THESE NEXT -->
+  <div class="hw" style="max-width: 1280px; margin: 0 auto; padding: 12px 24px 0;">
+    <div style="border: 1px solid #E4E2DD; border-left: 3px solid #993C1D; border-radius: 12px; background: #FFFFFF; padding: 11px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; animation: hubIn .3s ease;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D; flex: none;">Do these next</span>
+      <sc-for list="{{ deckActions }}" as="a" hint-placeholder-count="3">
+        <button onClick="{{ a.toggle }}" title="{{ a.branchTitle }}" style="display: inline-flex; align-items: center; gap: 7px; max-width: 100%; font-size: 12px; color: #26271F; background: #FCFBF9; border: 1px solid #E4E2DD; border-radius: 18px; padding: 6px 12px; cursor: pointer; text-align: left;" style-hover="border-color: #993C1D;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ a.color }}; flex: none;"></span>
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ a.label }}</span>
+        </button>
+      </sc-for>
+      <span style="flex: 1;"></span>
+      <a href="#" onClick="{{ goActions }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86; white-space: nowrap;">all actions →</a>
+    </div>
+  </div>
+
   <!-- QUOTE OF THE DAY -->
   <div class="hw" style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 0;">
     <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 15px 24px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; animation: hubIn .3s ease;">
@@ -138,8 +150,14 @@
 
   <div class="hw" style="max-width: 1280px; margin: 0 auto; padding: 26px 24px 0;">
 
+  <div class="hw anchor" id="sec-rooms" style="max-width: 1280px; margin: 0 auto; padding: 24px 24px 0;">
+    <button onClick="{{ zT_rooms }}" style="width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #E4E2DD; padding: 0 0 6px; cursor: pointer; display: flex; align-items: baseline; gap: 12px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #993C1D;">{{ zC_rooms }} Rooms & tools</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ zS_rooms }}</span>
+    </button>
+  </div>
+  <sc-if value="{{ zO_rooms }}">
     <!-- PROJECT CARDS -->
-    <div class="anchor" id="sec-rooms"></div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; animation: hubIn .3s ease;">
 
       <a href="CT Master Plan.html" onClick="{{ goToday }}" style="display: block; border: 1px solid #E4E2DD; border-top: 3px solid #993C1D; border-radius: 14px; background: #FFFFFF; padding: 20px 22px; color: inherit; transition: transform .16s ease, box-shadow .16s ease;" style-hover="transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,27,26,.08); color: inherit;">
@@ -331,6 +349,14 @@
       </div>
     </div>
 
+  </sc-if>
+  <div class="hw anchor" id="sec-plan" style="max-width: 1280px; margin: 0 auto; padding: 24px 24px 0;">
+    <button onClick="{{ zT_plan }}" style="width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #E4E2DD; padding: 0 0 6px; cursor: pointer; display: flex; align-items: baseline; gap: 12px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #A32E27;">{{ zC_plan }} Plan & risk</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ zS_plan }}</span>
+    </button>
+  </div>
+  <sc-if value="{{ zO_plan }}">
     <!-- CRITICAL PATH / SPOF -->
     <div style="margin-top: 22px;">
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A32E27;">The critical path</div>
@@ -427,8 +453,15 @@
       </div>
     </div>
 
+  </sc-if>
+  <div class="hw anchor" id="sec-analytics" style="max-width: 1280px; margin: 0 auto; padding: 24px 24px 0;">
+    <button onClick="{{ zT_analytics }}" style="width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #E4E2DD; padding: 0 0 6px; cursor: pointer; display: flex; align-items: baseline; gap: 12px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #534AB7;">{{ zC_analytics }} Analytics</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ zS_analytics }}</span>
+    </button>
+  </div>
+  <sc-if value="{{ zO_analytics }}">
     <!-- ═══════ ANALYTICS ═══════ -->
-    <div class="anchor" id="sec-analytics"></div>
     <div style="margin-top: 26px;">
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Analytics</div>
       <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 4px;">The campaign, measured</div>
@@ -711,8 +744,15 @@
       </div>
     </div>
 
+  </sc-if>
+  <div class="hw anchor" id="sec-confs" style="max-width: 1280px; margin: 0 auto; padding: 24px 24px 0;">
+    <button onClick="{{ zT_confs }}" style="width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #E4E2DD; padding: 0 0 6px; cursor: pointer; display: flex; align-items: baseline; gap: 12px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #2E6A86;">{{ zC_confs }} Conference desk & funding</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ zS_confs }}</span>
+    </button>
+  </div>
+  <sc-if value="{{ zO_confs }}">
     <!-- ═══════ CONFERENCE DESK ═══════ -->
-    <div class="anchor" id="sec-confs"></div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
 
       <!-- LOG A CONFERENCE -->
@@ -834,6 +874,14 @@
       <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Click a status pill to advance it: researching → drafting → submitted → won / lost. Open deadlines appear in the deadline radar, tagged FUND.</div>
     </div>
 
+  </sc-if>
+  <div class="hw anchor" id="sec-desks" style="max-width: 1280px; margin: 0 auto; padding: 24px 24px 0;">
+    <button onClick="{{ zT_desks }}" style="width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #E4E2DD; padding: 0 0 6px; cursor: pointer; display: flex; align-items: baseline; gap: 12px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #854F0B;">{{ zC_desks }} Decisions, debts & horizon</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">{{ zS_desks }}</span>
+    </button>
+  </div>
+  <sc-if value="{{ zO_desks }}">
     <!-- DECISIONS + BRANCHES -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
 
@@ -933,6 +981,7 @@
       </div>
     </div>
 
+  </sc-if>
     <!-- THIS WEEK + NEXT CHAPTER -->
     <div class="anchor" id="sec-week"></div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
@@ -1913,7 +1962,7 @@ class Component extends DCLogic {
         bar: contacts.length ? Math.round((contacts.length - owed.length) / contacts.length * 100) : 0,
         sub: owed.length ? 'of ' + contacts.length + ' contacts need a touch' : 'all ' + contacts.length + ' contacts current' });
       // 7 · Conferences
-      tiles.push({ label: 'Conferences', href: '#sec-confs', color: '#2E6A86',
+      tiles.push({ label: 'Conferences', href: 'Conference Radar.dc.html', color: '#2E6A86',
         big: nextConf ? (nextConf.live ? 'LIVE' : nextConf.daysAway + 'd') : '—',
         badge: nextConf ? nextConf.acronym : '', accentColor: '#2E6A86',
         bar: nextConf ? Math.max(6, 100 - Math.min(100, nextConf.daysAway)) : 0,
@@ -1925,8 +1974,49 @@ class Component extends DCLogic {
       return tiles;
     })();
 
+    // ── Collapsible zones (persisted in hub_zones_v1, phone collapses heavy ones) ──
+    const isPhone = (typeof window !== 'undefined' && window.innerWidth <= 640);
+    const zoneDefaults = { rooms: 1, plan: 1, analytics: isPhone ? 0 : 1, confs: isPhone ? 0 : 1, desks: isPhone ? 0 : 1 };
+    const zSaved = lsJson('hub_zones_v1', {});
+    const zOpen = {};
+    Object.keys(zoneDefaults).forEach(k => { zOpen[k] = zSaved[k] != null ? !!zSaved[k] : !!zoneDefaults[k]; });
+    const zT = k => () => {
+      const cur = Object.assign({}, lsJson('hub_zones_v1', {}));
+      cur[k] = zOpen[k] ? 0 : 1;
+      try { localStorage.setItem('hub_zones_v1', JSON.stringify(cur)); } catch (e) {}
+      this.setState({ __zones: Date.now() });
+    };
+    const zOpenNow = k => {
+      if (zOpen[k]) return;
+      const cur = Object.assign({}, lsJson('hub_zones_v1', {}));
+      cur[k] = 1;
+      try { localStorage.setItem('hub_zones_v1', JSON.stringify(cur)); } catch (e) {}
+      this.setState({ __zones: Date.now() });
+    };
+    const goSec = (sec, zone) => (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      if (zone) zOpenNow(zone);
+      setTimeout(() => { const el = document.getElementById(sec); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    };
+    const quickNav = [
+      { label: '◎ Overview', go: goSec('sec-deck', null) },
+      { label: '▦ Rooms', go: goSec('sec-rooms', 'rooms') },
+      { label: '→ Next actions', go: goSec('sec-actions', 'plan') },
+      { label: '∿ Analytics', go: goSec('sec-analytics', 'analytics') },
+      { label: '✈ Conferences', go: goSec('sec-confs', 'confs') },
+      { label: '⚖ Decisions', go: goSec('sec-desks', 'desks') },
+      { label: '▤ This week', go: goSec('sec-week', null) },
+    ];
+    const deckActions = nextActions.slice(0, 3).map(a2 => ({ label: a2.label, color: a2.color, branchTitle: a2.branchTitle, toggle: a2.toggle }));
+
     return {
       deck,
+      quickNav, deckActions, goActions: goSec('sec-actions', 'plan'),
+      zO_rooms: zOpen.rooms, zT_rooms: zT('rooms'), zC_rooms: zOpen.rooms ? '▾' : '▸', zS_rooms: 'every page, one tap away',
+      zO_plan: zOpen.plan, zT_plan: zT('plan'), zC_plan: zOpen.plan ? '▾' : '▸', zS_plan: nextActions.length + ' open actions · critical path · roadmap',
+      zO_analytics: zOpen.analytics, zT_analytics: zT('analytics'), zC_analytics: zOpen.analytics ? '▾' : '▸', zS_analytics: 'curves · radar · skills · heatmap · dials · briefing',
+      zO_confs: zOpen.confs, zT_confs: zT('confs'), zC_confs: zOpen.confs ? '▾' : '▸', zS_confs: upcoming.length + ' upcoming · scholarships',
+      zO_desks: zOpen.desks, zT_desks: zT('desks'), zC_desks: zOpen.desks ? '▾' : '▸', zS_desks: 'decisions · debts · the horizon',
       todayLabel, positioningNow: extras.positioning[0].text,
       pctShow: Math.round(pct * f), pctBar: pct * f, done: doneCount, total, ringDash, branchCount: data.branches.length,
       streakText: streak > 0 ? streak + '-day streak' : 'no active streak',
