@@ -71,6 +71,8 @@
       <span style="flex: 1;"></span>
       <button onClick="{{ surprise }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #E6D6B0; background: #FBF6EA; color: #854F0B;">🎲 Surprise me</button>
       <button onClick="{{ addBook }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #3B6D11; background: #3B6D11; color: #FFFFFF;">＋ Add a book</button>
+      <button onClick="{{ openImport }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #534AB7; background: #F4F2FB; color: #534AB7;">⭳ Import</button>
+      <button onClick="{{ exportAll }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #E4E2DD; background: #FFFFFF; color: #55564F;">⭱ Export</button>
     </div>
 
     <sc-if value="{{ hasTags }}" hint-placeholder-val="{{ false }}">
@@ -197,6 +199,43 @@
 
   </div>
 
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 950; max-width: 92vw; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; line-height: 1.4; padding: 11px 18px; border-radius: 22px; color: #FFFDF8; background: {{ toastBg }}; box-shadow: 0 8px 26px rgba(26,27,26,.28); animation: rlIn .2s ease;">{{ toastMsg }}</div>
+  </sc-if>
+
+  <sc-if value="{{ importOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeImport }}" style="position: fixed; inset: 0; z-index: 900; background: rgba(20,20,22,.45);"></div>
+    <div style="position: fixed; z-index: 901; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(94vw, 640px); max-height: 88vh; overflow-y: auto; background: #FFFDF8; border: 1px solid #E4E2DD; border-radius: 16px; padding: 20px 22px 18px; animation: rlIn .25s ease;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: #534AB7;">Import</div>
+      <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin: 5px 0 4px;">Add books, categories, or a full backup</div>
+      <div style="font-size: 12.5px; color: #77786F; line-height: 1.55; margin-bottom: 14px;">Paste JSON below (a chat's recommendations, or an exported file), or restore a backup file. Books with a <b>shelf</b> name create that category automatically. Titles you already have are skipped.</div>
+
+      <div style="border: 1px solid #D6D2EC; border-radius: 12px; background: #F4F2FB; padding: 12px 14px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #534AB7;">Turn a conversation into a list</span>
+          <span style="flex: 1;"></span>
+          <button onClick="{{ copyPrompt }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 6px 13px; border-radius: 16px; border: 1px solid #534AB7; background: {{ copyBg }}; color: {{ copyColor }}; cursor: pointer;">{{ copyLabel }}</button>
+        </div>
+        <div style="font-size: 12px; color: #6b6c63; line-height: 1.5; margin-top: 7px;">Copy this prompt, paste it into any chat with your reading list, and paste the JSON it returns into the box below.</div>
+        <textarea readonly rows="4" value="{{ promptText }}" style="width: 100%; margin-top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; line-height: 1.5; padding: 9px 11px; border: 1px solid #D6D2EC; border-radius: 9px; background: #FFFFFF; color: #55564F; resize: vertical;"></textarea>
+      </div>
+
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .05em; color: #55564F; margin-bottom: 5px;">Paste JSON here</div>
+      <textarea value="{{ importText }}" onChange="{{ setImportText }}" rows="7" placeholder='{"type":"ct-reading-list","books":[{"title":"Fragile Lives","by":"Stephen Westaby","shelf":"Surgeon memoirs"}]}' style="width: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.5; padding: 10px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F; resize: vertical;"></textarea>
+      <sc-if value="{{ hasImportMsg }}" hint-placeholder-val="{{ false }}">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A32E27; margin-top: 8px;">{{ importMsg }}</div>
+      </sc-if>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px;">
+        <button onClick="{{ importPaste }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 40px; padding: 0 18px; border-radius: 20px; border: 1px solid #534AB7; background: #534AB7; color: #FFF; cursor: pointer;">Add these books</button>
+        <button onClick="{{ pickImportFile }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 40px; padding: 0 16px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFFFFF; color: #55564F; cursor: pointer;">⭳ Restore a backup file…</button>
+        <span style="flex: 1;"></span>
+        <button onClick="{{ closeImport }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid #E4E2DD; background: #FFFFFF; color: #77786F; cursor: pointer;">Cancel</button>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F; margin-top: 9px; line-height: 1.5;">Pasting adds to your list. Restoring a backup file replaces your books and progress with that file's.</div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ showLog }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ saveLog }}" style="position: fixed; inset: 0; z-index: 900; background: rgba(20,20,22,.45);"></div>
     <div style="position: fixed; z-index: 901; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92vw, 560px); max-height: 86vh; overflow-y: auto; background: #FFFDF8; border: 1px solid #E4E2DD; border-radius: 16px; padding: 20px 22px 18px; animation: rlIn .25s ease;">
@@ -221,7 +260,8 @@
 class Component extends DCLogic {
   KEY = 'ct_reading_v1';
   KEY_BOOKS = 'ct_reading_books_v1';   // books you add yourself (syncs across devices)
-  state = { tick: 0, filter: 'all', query: '', tag: '', pick: null, logId: null, logTitle: '', draft: null };
+  state = { tick: 0, filter: 'all', query: '', tag: '', pick: null, logId: null, logTitle: '', draft: null,
+            importOpen: false, importText: '', importMsg: '', promptCopied: false, toastMsg: '', toastBad: false };
 
   bump() { this.setState(s => ({ tick: s.tick + 1 })); }
   setQuery(e) { this.setState({ query: e && e.target ? e.target.value : '' }); }
@@ -351,6 +391,170 @@ class Component extends DCLogic {
     this.setState(s => ({ tick: s.tick + 1 }));
   }
 
+  /* ─────────── Export / import ───────────
+     Export = every custom book + all state (status, journals, tags, view prefs).
+     Import = merge (add books, fill gaps) or replace (full restore from backup).
+     Books may name a `shelf`, so an import can create whole new categories. */
+  EXPORT_TYPE = 'ct-reading-list';
+
+  buildExport() {
+    const st = this.read();
+    return {
+      type: this.EXPORT_TYPE, version: 1, exportedAt: new Date().toISOString(),
+      books: this.readBooks(),
+      state: { status: st.status || {}, history: st.history || {}, tags: st.tags || {}, ui: st.ui || {} },
+    };
+  }
+  exportAll() {
+    const data = JSON.stringify(this.buildExport(), null, 2);
+    const name = 'reading-list-' + new Date().toISOString().slice(0, 10) + '.json';
+    try {
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = name; document.body.appendChild(a); a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 500);
+      this.toast('Exported ' + this.readBooks().length + ' of your books + all progress');
+    } catch (e) { this.toast('Export failed: ' + e.message, true); }
+  }
+
+  toast(msg, bad) {
+    this.setState({ toastMsg: msg, toastBad: !!bad });
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => this.setState({ toastMsg: '' }), 4000);
+  }
+
+  openImport() { this.setState({ importOpen: true, importText: '', importMsg: '', promptCopied: false }); }
+  closeImport() { this.setState({ importOpen: false, importText: '', importMsg: '' }); }
+  setImportText(e) { this.setState({ importText: e.target.value, importMsg: '' }); }
+
+  importPromptText() {
+    return [
+      'Convert the reading list below into JSON for my reading tracker.',
+      'Reply with ONLY a json code block — no commentary before or after.',
+      '',
+      'Schema:',
+      '{',
+      '  "type": "ct-reading-list",',
+      '  "version": 1,',
+      '  "books": [',
+      '    {',
+      '      "title": "Book or paper title",',
+      '      "by": "Author, year (or journal)",',
+      '      "note": "one sentence on why it is worth reading",',
+      '      "shelf": "Category name — books with the same name group together",',
+      '      "status": "unread | reading | read",',
+      '      "tags": ["optional", "lowercase", "tags"],',
+      '      "doi": "10.xxxx/optional-for-papers"',
+      '    }',
+      '  ]',
+      '}',
+      '',
+      'Rules:',
+      '- title is required; every other field is optional.',
+      '- Group related titles by giving them the same "shelf" name.',
+      '- Keep "note" to one useful sentence, not marketing copy.',
+      '- Omit "status" unless the list says it was already read.',
+      '',
+      'The reading list to convert:',
+      '<<< PASTE THE LIST HERE >>>',
+    ].join('\n');
+  }
+  copyPrompt() {
+    const t = this.importPromptText();
+    const done = () => { this.setState({ promptCopied: true }); setTimeout(() => this.setState({ promptCopied: false }), 2500); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done, () => this.fallbackCopy(t, done)); }
+      else this.fallbackCopy(t, done);
+    } catch (e) { this.fallbackCopy(t, done); }
+  }
+  fallbackCopy(t, done) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done();
+    } catch (e) { this.setState({ importMsg: 'Copy failed — select the prompt above manually.' }); }
+  }
+
+  pickImportFile() {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json,application/json,text/plain';
+    inp.onchange = (e) => {
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => this.runImport(String(r.result), 'replace');
+      r.readAsText(f);
+    };
+    inp.click();
+  }
+
+  // Accepts a whole export file, a bare {books:[…]}, or just an array of books.
+  // Tolerates a ```json fence pasted straight out of a chat.
+  parseImport(raw) {
+    let t = String(raw || '').trim();
+    const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fence) t = fence[1].trim();
+    if (!t) throw new Error('nothing to import');
+    let o;
+    try { o = JSON.parse(t); } catch (e) { throw new Error('that is not valid JSON'); }
+    if (Array.isArray(o)) o = { books: o };
+    if (!o || typeof o !== 'object') throw new Error('unexpected shape');
+    if (!Array.isArray(o.books)) o.books = [];
+    return o;
+  }
+
+  runImport(raw, mode) {
+    let o;
+    try { o = this.parseImport(raw); }
+    catch (e) { this.setState({ importMsg: '✕ ' + e.message }); return; }
+
+    const incoming = o.books.filter(b => b && String(b.title || '').trim());
+    if (!incoming.length && !o.state) { this.setState({ importMsg: '✕ no books or state found in that file' }); return; }
+
+    const existing = mode === 'replace' ? [] : this.readBooks();
+    const seen = {};
+    existing.forEach(b => { seen[String(b.title || '').toLowerCase().trim()] = 1; });
+
+    let added = 0, skipped = 0;
+    const status = {}, tags = {};
+    const books = existing.slice();
+    incoming.forEach((b, i) => {
+      const title = String(b.title).trim();
+      const key = title.toLowerCase();
+      if (seen[key]) { skipped++; return; }
+      seen[key] = 1;
+      const id = b.id && String(b.id).indexOf('usr-') === 0 ? b.id : ('usr-' + Date.now().toString(36) + i.toString(36));
+      const rec = { id, title, by: String(b.by || '').trim(), note: String(b.note || '').trim() };
+      if (b.shelf) rec.shelf = String(b.shelf).trim();
+      if (b.doi) rec.doi = String(b.doi).trim();
+      if (Array.isArray(b.files)) rec.files = b.files;
+      books.push(rec); added++;
+      if (b.status === 'read' || b.status === 'reading') status[id] = b.status;
+      if (Array.isArray(b.tags) && b.tags.length) tags[id] = b.tags.map(t => String(t).toLowerCase().trim()).filter(Boolean);
+    });
+
+    this.writeBooks(books);
+
+    // State: replace wipes first; merge keeps what you already have.
+    const cur = this.read();
+    const src = (o.state && typeof o.state === 'object') ? o.state : {};
+    const merge = (base, extra) => Object.assign({}, base, extra);
+    const patch = mode === 'replace'
+      ? { status: merge(src.status || {}, status), history: src.history || {}, tags: merge(src.tags || {}, tags), ui: src.ui || cur.ui || {} }
+      : { status: merge(merge(cur.status || {}, src.status || {}), status),
+          history: merge(cur.history || {}, src.history || {}),
+          tags: merge(merge(cur.tags || {}, src.tags || {}), tags),
+          ui: cur.ui || {} };
+    this.write(patch);
+
+    const bits = [];
+    if (added) bits.push(added + ' book' + (added === 1 ? '' : 's') + ' added');
+    if (skipped) bits.push(skipped + ' already on the list');
+    if (o.state) bits.push('progress ' + (mode === 'replace' ? 'restored' : 'merged'));
+    this.setState({ importOpen: false, importText: '' });
+    this.toast('✓ ' + (bits.join(' · ') || 'nothing new to add'));
+    this.bump();
+  }
+
   removeBook(id, e) {
     if (e && e.stopPropagation) e.stopPropagation();
     this.writeBooks(this.readBooks().filter(b => b.id !== id));
@@ -370,18 +574,28 @@ class Component extends DCLogic {
     const ui = this.readUI();
     const view = ui.view || 'list';
     const collapsed = ui.collapsed || {};
-    if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], viewChips: [], tagChips: [], shelves: [], onDeck: [], isListView: true, isShelfView: false, addBook: () => this.addBook() };
+    if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], viewChips: [], tagChips: [], shelves: [], onDeck: [], isListView: true, isShelfView: false, addBook: () => this.addBook(), exportAll: () => this.exportAll(), openImport: () => this.openImport(), closeImport: () => this.closeImport(), setImportText: (e) => this.setImportText(e), importPaste: () => this.runImport(this.state.importText, 'merge'), pickImportFile: () => this.pickImportFile(), copyPrompt: () => this.copyPrompt(), promptText: this.importPromptText(), copyLabel: '⧉ copy prompt', copyBg: '#FFFFFF', copyColor: '#534AB7', importOpen: !!this.state.importOpen, importText: this.state.importText || '', importMsg: this.state.importMsg || '', hasImportMsg: !!this.state.importMsg, hasToast: !!this.state.toastMsg, toastMsg: this.state.toastMsg || '', toastBg: '#3B6D11' };
 
     const store = this.read();
     const statusOf = id => store.status[id] || 'unread';
     const tagsOf = id => (store.tags || {})[id] || [];
 
     // Static shelves from reading-data.js + the books you've added yourself.
+    // Your own books, grouped by their category ("shelf"). Imports can create
+    // new categories just by naming them; anything unnamed lands in "Added by you".
     const myBooks = this.readBooks();
-    const myShelf = myBooks.length ? [{
-      id: 'b-mine', kind: 'book', accent: '#3B6D11', name: 'Added by you',
-      items: myBooks.map(b => ({ id: b.id, title: b.title, by: b.by, note: b.note })),
-    }] : [];
+    const myGroups = [];
+    myBooks.forEach(b => {
+      const nm = (b.shelf || '').trim() || 'Added by you';
+      let g = myGroups.find(x => x.name === nm);
+      if (!g) {
+        g = { id: 'b-usr-' + nm.toLowerCase().replace(/[^a-z0-9]+/g, '-'), kind: 'book',
+              accent: b.accent || '#3B6D11', name: nm, items: [] };
+        myGroups.push(g);
+      }
+      g.items.push({ id: b.id, title: b.title, by: b.by, note: b.note, files: b.files, doi: b.doi });
+    });
+    const myShelf = myGroups;
     const allShelves = (data.shelves || []).concat(myShelf);
     const allItems = allShelves.reduce((a, s) => a.concat(s.items), []);
     const totalN = allItems.length;
@@ -526,6 +740,25 @@ class Component extends DCLogic {
       noResults: shelves.length === 0,
       searchInfo: (qy || tag) ? (matchN + ' match' + (matchN === 1 ? '' : 'es') + (qy ? (' for “' + this.state.query.trim() + '”') : '') + (tag ? (' #' + tag) : '')) : '',
       addBook: () => this.addBook(),
+      // export / import
+      exportAll: () => this.exportAll(),
+      openImport: () => this.openImport(),
+      closeImport: () => this.closeImport(),
+      setImportText: (e) => this.setImportText(e),
+      importPaste: () => this.runImport(this.state.importText, 'merge'),
+      pickImportFile: () => this.pickImportFile(),
+      copyPrompt: () => this.copyPrompt(),
+      promptText: this.importPromptText(),
+      copyLabel: this.state.promptCopied ? '✓ copied' : '⧉ copy prompt',
+      copyBg: this.state.promptCopied ? '#534AB7' : '#FFFFFF',
+      copyColor: this.state.promptCopied ? '#FFFFFF' : '#534AB7',
+      importOpen: !!this.state.importOpen,
+      importText: this.state.importText || '',
+      importMsg: this.state.importMsg || '',
+      hasImportMsg: !!this.state.importMsg,
+      hasToast: !!this.state.toastMsg,
+      toastMsg: this.state.toastMsg || '',
+      toastBg: this.state.toastBad ? '#A32E27' : '#3B6D11',
       showLog,
       logTitle: this.state.logTitle,
       logDate: this.fmtDate(logEntry.readAt || new Date().toISOString()),
