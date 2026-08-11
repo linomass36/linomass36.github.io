@@ -74,6 +74,89 @@ you** shelf, cycles through *to read → reading → read* like any other, and c
 removed via the **remove** link on the row. Your additions live in `localStorage`
 under `ct_reading_books_v1`, so once sync is on they follow you across devices.
 
+## The shelf, and opening a book
+The **▦ Shelf** view binds every book in leather cut from its shelf's colour —
+faded cloth until you start it, deep hide once you do, a red ribbon hanging out
+of whatever you're reading now, and gilt on the ones you've finished. Hover and
+the book draws half out of the shelf; click and it opens.
+
+An open book holds everything about it in one place:
+
+- **Want to read / Reading now / Finished reading** — one tap each, and the
+  started/finished dates are stamped for you.
+- **Where you are** — free text, so `p. 128 of 402`, `ch. 9` or `01:12:30` all work.
+- **Notes** — each one stamped with the moment you wrote it *and* the place in
+  the book it belongs to. Add the place, write the note, and it files itself
+  newest-first. Writing a note marks the book as being read.
+- **Reflection** — the four questions from the old reading log, saved as you type.
+
+The **open ▸** link on any row in the list view opens the same book.
+
+## Syncing with Obsidian
+One book = one Markdown note, and it goes both ways: write in Obsidian or write
+on the site, and a sync reconciles the two. Open **◆ Obsidian** in the toolbar
+and pick a transport:
+
+**Vault folder** (simplest — Chrome or Edge on a desktop). Click *Connect your
+vault folder…* and choose your vault. The browser writes the notes straight to
+disk with the File System Access API; Obsidian picks them up at once. The folder
+permission is remembered, so later visits sync quietly on load.
+
+**Local REST API** (works from any device that can reach the machine running
+Obsidian). Install the *Local REST API* community plugin, paste its key and
+address here, and open `https://127.0.0.1:27124` once in the same browser to
+accept the plugin's self-signed certificate. Then *Test*, then *Sync now*.
+
+What a note looks like — the frontmatter is the state, the body is your thinking:
+
+```markdown
+---
+ct_id: "ct7"
+title: "Partial heart transplantation for growing valves"
+author: "Turek et al., JAMA, 2024"
+shelf: "Cardiothoracic & transplant"
+status: reading
+progress: "p. 3 of 9"
+started: 2026-02-01
+finished:
+tags: [reading/transplant]
+updated: 2026-08-11T21:04:00.000Z
+source: reading-list
+---
+
+# Partial heart transplantation for growing valves
+
+## Notes
+
+- **2026-08-11 12:30 · p. 42** — the growth potential is the whole thesis
+
+## Reflection
+
+### The main takeaway?
+a valve that grows with the child
+```
+
+Rules worth knowing:
+
+- **Nothing is clobbered.** Each sync remembers what it last wrote, so an edit
+  made in Obsidian and an edit made on the site both survive; only a field
+  changed on one side moves. Delete a note bullet in Obsidian and it stays
+  deleted here.
+- **Books you haven't touched stay out of the vault**, unless you tick *write a
+  note for every book*.
+- **New books can start in Obsidian.** Drop a note in the folder with a
+  frontmatter block and a title (the panel has a template) and the next sync
+  pulls it in as a book and stamps a `ct_id` into it.
+- **Filenames never change.** Retitling a book rewrites the note's contents but
+  leaves the file where it is, so `[[wikilinks]]` to it keep working.
+- Set a **vault name** in the panel to make the per-book **◆ Obsidian ↗** button
+  open the real note in the app.
+
+Settings live in `localStorage` under `ct_obsidian_cfg_v1` and sync-state per
+book under `obsidian` in `ct_reading_v1` — so, like everything else here, they
+follow you across devices. The vault folder handle itself is per-device
+(IndexedDB), which is right: it points at a folder on that machine.
+
 ---
 
 ## How it behaves
@@ -83,6 +166,7 @@ under `ct_reading_books_v1`, so once sync is on they follow you across devices.
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys).
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = offline. Tap it to force a sync now; `window.hubSync.state` / `window.hubSync.syncNow()` are available in the console.
+- `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note format, its parser, the three-way merge, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
 - `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`). Injected on hub pages.
 - `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support. The service worker is network-first for pages (new deploys land at once) and cache-busts by version; the deploy stamps the version into it so each push updates the installed app.
 - `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.
