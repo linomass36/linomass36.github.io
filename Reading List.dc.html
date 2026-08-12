@@ -134,6 +134,8 @@
   .rl-book.is-thin .rl-plate { padding: 4px 0; }
   .rl-book.is-thin .rl-band { height: 5px; }
   .rl-book.is-thin .rl-spine { padding: 7% 1px 9%; }
+  /* the gap it leaves while it is in the air */
+  .rl-book.is-flying { visibility: hidden; }
   .rl-book.is-read .rl-spine { box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 -18px 22px rgba(0,0,0,.28), 0 0 0 1px rgba(214,183,116,.4); }
   .rl-board {
     height: 15px; margin: 0 -14px; border-radius: 0 0 6px 6px;
@@ -141,160 +143,128 @@
     box-shadow: 0 10px 18px rgba(40,26,12,.28), inset 0 2px 0 rgba(255,255,255,.16);
   }
 
-  /* ─────────── Opening a book ───────────
-     The panel is the open book. Over it lies the front board, hinged on
-     the left: dyed hide and gilt on the outside, a cord-raised spine at
-     the hinge, marbled endpaper on the inside. It swings up and over,
-     turns to show its inner face past ninety degrees, and dissolves as
-     it comes to rest — so it never has to land anywhere.               */
-  @keyframes rlCoverSwing {
-    0%   { transform: translateZ(4px) rotateY(0deg); }
-    100% { transform: translateZ(4px) rotateY(-162deg); }
-  }
-  @keyframes rlCoverGo {   /* on the faces, not the board: opacity here
-                              would flatten the board's 3D children */
-    0%, 66% { opacity: 1; }
-    100%    { opacity: 0; }
-  }
-  @keyframes rlGutter { 0% { opacity: .55; } 100% { opacity: 0; } }
-  @keyframes rlPaperIn { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: none; } }
-  @keyframes rlFadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  .rl-modal { perspective: 2600px; perspective-origin: 44% 42%; }
-  .rl-openbook { position: relative; transform-style: preserve-3d; }
-  /* the block of pages, along the fore-edge */
-  .rl-openbook::after {
-    content: ''; position: absolute; top: 8px; bottom: 8px; left: 100%; width: 7px;
-    background: repeating-linear-gradient(180deg, #f2ead7 0 2px, #d6cbb0 2px 3px);
-    border-radius: 0 5px 5px 0; box-shadow: 2px 1px 7px rgba(30,18,6,.3);
-  }
-  /* the shadow the closed board casts on the page under it */
-  .rl-openbook::before {
-    content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-    border-radius: 4px 10px 10px 4px;
-    background: linear-gradient(90deg, rgba(24,14,4,.5), rgba(24,14,4,.16) 40%, rgba(24,14,4,0) 78%);
-    animation: rlGutter .66s cubic-bezier(.36,.06,.22,1) forwards;
-  }
-  .rl-openbook-cover {
-    position: absolute; inset: 0; z-index: 4; pointer-events: none;
-    transform-origin: left center; transform-style: preserve-3d;
-    animation: rlCoverSwing .66s cubic-bezier(.38,.03,.22,1) forwards;
-  }
-  .rl-cover-face {
-    position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden;
+  /* ─────────── The bound board ───────────
+     One piece of art, used at two sizes: the cover in the open book, and
+     the book that flies off the shelf when you click a spine. Everything
+     is proportional so it holds up at 200px and at 440px. --tf sets the
+     lettering. */
+  .rl-board {
+    position: relative; overflow: hidden; border-radius: 3px 9px 9px 3px;
     display: flex; align-items: center; justify-content: center;
-    animation: rlCoverGo .66s linear forwards;
-  }
-  .rl-cover-out {
-    border-radius: 4px 11px 11px 4px;
-    box-shadow: 0 24px 46px rgba(18,10,3,.45), inset 0 1px 0 rgba(255,255,255,.14);
-    background:
-      radial-gradient(120% 100% at 30% 14%, rgba(255,255,255,.10), rgba(0,0,0,0) 46%),
-      repeating-linear-gradient(7deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.05) 1px 3px),
-      repeating-linear-gradient(-83deg, rgba(255,255,255,.02) 0 1px, rgba(0,0,0,.035) 1px 4px),
-      linear-gradient(150deg, var(--ink2) -12%, var(--ink) 42%, #2A1710 165%);
-  }
-  .rl-cover-out::after {
-    content: ''; position: absolute; inset: 18px 22px 18px 42px;
-    border: 1px solid var(--gold); opacity: .34; border-radius: 2px;
-  }
-  .rl-cover-out::before {
-    content: ''; position: absolute; inset: 23px 27px 23px 47px;
-    border: 1px solid var(--gold); opacity: .17; border-radius: 1px;
-  }
-  /* the spine standing at the hinge, with its cords */
-  .rl-cover-spine {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 26px; border-radius: 4px 0 0 4px;
-    background: linear-gradient(90deg, rgba(0,0,0,.6), rgba(255,255,255,.12) 42%, rgba(0,0,0,.34));
-    box-shadow: inset -4px 0 10px rgba(0,0,0,.42);
-  }
-  .rl-cover-band {
-    position: absolute; left: 0; right: 0; height: 9px;
-    background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.06) 48%, rgba(0,0,0,.32));
-    box-shadow: 0 -1px 0 var(--goldsoft), 0 1px 0 rgba(0,0,0,.3);
-  }
-  .rl-cover-band:nth-child(1) { top: 15%; }
-  .rl-cover-band:nth-child(2) { top: 42%; }
-  .rl-cover-band:nth-child(3) { bottom: 15%; }
-  /* the inside of the board */
-  .rl-cover-in {
-    transform: rotateY(180deg); border-radius: 11px 4px 4px 11px;
-    background:
-      repeating-linear-gradient(115deg, rgba(150,120,70,.07) 0 6px, rgba(255,255,255,.05) 6px 13px),
-      radial-gradient(90% 70% at 70% 30%, #FBF6E8, #E8DDC4);
-    box-shadow: inset 0 0 44px rgba(140,112,64,.28);
-  }
-  .rl-openbook-title {
-    position: relative; z-index: 1; padding-left: 26px;
-    font-family: 'Newsreader', serif; font-size: 25px; line-height: 1.25; text-align: center;
-    color: var(--gold); max-width: 66%; text-shadow: 0 1px 2px rgba(0,0,0,.6);
-  }
-  /* No room to swing a board on a phone — just bring the page up. */
-  @media (max-width: 720px) {
-    .rl-openbook-cover, .rl-openbook::before { display: none; }
-    .rl-paper { animation: rlPaperIn .3s both; }
-  }
-  .rl-paper {
-    position: relative; z-index: 2; max-height: 90vh; overflow-y: auto;
-    border-radius: 4px 10px 10px 4px; background: #FFFCF4;
-    background-image: linear-gradient(90deg, #efe6d2 0 10px, rgba(0,0,0,.10) 10px 13px, #FFFCF4 20px);
-    box-shadow: 0 26px 60px rgba(20,12,4,.4), inset 0 0 0 1px rgba(160,138,96,.25);
-    animation: rlPaperIn .42s .3s both;
-  }
-  .rl-cols { display: grid; grid-template-columns: 210px 1fr; gap: 22px; }
-  @media (max-width: 720px) { .rl-cols { grid-template-columns: 1fr; } .rl-openbook-title { font-size: 19px; } }
-  /* The same binding as the shelf, seen face on: spine and its raised
-     cords down the hinge, a gilt double rule, page edges at the fore. */
-  .rl-mini {
-    position: relative; height: 214px; overflow: hidden;
-    border-radius: 3px 9px 9px 3px;
+    padding: 11% 8% 11% 17%;
     background:
       radial-gradient(120% 90% at 26% 14%, rgba(255,255,255,.10), rgba(0,0,0,0) 48%),
       repeating-linear-gradient(7deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.05) 1px 3px),
       repeating-linear-gradient(-83deg, rgba(255,255,255,.02) 0 1px, rgba(0,0,0,.035) 1px 4px),
       linear-gradient(150deg, var(--ink2) -14%, var(--ink) 44%, #2A1710 170%);
     box-shadow: 0 14px 26px rgba(40,26,12,.32), inset 0 1px 0 rgba(255,255,255,.16);
-    display: flex; align-items: center; justify-content: center;
-    padding: 22px 16px 22px 34px;
   }
-  .rl-mini-spine {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 17px;
+  .rl-board::after {
+    content: ''; position: absolute; top: 6%; bottom: 6%; left: 14%; right: 6%;
+    border: 1px solid var(--gold); opacity: .32; border-radius: 2px;
+  }
+  .rl-board::before {
+    content: ''; position: absolute; top: 8%; bottom: 8%; left: 16.5%; right: 8.5%;
+    border: 1px solid var(--gold); opacity: .16; border-radius: 1px;
+  }
+  .rl-board-spine {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 8%; min-width: 13px;
     background: linear-gradient(90deg, rgba(0,0,0,.52), rgba(255,255,255,.13) 44%, rgba(0,0,0,.40));
     box-shadow: inset -3px 0 8px rgba(0,0,0,.4);
   }
-  .rl-mini-band {
-    position: absolute; left: 0; right: 0; height: 7px;
+  .rl-board-band {
+    position: absolute; left: 0; right: 0; height: 3.2%; min-height: 5px;
     background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.06) 48%, rgba(0,0,0,.30));
     box-shadow: 0 -1px 0 var(--goldsoft), 0 1px 0 rgba(0,0,0,.28);
   }
-  .rl-mini-band:first-child { top: 17%; }
-  .rl-mini-band:last-child { bottom: 17%; }
-  .rl-mini-edge {
-    position: absolute; right: 0; top: 5px; bottom: 5px; width: 5px; border-radius: 0 3px 3px 0;
+  .rl-board-band:first-child { top: 17%; }
+  .rl-board-band:last-child { bottom: 17%; }
+  .rl-board-edge {
+    position: absolute; right: 0; top: 2.5%; bottom: 2.5%; width: 2.4%; min-width: 4px;
+    border-radius: 0 3px 3px 0;
     background: repeating-linear-gradient(180deg, #efe7d5 0 2px, #d3c8ad 2px 3px);
     box-shadow: inset 2px 0 4px rgba(60,42,18,.35);
   }
-  .rl-mini::after {
-    content: ''; position: absolute; inset: 13px 13px 13px 30px;
-    border: 1px solid var(--gold); opacity: .32; border-radius: 2px;
-  }
-  .rl-mini::before {
-    content: ''; position: absolute; inset: 17px 17px 17px 34px;
-    border: 1px solid var(--gold); opacity: .16; border-radius: 1px;
-  }
-  .rl-mini-plate {
+  .rl-board-plate {
     position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
-    gap: 7px; text-align: center; max-width: 100%;
+    gap: .5em; text-align: center; max-width: 100%;
   }
-  .rl-mini-rule { display: block; width: 34px; height: 1px; background: var(--gold); opacity: .5; }
-  .rl-mini-title {
-    font-family: 'Newsreader', serif; font-size: 14px; line-height: 1.32; color: var(--gold);
-    text-shadow: 0 1px 2px rgba(0,0,0,.6); max-height: 108px; overflow: hidden;
+  .rl-board-rule { display: block; width: 2.4em; height: 1px; background: var(--gold); opacity: .5; }
+  .rl-board-title {
+    font-family: 'Newsreader', serif; font-size: var(--tf, 14px); line-height: 1.32;
+    color: var(--gold); text-shadow: 0 1px 2px rgba(0,0,0,.6); max-height: 8em; overflow: hidden;
   }
-  .rl-mini-by {
-    font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .07em;
-    color: var(--gold); opacity: .72; max-width: 100%; overflow: hidden;
+  .rl-board-by {
+    font-family: 'IBM Plex Mono', monospace; font-size: calc(var(--tf, 14px) * .6);
+    letter-spacing: .07em; color: var(--gold); opacity: .72; max-width: 100%; overflow: hidden;
   }
+  .rl-mini { height: 214px; --tf: 14px; }
+
+  /* ─────────── Taking a book off the shelf ───────────
+     One element does the whole thing. First it flies: from the spine's
+     place on the shelf, edge on and small, out towards you and across to
+     the middle of the screen, turning to face you as it comes. Then it
+     opens: the board swings on its left edge, shows the endpaper on its
+     back, and dissolves while the page grows in behind it.             */
+  @keyframes rlFly {
+    0%   { transform: translate(var(--dx), var(--dy)) scale(var(--s)) rotateY(82deg); }
+    32%  { transform: translate(calc(var(--dx) * .8), calc(var(--dy) * .84)) scale(calc(var(--s) * 1.3)) rotateY(64deg); }
+    100% { transform: none; }
+  }
+  @keyframes rlSwing { from { transform: rotateY(0deg); } to { transform: rotateY(-156deg); } }
+  @keyframes rlBoardGo { 0%, 62% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes rlPaperIn { from { opacity: 0; transform: scale(.93) translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes rlFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .rl-stage {
+    position: fixed; inset: 0; z-index: 960; pointer-events: none;
+    perspective: 1900px; perspective-origin: 50% 44%;
+  }
+  .rl-flight {
+    position: absolute; left: 50%; top: 50%; width: var(--bw); height: var(--bh);
+    margin: calc(var(--bh) / -2) 0 0 calc(var(--bw) / -2);
+    transform-style: preserve-3d;
+    animation: rlFly .34s cubic-bezier(.3,.72,.28,1) both;
+  }
+  .rl-flight-swing { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: left center; }
+  .rl-flight.is-opening .rl-flight-swing { animation: rlSwing .46s cubic-bezier(.4,.04,.24,1) forwards; }
+  .rl-flight.is-opening .rl-face { animation: rlBoardGo .46s linear forwards; }
+  .rl-face { position: absolute; inset: 0; backface-visibility: hidden; }
+  /* the spine you clicked, standing at the hinge and running back by the
+     thickness of the book — it is what faces you as the book comes out */
+  .rl-flight-spine {
+    position: absolute; right: 100%; top: 0; bottom: 0; width: var(--sw);
+    transform-origin: right center; transform: rotateY(-90deg);
+    backface-visibility: hidden;
+  }
+  .rl-flight-spine .rl-spine { border-radius: 3px 0 0 3px; }
+  .rl-flight.is-opening .rl-flight-spine { animation: rlBoardGo .46s linear forwards; }
+  .rl-face-back {
+    transform: rotateY(180deg); border-radius: 9px 3px 3px 9px;
+    background:
+      repeating-linear-gradient(115deg, rgba(150,120,70,.07) 0 6px, rgba(255,255,255,.05) 6px 13px),
+      radial-gradient(90% 70% at 70% 30%, #FBF6E8, #E8DDC4);
+    box-shadow: inset 0 0 44px rgba(140,112,64,.28);
+  }
+
+  /* ─────────── The open book ─────────── */
+  .rl-modal { perspective: 2600px; }
+  .rl-openbook { position: relative; }
+  /* the block of pages, along the fore-edge */
+  .rl-openbook::after {
+    content: ''; position: absolute; top: 8px; bottom: 8px; left: 100%; width: 7px;
+    background: repeating-linear-gradient(180deg, #f2ead7 0 2px, #d6cbb0 2px 3px);
+    border-radius: 0 5px 5px 0; box-shadow: 2px 1px 7px rgba(30,18,6,.3);
+  }
+  .rl-paper {
+    position: relative; z-index: 2; max-height: 90vh; overflow-y: auto;
+    border-radius: 4px 10px 10px 4px; background: #FFFCF4;
+    background-image: linear-gradient(90deg, #efe6d2 0 10px, rgba(0,0,0,.10) 10px 13px, #FFFCF4 20px);
+    box-shadow: 0 26px 60px rgba(20,12,4,.4), inset 0 0 0 1px rgba(160,138,96,.25);
+    animation: rlPaperIn .34s .14s both;
+  }
+  .rl-cols { display: grid; grid-template-columns: 210px 1fr; gap: 22px; }
+  @media (max-width: 720px) { .rl-cols { grid-template-columns: 1fr; } }
 
   /* A plan is a sheet of paper, not a book — ruled margin, no cover. */
   .rl-plan {
@@ -313,7 +283,7 @@
      perspective, so the 3D still works. */
   html.hb-dark .rl-spine, html.hb-dark .rl-cover, html.hb-dark .rl-head,
   html.hb-dark .rl-ribbon, html.hb-dark .rl-board,
-  html.hb-dark .rl-openbook-cover, html.hb-dark .rl-mini {
+  html.hb-dark .rl-board, html.hb-dark .rl-face-back {
     filter: invert(1) hue-rotate(180deg);
   }
   html.hb-dark .rl-book.is-unread .rl-spine { filter: invert(1) hue-rotate(180deg) saturate(.8); }
@@ -586,18 +556,44 @@
     </div>
   </sc-if>
 
+  <!-- ─────────── A book coming off the shelf ─────────── -->
+  <sc-if value="{{ hasFlight }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ flyScrim }}" hint-placeholder-val="{{ false }}">
+      <div style="position: fixed; inset: 0; z-index: 955; background: rgba(24,16,9,.55); animation: rlFadeIn .34s both;"></div>
+    </sc-if>
+    <div class="rl-stage">
+      <div class="rl-flight {{ fly.cls }}" style="--bw: {{ fly.bw }}; --bh: {{ fly.bh }}; --dx: {{ fly.dx }}; --dy: {{ fly.dy }}; --s: {{ fly.s }}; --sw: {{ fly.sw }}; --tf: {{ fly.tf }}; --fs: {{ fly.fs }}; --ink: {{ fly.ink }}; --ink2: {{ fly.ink2 }}; --gold: {{ fly.gold }}; --goldsoft: {{ fly.goldsoft }};">
+        <div class="rl-flight-swing">
+          <div class="rl-flight-spine">
+            <span class="rl-spine">
+              <span class="rl-band rl-band-a"></span>
+              <span class="rl-mark">{{ fly.mark }}</span>
+              <span class="rl-plate"><span class="rl-title">{{ fly.spineTitle }}</span></span>
+              <span class="rl-author">{{ fly.spineBy }}</span>
+              <span class="rl-band rl-band-b"></span>
+            </span>
+          </div>
+          <div class="rl-face rl-board">
+            <span class="rl-board-spine"><span class="rl-board-band"></span><span class="rl-board-band"></span></span>
+            <span class="rl-board-edge"></span>
+            <span class="rl-board-plate">
+              <span class="rl-board-rule"></span>
+              <span class="rl-board-title">{{ fly.title }}</span>
+              <span class="rl-board-by">{{ fly.by }}</span>
+              <span class="rl-board-rule"></span>
+            </span>
+          </div>
+          <div class="rl-face rl-face-back"></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- ─────────── An opened book ─────────── -->
   <sc-if value="{{ showBook }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeBook }}" style="position: fixed; inset: 0; z-index: 940; background: rgba(24,16,9,.55); animation: rlFadeIn .25s ease;"></div>
     <div class="rl-modal" style="position: fixed; z-index: 941; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(96vw, 900px);">
       <div class="rl-openbook" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }}; --goldsoft: {{ bk.goldsoft }};">
-        <span class="rl-openbook-cover">
-          <span class="rl-cover-face rl-cover-out">
-            <span class="rl-cover-spine"><span class="rl-cover-band"></span><span class="rl-cover-band"></span><span class="rl-cover-band"></span></span>
-            <span class="rl-openbook-title">{{ bk.title }}</span>
-          </span>
-          <span class="rl-cover-face rl-cover-in"></span>
-        </span>
         <div class="rl-paper">
           <div style="padding: 22px 26px 26px 40px;">
 
@@ -618,14 +614,14 @@
 
               <!-- left: the object, and what you're doing with it -->
               <div>
-                <div class="rl-mini" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }}; --goldsoft: {{ bk.goldsoft }};">
-                  <span class="rl-mini-spine"><span class="rl-mini-band"></span><span class="rl-mini-band"></span></span>
-                  <span class="rl-mini-edge"></span>
-                  <span class="rl-mini-plate">
-                    <span class="rl-mini-rule"></span>
-                    <span class="rl-mini-title">{{ bk.title }}</span>
-                    <span class="rl-mini-by">{{ bk.by }}</span>
-                    <span class="rl-mini-rule"></span>
+                <div class="rl-board rl-mini" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }}; --goldsoft: {{ bk.goldsoft }};">
+                  <span class="rl-board-spine"><span class="rl-board-band"></span><span class="rl-board-band"></span></span>
+                  <span class="rl-board-edge"></span>
+                  <span class="rl-board-plate">
+                    <span class="rl-board-rule"></span>
+                    <span class="rl-board-title">{{ bk.title }}</span>
+                    <span class="rl-board-by">{{ bk.by }}</span>
+                    <span class="rl-board-rule"></span>
                   </span>
                 </div>
 
@@ -922,6 +918,7 @@ class Component extends DCLogic {
   state = { tick: 0, filter: 'all', query: '', tag: '', pick: null, openId: null, draft: null,
             noteLoc: '', noteText: '',
             planId: null, planEdit: false, stepQuery: '', fromPlan: null,
+            flight: null, flyPhase: null,
             importOpen: false, importText: '', importMsg: '', promptCopied: false,
             obsOpen: false, obsMsg: '', obsBad: false, obsBusy: false, obsVault: '',
             toastMsg: '', toastBad: false };
@@ -1082,9 +1079,55 @@ class Component extends DCLogic {
     this.setState(s => ({ tick: s.tick + 1 }));
   }
 
-  // ── The open book ──
+  /* ── The open book ──
+     Clicking a spine takes the book off the shelf before it opens: the
+     board flies from where the spine was standing to the middle of the
+     screen, turning to face you, and only then swings open. Opened from
+     anywhere else (a list row, a plan step) there is no spine to fly
+     from, so the same board grows out of the middle instead. */
+  FLY_MS = 340;
+
   openBook(id, e) {
     if (e && e.stopPropagation) e.stopPropagation();
+    const el = e && e.currentTarget;
+    const from = (el && el.getBoundingClientRect && el.classList && el.classList.contains('rl-book'))
+      ? el.getBoundingClientRect() : null;
+
+    let reduced = false;
+    try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (err) {}
+    if (reduced) return this.showBook(id);
+
+    // Where the board should come to rest: a portrait book, sized to fit.
+    const vw = window.innerWidth || 1000, vh = window.innerHeight || 800;
+    const bh = Math.round(Math.min(vh * 0.56, 430, vw * 0.92 / 0.72));
+    const bw = Math.round(bh * 0.72);
+    const cx = from ? from.left + from.width / 2 : vw / 2;
+    const cy = from ? from.top + from.height / 2 : vh / 2;
+
+    clearTimeout(this._flyT);
+    clearTimeout(this._flyT2);
+    this.setState({
+      flight: {
+        id, bw: bw + 'px', bh: bh + 'px',
+        dx: Math.round(cx - vw / 2) + 'px', dy: Math.round(cy - vh / 2) + 'px',
+        s: from ? +(from.height / bh).toFixed(3) : 0.7,
+        // the spine slab, drawn at flight scale so it shrinks back to the
+        // exact thickness the book has on the shelf
+        sw: Math.round(from ? from.width * (bh / from.height) : bw * 0.1) + 'px',
+        fs: Math.round((from ? bh / from.height : 3) * 8) + 'px',
+        tf: Math.max(13, Math.round(bh * 0.055)) + 'px',
+      },
+      flyPhase: 'fly',
+    });
+    // fly, then open — the board keeps going while the page grows in
+    this._flyT = setTimeout(() => {
+      this.setState({ flyPhase: 'open' });
+      this.showBook(id);
+      this._flyT2 = setTimeout(() => this.setState({ flight: null, flyPhase: null }), 480);
+    }, this.FLY_MS);
+  }
+
+  showBook(id) {
     const entry = this.historyOf(id);
     const draft = {};
     this.FIELDS.forEach(f => { draft[f.key] = entry[f.key] || ''; });
@@ -1103,6 +1146,8 @@ class Component extends DCLogic {
   }
   closeBook() {
     this.saveDraft();
+    clearTimeout(this._flyT); clearTimeout(this._flyT2);
+    if (this.state.flight) this.setState({ flight: null, flyPhase: null });
     // If you came here from a plan, go back to it.
     const back = this.state.fromPlan;
     this.setState(s => ({ openId: null, draft: null, noteText: '', noteLoc: '',
@@ -1853,7 +1898,7 @@ class Component extends DCLogic {
     const view = ui.view || 'list';
     const collapsed = ui.collapsed || {};
     if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], viewChips: [], tagChips: [], shelves: [], onDeck: [], isListView: true, isShelfView: false, addBook: () => this.addBook(), exportAll: () => this.exportAll(), openImport: () => this.openImport(), closeImport: () => this.closeImport(), setImportText: (e) => this.setImportText(e), importPaste: () => this.runImport(this.state.importText, 'merge'), pickImportFile: () => this.pickImportFile(), copyPrompt: () => this.copyPrompt(), promptText: this.importPromptText(), copyLabel: '⧉ copy prompt', copyBg: '#FFFFFF', copyColor: '#534AB7', importOpen: !!this.state.importOpen, importText: this.state.importText || '', importMsg: this.state.importMsg || '', hasImportMsg: !!this.state.importMsg, hasToast: !!this.state.toastMsg, toastMsg: this.state.toastMsg || '', toastBg: '#3B6D11',
-      showBook: false, bk: { statusBtns: [], notes: [], tags: [], files: [], plans: [] }, logFields: [], closeBook: () => {}, addNote: () => {}, setNoteLoc: () => {}, setNoteText: () => {}, noteLoc: '', noteText: '', nowLabel: '',
+      hasFlight: false, flyScrim: false, fly: { cls: '' }, showBook: false, bk: { statusBtns: [], notes: [], tags: [], files: [], plans: [] }, logFields: [], closeBook: () => {}, addNote: () => {}, setNoteLoc: () => {}, setNoteText: () => {}, noteLoc: '', noteText: '', nowLabel: '',
       isBrowse: true, isPlansView: false, planCards: [], hasPlans: false, noPlans: true, showPlan: false,
       pl: { steps: [], whyParas: [], stepHits: [] }, closePlan: () => this.closePlan(), newPlan: () => this.newPlan(),
       obsOpen: false, obs: { transportChips: [], folder: 'Reading List' }, openObs: () => this.openObs(), closeObs: () => this.closeObs(), obsChipLabel: 'Obsidian', obsChipBorder: '#E4E2DD', obsChipBg: '#FFFFFF', obsChipColor: '#55564F' };
@@ -1982,7 +2027,8 @@ class Component extends DCLogic {
               // the bound object on the shelf
               ink: bind.ink, ink2: bind.ink2, gold: bind.gold, goldsoft: bind.goldsoft,
               w: bind.w, h: bind.h, d: bind.d, fs: bind.fs,
-              bookCls: 'is-' + st + (bind.thin ? ' is-thin' : ''),
+              bookCls: 'is-' + st + (bind.thin ? ' is-thin' : '') +
+                       ((this.state.flight && this.state.flight.id === it.id) ? ' is-flying' : ''),
               spineTitle: this.shortTitle(it.title, bind.chars),
               spineBy: this.shortBy(it.by, bind.byChars),
               spineMark: st === 'read' ? '✦' : (st === 'reading' ? '‣' : ''),
@@ -2178,6 +2224,26 @@ class Component extends DCLogic {
       };
     }
 
+    // ── The board in the air ──
+    const flight = this.state.flight;
+    let fly = { cls: '', bw: '0px', bh: '0px', dx: '0px', dy: '0px', s: 1, sw: '0px', tf: '14px', fs: '8px',
+                ink: '#4A5B7A', ink2: '#6d7c96', gold: '#E3C88A', goldsoft: 'rgba(227,200,138,.4)',
+                title: '', by: '', spineTitle: '', spineBy: '', mark: '' };
+    if (flight) {
+      const hit = items[flight.id];
+      const fst = statusOf(flight.id);
+      const fb = hit ? this.binding(flight.id, hit.shelf.accent, fst, this.pagesOf(hit.it, hit.shelf.kind))
+                     : this.binding(flight.id, '#4A5B7A', fst, 0);
+      fly = Object.assign({}, flight, {
+        cls: this.state.flyPhase === 'open' ? 'is-opening' : '',
+        ink: fb.ink, ink2: fb.ink2, gold: fb.gold, goldsoft: fb.goldsoft,
+        title: hit ? hit.it.title : '', by: hit ? (hit.it.by || '') : '',
+        spineTitle: hit ? this.shortTitle(hit.it.title, fb.chars) : '',
+        spineBy: hit ? this.shortBy(hit.it.by, fb.byChars) : '',
+        mark: fst === 'read' ? '✦' : (fst === 'reading' ? '‣' : ''),
+      });
+    }
+
     // ── Obsidian panel ──
     const oc = OB ? OB.cfg() : { folder: 'Reading List', vaultName: '', restUrl: '', restKey: '', transport: 'folder', includeAll: false, lastSync: '' };
     const linked = !!(oc.transport === 'rest' ? oc.restKey : this.state.obsVault);
@@ -2252,7 +2318,8 @@ class Component extends DCLogic {
       hasToast: !!this.state.toastMsg,
       toastMsg: this.state.toastMsg || '',
       toastBg: this.state.toastBad ? '#A32E27' : '#3B6D11',
-      // the open book
+      // the board in the air, and the open book
+      hasFlight: !!flight, fly, flyScrim: this.state.flyPhase === 'fly',
       showBook: !!itemOf, bk, logFields,
       closeBook: () => this.closeBook(),
       addNote: () => this.addNote(),

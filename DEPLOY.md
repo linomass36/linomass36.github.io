@@ -78,7 +78,15 @@ under `ct_reading_books_v1`, so once sync is on they follow you across devices.
 The **▦ Shelf** view binds every book in leather cut from its shelf's colour —
 faded cloth until you start it, deep hide once you do, a red ribbon hanging out
 of whatever you're reading now, and gilt on the ones you've finished. Hover and
-the book draws half out of the shelf; click and it opens.
+the book draws half out of the shelf.
+
+Click and it comes off the shelf properly: the book lifts out of its slot
+spine-first, turns to face you and grows as it crosses to the middle of the
+screen, and only then does the cover swing open on its hinge — showing the
+endpaper on its back — and dissolve as the page grows in behind it. It leaves a
+gap on the shelf while it's in the air. Opened from anywhere without a spine to
+fly from (a list row, a plan step) the same board grows out of the middle
+instead, and with the OS set to reduce motion it skips straight to the page.
 
 An open book holds everything about it in one place:
 
