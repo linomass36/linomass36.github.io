@@ -87,7 +87,7 @@
   }
   .rl-title {
     writing-mode: vertical-rl; transform: rotate(180deg); text-align: center;
-    font-family: 'Newsreader', serif; font-size: 8px; font-weight: 500; letter-spacing: .01em; line-height: 1.25;
+    font-family: 'Newsreader', serif; font-size: var(--fs, 8px); font-weight: 500; letter-spacing: .01em; line-height: 1.25;
     color: var(--gold); text-shadow: 0 1px 1px rgba(0,0,0,.7);
     max-height: 100%; overflow: hidden;
   }
@@ -129,6 +129,11 @@
   }
   .rl-book.is-reading .rl-ribbon { display: block; }
   .rl-book.is-unread .rl-spine { filter: saturate(.8); }
+  /* A pamphlet has no room for an author, and thinner cords. */
+  .rl-book.is-thin .rl-author { display: none; }
+  .rl-book.is-thin .rl-plate { padding: 4px 0; }
+  .rl-book.is-thin .rl-band { height: 5px; }
+  .rl-book.is-thin .rl-spine { padding: 7% 1px 9%; }
   .rl-book.is-read .rl-spine { box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 -18px 22px rgba(0,0,0,.28), 0 0 0 1px rgba(214,183,116,.4); }
   .rl-board {
     height: 15px; margin: 0 -14px; border-radius: 0 0 6px 6px;
@@ -136,53 +141,160 @@
     box-shadow: 0 10px 18px rgba(40,26,12,.28), inset 0 2px 0 rgba(255,255,255,.16);
   }
 
-  /* ─────────── Opening a book ─────────── */
-  @keyframes rlCoverOpen {
-    0%   { transform: rotateY(0deg);   box-shadow: 8px 12px 30px rgba(20,12,4,.5); }
-    60%  { transform: rotateY(-128deg); }
-    100% { transform: rotateY(-178deg); box-shadow: -14px 10px 26px rgba(20,12,4,.28); }
+  /* ─────────── Opening a book ───────────
+     The panel is the open book. Over it lies the front board, hinged on
+     the left: dyed hide and gilt on the outside, a cord-raised spine at
+     the hinge, marbled endpaper on the inside. It swings up and over,
+     turns to show its inner face past ninety degrees, and dissolves as
+     it comes to rest — so it never has to land anywhere.               */
+  @keyframes rlCoverSwing {
+    0%   { transform: translateZ(4px) rotateY(0deg); }
+    100% { transform: translateZ(4px) rotateY(-162deg); }
   }
-  @keyframes rlPaperIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+  @keyframes rlCoverGo {   /* on the faces, not the board: opacity here
+                              would flatten the board's 3D children */
+    0%, 66% { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+  @keyframes rlGutter { 0% { opacity: .55; } 100% { opacity: 0; } }
+  @keyframes rlPaperIn { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: none; } }
   @keyframes rlFadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .rl-modal { perspective: 2400px; }
+
+  .rl-modal { perspective: 2600px; perspective-origin: 44% 42%; }
   .rl-openbook { position: relative; transform-style: preserve-3d; }
+  /* the block of pages, along the fore-edge */
+  .rl-openbook::after {
+    content: ''; position: absolute; top: 8px; bottom: 8px; left: 100%; width: 7px;
+    background: repeating-linear-gradient(180deg, #f2ead7 0 2px, #d6cbb0 2px 3px);
+    border-radius: 0 5px 5px 0; box-shadow: 2px 1px 7px rgba(30,18,6,.3);
+  }
+  /* the shadow the closed board casts on the page under it */
+  .rl-openbook::before {
+    content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    border-radius: 4px 10px 10px 4px;
+    background: linear-gradient(90deg, rgba(24,14,4,.5), rgba(24,14,4,.16) 40%, rgba(24,14,4,0) 78%);
+    animation: rlGutter .66s cubic-bezier(.36,.06,.22,1) forwards;
+  }
   .rl-openbook-cover {
-    position: absolute; inset: 0; z-index: 3; border-radius: 4px 10px 10px 4px;
-    transform-origin: left center; backface-visibility: hidden;
-    animation: rlCoverOpen .78s cubic-bezier(.55,.05,.25,1) forwards;
-    display: flex; align-items: center; justify-content: center; pointer-events: none;
+    position: absolute; inset: 0; z-index: 4; pointer-events: none;
+    transform-origin: left center; transform-style: preserve-3d;
+    animation: rlCoverSwing .66s cubic-bezier(.38,.03,.22,1) forwards;
+  }
+  .rl-cover-face {
+    position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden;
+    display: flex; align-items: center; justify-content: center;
+    animation: rlCoverGo .66s linear forwards;
+  }
+  .rl-cover-out {
+    border-radius: 4px 11px 11px 4px;
+    box-shadow: 0 24px 46px rgba(18,10,3,.45), inset 0 1px 0 rgba(255,255,255,.14);
     background:
-      radial-gradient(120% 100% at 24% 16%, rgba(255,255,255,.10), rgba(0,0,0,0) 45%),
-      linear-gradient(90deg, rgba(0,0,0,.55) 0 11px, rgba(255,255,255,.09) 13px, rgba(0,0,0,.03) 30px, rgba(0,0,0,.34)),
+      radial-gradient(120% 100% at 30% 14%, rgba(255,255,255,.10), rgba(0,0,0,0) 46%),
       repeating-linear-gradient(7deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.05) 1px 3px),
       repeating-linear-gradient(-83deg, rgba(255,255,255,.02) 0 1px, rgba(0,0,0,.035) 1px 4px),
       linear-gradient(150deg, var(--ink2) -12%, var(--ink) 42%, #2A1710 165%);
   }
-  .rl-openbook-cover::after {
-    content: ''; position: absolute; inset: 16px 18px; border: 1px solid var(--gold); opacity: .35; border-radius: 3px;
+  .rl-cover-out::after {
+    content: ''; position: absolute; inset: 18px 22px 18px 42px;
+    border: 1px solid var(--gold); opacity: .34; border-radius: 2px;
+  }
+  .rl-cover-out::before {
+    content: ''; position: absolute; inset: 23px 27px 23px 47px;
+    border: 1px solid var(--gold); opacity: .17; border-radius: 1px;
+  }
+  /* the spine standing at the hinge, with its cords */
+  .rl-cover-spine {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 26px; border-radius: 4px 0 0 4px;
+    background: linear-gradient(90deg, rgba(0,0,0,.6), rgba(255,255,255,.12) 42%, rgba(0,0,0,.34));
+    box-shadow: inset -4px 0 10px rgba(0,0,0,.42);
+  }
+  .rl-cover-band {
+    position: absolute; left: 0; right: 0; height: 9px;
+    background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.06) 48%, rgba(0,0,0,.32));
+    box-shadow: 0 -1px 0 var(--goldsoft), 0 1px 0 rgba(0,0,0,.3);
+  }
+  .rl-cover-band:nth-child(1) { top: 15%; }
+  .rl-cover-band:nth-child(2) { top: 42%; }
+  .rl-cover-band:nth-child(3) { bottom: 15%; }
+  /* the inside of the board */
+  .rl-cover-in {
+    transform: rotateY(180deg); border-radius: 11px 4px 4px 11px;
+    background:
+      repeating-linear-gradient(115deg, rgba(150,120,70,.07) 0 6px, rgba(255,255,255,.05) 6px 13px),
+      radial-gradient(90% 70% at 70% 30%, #FBF6E8, #E8DDC4);
+    box-shadow: inset 0 0 44px rgba(140,112,64,.28);
   }
   .rl-openbook-title {
-    font-family: 'Newsreader', serif; font-size: 24px; line-height: 1.2; text-align: center;
-    color: var(--gold); max-width: 70%; text-shadow: 0 1px 0 rgba(0,0,0,.55);
+    position: relative; z-index: 1; padding-left: 26px;
+    font-family: 'Newsreader', serif; font-size: 25px; line-height: 1.25; text-align: center;
+    color: var(--gold); max-width: 66%; text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  }
+  /* No room to swing a board on a phone — just bring the page up. */
+  @media (max-width: 720px) {
+    .rl-openbook-cover, .rl-openbook::before { display: none; }
+    .rl-paper { animation: rlPaperIn .3s both; }
   }
   .rl-paper {
     position: relative; z-index: 2; max-height: 90vh; overflow-y: auto;
     border-radius: 4px 10px 10px 4px; background: #FFFCF4;
     background-image: linear-gradient(90deg, #efe6d2 0 10px, rgba(0,0,0,.10) 10px 13px, #FFFCF4 20px);
     box-shadow: 0 26px 60px rgba(20,12,4,.4), inset 0 0 0 1px rgba(160,138,96,.25);
-    animation: rlPaperIn .5s .34s both;
+    animation: rlPaperIn .42s .3s both;
   }
   .rl-cols { display: grid; grid-template-columns: 210px 1fr; gap: 22px; }
   @media (max-width: 720px) { .rl-cols { grid-template-columns: 1fr; } .rl-openbook-title { font-size: 19px; } }
+  /* The same binding as the shelf, seen face on: spine and its raised
+     cords down the hinge, a gilt double rule, page edges at the fore. */
   .rl-mini {
-    height: 190px; border-radius: 3px 7px 7px 3px; position: relative; overflow: hidden;
+    position: relative; height: 214px; overflow: hidden;
+    border-radius: 3px 9px 9px 3px;
     background:
-      linear-gradient(90deg, rgba(0,0,0,.5) 0 7px, rgba(255,255,255,.12) 9px, rgba(0,0,0,.05) 20px, rgba(0,0,0,.26)),
-      linear-gradient(160deg, var(--ink2), var(--ink));
-    box-shadow: 0 10px 20px rgba(40,26,12,.28);
-    display: flex; align-items: center; justify-content: center; padding: 18px 14px 18px 22px;
+      radial-gradient(120% 90% at 26% 14%, rgba(255,255,255,.10), rgba(0,0,0,0) 48%),
+      repeating-linear-gradient(7deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.05) 1px 3px),
+      repeating-linear-gradient(-83deg, rgba(255,255,255,.02) 0 1px, rgba(0,0,0,.035) 1px 4px),
+      linear-gradient(150deg, var(--ink2) -14%, var(--ink) 44%, #2A1710 170%);
+    box-shadow: 0 14px 26px rgba(40,26,12,.32), inset 0 1px 0 rgba(255,255,255,.16);
+    display: flex; align-items: center; justify-content: center;
+    padding: 22px 16px 22px 34px;
   }
-  .rl-mini::after { content: ''; position: absolute; inset: 10px 10px 10px 18px; border: 1px solid var(--gold); opacity: .3; }
+  .rl-mini-spine {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 17px;
+    background: linear-gradient(90deg, rgba(0,0,0,.52), rgba(255,255,255,.13) 44%, rgba(0,0,0,.40));
+    box-shadow: inset -3px 0 8px rgba(0,0,0,.4);
+  }
+  .rl-mini-band {
+    position: absolute; left: 0; right: 0; height: 7px;
+    background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.06) 48%, rgba(0,0,0,.30));
+    box-shadow: 0 -1px 0 var(--goldsoft), 0 1px 0 rgba(0,0,0,.28);
+  }
+  .rl-mini-band:first-child { top: 17%; }
+  .rl-mini-band:last-child { bottom: 17%; }
+  .rl-mini-edge {
+    position: absolute; right: 0; top: 5px; bottom: 5px; width: 5px; border-radius: 0 3px 3px 0;
+    background: repeating-linear-gradient(180deg, #efe7d5 0 2px, #d3c8ad 2px 3px);
+    box-shadow: inset 2px 0 4px rgba(60,42,18,.35);
+  }
+  .rl-mini::after {
+    content: ''; position: absolute; inset: 13px 13px 13px 30px;
+    border: 1px solid var(--gold); opacity: .32; border-radius: 2px;
+  }
+  .rl-mini::before {
+    content: ''; position: absolute; inset: 17px 17px 17px 34px;
+    border: 1px solid var(--gold); opacity: .16; border-radius: 1px;
+  }
+  .rl-mini-plate {
+    position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 7px; text-align: center; max-width: 100%;
+  }
+  .rl-mini-rule { display: block; width: 34px; height: 1px; background: var(--gold); opacity: .5; }
+  .rl-mini-title {
+    font-family: 'Newsreader', serif; font-size: 14px; line-height: 1.32; color: var(--gold);
+    text-shadow: 0 1px 2px rgba(0,0,0,.6); max-height: 108px; overflow: hidden;
+  }
+  .rl-mini-by {
+    font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .07em;
+    color: var(--gold); opacity: .72; max-width: 100%; overflow: hidden;
+  }
 
   /* A plan is a sheet of paper, not a book — ruled margin, no cover. */
   .rl-plan {
@@ -373,7 +485,7 @@
             <div class="rl-shelfrow">
               <div class="rl-books">
                 <sc-for list="{{ s.items }}" as="it" hint-placeholder-count="8">
-                  <button onClick="{{ it.open }}" class="rl-book {{ it.bookCls }}" title="{{ it.tip }}" aria-label="{{ it.tip }}" style="--w: {{ it.w }}; --h: {{ it.h }}; --d: {{ it.d }}; --ink: {{ it.ink }}; --ink2: {{ it.ink2 }}; --gold: {{ it.gold }}; --goldsoft: {{ it.goldsoft }};">
+                  <button onClick="{{ it.open }}" class="rl-book {{ it.bookCls }}" title="{{ it.tip }}" aria-label="{{ it.tip }}" style="--w: {{ it.w }}; --h: {{ it.h }}; --d: {{ it.d }}; --fs: {{ it.fs }}; --ink: {{ it.ink }}; --ink2: {{ it.ink2 }}; --gold: {{ it.gold }}; --goldsoft: {{ it.goldsoft }};">
                     <span class="rl-head"></span>
                     <span class="rl-cover"></span>
                     <span class="rl-ribbon"></span>
@@ -478,8 +590,14 @@
   <sc-if value="{{ showBook }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeBook }}" style="position: fixed; inset: 0; z-index: 940; background: rgba(24,16,9,.55); animation: rlFadeIn .25s ease;"></div>
     <div class="rl-modal" style="position: fixed; z-index: 941; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(96vw, 900px);">
-      <div class="rl-openbook" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }};">
-        <span class="rl-openbook-cover"><span class="rl-openbook-title">{{ bk.title }}</span></span>
+      <div class="rl-openbook" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }}; --goldsoft: {{ bk.goldsoft }};">
+        <span class="rl-openbook-cover">
+          <span class="rl-cover-face rl-cover-out">
+            <span class="rl-cover-spine"><span class="rl-cover-band"></span><span class="rl-cover-band"></span><span class="rl-cover-band"></span></span>
+            <span class="rl-openbook-title">{{ bk.title }}</span>
+          </span>
+          <span class="rl-cover-face rl-cover-in"></span>
+        </span>
         <div class="rl-paper">
           <div style="padding: 22px 26px 26px 40px;">
 
@@ -500,8 +618,15 @@
 
               <!-- left: the object, and what you're doing with it -->
               <div>
-                <div class="rl-mini" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }};">
-                  <span style="font-family: 'Newsreader', serif; font-size: 13px; line-height: 1.3; text-align: center; color: {{ bk.gold }}; text-shadow: 0 1px 0 rgba(0,0,0,.5);">{{ bk.title }}</span>
+                <div class="rl-mini" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }}; --goldsoft: {{ bk.goldsoft }};">
+                  <span class="rl-mini-spine"><span class="rl-mini-band"></span><span class="rl-mini-band"></span></span>
+                  <span class="rl-mini-edge"></span>
+                  <span class="rl-mini-plate">
+                    <span class="rl-mini-rule"></span>
+                    <span class="rl-mini-title">{{ bk.title }}</span>
+                    <span class="rl-mini-by">{{ bk.by }}</span>
+                    <span class="rl-mini-rule"></span>
+                  </span>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 14px;">
@@ -515,6 +640,12 @@
                 <div style="margin-top: 12px;">
                   <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">where you are</div>
                   <input value="{{ bk.progress }}" onInput="{{ bk.setProgress }}" placeholder="p. 128 of 402" style="width: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; padding: 8px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F;">
+                </div>
+
+                <div style="margin-top: 10px;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">how long</div>
+                  <input value="{{ bk.pages }}" onInput="{{ bk.setPages }}" placeholder="402 pages · or 9h" style="width: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; padding: 8px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; color: #26271F;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #A6A79F; line-height: 1.5; margin-top: 4px;">{{ bk.lengthNote }}</div>
                 </div>
 
                 <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px;">
@@ -935,6 +1066,14 @@ class Component extends DCLogic {
     // Finishing a book earns its reflection — open it.
     if (next === 'read') this.openBook(id);
   }
+  // The length of the book, which is what its spine thickness is drawn from.
+  setPages(id, e) {
+    const entry = this.historyOf(id);
+    const v = (e && e.target ? e.target.value : '').trim();
+    if (v) entry.pages = v; else delete entry.pages;
+    this.writeHistory(id, entry);
+    this.setState(s => ({ tick: s.tick + 1 }));
+  }
   setProgress(id, e) {
     const entry = this.historyOf(id);
     const v = (e && e.target ? e.target.value : '').trim();
@@ -1036,6 +1175,7 @@ class Component extends DCLogic {
       '      "shelf": "Category name — books with the same name group together",',
       '      "status": "unread | reading | read",',
       '      "tags": ["optional", "lowercase", "tags"],',
+      '      "pages": 402,',
       '      "doi": "10.xxxx/optional-for-papers"',
       '    }',
       '  ],',
@@ -1063,6 +1203,8 @@ class Component extends DCLogic {
       '- Group related titles by giving them the same "shelf" name.',
       '- Keep "note" to one useful sentence, not marketing copy.',
       '- Omit "status" unless the list says it was already read.',
+      '- "pages" is the length. Give it whenever you know it, even roughly —',
+      '  it is what decides how thick the book sits on the shelf.',
       '- Use "plans" whenever the list has an order or a purpose behind it:',
       '  put the argument in "why", and one entry per book in "steps",',
       '  in reading order. Do not renumber or re-sort them alphabetically.',
@@ -1145,6 +1287,7 @@ class Component extends DCLogic {
       const rec = { id, title, by: String(b.by || '').trim(), note: String(b.note || '').trim() };
       if (b.shelf) rec.shelf = String(b.shelf).trim();
       if (b.doi) rec.doi = String(b.doi).trim();
+      if (this.toPages(b.pages)) rec.pages = String(this.toPages(b.pages));
       if (Array.isArray(b.files)) rec.files = b.files;
       books.push(rec); added++;
       if (b.status === 'read' || b.status === 'reading') status[id] = b.status;
@@ -1185,6 +1328,7 @@ class Component extends DCLogic {
                         note: String((s && s.note) || '').trim(),
                         shelf: String((s && s.shelf) || p.shelf || title).trim() };
           if (s && s.doi) rec.doi = String(s.doi).trim();
+          if (s && this.toPages(s.pages)) rec.pages = String(this.toPages(s.pages));
           books.push(rec); added++;
           titleId[k] = id;
           if (s && Array.isArray(s.tags) && s.tags.length) {
@@ -1396,7 +1540,7 @@ class Component extends DCLogic {
       id: it.id, title: it.title || '', by: it.by || '', shelf: shelfName || '',
       note: it.note || '', doi: it.doi || '',
       status: (st.status || {})[it.id] || 'unread',
-      progress: h.progress || '',
+      progress: h.progress || '', pages: h.pages || (it.pages ? String(it.pages) : ''),
       started: h.started || '', finished: h.finished || h.readAt || '',
       tags: this.tagsOf(it.id), notes: this.notesOf(it.id), reflection,
       file: ((st.obsidian || {})[it.id] || {}).file || '',
@@ -1427,6 +1571,7 @@ class Component extends DCLogic {
       if (v) h[f.key] = v; else delete h[f.key];
     });
     if (rec.progress) h.progress = rec.progress; else delete h.progress;
+    if (rec.pages) h.pages = String(rec.pages); else delete h.pages;
     if (rec.started) h.started = rec.started; else delete h.started;
     if (rec.finished) { h.finished = rec.finished; h.readAt = rec.finished; }
     else { delete h.finished; delete h.readAt; }
@@ -1617,26 +1762,69 @@ class Component extends DCLogic {
     return h;
   }
   rgba(hex, a) { const c = this.hexOf(hex); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
-  binding(id, accent, status) {
+
+  /* How long is this book? In order: a length you've set, a length the
+     import supplied, the total you wrote into "where you are"
+     ("p. 128 of 402"), and failing all of that, the kind of thing it is —
+     a journal article is a couple of dozen pages, a book is unknown.
+     Hours are accepted for anything you listen to, at 45 pages an hour. */
+  pagesOf(it, kind) {
+    const hist = (this.read().history || {})[it.id] || {};
+    const explicit = this.toPages(hist.pages) || this.toPages(it.pages);
+    if (explicit) return explicit;
+    const m = /(?:of|\/)\s*(\d{2,4})\b/i.exec(String(hist.progress || '')) ||
+              /\b(\d{2,4})\s*(?:pp?\.?|pages)\b/i.exec(String(hist.progress || ''));
+    if (m) return parseInt(m[1], 10);
+    return kind === 'paper' ? 22 : 0;           // 0 = unknown
+  }
+  toPages(v) {
+    const s = String(v == null ? '' : v).trim();
+    if (!s) return 0;
+    const hrs = /^(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hours?)\b/i.exec(s);
+    if (hrs) return Math.round(parseFloat(hrs[1]) * 45);   // an audiobook hour ≈ 45 pages
+    const n = parseInt(s.replace(/[^\d]/g, ''), 10);
+    return n > 0 && n < 20000 ? n : 0;
+  }
+
+  /* The binding. Two of the three dimensions are decided here:
+
+       thickness  is the length of the book — a twelve-page essay is a
+                  pamphlet, a thousand-page novel is a brick. Square root,
+                  so the range stays shelf-like rather than absurd.
+       height     is decorative: a stable hash of the book's id, so no two
+                  neighbours match but a given book is always the same
+                  size. Real shelves are ragged; a row of identical
+                  rectangles reads as a chart, not a shelf.
+       depth      likewise — it only shows when a book tips out.          */
+  binding(id, accent, status, pages) {
     const h = this.hashOf(id);
-    const worn = (h >> 3 & 7) / 90;             // a little variation, book to book
+    const worn = (h >>> 3 & 7) / 90;            // a little variation, book to book
     const unread = status === 'unread';
     // Read and reading are bound in deep dyed hide; the ones you haven't
     // opened are the same leather, faded on the shelf.
     const base = unread ? this.mix(accent, '#5C5348', .52) : this.mix(accent, '#3A1F12', .28 + worn);
     const gold = unread ? '#CFC3A8' : (status === 'read' ? '#F2DCA6' : '#E7CE93');
-    const w = 30 + (h % 18), ht = 112 + ((h >> 4) % 56);
+    const jitter = (h >>> 13 & 3) - 1;          // ±1px, so equal lengths aren't clones
+    const w = pages
+      ? Math.max(13, Math.min(58, Math.round(10 + 1.6 * Math.sqrt(pages)) + jitter))
+      : 28 + (h % 12);                          // unknown length → a modest middle band
+    // Unsigned shifts throughout: >> on a hash above 2^31 goes negative,
+    // which would take a book below its minimum height.
+    const ht = 112 + ((h >>> 4) % 56);
     // How much gilt lettering the spine can actually carry: the title is
     // set vertically, so it runs down the plate and wraps into columns.
-    const cols = Math.max(1, Math.floor((w - 7) / 11));
-    const perCol = Math.floor((ht * 0.62 - 16) / 4.6);
+    // A thin spine takes smaller type and fewer of them.
+    const fs = w < 22 ? 7 : 8;
+    const cols = Math.max(1, Math.floor((w - 6) / (fs * 1.3 + 2)));
+    const perCol = Math.floor((ht * 0.62 - 16) / (fs * 0.575));
     return {
       ink: base,
       ink2: this.mix(base, '#F5E8CE', unread ? .18 : .24),
       gold, goldsoft: this.rgba(gold, .4),
-      w: w + 'px', h: ht + 'px', d: (42 + ((h >> 9) % 20)) + 'px',
-      chars: Math.max(12, cols * perCol - 2),
+      w: w + 'px', h: ht + 'px', d: (42 + ((h >>> 9) % 20)) + 'px', fs: fs + 'px',
+      chars: Math.max(10, cols * perCol - 2),
       byChars: Math.max(4, Math.floor(ht * 0.20 / 3.9)),
+      thin: w < 20,
     };
   }
   // A spine only has room for the title itself — not its subtitle, and
@@ -1765,7 +1953,8 @@ class Component extends DCLogic {
             const hist = (store.history || {})[it.id] || {};
             const nNotes = ((store.notes || {})[it.id] || []).length;
             const written = nNotes + (this.FIELDS.filter(f => hist[f.key]).length ? 1 : 0);
-            const bind = this.binding(it.id, s.accent, st);
+            const nPages = this.pagesOf(it, s.kind);
+            const bind = this.binding(it.id, s.accent, st, nPages);
             const q = encodeURIComponent(String(it.title || '').replace(/[\u2018\u2019]/g, "'") + ' ' + String(it.by || '').split(',')[0]);
             const usePubmed = (s.search || 'pubmed') === 'pubmed';
             return {
@@ -1792,12 +1981,12 @@ class Component extends DCLogic {
               editTags: (e) => this.editTags(it.id, e),
               // the bound object on the shelf
               ink: bind.ink, ink2: bind.ink2, gold: bind.gold, goldsoft: bind.goldsoft,
-              w: bind.w, h: bind.h, d: bind.d,
-              bookCls: 'is-' + st,
+              w: bind.w, h: bind.h, d: bind.d, fs: bind.fs,
+              bookCls: 'is-' + st + (bind.thin ? ' is-thin' : ''),
               spineTitle: this.shortTitle(it.title, bind.chars),
               spineBy: this.shortBy(it.by, bind.byChars),
               spineMark: st === 'read' ? '✦' : (st === 'reading' ? '‣' : ''),
-              tip: it.title + (it.by ? ' — ' + it.by : ''),
+              tip: it.title + (it.by ? ' — ' + it.by : '') + (nPages ? ' · ' + nPages + ' pp' : ''),
               open: (e) => this.openBook(it.id, e),
               cycle: () => this.cycle(it.id, it.title),
             };
@@ -1838,7 +2027,7 @@ class Component extends DCLogic {
       const it = itemOf, s = shelfOf;
       const st = statusOf(openId);
       const hist = (store.history || {})[openId] || {};
-      const bind = this.binding(openId, s.accent, st);
+      const bind = this.binding(openId, s.accent, st, this.pagesOf(it, s.kind));
       const rec = this.recordFor(it, s.name);
       const q = encodeURIComponent(String(it.title || '').replace(/[‘’]/g, "'") + ' ' + String(it.by || '').split(',')[0]);
       const usePubmed = (s.search || 'pubmed') === 'pubmed';
@@ -1853,7 +2042,7 @@ class Component extends DCLogic {
       bk = {
         title: it.title, by: it.by || '', shelfName: s.name,
         note: it.note || '', hasNote: !!it.note,
-        ink: bind.ink, ink2: bind.ink2, gold: bind.gold,
+        ink: bind.ink, ink2: bind.ink2, gold: bind.gold, goldsoft: bind.goldsoft,
         statusBtns: ['unread', 'reading', 'read'].map(k => {
           const on = st === k;
           return {
@@ -1865,6 +2054,11 @@ class Component extends DCLogic {
         datesLine: dates.length ? dates.join(' · ') : 'not started yet',
         progress: hist.progress || '',
         setProgress: (e) => this.setProgress(openId, e),
+        pages: hist.pages || '',
+        setPages: (e) => this.setPages(openId, e),
+        lengthNote: this.pagesOf(it, s.kind)
+          ? this.pagesOf(it, s.kind) + ' pages · sets how thick it sits on the shelf'
+          : 'unknown — the shelf guesses',
         noteCount: myNotes.length,
         hasNotes: myNotes.length > 0,
         notes: myNotes.map(n => ({

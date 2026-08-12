@@ -43,7 +43,7 @@
   ];
 
   // Scalars that participate in the three-way merge.
-  var SCALARS = ['title', 'by', 'shelf', 'note', 'doi', 'status', 'progress', 'started', 'finished'];
+  var SCALARS = ['title', 'by', 'shelf', 'note', 'doi', 'status', 'progress', 'pages', 'started', 'finished'];
 
   // ── Config ───────────────────────────────────────────────────
   function cfg() {
@@ -126,6 +126,7 @@
     out.push('shelf: ' + yaml(rec.shelf));
     out.push('status: ' + (rec.status || 'unread'));
     out.push('progress: ' + yaml(rec.progress));
+    out.push('pages: ' + (parseInt(rec.pages, 10) > 0 ? parseInt(rec.pages, 10) : ''));
     out.push('started: ' + (rec.started ? fmtDay(rec.started) : ''));
     out.push('finished: ' + (rec.finished ? fmtDay(rec.finished) : ''));
     out.push('tags: [' + (rec.tags || []).map(function (t) { return 'reading/' + t; }).join(', ') + ']');
@@ -259,6 +260,7 @@
       doi: trim(fm.doi),
       status: /^(unread|reading|read)$/.test(trim(fm.status)) ? trim(fm.status) : 'unread',
       progress: trim(fm.progress),
+      pages: parseInt(fm.pages, 10) > 0 ? String(parseInt(fm.pages, 10)) : '',
       started: fm.started ? parseStamp(fm.started) : '',
       finished: fm.finished ? parseStamp(fm.finished) : '',
       tags: (fm.tags || []).map(function (t) { return trim(t).replace(/^reading\//, '').toLowerCase(); }).filter(Boolean),

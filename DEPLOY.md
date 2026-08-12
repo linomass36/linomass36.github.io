@@ -85,12 +85,34 @@ An open book holds everything about it in one place:
 - **Want to read / Reading now / Finished reading** — one tap each, and the
   started/finished dates are stamped for you.
 - **Where you are** — free text, so `p. 128 of 402`, `ch. 9` or `01:12:30` all work.
+- **How long** — the length of the book, which is what its thickness on the
+  shelf is drawn from. `402`, `402 pages` and `9h` (an audiobook, counted at 45
+  pages an hour) all parse.
 - **Notes** — each one stamped with the moment you wrote it *and* the place in
   the book it belongs to. Add the place, write the note, and it files itself
   newest-first. Writing a note marks the book as being read.
 - **Reflection** — the four questions from the old reading log, saved as you type.
 
 The **open ▸** link on any row in the list view opens the same book.
+
+### What decides a book's size
+Three dimensions, and only one of them means anything:
+
+- **Thickness is length.** A twelve-page essay is a pamphlet, a 1,200-page novel
+  is a brick. The scale is a square root, so the range stays shelf-like: 12pp is
+  about 18px, 300pp about 39px, and anything past 1,100pp is capped at 58px. The
+  length comes from the first of these that exists — the **how long** field, a
+  `pages` given at import, the total written into **where you are** (`p. 128 of
+  402`), or, for a journal article, an assumed couple of dozen pages. That last
+  default is why the publication shelves are all slim. A book whose length is
+  unknown sits in a modest middle band until you tell it otherwise.
+- **Height is decorative.** It is a stable hash of the book's id, spread over
+  112–167px. It carries no meaning: it exists because a row of identical
+  rectangles reads as a bar chart rather than a shelf, and hashing the id (rather
+  than randomising) means a given book is always exactly the same height, on
+  every device, forever.
+- **Depth** — how far a book runs back into the shelf — is the same hash trick,
+  and only shows when a book tips out on hover.
 
 ## Reading plans
 A plan is the form advice actually arrives in: a piece of prose explaining what
