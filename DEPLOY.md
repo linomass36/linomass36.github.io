@@ -78,19 +78,79 @@ under `ct_reading_books_v1`, so once sync is on they follow you across devices.
 The **▦ Shelf** view binds every book in leather cut from its shelf's colour —
 faded cloth until you start it, deep hide once you do, a red ribbon hanging out
 of whatever you're reading now, and gilt on the ones you've finished. Hover and
-the book draws half out of the shelf; click and it opens.
+the book draws half out of the shelf.
+
+Click and it comes off the shelf properly: the book lifts out of its slot
+spine-first, turns to face you and grows as it crosses to the middle of the
+screen, and only then does the cover swing open on its hinge — showing the
+endpaper on its back — and dissolve as the page grows in behind it. It leaves a
+gap on the shelf while it's in the air. Opened from anywhere without a spine to
+fly from (a list row, a plan step) the same board grows out of the middle
+instead, and with the OS set to reduce motion it skips straight to the page.
 
 An open book holds everything about it in one place:
 
 - **Want to read / Reading now / Finished reading** — one tap each, and the
   started/finished dates are stamped for you.
 - **Where you are** — free text, so `p. 128 of 402`, `ch. 9` or `01:12:30` all work.
+- **How long** — the length of the book, which is what its thickness on the
+  shelf is drawn from. `402`, `402 pages` and `9h` (an audiobook, counted at 45
+  pages an hour) all parse.
 - **Notes** — each one stamped with the moment you wrote it *and* the place in
   the book it belongs to. Add the place, write the note, and it files itself
   newest-first. Writing a note marks the book as being read.
 - **Reflection** — the four questions from the old reading log, saved as you type.
 
 The **open ▸** link on any row in the list view opens the same book.
+
+### What decides a book's size
+Three dimensions, and only one of them means anything:
+
+- **Thickness is length.** A twelve-page essay is a pamphlet, a 1,200-page novel
+  is a brick. The scale is a square root, so the range stays shelf-like: 12pp is
+  about 18px, 300pp about 39px, and anything past 1,100pp is capped at 58px. The
+  length comes from the first of these that exists — the **how long** field, a
+  `pages` given at import, the total written into **where you are** (`p. 128 of
+  402`), or, for a journal article, an assumed couple of dozen pages. That last
+  default is why the publication shelves are all slim. A book whose length is
+  unknown sits in a modest middle band until you tell it otherwise.
+- **Height is decorative.** It is a stable hash of the book's id, spread over
+  112–167px. It carries no meaning: it exists because a row of identical
+  rectangles reads as a bar chart rather than a shelf, and hashing the id (rather
+  than randomising) means a given book is always exactly the same height, on
+  every device, forever.
+- **Depth** — how far a book runs back into the shelf — is the same hash trick,
+  and only shows when a book tips out on hover.
+
+## Reading plans
+A plan is the form advice actually arrives in: a piece of prose explaining what
+this is for, and an order — read this first, then this, and here's why. The
+**◈ Plans** view holds them.
+
+The usual way one arrives is a paste. Ask a chat for a reading list, copy the
+prompt from **Import → copy prompt** (it now describes plans as well as books),
+and paste back what it returns. Books and the plan come in together: a step
+names its book by title, and if the list has never heard of that title the step
+carries enough to create it. The paste lands you on the plans view.
+
+Inside a plan: the prose renders with its **bold** and *italics*, the steps are
+numbered in reading order with their "when" (`this week`, `alongside whatever
+else`) and the reasoning for that position, each showing its live status.
+**Start the next one** marks the first unread step as reading. Clicking a step's
+title opens that book — notes, dates and all — and closing it puts you back in
+the plan. A book that belongs to a plan shows which one, and which step it is.
+
+**✎ edit** turns on the editor: retitle the plan, rewrite the prose, reorder
+steps with ▲▼, drop them, edit any step's when and why, and add new steps by
+searching your books. **＋ New plan** starts an empty one.
+
+Plans are part of the same export/import as everything else, and they sync to
+Obsidian as their own notes in a `Plans` subfolder — one note per plan, prose
+under `## Why this plan`, and the order as a numbered list of `[[wikilinks]]`
+to the individual book notes, so a plan is navigable inside the vault. Edit it
+there — reorder the list, rewrite a step's reasoning, add a numbered line for a
+book that isn't on the list yet — and the next sync brings it back, creating any
+book the new step needs. Deleting a plan here deletes its note there.
 
 ## Syncing with Obsidian
 One book = one Markdown note, and it goes both ways: write in Obsidian or write
@@ -166,7 +226,7 @@ follow you across devices. The vault folder handle itself is per-device
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys).
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = offline. Tap it to force a sync now; `window.hubSync.state` / `window.hubSync.syncNow()` are available in the console.
-- `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note format, its parser, the three-way merge, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
+- `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note formats (one per book, one per reading plan), their parsers, the three-way merges, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
 - `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`). Injected on hub pages.
 - `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support. The service worker is network-first for pages (new deploys land at once) and cache-busts by version; the deploy stamps the version into it so each push updates the installed app.
 - `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.
