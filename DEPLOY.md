@@ -92,6 +92,36 @@ An open book holds everything about it in one place:
 
 The **open ▸** link on any row in the list view opens the same book.
 
+## Reading plans
+A plan is the form advice actually arrives in: a piece of prose explaining what
+this is for, and an order — read this first, then this, and here's why. The
+**◈ Plans** view holds them.
+
+The usual way one arrives is a paste. Ask a chat for a reading list, copy the
+prompt from **Import → copy prompt** (it now describes plans as well as books),
+and paste back what it returns. Books and the plan come in together: a step
+names its book by title, and if the list has never heard of that title the step
+carries enough to create it. The paste lands you on the plans view.
+
+Inside a plan: the prose renders with its **bold** and *italics*, the steps are
+numbered in reading order with their "when" (`this week`, `alongside whatever
+else`) and the reasoning for that position, each showing its live status.
+**Start the next one** marks the first unread step as reading. Clicking a step's
+title opens that book — notes, dates and all — and closing it puts you back in
+the plan. A book that belongs to a plan shows which one, and which step it is.
+
+**✎ edit** turns on the editor: retitle the plan, rewrite the prose, reorder
+steps with ▲▼, drop them, edit any step's when and why, and add new steps by
+searching your books. **＋ New plan** starts an empty one.
+
+Plans are part of the same export/import as everything else, and they sync to
+Obsidian as their own notes in a `Plans` subfolder — one note per plan, prose
+under `## Why this plan`, and the order as a numbered list of `[[wikilinks]]`
+to the individual book notes, so a plan is navigable inside the vault. Edit it
+there — reorder the list, rewrite a step's reasoning, add a numbered line for a
+book that isn't on the list yet — and the next sync brings it back, creating any
+book the new step needs. Deleting a plan here deletes its note there.
+
 ## Syncing with Obsidian
 One book = one Markdown note, and it goes both ways: write in Obsidian or write
 on the site, and a sync reconciles the two. Open **◆ Obsidian** in the toolbar
@@ -166,7 +196,7 @@ follow you across devices. The vault folder handle itself is per-device
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys).
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = offline. Tap it to force a sync now; `window.hubSync.state` / `window.hubSync.syncNow()` are available in the console.
-- `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note format, its parser, the three-way merge, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
+- `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note formats (one per book, one per reading plan), their parsers, the three-way merges, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
 - `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`). Injected on hub pages.
 - `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support. The service worker is network-first for pages (new deploys land at once) and cache-busts by version; the deploy stamps the version into it so each push updates the installed app.
 - `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.

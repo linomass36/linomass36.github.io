@@ -404,13 +404,18 @@
     });
   }
 
+  // The sync folder, and optionally a subfolder of it (plans live in one).
+  function segs(sub) {
+    return (cfg().folder + (sub ? '/' + sub : '')).split('/').filter(Boolean);
+  }
+
   // Resolve (creating if needed) the sync folder inside the vault.
-  function noteDir(request) {
+  function noteDir(request, sub) {
     return savedVault().then(function (vault) {
       if (!vault) throw new Error('No vault folder connected yet.');
       return permission(vault, request).then(function (p) {
         if (p !== 'granted') throw new Error('Permission to the vault folder was not granted.');
-        var parts = cfg().folder.split('/').filter(Boolean);
+        var parts = segs(sub);
         var chain = Promise.resolve(vault);
         parts.forEach(function (part) {
           chain = chain.then(function (dir) { return dir.getDirectoryHandle(part, { create: true }); });
@@ -420,8 +425,8 @@
     });
   }
 
-  function folderIO(request) {
-    var dirP = noteDir(request);
+  function folderIO(request, sub) {
+    var dirP = noteDir(request, sub);
     return {
       label: 'vault folder',
       list: function () {
@@ -455,8 +460,8 @@
   }
 
   // ── Transport 2: the Local REST API plugin ───────────────────
-  function restPath(name) {
-    var folder = cfg().folder.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  function restPath(name, sub) {
+    var folder = segs(sub).map(encodeURIComponent).join('/');
     return folder + (name ? '/' + encodeURIComponent(name) : '/');
   }
   function restFetch(path, opts) {
@@ -472,19 +477,19 @@
       return opts.json ? r.json() : r.text();
     });
   }
-  function restIO() {
+  function restIO(sub) {
     return {
       label: 'Local REST API',
       list: function () {
-        return restFetch(restPath(''), { json: true }).then(function (d) {
+        return restFetch(restPath('', sub), { json: true }).then(function (d) {
           return ((d && d.files) || []).filter(function (n) { return /\.md$/i.test(n); });
-        });
+        }, function () { return []; });   // the subfolder may not exist yet
       },
-      read: function (name) { return restFetch(restPath(name)); },
+      read: function (name) { return restFetch(restPath(name, sub)); },
       write: function (name, md) {
-        return restFetch(restPath(name), { method: 'PUT', body: md, headers: { 'Content-Type': 'text/markdown' } });
+        return restFetch(restPath(name, sub), { method: 'PUT', body: md, headers: { 'Content-Type': 'text/markdown' } });
       },
-      del: function (name) { return restFetch(restPath(name), { method: 'DELETE' }).catch(function () {}); }
+      del: function (name) { return restFetch(restPath(name, sub), { method: 'DELETE' }).catch(function () {}); }
     };
   }
   function restTest() {
@@ -498,8 +503,8 @@
       });
   }
 
-  function io(request) {
-    return cfg().transport === 'rest' ? restIO() : folderIO(request);
+  function io(request, sub) {
+    return cfg().transport === 'rest' ? restIO(sub) : folderIO(request, sub);
   }
 
   // ── The sync itself ──────────────────────────────────────────
@@ -612,11 +617,239 @@
     return REFLECTION.some(function (f) { return trim((rec.reflection || {})[f.key]); });
   }
 
+  /* ─────────── Reading plans ───────────
+     A plan is a piece of prose plus an order: read this, then this,
+     and here is why. It becomes one note in a Plans subfolder, with
+     each step written as a [[wikilink]] to that book's own note, so
+     the plan is navigable inside Obsidian and editable there.
+
+     A plan step points at a book by title — that keeps the note
+     hand-editable: add a numbered line with a title and the next sync
+     adds the step (and the book, if it's new).                        */
+  var PLAN_SUB = 'Plans';
+  var PLAN_SCALARS = ['title', 'goal', 'why', 'source'];
+
+  function buildPlanNote(plan) {
+    var out = [];
+    out.push('---');
+    out.push('ct_plan_id: ' + yaml(plan.id));
+    out.push('title: ' + yaml(plan.title));
+    out.push('goal: ' + yaml(plan.goal));
+    out.push('created: ' + (plan.created ? fmtDay(plan.created) : fmtDay(new Date().toISOString())));
+    if (plan.source) out.push('source_of: ' + yaml(plan.source));
+    out.push('updated: ' + (plan.updated || new Date().toISOString()));
+    out.push('type: reading-plan');
+    out.push('source: reading-list');
+    out.push('---');
+    out.push('');
+    out.push('# ' + str(plan.title));
+    if (plan.goal) { out.push(''); out.push('*' + str(plan.goal) + '*'); }
+    out.push('');
+    out.push('## Why this plan');
+    out.push('');
+    out.push(str(plan.why));
+    out.push('');
+    out.push('## The order');
+    out.push('');
+    (plan.steps || []).forEach(function (s, i) {
+      var line = (i + 1) + '. **[[' + str(s.title).replace(/[\[\]|]/g, '') + ']]**';
+      if (trim(s.when)) line += ' — ' + trim(s.when);
+      out.push(line);
+      if (trim(s.why)) {
+        str(s.why).split('\n').forEach(function (l) { out.push('   ' + l); });
+      }
+    });
+    if (!(plan.steps || []).length) {
+      out.push('<!-- 1. **[[A book title]]** — this week -->');
+      out.push('<!--    why it comes first -->');
+    }
+    return out.join('\n').replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n') + '\n';
+  }
+
+  function parseSteps(text) {
+    var steps = [], cur = null;
+    str(text).split(/\r?\n/).forEach(function (line) {
+      if (/^\s*<!--/.test(line)) return;
+      var m = /^\s*(?:\d+[.)]|[-*])\s+(.*)$/.exec(line);
+      if (m) {
+        if (cur) steps.push(cur);
+        var rest = m[1], when = '';
+        var dash = rest.search(/\s+(?:—|–|--)\s+/);
+        if (dash !== -1) { when = rest.slice(dash).replace(/^\s*(?:—|–|--)\s*/, '').trim(); rest = rest.slice(0, dash); }
+        var link = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/.exec(rest);
+        var title = link ? link[1] : rest.replace(/\*\*/g, '').replace(/^\*|\*$/g, '');
+        cur = { title: trim(title), when: when, why: '' };
+        return;
+      }
+      // Continuation lines are prose, whatever they were indented by.
+      if (cur && /^\s+\S/.test(line)) cur.why += (cur.why ? '\n' : '') + trim(line);
+    });
+    if (cur) steps.push(cur);
+    return steps.filter(function (s) { return s.title; });
+  }
+
+  function parsePlanNote(md, file) {
+    var p = parseFrontmatter(md), fm = p.fm, body = p.body;
+    var title = trim(fm.title);
+    if (!title) {
+      var h1 = /^#\s+(.+)$/m.exec(body);
+      title = h1 ? trim(h1[1]) : trim(str(file).replace(/\.md$/i, ''));
+    }
+    return {
+      id: trim(fm.ct_plan_id),
+      file: file || '',
+      title: title,
+      goal: trim(fm.goal),
+      source: trim(fm.source_of),
+      created: fm.created ? parseStamp(fm.created) : '',
+      why: trim(section(body, 'Why this plan') || section(body, 'Why')),
+      steps: parseSteps(section(body, 'The order') || section(body, 'Order')),
+      updated: trim(fm.updated) || ''
+    };
+  }
+
+  function stepKey(s) { return trim(s.title).toLowerCase(); }
+
+  function mergePlan3(base, local, remote) {
+    if (!remote) return local;
+    if (!local) return remote;
+    var b = base || {}, out = {};
+    PLAN_SCALARS.forEach(function (k) {
+      var bv = str(b[k]), lv = str(local[k]), rv = str(remote[k]);
+      out[k] = (lv !== bv) ? lv : (rv !== bv ? rv : lv);
+    });
+    out.id = local.id || remote.id;
+    out.created = local.created || remote.created;
+    out.file = remote.file || local.file || '';
+
+    // Steps, three-way by title: dropped on one side → dropped;
+    // edited on one side → that side's wording wins.
+    var bi = {}, li = {}, ri = {};
+    (b.steps || []).forEach(function (s) { bi[stepKey(s)] = s; });
+    (local.steps || []).forEach(function (s) { li[stepKey(s)] = s; });
+    (remote.steps || []).forEach(function (s) { ri[stepKey(s)] = s; });
+
+    var remoteMoved = JSON.stringify(remote.steps || []) !== JSON.stringify(b.steps || []);
+    var order = (remoteMoved ? (remote.steps || []) : (local.steps || [])).map(stepKey);
+    (remoteMoved ? (local.steps || []) : (remote.steps || [])).forEach(function (s) {
+      if (order.indexOf(stepKey(s)) === -1) order.push(stepKey(s));
+    });
+
+    var steps = [];
+    order.forEach(function (k) {
+      var l = li[k], r = ri[k], inBase = !!bi[k];
+      if (inBase && base) { if (!l || !r) return; }        // removed on a side
+      var pick = l || r;
+      if (l && r) {
+        var same = function (f) { return str(l[f]) === str((bi[k] || {})[f]); };
+        pick = { title: (l.title || r.title), when: same('when') ? r.when : l.when,
+                 why: same('why') ? r.why : l.why };
+      }
+      if (pick) steps.push({ title: pick.title, when: str(pick.when), why: str(pick.why) });
+    });
+    out.steps = steps;
+    out.updated = new Date().toISOString();
+    return out;
+  }
+
+  function planSnapshot(plan) {
+    var s = {};
+    PLAN_SCALARS.forEach(function (k) { s[k] = str(plan[k]); });
+    s.steps = (plan.steps || []).map(function (x) { return { title: x.title, when: str(x.when), why: str(x.why) }; });
+    return s;
+  }
+  function planFingerprint(plan) { return hash(JSON.stringify(planSnapshot(plan))); }
+
+  /*  Same contract as sync(), for plans:
+      returns { merged, created, meta, stats, wantBooks }, where
+      wantBooks lists step titles the site has no book for yet.        */
+  function syncPlans(locals, meta, opts) {
+    opts = opts || {};
+    var transport = opts.io || io(opts.request !== false, PLAN_SUB);
+    var nextMeta = {};
+    var stats = { pushed: 0, pulled: 0, added: 0, removed: 0 };
+
+    return transport.list().then(function (names) {
+      var remotes = [], chain = Promise.resolve();
+      names.forEach(function (name) {
+        chain = chain.then(function () {
+          return transport.read(name).then(function (md) {
+            if (md == null || trim(md).indexOf('---') !== 0) return;
+            remotes.push({ plan: parsePlanNote(md, name), md: md, name: name });
+          }, function () {});
+        });
+      });
+      return chain.then(function () { return remotes; });
+    }).then(function (remotes) {
+      var byId = {}, byTitle = {};
+      remotes.forEach(function (r) {
+        if (r.plan.id) byId[r.plan.id] = r;
+        byTitle[r.plan.title.toLowerCase()] = r;
+      });
+
+      var merged = [], created = [], writes = [], deletes = [];
+
+      locals.forEach(function (local) {
+        var m = (meta || {})[local.id] || {};
+        var hit = byId[local.id] || (m.file ? null : byTitle[str(local.title).toLowerCase()]);
+        var remote = hit ? hit.plan : null;
+        var remoteChanged = hit ? hash(hit.md) !== m.hash : false;
+        var localChanged = !m.snap || planFingerprint(local) !== m.snap;
+
+        var out;
+        if (!remote) out = local;
+        else if (!localChanged && remoteChanged) { out = remote; out.id = local.id; stats.pulled++; }
+        else if (localChanged && !remoteChanged) out = local;
+        else if (!localChanged && !remoteChanged) out = local;
+        else { out = mergePlan3(m.base || null, local, remote); stats.pulled++; }
+
+        var name = (hit && hit.name) || (slug(out.title) + '.md');
+        var md = buildPlanNote(Object.assign({}, out, { updated: new Date().toISOString() }));
+        var same = hit && hash(stripStamp(hit.md)) === hash(stripStamp(md));
+        if (!same) { writes.push({ name: name, md: md }); stats.pushed++; }
+        out.file = name;
+        nextMeta[out.id] = { file: name, hash: hash(same ? hit.md : md), snap: planFingerprint(out), base: planSnapshot(out) };
+        merged.push(out);
+        if (hit) hit.claimed = true;
+      });
+
+      remotes.forEach(function (r) {
+        if (r.claimed || !r.plan.title) return;
+        // Synced before but gone from the site → deleted here, so delete there.
+        var known = r.plan.id && (meta || {})[r.plan.id];
+        if (known) { deletes.push(r.name); stats.removed++; return; }
+        var plan = r.plan;
+        if (!plan.id) plan.id = 'pl-' + hash(r.name + plan.title) + Math.floor(Math.random() * 1e4).toString(36);
+        plan.created = plan.created || new Date().toISOString();
+        plan.updated = plan.updated || new Date().toISOString();
+        created.push(plan);
+        stats.added++;
+        var md = buildPlanNote(plan);
+        writes.push({ name: r.name, md: md });
+        nextMeta[plan.id] = { file: r.name, hash: hash(md), snap: planFingerprint(plan), base: planSnapshot(plan) };
+      });
+
+      var wantBooks = [];
+      merged.concat(created).forEach(function (p) {
+        (p.steps || []).forEach(function (s) { if (wantBooks.indexOf(s.title) === -1) wantBooks.push(s.title); });
+      });
+
+      var chain = Promise.resolve();
+      writes.forEach(function (w) {
+        chain = chain.then(function () { return transport.write(w.name, w.md); });
+      });
+      deletes.forEach(function (n) { chain = chain.then(function () { return transport.del(n); }); });
+      return chain.then(function () {
+        return { merged: merged, created: created, meta: nextMeta, stats: stats, wantBooks: wantBooks };
+      });
+    });
+  }
+
   // ── obsidian:// links ────────────────────────────────────────
-  function uriFor(rec) {
+  function uriFor(rec, sub) {
     var c = cfg();
     var file = rec.file || (slug(rec.title) + '.md');
-    var path = c.folder.replace(/\/+$/, '') + '/' + file.replace(/\.md$/i, '');
+    var path = segs(sub).join('/') + '/' + file.replace(/\.md$/i, '');
     if (c.vaultName) return 'obsidian://open?vault=' + encodeURIComponent(c.vaultName) + '&file=' + encodeURIComponent(path);
     return 'obsidian://open?file=' + encodeURIComponent(path);
   }
@@ -630,6 +863,10 @@
     folderSupported: folderSupported, pickVault: pickVault, savedVault: savedVault,
     forgetVault: forgetVault, permission: permission,
     restTest: restTest,
-    sync: sync, uriFor: uriFor
+    sync: sync, uriFor: uriFor,
+    PLAN_SUB: PLAN_SUB,
+    buildPlanNote: buildPlanNote, parsePlanNote: parsePlanNote, mergePlan3: mergePlan3,
+    planFingerprint: planFingerprint, syncPlans: syncPlans,
+    planUriFor: function (plan) { return uriFor(plan, PLAN_SUB); }
   };
 })();

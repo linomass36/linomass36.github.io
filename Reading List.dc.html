@@ -184,6 +184,16 @@
   }
   .rl-mini::after { content: ''; position: absolute; inset: 10px 10px 10px 18px; border: 1px solid var(--gold); opacity: .3; }
 
+  /* A plan is a sheet of paper, not a book — ruled margin, no cover. */
+  .rl-plan {
+    max-height: 90vh; overflow-y: auto; border-radius: 4px 10px 10px 4px;
+    background: #FFFDF6;
+    background-image: linear-gradient(90deg, #F6EFDC 0 22px, #E3C88A 22px 23px, #FFFDF6 23px);
+    box-shadow: 0 26px 60px rgba(20,12,4,.36), inset 0 0 0 1px rgba(160,138,96,.22);
+    animation: rlPaperIn .34s both;
+  }
+  .rl-step:first-of-type { border-top: none !important; }
+
   /* Dark mode inverts the whole page (see mobile.css). Leather that has been
      inverted is pale blue, so the bindings invert themselves straight back;
      the shelf behind them is given a light colour that inverts to dark wood.
@@ -228,18 +238,22 @@
 
   <div style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 0;">
 
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-      <input onInput="{{ setQuery }}" placeholder="Search titles, authors, notes, tags…" style="flex: 1; min-width: 0; font-size: 14px; padding: 10px 14px; border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; color: #26271F;">
-      <sc-if value="{{ hasFilterInfo }}" hint-placeholder-val="{{ false }}">
-        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; white-space: nowrap;">{{ searchInfo }}</span>
-      </sc-if>
-    </div>
+    <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <input onInput="{{ setQuery }}" placeholder="Search titles, authors, notes, tags…" style="flex: 1; min-width: 0; font-size: 14px; padding: 10px 14px; border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; color: #26271F;">
+        <sc-if value="{{ hasFilterInfo }}" hint-placeholder-val="{{ false }}">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #55564F; white-space: nowrap;">{{ searchInfo }}</span>
+        </sc-if>
+      </div>
+    </sc-if>
 
     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
-      <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="3">
-        <button onClick="{{ f.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ f.border }}; background: {{ f.bg }}; color: {{ f.color }};">{{ f.label }}</button>
-      </sc-for>
-      <span style="width: 1px; height: 20px; background: #E4E2DD; margin: 0 3px;"></span>
+      <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ true }}">
+        <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="3">
+          <button onClick="{{ f.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ f.border }}; background: {{ f.bg }}; color: {{ f.color }};">{{ f.label }}</button>
+        </sc-for>
+        <span style="width: 1px; height: 20px; background: #E4E2DD; margin: 0 3px;"></span>
+      </sc-if>
       <sc-for list="{{ viewChips }}" as="v" hint-placeholder-count="2">
         <button onClick="{{ v.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ v.border }}; background: {{ v.bg }}; color: {{ v.color }};">{{ v.label }}</button>
       </sc-for>
@@ -381,6 +395,42 @@
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 14px; text-align: center;">hover to draw a book out · click to open it</div>
     </sc-if>
 
+    <!-- ─────────── Reading plans ─────────── -->
+    <sc-if value="{{ isPlansView }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+        <div style="font-size: 13px; color: #6b6c63; line-height: 1.55; flex: 1; min-width: 260px;">A plan is an order and a reason: read this first, then this, and here's why. Paste one from a chat through <b>Import</b>, or start an empty one.</div>
+        <button onClick="{{ newPlan }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 7px 14px; border-radius: 20px; cursor: pointer; border: 1px solid #854F0B; background: #854F0B; color: #FFFFFF;">＋ New plan</button>
+      </div>
+
+      <sc-if value="{{ noPlans }}" hint-placeholder-val="{{ true }}">
+        <div style="border: 1px dashed #E6D6B0; border-radius: 14px; background: #FCFAF3; padding: 26px 22px; text-align: center; font-size: 13px; color: #77786F; line-height: 1.6;">No plans yet. When a conversation hands you a reading order — for a flaw to work on, a field to learn, a season to get through — paste it into <b>Import</b> and it lands here with its prose intact.</div>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <sc-for list="{{ planCards }}" as="p" hint-placeholder-count="2">
+          <button onClick="{{ p.open }}" style="text-align: left; width: 100%; border: 1px solid #E6D6B0; border-left: 3px solid #854F0B; border-radius: 14px; background: #FFFDF8; padding: 15px 18px; cursor: pointer; animation: rlIn .3s ease;">
+            <span style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+              <span style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; line-height: 1.2; flex: 1; min-width: 200px;">{{ p.title }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ p.barColor }};">{{ p.count }}</span>
+            </span>
+            <sc-if value="{{ p.hasGoal }}" hint-placeholder-val="{{ true }}">
+              <span style="display: block; font-size: 12.5px; font-style: italic; color: #6b6c63; margin-top: 3px;">{{ p.goal }}</span>
+            </sc-if>
+            <span style="display: block; height: 5px; border-radius: 3px; background: #EFE7D5; overflow: hidden; margin-top: 10px;">
+              <span style="display: block; height: 100%; border-radius: 3px; background: {{ p.barColor }}; width: {{ p.pct }};"></span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 10px; margin-top: 9px; flex-wrap: wrap;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F;">next</span>
+              <span style="font-family: 'Newsreader', serif; font-size: 15px; flex: 1; min-width: 140px;">{{ p.nextTitle }} <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #854F0B;">{{ p.nextWhen }}</span></span>
+              <sc-if value="{{ p.hasNext }}" hint-placeholder-val="{{ true }}">
+                <a onClick="{{ p.startNext }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #854F0B; border: 1px solid #E6D6B0; border-radius: 12px; padding: 4px 10px; background: #FBF6EA; cursor: pointer;">start it</a>
+              </sc-if>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+
     <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFDF8; padding: 16px 22px; margin-top: 22px; font-size: 12.5px; color: #77786F; line-height: 1.55;">
       A living list, not a syllabus. Add or cut freely — the point is a deliberate diet of reading across the surgeon, the scientist, and the whole educated person. Start where your curiosity is loudest today.
     </div>
@@ -395,16 +445,16 @@
     <div onClick="{{ closeImport }}" style="position: fixed; inset: 0; z-index: 900; background: rgba(20,20,22,.45);"></div>
     <div style="position: fixed; z-index: 901; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(94vw, 640px); max-height: 88vh; overflow-y: auto; background: #FFFDF8; border: 1px solid #E4E2DD; border-radius: 16px; padding: 20px 22px 18px; animation: rlIn .25s ease;">
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: #534AB7;">Import</div>
-      <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin: 5px 0 4px;">Add books, categories, or a full backup</div>
-      <div style="font-size: 12.5px; color: #77786F; line-height: 1.55; margin-bottom: 14px;">Paste JSON below (a chat's recommendations, or an exported file), or restore a backup file. Books with a <b>shelf</b> name create that category automatically. Titles you already have are skipped.</div>
+      <div style="font-family: 'Newsreader', serif; font-size: 21px; font-weight: 500; margin: 5px 0 4px;">Add books, a plan, or a full backup</div>
+      <div style="font-size: 12.5px; color: #77786F; line-height: 1.55; margin-bottom: 14px;">Paste JSON below (a chat's recommendations, or an exported file), or restore a backup file. Books with a <b>shelf</b> name create that category automatically, and a <b>plan</b> — an order, with the reasoning behind it — lands in <b>◈ Plans</b> with its prose intact. Titles you already have are skipped.</div>
 
       <div style="border: 1px solid #D6D2EC; border-radius: 12px; background: #F4F2FB; padding: 12px 14px; margin-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #534AB7;">Turn a conversation into a list</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #534AB7;">Turn a conversation into a list or a plan</span>
           <span style="flex: 1;"></span>
           <button onClick="{{ copyPrompt }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 6px 13px; border-radius: 16px; border: 1px solid #534AB7; background: {{ copyBg }}; color: {{ copyColor }}; cursor: pointer;">{{ copyLabel }}</button>
         </div>
-        <div style="font-size: 12px; color: #6b6c63; line-height: 1.5; margin-top: 7px;">Copy this prompt, paste it into any chat with your reading list, and paste the JSON it returns into the box below.</div>
+        <div style="font-size: 12px; color: #6b6c63; line-height: 1.5; margin-top: 7px;">Copy this prompt, paste it into any chat that gave you a reading list, and paste the JSON it returns into the box below. If the list had an order and a reason behind it, the prompt asks for that too — and it arrives as a plan.</div>
         <textarea readonly rows="4" value="{{ promptText }}" style="width: 100%; margin-top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; line-height: 1.5; padding: 9px 11px; border: 1px solid #D6D2EC; border-radius: 9px; background: #FFFFFF; color: #55564F; resize: vertical;"></textarea>
       </div>
 
@@ -493,6 +543,14 @@
                   </sc-for>
                   <a onClick="{{ bk.editTags }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #A6A79F; border: 1px dashed #DAD7D0; border-radius: 10px; padding: 2px 7px; background: #FCFBF9; cursor: pointer;">＋ tag</a>
                 </div>
+
+                <sc-if value="{{ bk.hasPlans }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
+                    <sc-for list="{{ bk.plans }}" as="p" hint-placeholder-count="1">
+                      <a onClick="{{ p.open }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; line-height: 1.45; color: #854F0B; border: 1px solid #E6D6B0; border-radius: 12px; padding: 5px 9px; background: #FBF6EA; cursor: pointer;">{{ p.label }}</a>
+                    </sc-for>
+                  </div>
+                </sc-if>
               </div>
 
               <!-- right: the notes themselves -->
@@ -540,6 +598,123 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ─────────── A reading plan, opened ─────────── -->
+  <sc-if value="{{ showPlan }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePlan }}" style="position: fixed; inset: 0; z-index: 930; background: rgba(24,16,9,.5); animation: rlFadeIn .25s ease;"></div>
+    <div style="position: fixed; z-index: 931; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(96vw, 780px);">
+      <div class="rl-plan">
+        <div style="padding: 22px 26px 26px 34px;">
+
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: #854F0B;">Reading plan · {{ pl.created }}</div>
+              <sc-if value="{{ pl.editing }}" hint-placeholder-val="{{ false }}">
+                <input value="{{ pl.title }}" onInput="{{ pl.setTitle }}" placeholder="What the plan is for" style="width: 100%; margin-top: 6px; font-family: 'Newsreader', serif; font-size: 22px; padding: 6px 9px; border: 1px solid #E6D6B0; border-radius: 9px; background: #FFFFFF; color: #26271F;">
+                <input value="{{ pl.goal }}" onInput="{{ pl.setGoal }}" placeholder="One line: what it's meant to change" style="width: 100%; margin-top: 6px; font-size: 13px; padding: 7px 9px; border: 1px solid #E6D6B0; border-radius: 9px; background: #FFFFFF; color: #26271F;">
+              </sc-if>
+              <sc-if value="{{ pl.reading }}" hint-placeholder-val="{{ true }}">
+                <div style="font-family: 'Newsreader', serif; font-size: 25px; font-weight: 500; line-height: 1.15; margin: 5px 0 2px;">{{ pl.title }}</div>
+                <sc-if value="{{ pl.hasGoal }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size: 13.5px; font-style: italic; color: #6b6c63; line-height: 1.5;">{{ pl.goal }}</div>
+                </sc-if>
+              </sc-if>
+            </div>
+            <button onClick="{{ closePlan }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 16px; line-height: 1; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #E4E2DD; background: #FFFDF8; color: #77786F; cursor: pointer;">×</button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+            <span style="flex: 1; min-width: 140px; height: 6px; border-radius: 3px; background: #EFE7D5; overflow: hidden;">
+              <span style="display: block; height: 100%; border-radius: 3px; background: {{ pl.barColor }}; width: {{ pl.pct }}; transition: width .4s ease;"></span>
+            </span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ pl.barColor }};">{{ pl.count }}</span>
+            <sc-if value="{{ pl.hasNext }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ pl.startNext }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 6px 13px; border-radius: 17px; border: 1px solid #854F0B; background: #854F0B; color: #FFF; cursor: pointer;">Start the next one</button>
+            </sc-if>
+            <button onClick="{{ pl.toggleEdit }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 6px 13px; border-radius: 17px; border: 1px solid #E4E2DD; background: #FFFFFF; color: #55564F; cursor: pointer;">{{ pl.editLabel }}</button>
+          </div>
+
+          <!-- the prose -->
+          <sc-if value="{{ pl.editing }}" hint-placeholder-val="{{ false }}">
+            <textarea value="{{ pl.why }}" onInput="{{ pl.setWhy }}" rows="8" placeholder="The reasoning: what this is for, what order, and why that order." style="width: 100%; margin-top: 14px; font-size: 13.5px; line-height: 1.6; padding: 11px 13px; border: 1px solid #E6D6B0; border-radius: 10px; background: #FFFFFF; color: #26271F; resize: vertical;"></textarea>
+            <input value="{{ pl.source }}" onInput="{{ pl.setSource }}" placeholder="where it came from (optional)" style="width: 100%; margin-top: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 7px 9px; border: 1px solid #E6D6B0; border-radius: 9px; background: #FFFFFF; color: #26271F;">
+          </sc-if>
+          <sc-if value="{{ pl.showProse }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 15px; border-left: 2px solid #E6D6B0; padding-left: 14px;">
+              <sc-for list="{{ pl.whyParas }}" as="para" hint-placeholder-count="2">
+                <div style="font-size: 13.5px; line-height: 1.68; color: #3f4038; margin-bottom: 10px;">
+<sc-for list="{{ para.bits }}" as="b" hint-placeholder-count="1"><span style="font-weight: {{ b.w }}; font-style: {{ b.i }};">{{ b.t }}</span></sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- the order -->
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B; margin: 20px 0 4px;">The order</div>
+          <sc-for list="{{ pl.steps }}" as="s" hint-placeholder-count="3">
+            <div class="rl-step" style="display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid #F0EADA;">
+              <span style="flex: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ s.dotColor }}; border: 1px solid {{ s.dotColor }}; background: #FFFDF8;">{{ s.n }}</span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                  <a onClick="{{ s.open }}" style="font-family: 'Newsreader', serif; font-size: 17px; line-height: 1.25; color: {{ s.titleColor }}; cursor: pointer;">{{ s.title }}</a>
+                  <sc-if value="{{ s.hasWhen }}" hint-placeholder-val="{{ true }}">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #854F0B; border: 1px solid #E6D6B0; border-radius: 10px; padding: 2px 8px; background: #FBF6EA;">{{ s.when }}</span>
+                  </sc-if>
+                  <span style="flex: 1;"></span>
+                  <a onClick="{{ s.cycle }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ s.dotColor }}; border: 1px solid {{ s.dotColor }}; border-radius: 12px; padding: 2px 9px; background: #FFFFFF; cursor: pointer; white-space: nowrap;">{{ s.statusLabel }}</a>
+                </span>
+                <sc-if value="{{ s.by }}" hint-placeholder-val="{{ true }}">
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #8a8577; margin-top: 2px;">{{ s.by }}</span>
+                </sc-if>
+                <sc-if value="{{ s.hasWhy }}" hint-placeholder-val="{{ true }}">
+                  <span style="display: block; margin-top: 5px;">
+                    <sc-for list="{{ s.whyParas }}" as="para" hint-placeholder-count="1">
+                      <span style="display: block; font-size: 12.5px; line-height: 1.6; color: #6b6c63; margin-bottom: 5px;">
+<sc-for list="{{ para.bits }}" as="b" hint-placeholder-count="1"><span style="font-weight: {{ b.w }}; font-style: {{ b.i }};">{{ b.t }}</span></sc-for>
+                      </span>
+                    </sc-for>
+                  </span>
+                </sc-if>
+                <sc-if value="{{ pl.editing }}" hint-placeholder-val="{{ false }}">
+                  <span style="display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; align-items: center;">
+                    <input value="{{ s.when }}" onInput="{{ s.setWhen }}" placeholder="when — this week, alongside…" style="flex: 1; min-width: 130px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 5px 8px; border: 1px solid #E6D6B0; border-radius: 8px; background: #FFFFFF; color: #26271F;">
+                    <a onClick="{{ s.up }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 8px; background: #FFF; cursor: pointer;">▲</a>
+                    <a onClick="{{ s.down }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 8px; background: #FFF; cursor: pointer;">▼</a>
+                    <a onClick="{{ s.drop }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A32E27; border: 1px solid #E7C9C6; border-radius: 8px; padding: 3px 8px; background: #FBF1F0; cursor: pointer;">remove</a>
+                  </span>
+                  <textarea value="{{ s.why }}" onInput="{{ s.setWhy }}" rows="2" placeholder="why this one, here" style="width: 100%; margin-top: 6px; font-size: 12.5px; line-height: 1.55; padding: 7px 10px; border: 1px solid #E6D6B0; border-radius: 8px; background: #FFFFFF; color: #26271F; resize: vertical;"></textarea>
+                </sc-if>
+              </span>
+            </div>
+          </sc-for>
+
+          <sc-if value="{{ pl.editing }}" hint-placeholder-val="{{ false }}">
+            <div style="border: 1px dashed #E6D6B0; border-radius: 12px; background: #FCFAF3; padding: 11px 13px; margin-top: 12px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #A6A79F; margin-bottom: 5px;">add a step</div>
+              <input value="{{ pl.stepQuery }}" onInput="{{ pl.setStepQuery }}" placeholder="search your books by title…" style="width: 100%; font-size: 13px; padding: 8px 10px; border: 1px solid #E6D6B0; border-radius: 9px; background: #FFFFFF; color: #26271F;">
+              <sc-if value="{{ pl.hasStepHits }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 7px;">
+                  <sc-for list="{{ pl.stepHits }}" as="h" hint-placeholder-count="2">
+                    <a onClick="{{ h.add }}" style="font-family: 'Newsreader', serif; font-size: 14px; color: #26271F; border: 1px solid #E4E2DD; border-radius: 8px; padding: 6px 10px; background: #FFFFFF; cursor: pointer;">＋ {{ h.label }}</a>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px;">
+            <button onClick="{{ closePlan }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 38px; padding: 0 18px; border-radius: 19px; border: 1px solid #854F0B; background: #854F0B; color: #FFF; cursor: pointer;">Close the plan</button>
+            <a href="{{ pl.obsUri }}" target="_blank" rel="noopener" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #534AB7; border: 1px solid #D6D2EC; border-radius: 12px; padding: 4px 9px; background: #F4F2FB;">◆ Obsidian ↗</a>
+            <sc-if value="{{ pl.hasSource }}" hint-placeholder-val="{{ false }}">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;">from {{ pl.source }}</span>
+            </sc-if>
+            <span style="flex: 1;"></span>
+            <a onClick="{{ pl.remove }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A32E27; border: 1px solid #E7C9C6; border-radius: 12px; padding: 4px 9px; background: #FBF1F0; cursor: pointer;">delete plan</a>
           </div>
         </div>
       </div>
@@ -615,6 +790,7 @@ class Component extends DCLogic {
   KEY_BOOKS = 'ct_reading_books_v1';   // books you add yourself (syncs across devices)
   state = { tick: 0, filter: 'all', query: '', tag: '', pick: null, openId: null, draft: null,
             noteLoc: '', noteText: '',
+            planId: null, planEdit: false, stepQuery: '', fromPlan: null,
             importOpen: false, importText: '', importMsg: '', promptCopied: false,
             obsOpen: false, obsMsg: '', obsBad: false, obsBusy: false, obsVault: '',
             toastMsg: '', toastBad: false };
@@ -788,7 +964,10 @@ class Component extends DCLogic {
   }
   closeBook() {
     this.saveDraft();
-    this.setState(s => ({ openId: null, draft: null, noteText: '', noteLoc: '', tick: s.tick + 1 }));
+    // If you came here from a plan, go back to it.
+    const back = this.state.fromPlan;
+    this.setState(s => ({ openId: null, draft: null, noteText: '', noteLoc: '',
+                          fromPlan: null, planId: back || null, tick: s.tick + 1 }));
   }
 
   addBook() {
@@ -813,6 +992,7 @@ class Component extends DCLogic {
     return {
       type: this.EXPORT_TYPE, version: 1, exportedAt: new Date().toISOString(),
       books: this.readBooks(),
+      plans: this.readPlans(),
       state: { status: st.status || {}, history: st.history || {}, notes: st.notes || {},
                tags: st.tags || {}, ui: st.ui || {} },
     };
@@ -858,6 +1038,23 @@ class Component extends DCLogic {
       '      "tags": ["optional", "lowercase", "tags"],',
       '      "doi": "10.xxxx/optional-for-papers"',
       '    }',
+      '  ],',
+      '  "plans": [',
+      '    {',
+      '      "title": "What the plan is for",',
+      '      "goal": "one line on what it is meant to change",',
+      '      "why": "The reasoning, in prose. Several paragraphs are fine —',
+      '               separate them with a blank line. **bold** and *italics* render.",',
+      '      "source": "where it came from, e.g. a chat, March 2026",',
+      '      "steps": [',
+      '        {',
+      '          "title": "Exact title of the book, matching a book above",',
+      '          "when": "this week | alongside the others | after the first two",',
+      '          "why": "why this one, in this position",',
+      '          "by": "author — only needed if the book is not in books[] above"',
+      '        }',
+      '      ]',
+      '    }',
       '  ]',
       '}',
       '',
@@ -866,6 +1063,12 @@ class Component extends DCLogic {
       '- Group related titles by giving them the same "shelf" name.',
       '- Keep "note" to one useful sentence, not marketing copy.',
       '- Omit "status" unless the list says it was already read.',
+      '- Use "plans" whenever the list has an order or a purpose behind it:',
+      '  put the argument in "why", and one entry per book in "steps",',
+      '  in reading order. Do not renumber or re-sort them alphabetically.',
+      '- A step’s "title" must match a book in "books" exactly; if you did not',
+      '  list it there, give the step a "by" and it will be added.',
+      '- "plans" may be omitted entirely for a plain list of recommendations.',
       '',
       'The reading list to convert:',
       '<<< PASTE THE LIST HERE >>>',
@@ -911,6 +1114,7 @@ class Component extends DCLogic {
     if (Array.isArray(o)) o = { books: o };
     if (!o || typeof o !== 'object') throw new Error('unexpected shape');
     if (!Array.isArray(o.books)) o.books = [];
+    if (!Array.isArray(o.plans)) o.plans = (o.plan && typeof o.plan === 'object') ? [o.plan] : [];
     return o;
   }
 
@@ -920,7 +1124,10 @@ class Component extends DCLogic {
     catch (e) { this.setState({ importMsg: '✕ ' + e.message }); return; }
 
     const incoming = o.books.filter(b => b && String(b.title || '').trim());
-    if (!incoming.length && !o.state) { this.setState({ importMsg: '✕ no books or state found in that file' }); return; }
+    const incomingPlans = (o.plans || []).filter(p => p && String(p.title || '').trim());
+    if (!incoming.length && !incomingPlans.length && !o.state) {
+      this.setState({ importMsg: '✕ no books, plans or state found in that file' }); return;
+    }
 
     const existing = mode === 'replace' ? [] : this.readBooks();
     const seen = {};
@@ -944,7 +1151,63 @@ class Component extends DCLogic {
       if (Array.isArray(b.tags) && b.tags.length) tags[id] = b.tags.map(t => String(t).toLowerCase().trim()).filter(Boolean);
     });
 
+    /* Plans. A step names a book by title; if the list has never heard of
+       it, the step carries enough to create it, so one paste can bring a
+       plan and its whole reading order in together. */
+    const titleId = {};
+    ((window.READING_DATA || {}).shelves || []).forEach(s => (s.items || []).forEach(it => {
+      const k = String(it.title || '').toLowerCase().trim();
+      if (k && !titleId[k]) titleId[k] = it.id;
+    }));
+    books.forEach(b => {
+      const k = String(b.title || '').toLowerCase().trim();
+      if (k && !titleId[k]) titleId[k] = b.id;
+    });
+
+    const plans = mode === 'replace' ? [] : this.readPlans();
+    const planSeen = {};
+    plans.forEach(p => { planSeen[String(p.title || '').toLowerCase().trim()] = 1; });
+    let planN = 0, planSkipped = 0;
+
+    incomingPlans.forEach((p, pi) => {
+      const title = String(p.title).trim();
+      const key = title.toLowerCase();
+      if (planSeen[key]) { planSkipped++; return; }
+      planSeen[key] = 1;
+      const steps = (Array.isArray(p.steps) ? p.steps : []).map((s, si) => {
+        const sTitle = String((s && (s.title || s.book)) || '').trim();
+        if (!sTitle) return null;
+        const k = sTitle.toLowerCase();
+        let id = titleId[k];
+        if (!id) {                                   // a book the list hasn't got yet
+          id = 'usr-' + Date.now().toString(36) + pi.toString(36) + si.toString(36);
+          const rec = { id, title: sTitle, by: String((s && s.by) || '').trim(),
+                        note: String((s && s.note) || '').trim(),
+                        shelf: String((s && s.shelf) || p.shelf || title).trim() };
+          if (s && s.doi) rec.doi = String(s.doi).trim();
+          books.push(rec); added++;
+          titleId[k] = id;
+          if (s && Array.isArray(s.tags) && s.tags.length) {
+            tags[id] = s.tags.map(t => String(t).toLowerCase().trim()).filter(Boolean);
+          }
+          if (s && (s.status === 'read' || s.status === 'reading')) status[id] = s.status;
+        }
+        return { book: id, title: sTitle, when: String((s && s.when) || '').trim(),
+                 why: String((s && s.why) || '').trim() };
+      }).filter(Boolean);
+
+      plans.push({
+        id: (p.id && String(p.id).indexOf('pl-') === 0) ? p.id : ('pl-' + Date.now().toString(36) + pi.toString(36)),
+        title, goal: String(p.goal || '').trim(), why: String(p.why || p.prose || '').trim(),
+        source: String(p.source || '').trim(),
+        created: p.created || new Date().toISOString(), updated: new Date().toISOString(),
+        steps,
+      });
+      planN++;
+    });
+
     this.writeBooks(books);
+    if (plans.length || mode === 'replace') this.writePlans(plans);
 
     // State: replace wipes first; merge keeps what you already have.
     const cur = this.read();
@@ -965,9 +1228,12 @@ class Component extends DCLogic {
     const bits = [];
     if (added) bits.push(added + ' book' + (added === 1 ? '' : 's') + ' added');
     if (skipped) bits.push(skipped + ' already on the list');
+    if (planN) bits.push(planN + ' plan' + (planN === 1 ? '' : 's') + ' added');
+    if (planSkipped) bits.push(planSkipped + ' plan' + (planSkipped === 1 ? '' : 's') + ' already here');
     if (o.state) bits.push('progress ' + (mode === 'replace' ? 'restored' : 'merged'));
     this.setState({ importOpen: false, importText: '' });
     this.toast('✓ ' + (bits.join(' · ') || 'nothing new to add'));
+    if (planN) this.setView('plans');
     this.bump();
   }
 
@@ -981,6 +1247,139 @@ class Component extends DCLogic {
       this.write({ status });
     }
     this.setState(s => ({ tick: s.tick + 1 }));
+  }
+
+  /* ─────────── Reading plans ───────────
+     A plan is prose plus an order: what to read, in what sequence, and
+     why — the shape advice actually arrives in. Steps point at books by
+     id; a step whose book was never on the list creates one on import.  */
+
+  readPlans() {
+    const st = this.read();
+    return Array.isArray(st.plans) ? st.plans : [];
+  }
+  writePlans(list) { this.write({ plans: list }); }
+  planById(id) { return this.readPlans().filter(p => p.id === id)[0] || null; }
+  patchPlan(id, patch) {
+    const list = this.readPlans().map(p => (p.id === id ? Object.assign({}, p, patch, { updated: new Date().toISOString() }) : p));
+    this.writePlans(list);
+    this.bump();
+  }
+
+  // Every book on the site, by title, so a plan step can name one.
+  titleIndex() {
+    const idx = {};
+    const add = (title, id) => {
+      const k = String(title || '').toLowerCase().trim();
+      if (k && !idx[k]) idx[k] = id;
+    };
+    ((window.READING_DATA || {}).shelves || []).forEach(s => (s.items || []).forEach(it => add(it.title, it.id)));
+    this.readBooks().forEach(b => add(b.title, b.id));
+    return idx;
+  }
+  itemIndex() {
+    const idx = {};
+    ((window.READING_DATA || {}).shelves || []).forEach(s => (s.items || []).forEach(it => { idx[it.id] = { it, shelf: s }; }));
+    this.readBooks().forEach(b => {
+      idx[b.id] = { it: b, shelf: { name: (b.shelf || '').trim() || 'Added by you', accent: b.accent || '#3B6D11', kind: 'book' } };
+    });
+    return idx;
+  }
+  // Make a book for a title a plan asks for but the list doesn't have.
+  ensureBook(title, extra) {
+    const idx = this.titleIndex();
+    const k = String(title || '').toLowerCase().trim();
+    if (idx[k]) return idx[k];
+    const books = this.readBooks();
+    const id = 'usr-' + Date.now().toString(36) + books.length.toString(36);
+    books.push(Object.assign({ id, title: String(title).trim(), by: '', note: '', shelf: 'From a plan' }, extra || {}));
+    this.writeBooks(books);
+    return id;
+  }
+
+  planStats(plan) {
+    const store = this.read();
+    const steps = plan.steps || [];
+    const done = steps.filter(s => (store.status || {})[s.book] === 'read').length;
+    const next = steps.filter(s => (store.status || {})[s.book] !== 'read')[0] || null;
+    return { done, total: steps.length, pct: steps.length ? Math.round(done / steps.length * 100) : 0, next };
+  }
+
+  newPlan() {
+    const title = (window.prompt('What is the plan for? (a title)') || '').trim();
+    if (!title) return;
+    const plan = { id: 'pl-' + Date.now().toString(36), title, goal: '', why: '', source: '',
+                   created: new Date().toISOString(), updated: new Date().toISOString(), steps: [] };
+    this.writePlans(this.readPlans().concat([plan]));
+    this.setState({ planId: plan.id, planEdit: true });
+  }
+  deletePlan(id) {
+    if (!window.confirm('Delete this plan? The books stay on your list.')) return;
+    this.writePlans(this.readPlans().filter(p => p.id !== id));
+    this.setState(s => ({ planId: null, tick: s.tick + 1 }));
+  }
+  openPlan(id, e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    this.setState({ planId: id, planEdit: false, stepQuery: '' });
+  }
+  closePlan() { this.setState(s => ({ planId: null, planEdit: false, stepQuery: '', tick: s.tick + 1 })); }
+
+  moveStep(planId, i, by) {
+    const plan = this.planById(planId);
+    if (!plan) return;
+    const steps = (plan.steps || []).slice();
+    const j = i + by;
+    if (j < 0 || j >= steps.length) return;
+    const t = steps[i]; steps[i] = steps[j]; steps[j] = t;
+    this.patchPlan(planId, { steps });
+  }
+  removeStep(planId, i) {
+    const plan = this.planById(planId);
+    if (!plan) return;
+    const steps = (plan.steps || []).slice();
+    steps.splice(i, 1);
+    this.patchPlan(planId, { steps });
+  }
+  addStep(planId, bookId, title) {
+    const plan = this.planById(planId);
+    if (!plan) return;
+    const steps = (plan.steps || []).slice();
+    if (steps.some(s => s.book === bookId)) return;
+    steps.push({ book: bookId, title, when: '', why: '' });
+    this.patchPlan(planId, { steps });
+    this.setState({ stepQuery: '' });
+  }
+  setStepField(planId, i, key, e) {
+    const plan = this.planById(planId);
+    if (!plan) return;
+    const steps = (plan.steps || []).slice();
+    steps[i] = Object.assign({}, steps[i]);
+    steps[i][key] = e.target.value;
+    this.patchPlan(planId, { steps });
+  }
+
+  // The plans a given book belongs to, for the badge in the open book.
+  plansWith(bookId) {
+    return this.readPlans().filter(p => (p.steps || []).some(s => s.book === bookId));
+  }
+
+  /* Prose with the light markdown a chat produces: paragraphs, **bold**
+     and *italics*. Rendered as spans, never as HTML. */
+  mdParas(text) {
+    return String(text || '').split(/\n\s*\n/).map(para => {
+      const bits = [];
+      const re = /(\*\*[^*]+\*\*|\*[^*\n]+\*|_[^_\n]+_)/g;
+      let last = 0, m;
+      while ((m = re.exec(para)) !== null) {
+        if (m.index > last) bits.push({ t: para.slice(last, m.index), w: '400', i: 'normal' });
+        const tok = m[0];
+        if (tok.slice(0, 2) === '**') bits.push({ t: tok.slice(2, -2), w: '600', i: 'normal' });
+        else bits.push({ t: tok.slice(1, -1), w: '400', i: 'italic' });
+        last = m.index + tok.length;
+      }
+      if (last < para.length) bits.push({ t: para.slice(last), w: '400', i: 'normal' });
+      return { bits: bits.length ? bits : [{ t: para, w: '400', i: 'normal' }] };
+    }).filter(p => p.bits.some(b => b.t.trim()));
   }
 
   /* ─────────── Obsidian ───────────
@@ -1083,21 +1482,52 @@ class Component extends DCLogic {
         this.setState({ draft });
       }
 
-      const s = res.stats;
-      const bits = [];
-      if (s.pushed) bits.push(s.pushed + ' note' + (s.pushed === 1 ? '' : 's') + ' written');
-      if (s.pulled) bits.push(s.pulled + ' pulled back');
-      if (s.added) bits.push(s.added + ' new from the vault');
-      const msg = '✓ ' + (bits.join(' · ') || 'already in step');
-      this._syncing = false;
-      this.setState(st2 => ({ obsBusy: false, obsMsg: msg, obsBad: false, tick: st2.tick + 1 }));
-      if (!opts.silent || s.pulled || s.added) this.toast(msg);
+      return this.syncPlanNotes().then(ps => {
+        const s = res.stats;
+        const bits = [];
+        if (s.pushed) bits.push(s.pushed + ' note' + (s.pushed === 1 ? '' : 's') + ' written');
+        if (s.pulled) bits.push(s.pulled + ' pulled back');
+        if (s.added) bits.push(s.added + ' new from the vault');
+        if (ps.pushed) bits.push(ps.pushed + ' plan' + (ps.pushed === 1 ? '' : 's') + ' written');
+        if (ps.pulled) bits.push(ps.pulled + ' plan' + (ps.pulled === 1 ? '' : 's') + ' pulled back');
+        if (ps.added) bits.push(ps.added + ' new plan' + (ps.added === 1 ? '' : 's') + ' from the vault');
+        const msg = '✓ ' + (bits.join(' · ') || 'already in step');
+        this._syncing = false;
+        this.setState(st2 => ({ obsBusy: false, obsMsg: msg, obsBad: false, tick: st2.tick + 1 }));
+        if (!opts.silent || s.pulled || s.added || ps.pulled || ps.added) this.toast(msg);
+      });
     }).catch(err => {
       this._syncing = false;
       const msg = '✕ ' + ((err && err.message) || err);
       this.setState({ obsBusy: false, obsMsg: msg, obsBad: true });
       if (!opts.silent) this.toast(msg, true);
     });
+  }
+
+  /* Plans sync as their own notes, in a Plans subfolder, each step a
+     [[wikilink]] to that book's note. Steps travel by title, so a plan
+     can pick up a book that isn't on the list yet — we create it. */
+  syncPlanNotes() {
+    const OB = window.ObsidianBridge;
+    if (!OB) return Promise.resolve({ pushed: 0, pulled: 0, added: 0 });
+    const meta = this.read().planSync || {};
+    return OB.syncPlans(this.readPlans(), meta, { request: false }).then(res => {
+      const byTitle = this.titleIndex();
+      const resolve = (steps) => (steps || []).map(s => {
+        const k = String(s.title || '').toLowerCase().trim();
+        const book = byTitle[k] || this.ensureBook(s.title);
+        byTitle[k] = book;
+        return { book, title: s.title, when: s.when || '', why: s.why || '' };
+      });
+      const plans = res.merged.concat(res.created).map(p => ({
+        id: p.id, title: p.title, goal: p.goal || '', why: p.why || '', source: p.source || '',
+        created: p.created || new Date().toISOString(), updated: p.updated || new Date().toISOString(),
+        steps: resolve(p.steps),
+      }));
+      this.writePlans(plans);
+      this.write({ planSync: res.meta });
+      return res.stats;
+    }, () => ({ pushed: 0, pulled: 0, added: 0 }));
   }
 
   openObs() { this.setState({ obsOpen: true, obsMsg: '' }); this.refreshVault(); }
@@ -1235,7 +1665,9 @@ class Component extends DCLogic {
     const view = ui.view || 'list';
     const collapsed = ui.collapsed || {};
     if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], viewChips: [], tagChips: [], shelves: [], onDeck: [], isListView: true, isShelfView: false, addBook: () => this.addBook(), exportAll: () => this.exportAll(), openImport: () => this.openImport(), closeImport: () => this.closeImport(), setImportText: (e) => this.setImportText(e), importPaste: () => this.runImport(this.state.importText, 'merge'), pickImportFile: () => this.pickImportFile(), copyPrompt: () => this.copyPrompt(), promptText: this.importPromptText(), copyLabel: '⧉ copy prompt', copyBg: '#FFFFFF', copyColor: '#534AB7', importOpen: !!this.state.importOpen, importText: this.state.importText || '', importMsg: this.state.importMsg || '', hasImportMsg: !!this.state.importMsg, hasToast: !!this.state.toastMsg, toastMsg: this.state.toastMsg || '', toastBg: '#3B6D11',
-      showBook: false, bk: { statusBtns: [], notes: [], tags: [], files: [] }, logFields: [], closeBook: () => {}, addNote: () => {}, setNoteLoc: () => {}, setNoteText: () => {}, noteLoc: '', noteText: '', nowLabel: '',
+      showBook: false, bk: { statusBtns: [], notes: [], tags: [], files: [], plans: [] }, logFields: [], closeBook: () => {}, addNote: () => {}, setNoteLoc: () => {}, setNoteText: () => {}, noteLoc: '', noteText: '', nowLabel: '',
+      isBrowse: true, isPlansView: false, planCards: [], hasPlans: false, noPlans: true, showPlan: false,
+      pl: { steps: [], whyParas: [], stepHits: [] }, closePlan: () => this.closePlan(), newPlan: () => this.newPlan(),
       obsOpen: false, obs: { transportChips: [], folder: 'Reading List' }, openObs: () => this.openObs(), closeObs: () => this.closeObs(), obsChipLabel: 'Obsidian', obsChipBorder: '#E4E2DD', obsChipBg: '#FFFFFF', obsChipColor: '#55564F' };
 
     const store = this.read();
@@ -1281,7 +1713,9 @@ class Component extends DCLogic {
       };
     });
 
-    const viewChips = [{ key: 'list', label: '☰ List' }, { key: 'shelf', label: '▦ Shelf' }].map(v => {
+    const myPlans = this.readPlans();
+    const viewChips = [{ key: 'list', label: '☰ List' }, { key: 'shelf', label: '▦ Shelf' },
+                       { key: 'plans', label: '◈ Plans' + (myPlans.length ? ' ' + myPlans.length : '') }].map(v => {
       const on = view === v.key;
       return { label: v.label, set: () => this.setView(v.key),
         border: on ? '#993C1D' : '#E4E2DD', bg: on ? '#993C1D' : '#FFFFFF', color: on ? '#FFFFFF' : '#55564F' };
@@ -1439,6 +1873,12 @@ class Component extends DCLogic {
         })),
         tags: this.tagsOf(openId).map(t => ({ t: '#' + t })),
         editTags: (e) => this.editTags(openId, e),
+        plans: this.plansWith(openId).map(p => {
+          const idx = (p.steps || []).findIndex(x => x.book === openId);
+          return { label: '◈ ' + p.title + ' · step ' + (idx + 1) + ' of ' + (p.steps || []).length,
+                   open: () => this.setState({ openId: null, draft: null, fromPlan: null, planId: p.id }) };
+        }),
+        hasPlans: this.plansWith(openId).length > 0,
         searchLabel: usePubmed ? 'PubMed ↗' : 'Scholar ↗',
         searchUrl: usePubmed
           ? 'https://pubmed.ncbi.nlm.nih.gov/' + (it.pmid ? it.pmid + '/' : '?term=' + q)
@@ -1452,6 +1892,95 @@ class Component extends DCLogic {
         // Whatever is half-typed in the reflection counts as written.
         syncOne: () => { this.saveDraft(); this.runSync(); },
         copyMd: () => { this.saveDraft(); this.copyMarkdown(openId); },
+      };
+    }
+
+    // ── Reading plans ──
+    const items = this.itemIndex();
+    const stepView = (s, i, plan) => {
+      const hit = items[s.book];
+      const st = statusOf(s.book);
+      const tone = { unread: '#8a8577', reading: '#854F0B', read: '#3B6D11' };
+      return {
+        n: (i + 1) + '',
+        title: (hit && hit.it.title) || s.title || '(a book no longer on the list)',
+        by: hit ? (hit.it.by || '') : '',
+        when: s.when || '', hasWhen: !!s.when,
+        why: s.why || '', hasWhy: !!s.why, whyParas: this.mdParas(s.why),
+        statusLabel: st === 'read' ? 'read ✓' : (st === 'reading' ? 'reading' : 'to read'),
+        dotColor: tone[st], dotBg: st === 'unread' ? '#FFFFFF' : tone[st],
+        titleColor: st === 'read' ? '#7d8a72' : '#26271F',
+        isNext: false,
+        open: (e) => { if (e && e.stopPropagation) e.stopPropagation();
+                       this.setState({ fromPlan: plan.id, planId: null });
+                       this.openBook(s.book); },
+        cycle: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.cycle(s.book, s.title); },
+        up: () => this.moveStep(plan.id, i, -1),
+        down: () => this.moveStep(plan.id, i, 1),
+        drop: () => this.removeStep(plan.id, i),
+        setWhen: (e) => this.setStepField(plan.id, i, 'when', e),
+        setWhy: (e) => this.setStepField(plan.id, i, 'why', e),
+      };
+    };
+
+    const planCards = myPlans.map(p => {
+      const st = this.planStats(p);
+      const nextHit = st.next ? items[st.next.book] : null;
+      return {
+        title: p.title, goal: p.goal || '', hasGoal: !!p.goal,
+        count: st.done + ' / ' + st.total, pct: st.pct + '%',
+        barColor: st.done === st.total && st.total ? '#3B6D11' : '#854F0B',
+        done: st.done === st.total && st.total > 0,
+        nextTitle: nextHit ? nextHit.it.title : (st.next ? st.next.title : 'every step is read'),
+        nextWhen: st.next && st.next.when ? st.next.when : '',
+        hasNext: !!st.next,
+        open: (e) => this.openPlan(p.id, e),
+        startNext: (e) => {
+          if (e && e.stopPropagation) e.stopPropagation();
+          if (st.next) { this.setStatus(st.next.book, 'reading'); this.toast('✓ started ' + (nextHit ? nextHit.it.title : st.next.title)); }
+        },
+      };
+    });
+
+    const planId = this.state.planId;
+    const openPlanRec = planId ? this.planById(planId) : null;
+    let pl = { steps: [], whyParas: [], stepHits: [] };
+    if (openPlanRec) {
+      const st = this.planStats(openPlanRec);
+      const steps = (openPlanRec.steps || []).map((s, i) => stepView(s, i, openPlanRec));
+      const nextIdx = (openPlanRec.steps || []).findIndex(s => statusOf(s.book) !== 'read');
+      if (nextIdx >= 0) steps[nextIdx].isNext = true;
+      const q = (this.state.stepQuery || '').toLowerCase().trim();
+      const already = {};
+      (openPlanRec.steps || []).forEach(s => { already[s.book] = 1; });
+      const hits = q ? Object.keys(items).filter(id => !already[id] &&
+            String(items[id].it.title || '').toLowerCase().indexOf(q) !== -1).slice(0, 6) : [];
+      pl = {
+        id: openPlanRec.id,
+        title: openPlanRec.title, goal: openPlanRec.goal || '', hasGoal: !!openPlanRec.goal,
+        why: openPlanRec.why || '', whyParas: this.mdParas(openPlanRec.why), hasWhy: !!openPlanRec.why,
+        source: openPlanRec.source || '', hasSource: !!openPlanRec.source,
+        created: openPlanRec.created ? this.fmtDate(openPlanRec.created) : '',
+        count: st.done + ' / ' + st.total + ' read', pct: st.pct + '%',
+        barColor: st.done === st.total && st.total ? '#3B6D11' : '#854F0B',
+        steps, hasSteps: steps.length > 0,
+        editing: !!this.state.planEdit,
+        reading: !this.state.planEdit,
+        showProse: !this.state.planEdit && !!openPlanRec.why,
+        toggleEdit: () => this.setState(s2 => ({ planEdit: !s2.planEdit })),
+        editLabel: this.state.planEdit ? '✓ done editing' : '✎ edit',
+        setTitle: (e) => this.patchPlan(openPlanRec.id, { title: e.target.value }),
+        setGoal: (e) => this.patchPlan(openPlanRec.id, { goal: e.target.value }),
+        setWhy: (e) => this.patchPlan(openPlanRec.id, { why: e.target.value }),
+        setSource: (e) => this.patchPlan(openPlanRec.id, { source: e.target.value }),
+        remove: () => this.deletePlan(openPlanRec.id),
+        stepQuery: this.state.stepQuery || '',
+        setStepQuery: (e) => this.setState({ stepQuery: e.target.value }),
+        stepHits: hits.map(id => ({ label: items[id].it.title, add: () => this.addStep(openPlanRec.id, id, items[id].it.title) })),
+        hasStepHits: hits.length > 0,
+        obsUri: OB ? OB.planUriFor(openPlanRec) : '#',
+        startNext: () => { if (st.next) { this.setStatus(st.next.book, 'reading'); this.toast('✓ started reading'); } },
+        hasNext: !!st.next,
       };
     }
 
@@ -1491,17 +2020,23 @@ class Component extends DCLogic {
 
     return {
       pct, readN, totalN, readingN, shelfN: allShelves.length,
-      filterChips, viewChips, tagChips, hasTags: tagChips.length > 0,
-      shelves, stop, isListView: view === 'list', isShelfView: view === 'shelf',
-      onDeck, hasOnDeck: onDeck.length > 0,
+      filterChips, viewChips, tagChips, hasTags: tagChips.length > 0 && view !== 'plans',
+      isBrowse: view !== 'plans',
+      shelves, stop,
+      isListView: view === 'list', isShelfView: view === 'shelf', isPlansView: view === 'plans',
+      planCards, hasPlans: planCards.length > 0, noPlans: planCards.length === 0,
+      pl, showPlan: !!openPlanRec,
+      closePlan: () => this.closePlan(),
+      newPlan: () => this.newPlan(),
+      onDeck, hasOnDeck: onDeck.length > 0 && view !== 'plans',
       surprise: () => this.surprise(),
-      hasPick: !!pick, pickTitle: pick ? pick.title : '', pickShelf: pick ? pick._shelf : '',
+      hasPick: !!pick && view !== 'plans', pickTitle: pick ? pick.title : '', pickShelf: pick ? pick._shelf : '',
       pickRead: () => { if (this.state.pick) this.cycle(this.state.pick.id, this.state.pick.title); },
       clearPick: () => this.setState({ pick: null }),
       setQuery: (e) => this.setQuery(e),
       hasQuery: !!qy,
       hasFilterInfo: !!(qy || tag),
-      noResults: shelves.length === 0,
+      noResults: shelves.length === 0 && view !== 'plans',
       searchInfo: (qy || tag) ? (matchN + ' match' + (matchN === 1 ? '' : 'es') + (qy ? (' for “' + this.state.query.trim() + '”') : '') + (tag ? (' #' + tag) : '')) : '',
       addBook: () => this.addBook(),
       // export / import
