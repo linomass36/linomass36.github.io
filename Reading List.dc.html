@@ -51,15 +51,18 @@
     transition: transform .42s cubic-bezier(.2,.85,.3,1.05), filter .42s;
     -webkit-tap-highlight-color: transparent;
   }
+  /* Tipped out, not blown up: it pivots on its bottom edge the way you
+     hook a finger over the head of a spine, so it never grows sideways
+     across the books beside it. */
   .rl-book:hover, .rl-book:focus-visible {
-    transform: translate3d(0, -14px, 66px) rotateY(-18deg) rotateX(1.5deg);
+    transform: translateZ(3px) rotateX(-16deg);
     z-index: 8; outline: none;
   }
   .rl-book:hover .rl-spine, .rl-book:focus-visible .rl-spine {
     box-shadow: inset 0 1px 0 rgba(255,255,255,.32), inset 0 -12px 16px rgba(0,0,0,.20),
                 -9px 12px 24px rgba(18,10,3,.45);
   }
-  .rl-book:active { transform: translate3d(0, -7px, 36px) rotateY(-10deg); }
+  .rl-book:active { transform: translateZ(2px) rotateX(-9deg); }
 
   .rl-spine {
     position: absolute; inset: 0; border-radius: 2px 4px 4px 2px; overflow: hidden;
@@ -148,10 +151,10 @@
      the book that flies off the shelf when you click a spine. Everything
      is proportional so it holds up at 200px and at 440px. --tf sets the
      lettering. */
-  .rl-board {
+  .rl-bd {
     position: relative; overflow: hidden; border-radius: 3px 9px 9px 3px;
     display: flex; align-items: center; justify-content: center;
-    padding: 11% 8% 11% 17%;
+    padding: 11% 8% 11% calc(var(--spw, 8%) + 9%);
     background:
       radial-gradient(120% 90% at 26% 14%, rgba(255,255,255,.10), rgba(0,0,0,0) 48%),
       repeating-linear-gradient(7deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.05) 1px 3px),
@@ -159,46 +162,47 @@
       linear-gradient(150deg, var(--ink2) -14%, var(--ink) 44%, #2A1710 170%);
     box-shadow: 0 14px 26px rgba(40,26,12,.32), inset 0 1px 0 rgba(255,255,255,.16);
   }
-  .rl-board::after {
-    content: ''; position: absolute; top: 6%; bottom: 6%; left: 14%; right: 6%;
+  .rl-bd::after {
+    content: ''; position: absolute; top: 6%; bottom: 6%; left: calc(var(--spw, 8%) + 6%); right: 6%;
     border: 1px solid var(--gold); opacity: .32; border-radius: 2px;
   }
-  .rl-board::before {
-    content: ''; position: absolute; top: 8%; bottom: 8%; left: 16.5%; right: 8.5%;
+  .rl-bd::before {
+    content: ''; position: absolute; top: 8%; bottom: 8%; left: calc(var(--spw, 8%) + 8.5%); right: 8.5%;
     border: 1px solid var(--gold); opacity: .16; border-radius: 1px;
   }
-  .rl-board-spine {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 8%; min-width: 13px;
+  .rl-bd-spine {
+    position: absolute; left: 0; top: 0; bottom: 0; width: var(--spw, 8%); min-width: 9px;
     background: linear-gradient(90deg, rgba(0,0,0,.52), rgba(255,255,255,.13) 44%, rgba(0,0,0,.40));
     box-shadow: inset -3px 0 8px rgba(0,0,0,.4);
   }
-  .rl-board-band {
+  .rl-bd-band {
     position: absolute; left: 0; right: 0; height: 3.2%; min-height: 5px;
     background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.06) 48%, rgba(0,0,0,.30));
     box-shadow: 0 -1px 0 var(--goldsoft), 0 1px 0 rgba(0,0,0,.28);
   }
-  .rl-board-band:first-child { top: 17%; }
-  .rl-board-band:last-child { bottom: 17%; }
-  .rl-board-edge {
+  .rl-bd-band:first-child { top: 17%; }
+  .rl-bd-band:last-child { bottom: 17%; }
+  .rl-bd-edge {
     position: absolute; right: 0; top: 2.5%; bottom: 2.5%; width: 2.4%; min-width: 4px;
     border-radius: 0 3px 3px 0;
     background: repeating-linear-gradient(180deg, #efe7d5 0 2px, #d3c8ad 2px 3px);
     box-shadow: inset 2px 0 4px rgba(60,42,18,.35);
   }
-  .rl-board-plate {
+  .rl-bd-plate {
     position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
     gap: .5em; text-align: center; max-width: 100%;
   }
-  .rl-board-rule { display: block; width: 2.4em; height: 1px; background: var(--gold); opacity: .5; }
-  .rl-board-title {
+  .rl-bd-rule { display: block; width: 2.4em; height: 1px; background: var(--gold); opacity: .5; }
+  .rl-bd-title {
     font-family: 'Newsreader', serif; font-size: var(--tf, 14px); line-height: 1.32;
     color: var(--gold); text-shadow: 0 1px 2px rgba(0,0,0,.6); max-height: 8em; overflow: hidden;
   }
-  .rl-board-by {
+  .rl-bd-by {
     font-family: 'IBM Plex Mono', monospace; font-size: calc(var(--tf, 14px) * .6);
     letter-spacing: .07em; color: var(--gold); opacity: .72; max-width: 100%; overflow: hidden;
   }
-  .rl-mini { height: 214px; --tf: 14px; }
+  /* min-height keeps it a book on anything too old for aspect-ratio */
+  .rl-mini { width: 100%; aspect-ratio: .70; min-height: 240px; --tf: 15px; }
 
   /* ─────────── Taking a book off the shelf ───────────
      One element does the whole thing. First it flies: from the spine's
@@ -283,7 +287,7 @@
      perspective, so the 3D still works. */
   html.hb-dark .rl-spine, html.hb-dark .rl-cover, html.hb-dark .rl-head,
   html.hb-dark .rl-ribbon, html.hb-dark .rl-board,
-  html.hb-dark .rl-board, html.hb-dark .rl-face-back {
+  html.hb-dark .rl-bd, html.hb-dark .rl-face-back {
     filter: invert(1) hue-rotate(180deg);
   }
   html.hb-dark .rl-book.is-unread .rl-spine { filter: invert(1) hue-rotate(180deg) saturate(.8); }
@@ -562,7 +566,7 @@
       <div style="position: fixed; inset: 0; z-index: 955; background: rgba(24,16,9,.55); animation: rlFadeIn .34s both;"></div>
     </sc-if>
     <div class="rl-stage">
-      <div class="rl-flight {{ fly.cls }}" style="--bw: {{ fly.bw }}; --bh: {{ fly.bh }}; --dx: {{ fly.dx }}; --dy: {{ fly.dy }}; --s: {{ fly.s }}; --sw: {{ fly.sw }}; --tf: {{ fly.tf }}; --fs: {{ fly.fs }}; --ink: {{ fly.ink }}; --ink2: {{ fly.ink2 }}; --gold: {{ fly.gold }}; --goldsoft: {{ fly.goldsoft }};">
+      <div class="rl-flight {{ fly.cls }}" style="--bw: {{ fly.bw }}; --bh: {{ fly.bh }}; --dx: {{ fly.dx }}; --dy: {{ fly.dy }}; --s: {{ fly.s }}; --sw: {{ fly.sw }}; --tf: {{ fly.tf }}; --fs: {{ fly.fs }}; --spw: {{ fly.spw }}; --ink: {{ fly.ink }}; --ink2: {{ fly.ink2 }}; --gold: {{ fly.gold }}; --goldsoft: {{ fly.goldsoft }};">
         <div class="rl-flight-swing">
           <div class="rl-flight-spine">
             <span class="rl-spine">
@@ -573,14 +577,14 @@
               <span class="rl-band rl-band-b"></span>
             </span>
           </div>
-          <div class="rl-face rl-board">
-            <span class="rl-board-spine"><span class="rl-board-band"></span><span class="rl-board-band"></span></span>
-            <span class="rl-board-edge"></span>
-            <span class="rl-board-plate">
-              <span class="rl-board-rule"></span>
-              <span class="rl-board-title">{{ fly.title }}</span>
-              <span class="rl-board-by">{{ fly.by }}</span>
-              <span class="rl-board-rule"></span>
+          <div class="rl-face rl-bd">
+            <span class="rl-bd-spine"><span class="rl-bd-band"></span><span class="rl-bd-band"></span></span>
+            <span class="rl-bd-edge"></span>
+            <span class="rl-bd-plate">
+              <span class="rl-bd-rule"></span>
+              <span class="rl-bd-title">{{ fly.title }}</span>
+              <span class="rl-bd-by">{{ fly.by }}</span>
+              <span class="rl-bd-rule"></span>
             </span>
           </div>
           <div class="rl-face rl-face-back"></div>
@@ -614,14 +618,14 @@
 
               <!-- left: the object, and what you're doing with it -->
               <div>
-                <div class="rl-board rl-mini" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }}; --goldsoft: {{ bk.goldsoft }};">
-                  <span class="rl-board-spine"><span class="rl-board-band"></span><span class="rl-board-band"></span></span>
-                  <span class="rl-board-edge"></span>
-                  <span class="rl-board-plate">
-                    <span class="rl-board-rule"></span>
-                    <span class="rl-board-title">{{ bk.title }}</span>
-                    <span class="rl-board-by">{{ bk.by }}</span>
-                    <span class="rl-board-rule"></span>
+                <div class="rl-bd rl-mini" style="--ink: {{ bk.ink }}; --ink2: {{ bk.ink2 }}; --gold: {{ bk.gold }}; --goldsoft: {{ bk.goldsoft }}; --spw: {{ bk.spw }};">
+                  <span class="rl-bd-spine"><span class="rl-bd-band"></span><span class="rl-bd-band"></span></span>
+                  <span class="rl-bd-edge"></span>
+                  <span class="rl-bd-plate">
+                    <span class="rl-bd-rule"></span>
+                    <span class="rl-bd-title">{{ bk.title }}</span>
+                    <span class="rl-bd-by">{{ bk.by }}</span>
+                    <span class="rl-bd-rule"></span>
                   </span>
                 </div>
 
@@ -1867,6 +1871,9 @@ class Component extends DCLogic {
       ink2: this.mix(base, '#F5E8CE', unread ? .18 : .24),
       gold, goldsoft: this.rgba(gold, .4),
       w: w + 'px', h: ht + 'px', d: (42 + ((h >>> 9) % 20)) + 'px', fs: fs + 'px',
+      // the same thickness again, as a share of the cover's width, so the
+      // spine drawn on a front cover matches the spine on the shelf
+      spw: (pages ? Math.max(4, Math.min(24, 4 + Math.sqrt(pages) / 2.2)) : 9).toFixed(1) + '%',
       chars: Math.max(10, cols * perCol - 2),
       byChars: Math.max(4, Math.floor(ht * 0.20 / 3.9)),
       thin: w < 20,
@@ -2064,7 +2071,7 @@ class Component extends DCLogic {
       },
     }));
 
-    let bk = { ink: '#4A5B7A', ink2: '#6d7c96', gold: '#E3C88A', statusBtns: [], notes: [], tags: [], files: [] };
+    let bk = { ink: '#4A5B7A', ink2: '#6d7c96', gold: '#E3C88A', spw: '9%', statusBtns: [], notes: [], tags: [], files: [] };
     let shelfOf = null, itemOf = null;
     if (openId) {
       allShelves.forEach(s => (s.items || []).forEach(it => { if (it.id === openId) { shelfOf = s; itemOf = it; } }));
@@ -2088,7 +2095,7 @@ class Component extends DCLogic {
       bk = {
         title: it.title, by: it.by || '', shelfName: s.name,
         note: it.note || '', hasNote: !!it.note,
-        ink: bind.ink, ink2: bind.ink2, gold: bind.gold, goldsoft: bind.goldsoft,
+        ink: bind.ink, ink2: bind.ink2, gold: bind.gold, goldsoft: bind.goldsoft, spw: bind.spw,
         statusBtns: ['unread', 'reading', 'read'].map(k => {
           const on = st === k;
           return {
@@ -2227,7 +2234,7 @@ class Component extends DCLogic {
     // ── The board in the air ──
     const flight = this.state.flight;
     let fly = { cls: '', bw: '0px', bh: '0px', dx: '0px', dy: '0px', s: 1, sw: '0px', tf: '14px', fs: '8px',
-                ink: '#4A5B7A', ink2: '#6d7c96', gold: '#E3C88A', goldsoft: 'rgba(227,200,138,.4)',
+                ink: '#4A5B7A', ink2: '#6d7c96', gold: '#E3C88A', goldsoft: 'rgba(227,200,138,.4)', spw: '9%',
                 title: '', by: '', spineTitle: '', spineBy: '', mark: '' };
     if (flight) {
       const hit = items[flight.id];
@@ -2236,7 +2243,7 @@ class Component extends DCLogic {
                      : this.binding(flight.id, '#4A5B7A', fst, 0);
       fly = Object.assign({}, flight, {
         cls: this.state.flyPhase === 'open' ? 'is-opening' : '',
-        ink: fb.ink, ink2: fb.ink2, gold: fb.gold, goldsoft: fb.goldsoft,
+        ink: fb.ink, ink2: fb.ink2, gold: fb.gold, goldsoft: fb.goldsoft, spw: fb.spw,
         title: hit ? hit.it.title : '', by: hit ? (hit.it.by || '') : '',
         spineTitle: hit ? this.shortTitle(hit.it.title, fb.chars) : '',
         spineBy: hit ? this.shortBy(hit.it.by, fb.byChars) : '',
