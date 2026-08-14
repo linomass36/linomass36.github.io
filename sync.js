@@ -118,9 +118,14 @@
         docRef().get().then(function (snap) {
           if (!snap.exists) { render(row('cloud', 'NO DOC — never pushed')); return; }
           var d = snap.data() || {}; var store = d.store || {};
+          var mine = localSnapshot();
           var extra = row('cloud rev', d.updatedAt ? new Date(+d.updatedAt).toLocaleString() : '?');
           extra += row('cloud keys', Object.keys(store).length);
-          extra += row('cloud has library', store.ct_library_v1 ? ('yes (' + store.ct_library_v1.length + ' chars)') : 'NO');
+          extra += row('this device', Object.keys(mine).length + ' keys, ' + Math.round(sizeOf(mine) / 1024) + ' KB of 950');
+          extra += row('biggest', biggestKeys(mine).map(function (x) { return x.key + ' ' + x.kb + 'KB'; }).join(', '));
+          // the keys that differ are exactly the ones that have not made it across
+          var behind = Object.keys(mine).filter(function (k) { return store[k] !== mine[k]; });
+          extra += row('not yet in the cloud', behind.length ? behind.join(', ') : 'none — in step');
           render(extra);
         }).catch(function (e) {
           render(row('cloud', 'READ FAILED: ' + ((e && e.code) || (e && e.message) || e)));
@@ -137,29 +142,63 @@
     return;
   }
 
-  UI.set('connecting', 'Connecting…');
+  // Declared up here because the loader reports through them.
+  var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0, lastErr = '', cloudRead = false;
 
   var SDK = '10.12.2';
   var BASE = 'https://www.gstatic.com/firebasejs/' + SDK + '/';
-  loadSeq([
+  var SDK_URLS = [
     BASE + 'firebase-app-compat.js',
     BASE + 'firebase-auth-compat.js',
     BASE + 'firebase-firestore-compat.js'
-  ], start);
+  ];
+  var booted = false, loading = false;
 
-  function loadSeq(urls, done) {
+  function boot() {
+    if (booted || loading) return;
+    loading = true;
+    UI.set('connecting', 'Connecting…');
+    loadSeq(SDK_URLS, function () { loading = false; booted = true; start(); },
+      function (url) {
+        loading = false;
+        lastErr = 'sdk: could not load ' + url;
+        console.error('[sync] giving up on', url, '— retrying when the network returns');
+        // A blocked or dropped SDK is not the same as being offline, and
+        // saying so is the difference between "wait" and "check your blocker".
+        UI.set('offline', navigator.onLine === false ? 'Offline' : 'Sync library blocked');
+      });
+  }
+  boot();
+
+  // A phone drops a request, sleeps a tab, or walks out of signal. Any of
+  // those used to kill syncing until a manual reload; now the moment the
+  // network or the tab comes back, we try again.
+  window.addEventListener('online', boot);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) boot(); });
+
+  // Each script gets a few goes with a widening gap before we give up.
+  function loadSeq(urls, done, fail) {
     var i = 0;
-    (function next() {
+    next();
+    function next() {
       if (i >= urls.length) return done();
+      one(urls[i], 0);
+    }
+    function one(url, attempt) {
       var s = document.createElement('script');
-      s.src = urls[i];
+      s.src = url + (attempt ? '?retry=' + attempt : '');
       s.onload = function () { i++; next(); };
-      s.onerror = function () { console.error('[sync] failed to load', urls[i]); UI.set('offline', 'Offline'); };
+      s.onerror = function () {
+        s.remove();
+        if (attempt < 2) {
+          console.warn('[sync] retrying', url, '(' + (attempt + 1) + ')');
+          setTimeout(function () { one(url, attempt + 1); }, 600 * Math.pow(2, attempt));
+        } else fail(url);
+      };
       document.head.appendChild(s);
-    })();
+    }
   }
 
-  var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0, lastErr = '';
 
   // Turn a Firebase error into a pill label that says what's actually wrong.
   // "permission-denied" is the big one: Firestore created in production mode
@@ -197,7 +236,14 @@
         return;
       }
       uid = u.uid;
-      window.hubSync.syncNow = function () { UI.set('saving', 'Saving…'); return pushNow(); };
+      window.hubSync.syncNow = function () {
+        UI.set('connecting', 'Checking…');
+        return docRef().get().then(function (snap) {
+          cloudRead = true;
+          if (applyIfNewer(snap)) { location.reload(); return; }  // the cloud was ahead
+          return pushNow();
+        }).catch(function (e) { fail('sync now', e); });
+      };
       hydrate();
     });
   }
@@ -211,6 +257,13 @@
       if (k && k.indexOf('__sync') !== 0) o[k] = localStorage.getItem(k);
     }
     return o;
+  }
+
+  function biggestKeys(store) {
+    return Object.keys(store)
+      .map(function (k) { return { key: k, kb: Math.round((store[k] || '').length / 1024) }; })
+      .sort(function (a, b) { return b.kb - a.kb; })
+      .slice(0, 4);
   }
 
   function applyToLocal(store) {
@@ -241,6 +294,7 @@
 
   function hydrate() {
     docRef().get().then(function (snap) {
+      cloudRead = true;                       // we know what the cloud holds
       if (snap.exists) {
         if (applyIfNewer(snap)) { location.reload(); return; }
       } else {
@@ -250,17 +304,41 @@
       patch();
       syncedLabel();
     }).catch(function (e) {
+      // We could not read the cloud, so we must not write over it: this
+      // device's copy may be months behind. Listen and retry instead.
+      cloudRead = false;
       fail('hydrate', e);
       watch(); patch();
+      setTimeout(hydrate, 15000);
     });
+  }
+
+  var LIMIT = 950 * 1024;   // a Firestore document tops out at 1 MiB
+
+  function sizeOf(o) {
+    try { return new Blob([JSON.stringify(o)]).size; }
+    catch (e) { return JSON.stringify(o).length; }
   }
 
   function pushNow() {
     if (!uid) return Promise.resolve();
+    if (!cloudRead) {                        // see hydrate()
+      console.warn('[sync] holding the push back — this device has not read the cloud yet');
+      UI.set('offline', 'Waiting to read the cloud');
+      return Promise.resolve();
+    }
+    var store = localSnapshot();
+    var bytes = sizeOf(store);
+    if (bytes > LIMIT) {
+      lastErr = 'payload ' + Math.round(bytes / 1024) + ' KB — over the 1 MB document limit';
+      console.error('[sync] ' + lastErr, biggestKeys(store));
+      UI.set('offline', 'Too big: ' + (bytes / 1048576).toFixed(2) + ' MB');
+      return Promise.resolve();
+    }
     var rev = Date.now();
     localStorage.setItem('__sync_rev', String(rev)); // our own write — don't echo-reload
     UI.set('saving', 'Saving…');
-    return docRef().set({ store: localSnapshot(), updatedAt: rev })
+    return docRef().set({ store: store, updatedAt: rev })
       .then(function () { syncedLabel(); })
       .catch(function (e) { fail('push', e); });
   }
