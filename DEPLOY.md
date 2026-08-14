@@ -227,6 +227,19 @@ follow you across devices. The vault folder handle itself is per-device
 - `config.js` — the one place you edit (owner email + Firebase keys).
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = not syncing. Tap it for a panel showing the account, both revisions, the size of what this device is holding, its biggest keys, and **which keys have not made it to the cloud yet** — that last line is the one that answers "why isn't this on my other device". The panel's **Sync now** pulls before it pushes, so one tap brings a device that missed an update back in line. `window.hubSync.state` / `window.hubSync.syncNow()` do the same from the console.
 
+  **How a push works.** It is not an overwrite. The device reads the cloud
+  first and merges: the cloud's copy, plus the keys *this device actually
+  edited* since its last push, plus any key the cloud has never seen. So a
+  phone carrying a week-old copy can only ever affect what was typed into
+  it — it cannot stamp its whole localStorage over an evening's work on the
+  laptop. If the cloud moved on since this device last applied it, that is
+  pulled in first and the reload re-pushes.
+
+  **Undo.** Whatever an incoming change lands on top of is kept on the
+  device first. If a sync arrives and takes something you wanted, tap the
+  pill → **Undo last sync**: it puts this device's previous copy back and
+  pushes it, so the correction reaches your other devices too.
+
   **When a device stops syncing, the pill says which of these it is:**
   - *Sync library blocked* — the Firebase SDK could not be fetched from `gstatic.com`. Content blockers, a VPN, iCloud Private Relay and locked-down wifi all do this. It retries each script twice, and again whenever the network returns or you come back to the tab.
   - *Sign in to sync* — not signed in as `authorizedEmail` on that device; it runs local-only.
