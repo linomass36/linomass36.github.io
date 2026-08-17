@@ -1190,7 +1190,7 @@ class Component extends DCLogic {
     this.setState(s => ({ tick: s.tick + 1 }));
   }
 
-  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_reviewroom_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_library_v1', 'ct_examiner_v1', 'ct_reading_v1', 'ct_reading_books_v1', 'ct_obsidian_cfg_v1', 'ct_anatomy_v1', 'ct_grind_v1', 'ct_research_v1'];
+  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_examiner_v1', 'ct_reading_v1', 'ct_reading_books_v1', 'ct_obsidian_cfg_v1', 'ct_anatomy_v1', 'ct_grind_v1', 'ct_research_v1'];
   doBackupAction = () => {
     const out = { __ct_hub_backup: 1, ts: Date.now(), data: {} };
     this.BKEYS.forEach(k => { try { const v = localStorage.getItem(k); if (v != null) out.data[k] = v; } catch (e) {} });
@@ -1842,7 +1842,7 @@ class Component extends DCLogic {
     const studyD = lsJson('ct_study_v1', { cards: [], exams: [] });
     const todayIso2 = new Date(nowMs).toISOString().slice(0, 10);
     const dueN = (studyD.cards || []).filter(c => c && c.due && c.due <= todayIso2).length;
-    const libD = lsJson('ct_library_v1', { items: [] });
+    const libD = lsJson({ items: [] });
     const libI = libD.items || [];
     const libLine = libI.length ? (libI.filter(i => i.st === 'queue').length + ' queued · ' + libI.filter(i => i.st === 'reading').length + ' reading · ' + libI.filter(i => i.st === 'done').length + ' read') : 'shelf is empty';
     const wkR = lsJson('ct_weekly_v1', { reviews: {} });
@@ -1853,11 +1853,11 @@ class Component extends DCLogic {
       { href: 'Plan Analysis.dc.html', color: '#6E4B8A', num: '01 · The strategic read', name: 'Plan Analysis', line: 'summer → year → decade, examined for gaps' },
       { href: 'Weekly Review.dc.html', color: '#993C1D', num: '00 · The Sunday ritual', name: 'Weekly Review', line: wkReviewed ? 'done this week ✓' : 'guided — wins, loops, people, next 3' },
       { href: 'Timeline.dc.html', color: '#2E6A86', num: '00 · One axis', name: 'Collision Timeline', line: 'checkpoints + conferences + deadlines, merged' },
-      { href: 'Review Room.dc.html', color: '#6E4B8A', num: '06 · The ritual', name: 'Review Room', line: lastWeekly ? (dAgo(lastWeekly) === 0 ? 'reviewed today' : dAgo(lastWeekly) + 'd since last review') : 'first ritual pending' },
+      { href: 'Weekly Review.dc.html', color: '#6E4B8A', num: '06 · The ritual', name: 'Weekly Review', line: lastWeekly ? (dAgo(lastWeekly) === 0 ? 'reviewed today' : dAgo(lastWeekly) + 'd since last review') : 'first ritual pending' },
       { href: 'Dossiers.dc.html', color: '#185FA5', num: '07 · The people files', name: 'Dossiers', line: contacts.length + ' people · ' + dosTouches + ' touches logged' },
       { href: 'Vault.dc.html', color: '#854F0B', num: '08 · The money', name: 'The Vault', line: vNet != null ? 'net $' + Math.round(vNet).toLocaleString('en-US') : 'no snapshot yet' },
       { href: 'Study Engine.dc.html', color: '#3B6D11', num: '09 · The reps', name: 'Study Engine', line: (studyD.cards || []).length ? dueN + ' due today · ' + (studyD.cards || []).length + ' cards' : 'no error cards yet' },
-      { href: 'Library.dc.html', color: '#4A5B7A', num: '10 · The shelf', name: 'The Library', line: libLine },
+      
       { href: 'Reading List.dc.html', color: '#4A5B7A', num: '12 · The reading list', name: 'Reading List', line: 'papers & books to read — medicine, science & the classics' },
       { href: 'Examiner.dc.html', color: '#A32E27', num: '11 · The examiner', name: 'The Examiner', line: (() => { const ex = lsJson('ct_examiner_v1', { briefs: [] }); const b = (ex.briefs || [])[0]; return b ? 'last examined ' + Math.floor((nowMs - b.ts) / 86400000) + 'd ago' : 'never examined — run it'; })() }
     ];
@@ -1937,9 +1937,9 @@ class Component extends DCLogic {
       } catch (e) {}
       // 4 · Library
       try {
-        const li = (lsJson('ct_library_v1', { items: [] }).items) || [];
+        const li = (lsJson({ items: [] }).items) || [];
         const lDone = li.filter(x => x.st === 'done').length, lNow = li.filter(x => x.st === 'reading').length;
-        tiles.push({ label: 'Library intake', href: 'Library.dc.html', color: '#0F6E56',
+        tiles.push({ label: 'Library intake', href: 'Reading List.dc.html', color: '#0F6E56',
           big: lDone + '/' + li.length, badge: lNow ? lNow + ' open' : '', accentColor: '#854F0B',
           bar: pctOf(lDone, li.length), sub: li.length ? (li.length - lDone - lNow) + ' queued · ' + lNow + ' reading' : 'shelf is empty' });
       } catch (e) {}

@@ -55,7 +55,7 @@
           </button>
         </sc-for>
       </div>
-      <div style="font-size: 10.5px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">People come from the <a href="Network Map.dc.html">Network Map</a> — add new ones there.</div>
+      <div style="font-size: 10.5px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">These are the files: what was said, and when. The <a href="Network Map.dc.html">Network Map</a> is the same people as a picture — who is warm, who is owed a touch, where they are. Add new people there.</div>
     </div>
 
     <!-- RIGHT: DOSSIER -->
@@ -66,6 +66,7 @@
             <div>
               <div style="font-family: 'Newsreader', serif; font-size: 26px; font-weight: 500; line-height: 1.1;">{{ selName }}</div>
               <div style="font-size: 12.5px; color: #55564F; margin-top: 4px;">{{ selSub }}</div>
+              <a href="{{ selMapHref }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #185FA5; border: 1px solid #C7D8EA; background: #F2F7FC; border-radius: 18px; padding: 0 12px;">{{ selMapLabel }}</a>
             </div>
             <div style="text-align: right;">
               <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .06em; color: {{ selStColor }}; border: 1px solid {{ selStBorder }}; background: {{ selStBg }}; border-radius: 20px; padding: 3px 10px;">{{ selStrength }}</span>
@@ -150,6 +151,17 @@ class Component extends DCLogic {
   NKEY = 'nm_nodes_v2';
   JKEY = 'ct_journal_v1';
   state = { tick: 0, sel: '', q: '', kind: 'call', note: '' };
+
+  /* The map and the files are one pair of pages, not one feature split in
+     two: the map is the picture, this is the record of what was actually
+     said. Each links to the other on the same person, so moving between them
+     never means finding them again. */
+  componentDidMount() {
+    try {
+      const want = new URLSearchParams(location.search).get('person');
+      if (want) this.setState({ sel: want });
+    } catch (e) {}
+  }
 
   lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   contacts() {
@@ -253,6 +265,8 @@ class Component extends DCLogic {
       q: S.q, setQ: (e) => this.setState({ q: e.target.value }),
       peopleRows,
       hasSel, noSel: !hasSel,
+      selMapHref: 'Network Map.dc.html' + (selC ? '?person=' + encodeURIComponent(this.ckey(selC)) : ''),
+      selMapLabel: '✦ find ' + (selC ? String(selC.name || '').split(' ').slice(-1)[0] : 'them') + ' on the map',
       selName: selC ? selC.name : '', selSub: selC ? [selC.role, selC.city, typeTag[selC.type] || ''].filter(Boolean).join(' · ') : '',
       selStrength: selC ? (selC.strength || 'unknown') : '', selStColor: sm[0], selStBg: sm[1], selStBorder: sm[2],
       selAgeText: selC ? ((selC.lastDays || 0) + 'd since last contact' + (selC.owed ? ' · owed a touch' : '')) : '',

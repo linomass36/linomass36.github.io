@@ -140,10 +140,11 @@
       </div>
       <div style="font-size:22px;font-weight:700;letter-spacing:-.01em">{{ sel.name }}</div>
       <div style="font-size:13px;color:#9fb4d0;margin-top:1px">{{ sel.role }}</div>
-      <div style="display:flex;gap:8px;margin:14px 0 16px">
+      <div style="display:flex;gap:8px;margin:14px 0 12px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;padding:4px 9px;border-radius:6px;background:rgba(90,130,180,.16);color:#a9c2e0">{{ sel.typeName }}</span>
         <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;padding:4px 9px;border-radius:6px;background:rgba(90,130,180,.16);color:#a9c2e0">◍ {{ sel.city }}</span>
       </div>
+      <a href="{{ sel.dossierHref }}" style="display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;margin-bottom:16px;border-radius:10px;border:1px solid rgba(90,130,180,.34);background:rgba(6,10,20,.6);color:#9fc4ea;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-decoration:none">▤ open the file — every conversation</a>
       <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;background:rgba(6,10,20,.6);margin-bottom:10px">
         <span style="width:11px;height:11px;border-radius:50%;background:{{ sel.dotColor }};box-shadow:0 0 8px {{ sel.dotColor }}"></span>
         <div><div style="font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;font-family:'IBM Plex Mono',monospace">Last contact</div><div style="font-size:14px;color:#e8eef7;font-weight:500">{{ sel.lastLabel }}</div></div>
@@ -1475,7 +1476,11 @@ class Component extends DCLogic {
       setGlobeEl:(el)=>{ this.globeEl=el; }, setRootEl:(el)=>{ this.rootEl=el; },
       setTexImg:(el)=>{ this.texImg=el; }, setDayImg:(el)=>{ this.dayImg=el; }, setFileEl:(el)=>{ this.fileEl=el; },
       onTexError:()=>this.onTexError(), onDayTexError:()=>this.onDayTexError(),
-      hasSelected:!!sel, sel: sel || { deletable:false },
+      hasSelected:!!sel,
+      // The map is the picture; the Dossier is what was actually said. Each
+      // opens the other on the same person.
+      sel: sel ? Object.assign({}, sel, { dossierHref: 'Dossiers.dc.html?person=' + encodeURIComponent(sel.id || sel.name) })
+               : { deletable:false, dossierHref:'Dossiers.dc.html' },
       clear:()=>this.clear(), editSel:()=>this.openEdit(this.state.selectedId), delSel:()=>this.deleteNode(this.state.selectedId),
       nodeCount: nodes.length-1, owedCount: nodes.filter(n=>n.owed).length,
       stamp: 'LUBLIN · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase(),

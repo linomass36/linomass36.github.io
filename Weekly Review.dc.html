@@ -23,6 +23,23 @@
   a:hover { color: #2E6A86; }
   input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
   @keyframes wrIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* The five questions, absorbed from the Review Room so there is one weekly
+     review rather than two competing for the same twenty minutes. */
+  .wr-q5 { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .wr-q { display: flex; gap: 13px; align-items: flex-start; padding: 12px 0; border-top: 1px solid #F2F0EB; }
+  .wr-q:first-child { border-top: none; padding-top: 4px; }
+  .wr-qn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; flex: none;
+           width: 20px; padding-top: 3px; }
+  .wr-qt { font-size: 14.5px; font-weight: 600; color: #26271F; line-height: 1.35; }
+  .wr-qh { font-size: 12px; color: #8a8577; line-height: 1.5; margin-top: 2px; }
+  .wr-qa { width: 100%; margin-top: 8px; min-height: 58px; resize: vertical; font-family: inherit;
+           font-size: 14px; line-height: 1.55; padding: 10px 12px; border: 1px solid #DAD7D0;
+           border-radius: 10px; background: #FCFBF8; color: #26271F; }
+  @media (max-width: 640px) {
+    .wr-qa { font-size: 16px; min-height: 66px; }
+    .wr-q { gap: 9px; }
+  }
 </style>
 </helmet>
 <div data-screen-label="Weekly Review" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 72px;">
@@ -186,15 +203,25 @@
       <div style="display: flex; justify-content: space-between; align-items: baseline;">
         <div>
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Step 4 · Reflect</div>
-          <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px;">This week's prompt</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px;">The five questions</div>
         </div>
         <a href="Journal.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86;">the logbook →</a>
       </div>
-      <div style="font-family: 'Newsreader', serif; font-style: italic; font-size: 16px; color: #3b357e; margin-top: 10px; line-height: 1.4;">{{ prompt }}</div>
-      <textarea value="{{ reflectText }}" onChange="{{ setReflect }}" placeholder="A few honest lines…" style="width: 100%; margin-top: 12px; min-height: 96px; resize: vertical; font-size: 13.5px; line-height: 1.55; padding: 12px 14px; border: 1px solid #DAD7D0; border-radius: 11px; background: #FCFBF8; color: #26271F;"></textarea>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 8px;">
+      <div class="wr-q5">
+        <sc-for list="{{ questions }}" as="q" hint-placeholder-count="5">
+          <div class="wr-q">
+            <div class="wr-qn">{{ q.n }}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div class="wr-qt">{{ q.title }}</div>
+              <div class="wr-qh">{{ q.hint }}</div>
+              <textarea class="wr-qa" value="{{ q.text }}" onChange="{{ q.set }}" placeholder="{{ q.placeholder }}" rows="2"></textarea>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 8px;">
         <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #0F6E56; min-height: 14px;">{{ reflectMsg }}</span>
-        <button onClick="{{ saveReflect }}" style="font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 9px; border: none; background: #534AB7; color: #FFF; cursor: pointer;">Save to the logbook</button>
+        <button onClick="{{ saveReflect }}" style="font-size: 13px; font-weight: 600; min-height: 44px; padding: 0 18px; border-radius: 9px; border: none; background: #534AB7; color: #FFF; cursor: pointer;">Save the week to the logbook</button>
       </div>
     </div>
 
@@ -265,13 +292,56 @@ class Component extends DCLogic {
   LKEY = 'ct_lifelog_v1';
   SKEY = 'ct_summer_v1';
   WKEY = 'ct_weekly_v1';
+  RRKEY = 'ct_reviewroom_v1';   // the Review Room's old store, read once and carried across
+
+  /* The five questions, moved here from the Review Room. There were two
+     complete weekly reviews with two sets of questions and two stores, and
+     six pages referring to "the weekly review" without saying which. This is
+     the one. */
+  QUESTIONS = [
+    ['moved',   'What actually moved this week?',            'wins, shipped things, conversations that advanced the plan', 'e.g. sent the abstract draft, first swim over 1500m…'],
+    ['stalled', 'What stalled — and why, really?',           'not the excuse; the mechanism behind it', 'e.g. anatomy slipped because evenings got eaten by…'],
+    ['learned', 'What did I learn that changes anything?',   'about the field, a person, a method, or yourself', ''],
+    ['cut',     'What gets cut or refused next week?',       'subtraction is the lever — name one thing', ''],
+    ['one',     'The one thing that must happen next week',  'if only this happens, the week still counted', ''],
+  ];
   BMETA = 'ct_backup_meta_v1';
   state = { tick: 0, reflectText: '', reflectMsg: '', prio0: '', prio1: '', prio2: '', editingPrio: false };
 
   readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   readPlan() { return Object.assign({ checked: {}, meta: {}, history: [] }, this.readJSON(this.PKEY, {}) || {}); }
   writePlan(patch) { const cur = this.readJSON(this.PKEY, { v: 2, checked: {}, meta: {}, history: [] }) || {}; Object.assign(cur, patch); try { localStorage.setItem(this.PKEY, JSON.stringify(cur)); } catch (e) {} }
-  readW() { return Object.assign({ priorities: {}, prioDone: {}, reviews: {}, steps: {} }, this.readJSON(this.WKEY, {}) || {}); }
+  readW() {
+    const w = Object.assign({ priorities: {}, prioDone: {}, reviews: {}, steps: {}, answers: {} },
+                            this.readJSON(this.WKEY, {}) || {});
+    if (!w.answers) w.answers = {};
+    return this.adoptReviewRoom(w);
+  }
+
+  /* Answers written in the Review Room before the two pages became one are
+     copied over on first load — its store is read, never written, and never
+     deleted. Weeks already answered here always win. */
+  adoptReviewRoom(w) {
+    if (w.adoptedRR) return w;
+    const old = this.readJSON(this.RRKEY, null);
+    const src = old && (old.answers || old.weeks || old);
+    let moved = 0;
+    if (src && typeof src === 'object') {
+      Object.keys(src).forEach(wk => {
+        const a = src[wk];
+        if (!a || typeof a !== 'object') return;
+        const keep = {};
+        this.QUESTIONS.forEach(([id]) => { if (typeof a[id] === 'string' && a[id].trim()) keep[id] = a[id]; });
+        if (!Object.keys(keep).length) return;
+        w.answers[wk] = Object.assign(keep, w.answers[wk] || {});
+        moved++;
+      });
+    }
+    w.adoptedRR = 1;
+    try { localStorage.setItem(this.WKEY, JSON.stringify(w)); } catch (e) {}
+    if (moved) this._adopted = moved;
+    return w;
+  }
   writeW(patch) { const cur = this.readW(); Object.assign(cur, patch); try { localStorage.setItem(this.WKEY, JSON.stringify(cur)); } catch (e) {} }
   bump() { this.setState(s => ({ tick: s.tick + 1 })); }
 
@@ -335,7 +405,7 @@ class Component extends DCLogic {
     const now = new Date(); const nowMs = now.getTime();
     const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
     const dowLabel = DAYS[now.getDay()];
-    if (!data) return { todayLabel, dowLabel, ritualDone: 0, todayItems: [], wins: [], loops: [], people: [], prioRows: [], staleRows: [], prompt: '' };
+    if (!data) return { todayLabel, dowLabel, ritualDone: 0, todayItems: [], wins: [], loops: [], people: [], prioRows: [], staleRows: [], questions: [], answeredN: 0, saveReflect: () => {}, reflectMsg: '' };
 
     const plan = this.readPlan();
     const w = this.readW();
@@ -384,29 +454,40 @@ class Component extends DCLogic {
     if (owed[0]) todayItems.push({ kicker: 'reach out', label: 'Message ' + owed[0].name + ' — ' + (owed[0].lastDays || 0) + 'd silent', color: '#0F6E56', checked: false, toggle: () => {} });
     const todayStripSummary = loops.length + ' loops open · ' + owed.length + ' owed a touch';
 
-    // ---- reflection prompt (rotates weekly) ----
-    const prompts = [
-      'What did you avoid this week, and what was the avoidance protecting you from?',
-      'Which single move this week will still matter in a year?',
-      'Where did you trade long-term leverage for short-term comfort?',
-      'What did you learn that changes how next week should run?',
-      'Who did you become this week — and is that the person the plan needs?',
-      'What would you cut if you were being honest about focus?',
-      'What compounded this week, quietly, that nobody would notice yet?',
-    ];
-    const prompt = prompts[Math.floor(nowMs / (7 * 86400000)) % prompts.length];
-    const setReflect = e => this.setState({ reflectText: e.target.value });
+    // The five answers, drafted straight into the store so walking away
+    // mid-ritual loses nothing.
+    const answers = w.answers[wk] || {};
+    const setAnswer = (id, v) => {
+      const all = Object.assign({}, w.answers);
+      all[wk] = Object.assign({}, all[wk] || {}, { [id]: v });
+      this.writeW({ answers: all });
+      this.setState(st => ({ tick: st.tick + 1 }));
+    };
+    const questions = this.QUESTIONS.map(([id, title, hint, placeholder], i) => ({
+      n: String(i + 1).padStart(2, '0'), title, hint, placeholder,
+      text: answers[id] || '',
+      set: (e) => setAnswer(id, e.target.value),
+    }));
+    const answeredN = this.QUESTIONS.filter(([id]) => (answers[id] || '').trim()).length;
+
     const saveReflect = () => {
-      const t = (this.state.reflectText || '').trim();
-      if (!t) { this.setState({ reflectMsg: 'Write a line or two first.' }); setTimeout(() => this.setState({ reflectMsg: '' }), 2500); return; }
+      const filled = this.QUESTIONS.filter(([id]) => (answers[id] || '').trim());
+      if (!filled.length) {
+        this.setState({ reflectMsg: 'Answer at least one first.' });
+        setTimeout(() => this.setState({ reflectMsg: '' }), 2500);
+        return;
+      }
+      const body = filled.map(([id, title]) => title + '\n' + answers[id].trim()).join('\n\n');
       const j = this.readJSON(this.JKEY, []) || [];
-      j.push({ id: 'wr' + Date.now(), date: this.isoDay(now), type: 'weekly', title: 'Weekly review — ' + MON[now.getMonth()] + ' ' + now.getDate(), body: t, at: nowMs });
+      j.push({ id: 'wr' + Date.now(), date: this.isoDay(now), type: 'weekly',
+               title: 'Weekly review — ' + MON[now.getMonth()] + ' ' + now.getDate(),
+               body, at: nowMs });
       try { localStorage.setItem(this.JKEY, JSON.stringify(j)); } catch (e) {}
       const st = Object.assign({}, steps, { reflect: 1 });
       const allSteps = Object.assign({}, w.steps, { [wk]: st });
       this.writeW({ steps: allSteps });
-      this.setState({ reflectText: '', reflectMsg: 'Saved to the logbook ✓', tick: this.state.tick + 1 });
-      setTimeout(() => this.setState({ reflectMsg: '' }), 3000);
+      this.setState({ reflectMsg: filled.length + ' of 5 filed to the logbook ✓', tick: this.state.tick + 1 });
+      setTimeout(() => this.setState({ reflectMsg: '' }), 3200);
     };
 
     // ---- next week priorities ----
@@ -485,7 +566,7 @@ class Component extends DCLogic {
       wins, winsEmpty, winsCountText, toggleWins: () => this.setStep('wins'), winsBtn: wb.btn, winsBorder: wb.border, winsColor: wb.color, winsBg: wb.bg,
       loops, toggleLoops: () => this.setStep('loops'), loopsBtn: lb.btn, loopsBorder: lb.border, loopsColor: lb.color, loopsBg: lb.bg,
       people, peopleEmpty, togglePeople: () => this.setStep('people'), peopleBtn: pb.btn, peopleBorder: pb.border, peopleColor: pb.color, peopleBg: pb.bg,
-      prompt, reflectText: this.state.reflectText, setReflect, saveReflect, reflectMsg: this.state.reflectMsg,
+      questions, answeredN, saveReflect, reflectMsg: this.state.reflectMsg,
       prioEditing, prioSet, prioWeekLabel, prio0: this.state.prio0, prio1: this.state.prio1, prio2: this.state.prio2,
       setPrio0, setPrio1, setPrio2, savePrio, editPrio, prioRows,
       staleRows, staleEmpty, backupText, backupColor,

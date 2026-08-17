@@ -738,6 +738,9 @@
                   </div>
                 </sc-if>
 
+                <sc-if value="{{ bk.needsTakeaway }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin: 18px 0 0; border: 1px solid #E6D6B0; background: #FBF6EA; border-radius: 10px; padding: 11px 14px; font-size: 12.5px; line-height: 1.55; color: #6e5417;">Marked read, but the takeaway is empty. A paper isn't read until you've written what it changes for you — one line, below.</div>
+                </sc-if>
                 <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #3B6D11; margin: 20px 0 7px;">Reflection</div>
                 <sc-for list="{{ logFields }}" as="f" hint-placeholder-count="4">
                   <div style="margin-bottom: 10px;">
@@ -1011,6 +1014,52 @@ class Component extends DCLogic {
     Object.assign(cur, patch);
     try { localStorage.setItem(this.KEY, JSON.stringify(cur)); } catch (e) {}
   }
+  componentDidMount() {
+    const n = this.adoptLibrary();
+    if (n) this.setState(st => ({ tick: st.tick + 1, toastMsg: n + ' paper' + (n === 1 ? '' : 's') + ' brought over from the Library' }));
+  }
+
+  KEY_LIBRARY = 'ct_library_v1';   // the old Library's store, read once and carried across
+
+  /* The Library was a second shelf: queue → reading → read, with one rule
+     worth keeping — a paper is not read until its takeaway is written. The
+     shelves here already hold publications and the reflection log already has
+     a takeaway field, so the page was a duplicate. Its papers come across on
+     first load; its store is read, never written, and never deleted. */
+  adoptLibrary() {
+    const st = this.read();
+    if (st.adoptedLib) return 0;
+    let lib = null;
+    try { lib = JSON.parse(localStorage.getItem(this.KEY_LIBRARY)); } catch (e) {}
+    const items = (lib && Array.isArray(lib.items)) ? lib.items : [];
+    const books = this.readBooks();
+    const have = {};
+    books.forEach(b => { have[b.id] = 1; });
+    const statusMap = { queue: 'unread', reading: 'reading', done: 'read' };
+    const status = Object.assign({}, st.status);
+    const history = Object.assign({}, st.history);
+    let moved = 0;
+
+    items.forEach(it => {
+      const id = 'lib-' + it.id;
+      if (have[id]) return;
+      books.push({ id, title: it.t || '(untitled)', by: it.by || '', note: '',
+                   kind: 'paper', url: it.url || '', tags: it.tags || [] });
+      const stt = statusMap[it.st] || 'unread';
+      if (stt !== 'unread') status[id] = stt;
+      const h = Object.assign({}, history[id] || {});
+      if ((it.take || '').trim()) h.takeaway = it.take.trim();
+      if (it.added) h.started = h.started || it.added + 'T12:00:00.000Z';
+      if (stt === 'read') h.finished = h.finished || (it.added ? it.added + 'T12:00:00.000Z' : new Date().toISOString());
+      if (Object.keys(h).length) history[id] = h;
+      moved++;
+    });
+
+    if (moved) this.writeBooks(books);
+    this.write({ status, history, adoptedLib: 1 });
+    return moved;
+  }
+
   readBooks() {
     try { const raw = localStorage.getItem(this.KEY_BOOKS); if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) return a; } } catch (e) {}
     return [];
@@ -2137,6 +2186,9 @@ class Component extends DCLogic {
       bk = {
         title: it.title, by: it.by || '', shelfName: s.name,
         note: it.note || '', hasNote: !!it.note,
+        // The Library's one rule, kept: a thing marked read with no takeaway
+        // written is not read, it is finished.
+        needsTakeaway: st === 'read' && !((this.historyOf(openId) || {}).takeaway || '').trim(),
         ink: bind.ink, ink2: bind.ink2, gold: bind.gold, goldsoft: bind.goldsoft, spw: bind.spw,
         statusBtns: ['unread', 'reading', 'read'].map(k => {
           const on = st === k;
