@@ -15,6 +15,10 @@ window.APP_CONFIG = {
 
   // Where the owner lands after signing in, and where intruders are bounced back to.
   hubUrl: 'Hub.dc.html',
+
+  // Where a phone lands instead — a one-thumb summary rather than the
+  // full desktop hub. Set to '' to send phones to hubUrl as well.
+  mobileHubUrl: 'Today.dc.html',
   gateUrl: 'index.html',
 
   // Firebase → Project settings → General → "Your apps" → Web app → SDK config.

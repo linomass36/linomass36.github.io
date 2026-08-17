@@ -23,6 +23,10 @@ body::after {
   -webkit-backdrop-filter: saturate(1.1) blur(2px);
   backdrop-filter: saturate(1.1) blur(2px);
 }
+/* …and clears the phone tab bar rather than sitting on top of it. */
+@media (max-width: 640px) {
+  body::after { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+}
 
 /* Installed-app (home screen) only: with viewport-fit=cover the web view goes
    edge-to-edge, so content would slide under the status bar / notch and clip at

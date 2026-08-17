@@ -156,7 +156,12 @@ book the new step needs. Deleting a plan here deletes its note there.
 The phone is not a smaller copy of the desktop page — it shows what you need
 at a glance and lets you put things in.
 
-- **A tab bar along the bottom** (phones only) with Home, Reading, Journal, Log
+- **Signing in on a phone lands on Today**, not on Mission Control. Mission
+  Control is a wall of nine panels built for a wide screen; Today is one column
+  you read top to bottom in a thumb's reach. A desktop still lands on Mission
+  Control. The page is set by `mobileHubUrl` in `config.js` — set it to `''` to
+  send phones to the desktop hub as well.
+- **A tab bar along the bottom** (phones only) with Today, Reading, Journal, Log
   and Review, current one lit. Everything else stays in the drawer, but the five
   you use daily are one tap, not two.
 - **The Reading List opens on what you're reading.** A *Reading now* card sits
@@ -173,6 +178,28 @@ at a glance and lets you put things in.
 Measured on an iPhone 13 viewport, before → after: the Reading List went from
 55 screens of scroll to 5.6, from 367 controls to 67, from 166 tap targets under
 40px to 39, and from 858 pieces of text under 11px to 75.
+
+### Today
+`Today.dc.html` is the phone's front door — 2.6 screens, and everything on it
+either tells you where you stand or takes something in. It reads and writes the
+same localStorage keys as the full pages, so anything typed here shows up on the
+desktop (and syncs) exactly as if it had been typed there.
+
+- **The date, and three tiles** — books read this year against your target,
+  how many you're reading now, and how far through the master plan you are.
+- **Reading now.** Each book you're partway through, with its place, and the two
+  buttons that are the whole daily job: **✎** opens a note box right there
+  (text plus where you are — page, chapter, timestamp, whatever you type) and
+  **✓** marks it finished.
+- **The plan bar and this week's priorities**, read-only, so a glance answers
+  "am I behind".
+- **Today's life-log chips** — what's already logged for today.
+- **A journal box.** Type and save; it writes a normal daily entry that the
+  Journal page opens.
+- **A grid of twelve tiles** to every other page, for when you want the real one.
+
+Nothing on Today is unique to Today: it is a shortcut to the pages, never a
+second copy of the data.
 
 ## Syncing with Obsidian
 One book = one Markdown note, and it goes both ways: write in Obsidian or write
@@ -246,7 +273,8 @@ follow you across devices. The vault folder handle itself is per-device
 - **Anyone else** → the **ACCESS VIOLATION** prank, then bounced. Hub pages are protected too: opening one directly without the owner session redirects to the gate.
 
 ## Files in this system
-- `config.js` — the one place you edit (owner email + Firebase keys).
+- `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
+- `Today.dc.html` — the phone's front door: the day at a glance, plus a note box, a ✓ and a journal box. See **On a phone** above.
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = not syncing. Tap it for a panel showing the account, both revisions, the size of what this device is holding, its biggest keys, and **which keys have not made it to the cloud yet** — that last line is the one that answers "why isn't this on my other device". The panel's **Sync now** pulls before it pushes, so one tap brings a device that missed an update back in line. `window.hubSync.state` / `window.hubSync.syncNow()` do the same from the console.
 
   **How a push works.** It is not an overwrite. The device reads the cloud
@@ -275,7 +303,7 @@ follow you across devices. The vault folder handle itself is per-device
   - *Too big: N MB* — everything in localStorage goes into **one** Firestore document, and a document tops out at 1 MiB. Nothing syncs past that. The panel's "biggest" line names the keys to prune.
   - *Waiting to read the cloud* — this device could not read the cloud, so it deliberately will not write over it either (otherwise a phone with a months-old copy could wipe the laptop's). It retries every 15s.
 - `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note formats (one per book, one per reading plan), their parsers, the three-way merges, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
-- `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`). Injected on hub pages.
+- `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`), and on phones the **bottom tab bar** — Today, Reading, Journal, Log, Review. Injected on hub pages.
 - `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support. The service worker is network-first for pages (new deploys land at once) and cache-busts by version; the deploy stamps the version into it so each push updates the installed app.
 - `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.
 - `.github/workflows/deploy.yml` — builds `_site/` and deploys to Pages on every push.

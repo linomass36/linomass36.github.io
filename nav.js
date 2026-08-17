@@ -20,6 +20,7 @@
 
   // Every hub page, in reading order. Filenames must match the deploy.
   var PAGES = [
+    ['Today.dc.html', 'Today · phone home'],
     ['Hub.dc.html', 'Mission Control'],
     ['CT Master Plan.html', 'CT Master Plan'],
     ['Summer Sprint.dc.html', 'Summer Sprint'],
@@ -245,7 +246,7 @@
      to day sit in a bar along the bottom instead, always visible, with
      the current one lit. The drawer stays for the other thirteen. */
   var TABS = [
-    ['Hub.dc.html', 'Home', '◆'],
+    ['Today.dc.html', 'Today', '◆'],
     ['Reading List.dc.html', 'Reading', '▤'],
     ['Journal.dc.html', 'Journal', '✎'],
     ['Life Log.dc.html', 'Log', '◷'],
