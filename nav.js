@@ -236,6 +236,55 @@
     render();
     document.body.appendChild(btn);
     document.body.appendChild(root);
+    buildTabs();
+  }
+
+  /* ─────────── The tab bar, phones only ───────────
+     On a phone everything was behind the hamburger: one tap to open the
+     drawer, another to find the page. The five things actually used day
+     to day sit in a bar along the bottom instead, always visible, with
+     the current one lit. The drawer stays for the other thirteen. */
+  var TABS = [
+    ['Hub.dc.html', 'Home', '◆'],
+    ['Reading List.dc.html', 'Reading', '▤'],
+    ['Journal.dc.html', 'Journal', '✎'],
+    ['Life Log.dc.html', 'Log', '◷'],
+    ['Weekly Review.dc.html', 'Review', '◈']
+  ];
+
+  function buildTabs() {
+    if (document.getElementById('hb-tabs')) return;
+    var here = currentFile();
+    var css = document.createElement('style');
+    css.textContent =
+      '#hb-tabs{position:fixed;left:0;right:0;bottom:0;z-index:2147482000;display:none;' +
+      'background:rgba(255,253,248,.97);border-top:1px solid #E4E2DD;' +
+      'padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));' +
+      '-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);}' +
+      '#hb-tabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;' +
+      'min-height:46px;justify-content:center;text-decoration:none;border-radius:12px;' +
+      'font:600 9.5px/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.03em;color:#8a8577;' +
+      '-webkit-tap-highlight-color:transparent;}' +
+      '#hb-tabs a .g{font-size:15px;line-height:1;}' +
+      '#hb-tabs a.on{color:#993C1D;background:#FBF2EE;}' +
+      '@media (max-width:640px){#hb-tabs{display:flex;}' +
+      '  body{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));}' +
+      '  #hub-sync{bottom:calc(64px + env(safe-area-inset-bottom,0px));}}';
+    document.head.appendChild(css);
+
+    var bar = document.createElement('nav');
+    bar.id = 'hb-tabs';
+    bar.setAttribute('aria-label', 'Main sections');
+    TABS.forEach(function (t) {
+      var a = document.createElement('a');
+      a.href = t[0];
+      if (t[0] === here) { a.className = 'on'; a.setAttribute('aria-current', 'page'); }
+      a.innerHTML = '<span class="g"></span><span class="l"></span>';
+      a.firstChild.textContent = t[2];
+      a.lastChild.textContent = t[1];
+      bar.appendChild(a);
+    });
+    document.body.appendChild(bar);
   }
 
   if (document.readyState === 'loading') {

@@ -152,6 +152,28 @@ there — reorder the list, rewrite a step's reasoning, add a numbered line for 
 book that isn't on the list yet — and the next sync brings it back, creating any
 book the new step needs. Deleting a plan here deletes its note there.
 
+## On a phone
+The phone is not a smaller copy of the desktop page — it shows what you need
+at a glance and lets you put things in.
+
+- **A tab bar along the bottom** (phones only) with Home, Reading, Journal, Log
+  and Review, current one lit. Everything else stays in the drawer, but the five
+  you use daily are one tap, not two.
+- **The Reading List opens on what you're reading.** A *Reading now* card sits
+  above everything: each book with where you are in it, **✎ note** (straight into
+  the note box) and **✓ finished**.
+- **Shelves start closed on a phone.** Thirty-one open shelves was fifty-five
+  screens of scrolling; closed, the whole list is about five and you open the one
+  you want. On a desktop they still start open. Either way, once you open or
+  close a shelf yourself that choice is remembered.
+- **The desktop blurb is hidden** and the header is one line.
+- **The rare actions fold** behind one **⋯ more** chip — Surprise me, Obsidian,
+  Import, Export. Search, the three views and ＋ Add a book stay out in the open.
+
+Measured on an iPhone 13 viewport, before → after: the Reading List went from
+55 screens of scroll to 5.6, from 367 controls to 67, from 166 tap targets under
+40px to 39, and from 858 pieces of text under 11px to 75.
+
 ## Syncing with Obsidian
 One book = one Markdown note, and it goes both ways: write in Obsidian or write
 on the site, and a sync reconciles the two. Open **◆ Obsidian** in the toolbar
@@ -234,6 +256,12 @@ follow you across devices. The vault folder handle itself is per-device
   it — it cannot stamp its whole localStorage over an evening's work on the
   laptop. If the cloud moved on since this device last applied it, that is
   pulled in first and the reload re-pushes.
+
+  **A copy a day.** Each device keeps the last three days of your whole store,
+  under a `__sync` key — which means the cloud never sees it (it costs nothing
+  against the 1 MB limit) and *an incoming sync cannot overwrite it*. That is the
+  point: the copy you want after a bad arrival is the one the arrival could not
+  touch. The pill's panel lists the days it holds and restores one with a tap.
 
   **Undo.** Whatever an incoming change lands on top of is kept on the
   device first. If a sync arrives and takes something you wanted, tap the

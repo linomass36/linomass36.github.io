@@ -102,6 +102,10 @@
         txt += extra;
         var u = null; try { u = JSON.parse(localStorage.getItem('__sync_undo')); } catch (e) {}
         txt += row('undo available', u && u.at ? new Date(u.at).toLocaleString() + ' (' + Object.keys(u.keys).length + ' keys)' : 'none');
+        var days = window.hubSync.backups();
+        txt += row('daily copies', days.length
+          ? days.map(function (d) { return d.day + ' (' + d.keys + ' keys, ' + d.kb + 'KB)'; }).join(', ')
+          : 'none yet');
         txt += row('last error', lastErr || 'none');
         p.textContent = txt;
         var btn = document.createElement('button');
@@ -118,6 +122,16 @@
           (uAt ? '#FBF1F0' : '#fff') + ';color:' + (uAt ? '#A32E27' : '#B9B8B0') + ';cursor:' + (uAt ? 'pointer' : 'default') + ';';
         undo.onclick = function () { window.hubSync.undoLastSync(); };
         p.appendChild(undo);
+
+        window.hubSync.backups().slice().reverse().forEach(function (d) {
+          var r = document.createElement('button');
+          r.textContent = '⤺ ' + d.day;
+          r.title = 'Put back the copy kept on ' + d.day;
+          r.style.cssText = 'margin-top:8px;margin-right:8px;font:600 11px "IBM Plex Mono",monospace;padding:6px 12px;' +
+            'border-radius:16px;border:1px solid #B98900;background:#FFFBF0;color:#8a6600;cursor:pointer;';
+          r.onclick = function () { window.hubSync.restoreDay(d.day); };
+          p.appendChild(r);
+        });
 
         var cls = document.createElement('button');
         cls.textContent = 'Close';
@@ -344,6 +358,7 @@
       }
       watch();
       patch();
+      dailyBackup();      // once we know we are in step, keep today's copy
       syncedLabel();
     }).catch(function (e) {
       // We could not read the cloud, so we must not write over it: this
@@ -421,6 +436,63 @@
       });
     }).catch(function (e) { fail('push' + (reason ? ' (' + reason + ')' : ''), e); });
   }
+
+  /* ─────────── A copy a day ───────────
+     Kept on the device, under a __sync key, which means two things: the
+     cloud never sees it (so it costs nothing against the 1 MB document
+     limit) and an incoming sync can never overwrite it. That is the point
+     — the copy you want after a bad arrival is the one the arrival could
+     not touch. Three days, oldest dropped first. */
+  var DAILY_KEY = '__sync_daily', DAILY_KEEP = 3, DAILY_MAX = 700 * 1024;
+
+  function readDaily() {
+    try { var a = JSON.parse(localStorage.getItem(DAILY_KEY)); return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function writeDaily(list) {
+    try { localStorage.setItem(DAILY_KEY, JSON.stringify(list)); return true; }
+    catch (e) {                                   // out of room: drop the oldest and try again
+      if (list.length > 1) return writeDaily(list.slice(1));
+      console.warn('[sync] no room for a daily backup', e);
+      return false;
+    }
+  }
+
+  function dailyBackup() {
+    var day = new Date().toISOString().slice(0, 10);
+    var all = readDaily();
+    if (all.length && all[all.length - 1].day === day) return;   // today is already kept
+    var store = localSnapshot();
+    var bytes = sizeOf(store);
+    if (!Object.keys(store).length) return;
+    if (bytes > DAILY_MAX) {
+      console.warn('[sync] daily backup skipped — ' + Math.round(bytes / 1024) + ' KB is too much to keep locally');
+      return;
+    }
+    all.push({ day: day, at: Date.now(), store: store });
+    while (all.length > DAILY_KEEP) all.shift();
+    if (writeDaily(all)) console.log('[sync] kept a copy of ' + Object.keys(store).length + ' keys for ' + day);
+  }
+
+  window.hubSync.backups = function () {
+    return readDaily().map(function (b) {
+      return { day: b.day, at: new Date(b.at).toLocaleString(), keys: Object.keys(b.store).length,
+               kb: Math.round(sizeOf(b.store) / 1024) };
+    });
+  };
+
+  /* Put a day back. Additive by default: it restores the keys that day
+     held and leaves anything newer alone, because the usual reason to
+     reach for this is that one thing was lost, not that everything was. */
+  window.hubSync.restoreDay = function (day) {
+    var b = readDaily().filter(function (x) { return x.day === day; })[0];
+    if (!b) { alert('No backup kept for ' + day); return; }
+    var names = Object.keys(b.store);
+    if (!confirm('Put back ' + names.length + ' keys as they were on ' + b.day + '?\n\n' +
+                 names.join(', ') + '\n\nAnything you have changed since will be overwritten.')) return;
+    names.forEach(function (k) { localStorage.setItem(k, b.store[k]); });   // patched → marked as ours
+    pushNow('restore').then(function () { location.reload(); });
+  };
 
   function pushSoon() { clearTimeout(pushTimer); UI.set('saving', 'Saving…'); pushTimer = setTimeout(pushNow, 800); }
 
