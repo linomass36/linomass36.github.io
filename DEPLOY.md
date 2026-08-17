@@ -307,8 +307,98 @@ follow you across devices. The vault folder handle itself is per-device
 - **You, signed in as `authorizedEmail`** → land in the hub; localStorage syncs to Firestore and across your devices in real time.
 - **Anyone else** → the **ACCESS VIOLATION** prank, then bounced. Hub pages are protected too: opening one directly without the owner session redirects to the gate.
 
+## Three systems folded in
+
+Three standalone tools became hub pages. They were not three of the same
+thing, which is why each went in differently: one is a protocol with a real
+state machine, one is a programme that recorded nothing, and one is a document
+where only two parts decay.
+
+### Anatomy — the closure log
+
+`Anatomy.dc.html`. Sixty-one blocks across seven regions, and a system that
+decides what you do today rather than just listing what there is.
+
+- **Four tiers** — full, half, core, rest. Core is the floor and still counts
+  as a day run. Rest is *declared*, costs nothing, and never triggers re-entry;
+  only an undeclared absence does.
+- **Phase 0** is the gate: blocks studied on an earlier day come back to be
+  redrawn cold and scored. 80/80 closes one.
+- **Two retests per block**, at D14 and D45, each deferrable rather than
+  silently missed. A failed D45 is a reopening, not a bad mark — the block goes
+  back to studied-today with both retests cleared.
+- **Re-entry** after a break of three days or more: no new blocks, retests
+  capped at three a day, and blocks studied but never scored are marked stale
+  rather than scored from memory.
+- **Seven tripwires** — open loops over five, Phase 0 skipped twice in a week,
+  a fortnight since anything was scored on paper, a D45 pass rate under 70%,
+  drawing under 60% of reading, more than twenty new cards per closed block,
+  and the thorax gate passing unstarted.
+
+The rules live in `anatomy-core.js` and nowhere else, because three pages need
+to agree about them — the Anatomy page, Today, and Weekly Review. The syllabus
+lives in `anatomy-data.js` and never enters the store.
+
+**It adopts the standalone file's data on first run** from
+`anatomy_closure_data` (or the two older keys), migrating through the same
+lossless path the original used. It never writes to or deletes the original, so
+that file keeps working while you decide you trust this one. A block id that is
+no longer in the build is parked in `orphans` rather than dropped.
+
+**One correction on the way in.** The original measured the gap from the last
+logged day to *today*, so declaring today's tier set the gap to zero and
+switched re-entry off on the spot — the banner's promise of "no new blocks for
+two days" could never be kept. The break is now measured where it happened,
+between the last two logged days or between the last logged day and today, and
+re-entry holds until two days have been logged since it.
+
+**On Today**: the tier and the Phase 0 tick, which are the two things that have
+to be possible from a phone. **In Weekly Review**: the week's four numbers and
+any tripwire that fired — a panel that stays away entirely until there is
+something to report.
+
+### Grind — the nine-week board
+
+`Grind.dc.html`. Five lifting days, a run progression with deloads at weeks
+four and eight and a test in week nine, a daily block of McGill work, posture
+and mobility, the armor menus, and eight benchmarks.
+
+**There is no start date, on purpose.** The standalone board had a manual week
+counter and a checklist keyed by weekday, so it was overwritten every seven
+days and tomorrow looked like today whether or not you had done the work. Here
+the week advances when its *sessions* are done — five lifts and the runs — so a
+fortnight away costs nothing and the board is simply still on week 4, where you
+left it. The pips across the top show which weeks are complete.
+
+The programme is in `grind-data.js` and never enters the store; `ct_grind_v1`
+holds the record — sessions, run ticks, per-week checklists, and the
+benchmarks. Training is **not** merged into the Life Log: this is its own
+track, so a grind session and a Life Log gym tick stay separate records.
+
+### Research Plan — the portfolio
+
+`Research Plan.dc.html`. Five tracks across eight quarters. Most of it is still
+the document it was — the milestone bars, the dependency view and the
+phase-by-phase execution plans are prose, and turning every line into a
+checkbox would make them worse.
+
+Two parts are live, because they are the parts that decay if nothing updates
+them:
+
+- **The next ninety days** — nine items, each tickable, with the ◉ in-person
+  ones called out because those windows close when you leave the States.
+- **The decision gates** — five of them, each recording which way it went and
+  on what date. A gate with no decision recorded is a track running on
+  momentum.
+
+Both live in `ct_research_v1` — **their own track, not the master plan**, so
+research progress is counted separately from the summer sprint.
+
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
+- `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
+- `Grind.dc.html` + `grind-data.js` — the nine-week board and its programme.
+- `Research Plan.dc.html` — the five-track portfolio, with a live ninety days and live gates.
 - `Today.dc.html` — the phone's front door: the day at a glance, plus a note box, a ✓ and a journal box. See **On a phone** above.
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = not syncing. Tap it for a panel showing the account, both revisions, the size of what this device is holding, its biggest keys, and **which keys have not made it to the cloud yet** — that last line is the one that answers "why isn't this on my other device". The panel's **Sync now** pulls before it pushes, so one tap brings a device that missed an update back in line. `window.hubSync.state` / `window.hubSync.syncNow()` do the same from the console.
 

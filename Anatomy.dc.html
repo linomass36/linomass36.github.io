@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
 <script src="./anatomy-data.js"></script>
+<script src="./anatomy-core.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; background: #F7F5F1; }
@@ -493,46 +494,16 @@
 /* ─────────────────────────────────────────────────────────────────────────
    The closure log, ported into the hub.
 
-   The rules are the value here, so they are carried over unchanged: the four
-   tiers, the Phase 0 gate, D14/D45 retests with a defer, re-entry after an
-   undeclared gap, and the seven tripwires. What changed is the shell — it
-   renders through the hub's component framework, syncs with everything else,
-   and is included in the hub's backups.
-
-   STORAGE CONTRACT — keep this stable.
-     ct_anatomy_v1 = { schema:3, app:"anatomy-closure", savedAt:ISO,
-                       meta:{repaired,rollover},
-                       blocks:{<blockId>:BlockRec},
-                       days:{<YYYY-MM-DD>:DayRec},
-                       orphans:{<unknownId>:BlockRec} }
-     BlockRec {studied,inv,topo,gate,d14,d45,d14due,d45due,reps[],cards}
-     DayRec   {tier,p0,rand,randScore,minRead,minDraw,cardsNew,cardsFixed,cardsCut,sheet,note}
-
-   Block ids (nk1, hd4, tx10 …) are permanent primary keys. A title or a
-   relation may be edited freely; an id must never be reused or renumbered.
-   Ids that are no longer in anatomy-data.js are parked in `orphans` rather
-   than dropped, so no history is ever lost.
-
-   A note on the day boundary: this system's day starts at 05:00 by default
-   (meta.rollover), because a session that runs past midnight belongs to the
-   day it started. That is deliberately not the same convention as the Life
-   Log, which keys on the UTC date — these are separate stores and each keeps
-   the boundary that suits what it records.
+   Every rule lives in anatomy-core.js — what an open loop is, when a retest
+   falls due, whether you are in re-entry, which tripwires have fired. Today
+   and Weekly Review read the same module, so the three cannot drift apart.
+   This file is the screen: the day, the blocks, the log.
    ───────────────────────────────────────────────────────────────────────── */
 class Component extends DCLogic {
-  KEY = 'ct_anatomy_v1';
-  // Read once, on first run, from the standalone file's stores. Never written
-  // to, never deleted — that file keeps working while you decide you trust
-  // this one.
-  IMPORT_FROM = ['anatomy_closure_data', 'anatomy_system_v1', 'anatomy_blocks_v1'];
-  SCHEMA = 3;
-  BLOCK_DEF = { studied: '', inv: '', topo: '', gate: '', d14: '', d45: '', d14due: '', d45due: '', reps: [], cards: 0 };
-  DAY_DEF = { tier: '', p0: false, rand: '', randScore: '', minRead: 0, minDraw: 0, cardsNew: 0, cardsFixed: 0, cardsCut: 0, sheet: '', note: '' };
-  META_DEF = { repaired: 0, rollover: 5 };
-  DAY_MS = 86400000;
+  get A() { return window.AnatomyCore; }
 
   state = { tick: 0, view: 'today', pickId: '', shut: {}, toast: '',
-            timerEnd: 0, timerKind: '', timerTotal: 0, now: Date.now(), importNote: '' };
+            timerEnd: 0, timerKind: '', timerTotal: 0, now: Date.now() };
 
   componentDidMount() {
     this._t = setInterval(() => { if (this.state.timerEnd) this.setState({ now: Date.now() }); }, 250);
@@ -545,211 +516,19 @@ class Component extends DCLogic {
     clearTimeout(this._toast);
     this._toast = setTimeout(() => this.setState({ toast: '' }), 3200);
   }
-
-  /* ── store ── */
-  blank() { return { schema: this.SCHEMA, app: 'anatomy-closure', savedAt: '',
-                     meta: Object.assign({}, this.META_DEF), blocks: {}, days: {}, orphans: {} }; }
-
-  detectSchema(p) {
-    if (p && typeof p.schema === 'number') return p.schema;
-    if (p && (p.blocks || p.days)) return 2;
-    const k = p ? Object.keys(p) : [];
-    if (k.length && p[k[0]] && typeof p[k[0]] === 'object' && 'studied' in p[k[0]]) return 1;
-    return 0;
-  }
-
-  // Additive and lossless: unknown fields survive, missing ones default.
-  migrate(p) {
-    if (!p || typeof p !== 'object') return this.blank();
-    let v = this.detectSchema(p);
-    const notes = [];
-    let d = JSON.parse(JSON.stringify(p));
-    if (v === 0) return this.blank();
-
-    if (v === 1) {                                   // a flat map of blocks
-      d = { schema: 2, meta: {}, blocks: d, days: {} };
-      notes.push('imported from the first tracker (blocks only)');
-      v = 2;
-    }
-    if (v === 2) {                                   // minGen → read/draw + counts
-      Object.values(d.days || {}).forEach(x => {
-        if ('minGen' in x) { x.minDraw = +x.minGen || 0; delete x.minGen; }
-        if ('minCards' in x) {
-          const m = +x.minCards || 0;
-          if (m) x.note = ((x.note || '') + ' [legacy: ' + m + ' card-edit min]').trim();
-          delete x.minCards;
-        }
-      });
-      notes.push('card minutes converted to read/draw minutes and card counts');
-      v = 3;
-    }
-
-    const out = this.blank();
-    out.meta = Object.assign({}, this.META_DEF, d.meta || {});
-    Object.entries(d.blocks || {}).forEach(([id, rec]) => {
-      const r = Object.assign({}, this.BLOCK_DEF, rec || {});
-      r.reps = Array.isArray(r.reps) ? r.reps : [];
-      r.cards = +r.cards || 0;
-      (this.findBlock(id) ? out.blocks : out.orphans)[id] = r;
-    });
-    Object.entries(d.days || {}).forEach(([day, rec]) => {
-      const r = Object.assign({}, this.DAY_DEF, rec || {});
-      ['minRead', 'minDraw', 'cardsNew', 'cardsFixed', 'cardsCut'].forEach(k => { r[k] = +r[k] || 0; });
-      r.p0 = !!r.p0;
-      out.days[day] = r;
-    });
-    Object.assign(out.orphans, d.orphans || {});
-    const orphanN = Object.keys(out.orphans).length;
-    if (orphanN) notes.push(orphanN + ' block record' + (orphanN > 1 ? 's' : '') + ' kept aside — those ids are not in this build');
-    this._migrationNote = notes.join('; ');
-    return out;
-  }
-
-  read() {
-    let raw = null;
-    try { raw = localStorage.getItem(this.KEY); } catch (e) {}
-    if (raw) { try { return this.migrate(JSON.parse(raw)); } catch (e) { return this.blank(); } }
-
-    // First run here: adopt whatever the standalone file left behind.
-    for (const k of this.IMPORT_FROM) {
-      let r = null;
-      try { r = localStorage.getItem(k); } catch (e) {}
-      if (!r) continue;
-      try {
-        const s = this.migrate(JSON.parse(r));
-        this._imported = k;
-        this.write(s);
-        return s;
-      } catch (e) {}
-    }
-    return this.blank();
-  }
-
-  write(s) {
-    s.schema = this.SCHEMA;
-    s.app = 'anatomy-closure';
-    s.savedAt = new Date().toISOString();
-    try { localStorage.setItem(this.KEY, JSON.stringify(s)); } catch (e) {}
-  }
-  mut(fn) { const s = this.read(); fn(s); this.write(s); this.bump(); }
-
-  blockRec(s, id) { if (!s.blocks[id]) s.blocks[id] = Object.assign({}, this.BLOCK_DEF, { reps: [] }); return s.blocks[id]; }
-  dayRec(s, d) { if (!s.days[d]) s.days[d] = Object.assign({}, this.DAY_DEF); return s.days[d]; }
-
-  /* ── dates ── */
-  get DATA() { return ((window.ANATOMY_DATA || {}).regions) || []; }
-  get GATE() { return (window.ANATOMY_DATA || {}).thoraxGate || ''; }
-  get REPAIR_TOTAL() { return (window.ANATOMY_DATA || {}).repairTotal || 0; }
-  get TIERS() { return (window.ANATOMY_DATA || {}).tiers || {}; }
-
-  rollover(s) { const r = s && s.meta && s.meta.rollover; return (r === 0 || r) ? r : 5; }
-  isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-  today(s) { const d = new Date(); d.setHours(d.getHours() - this.rollover(s)); return this.isoLocal(d); }
-  clockNow() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
-  addDays(iso, n) { if (!iso) return ''; const d = new Date(iso + 'T12:00:00'); if (isNaN(d)) return ''; d.setDate(d.getDate() + n); return this.isoLocal(d); }
-  daysBetween(a, b) {
-    if (!a || !b) return 0;
-    const x = new Date(a + 'T12:00:00'), y = new Date(b + 'T12:00:00');
-    if (isNaN(x) || isNaN(y)) return 0;
-    return Math.round((y - x) / this.DAY_MS);
-  }
-  lastNDays(s, n) { const o = []; const t = this.today(s); for (let i = 0; i < n; i++) o.push(this.addDays(t, -i)); return o; }
-
-  /* ── block status ── */
-  allBlocks() {
-    const o = [];
-    this.DATA.forEach(r => r.blocks.forEach(b => o.push(Object.assign({ region: r.name, regionId: r.id }, b))));
-    return o;
-  }
-  findBlock(id) { return this.allBlocks().find(b => b.id === id); }
-
-  status(s, id) {
-    const b = this.blockRec(s, id);
-    if (!b.studied) return 'todo';
-    if (b.inv === '' || b.topo === '') {
-      return this.daysBetween(b.studied, this.today(s)) > 2 ? 'stale' : 'open';
-    }
-    return (parseFloat(b.inv) >= 80 && parseFloat(b.topo) >= 80) ? 'closed' : 'repeat';
-  }
-  closedDate(s, id) { const b = this.blockRec(s, id); return this.status(s, id) === 'closed' ? (b.gate || b.studied) : ''; }
-  dueDate(s, id, k) {
-    const b = this.blockRec(s, id);
-    const cd = this.closedDate(s, id);
-    if (!cd) return '';
-    return b[k + 'due'] || this.addDays(cd, k === 'd14' ? 14 : 45);
-  }
-
-  /* ── activity and re-entry ── */
-  activeDays(s) { return Object.keys(s.days).filter(d => s.days[d].tier).sort(); }
-  lastActive(s) { const a = this.activeDays(s); return a.length ? a[a.length - 1] : ''; }
-  gapDays(s) { const la = this.lastActive(s); return la ? this.daysBetween(la, this.today(s)) : 0; }
-
-  /* Re-entry, with one correction to the original.
-     The original asked "is the gap from the last logged day to today three or
-     more?" — which meant that declaring today's tier set the gap to zero and
-     switched re-entry off on the spot. The banner promises "no new blocks for
-     two days", and that promise could never be kept: the moment you used the
-     page the cap lifted.
-     So the break is measured where it actually happened — between the last
-     two logged days, or between the last logged day and today — and re-entry
-     holds until two days have been logged since it. */
-  reentryInfo(s) {
-    const t = this.today(s);
-    const active = this.activeDays(s).filter(d => d <= t);
-    if (!active.length) return { on: false, gap: 0 };
-
-    // Still away: the gap runs from the last logged day up to today.
-    const tail = this.daysBetween(active[active.length - 1], t);
-    if (tail >= 3) return { on: true, gap: tail };
-
-    // Back: find the most recent break and count the days logged since it.
-    for (let i = active.length - 1; i > 0; i--) {
-      const g = this.daysBetween(active[i - 1], active[i]);
-      if (g >= 3) return { on: (active.length - i) < 2, gap: g };
-    }
-    return { on: false, gap: 0 };
-  }
-  inReentry(s) { return this.reentryInfo(s).on; }
-  p0Rate(s, n) {
-    const t = this.today(s);
-    const days = this.lastNDays(s, n).filter(d => d <= t);
-    const run = days.filter(d => s.days[d] && s.days[d].tier && s.days[d].tier !== 'rest');
-    if (!run.length) return null;
-    return Math.round(100 * run.filter(d => s.days[d].p0).length / run.length);
-  }
-  lastPaperScore(s) {
-    let last = '';
-    this.allBlocks().forEach(b => {
-      const r = this.blockRec(s, b.id);
-      (r.reps || []).forEach(x => { if (x.date > last) last = x.date; });
-    });
-    Object.keys(s.days).forEach(d => { if (s.days[d].randScore !== '' && d > last) last = d; });
-    return last;
-  }
-  dueList(s) {
-    const t = this.today(s), out = [];
-    this.allBlocks().forEach(b => {
-      if (!this.closedDate(s, b.id)) return;
-      const r = this.blockRec(s, b.id);
-      ['d14', 'd45'].forEach(k => {
-        if (r[k]) return;
-        const dd = this.dueDate(s, b.id, k);
-        if (dd && dd <= t) out.push({ b, k, dd });
-      });
-    });
-    return out.sort((a, x) => (a.dd < x.dd ? -1 : 1));
-  }
+  mut(fn) { this.A.mut(fn); this.bump(); }
 
   /* ── actions ── */
-  setTier(k) { this.mut(s => { this.dayRec(s, this.today(s)).tier = k; }); }
-  toggleP0() { this.mut(s => { const d = this.dayRec(s, this.today(s)); d.p0 = !d.p0; }); }
-  setDayF(k, v) { this.mut(s => { this.dayRec(s, this.today(s))[k] = v; }); }
-  setDayNum(k, v) { this.mut(s => { this.dayRec(s, this.today(s))[k] = +v || 0; }); }
+  setTier(k) { this.A.setTier(k); this.bump(); }
+  toggleP0() { this.A.toggleP0(); this.bump(); }
+  setDayF(k, v) { const A = this.A; this.mut(s => { A.dayRec(s, A.today(s))[k] = v; }); }
+  setDayNum(k, v) { const A = this.A; this.mut(s => { A.dayRec(s, A.today(s))[k] = +v || 0; }); }
 
   setScore(id, k, v) {
+    const A = this.A;
     this.mut(s => {
-      const t = this.today(s);
-      const b = this.blockRec(s, id);
+      const t = A.today(s);
+      const b = A.blockRec(s, id);
       b[k] = v;
       if (b.inv !== '' && b.topo !== '') {
         if (!b.gate) b.gate = t;
@@ -761,45 +540,52 @@ class Component extends DCLogic {
       }
     });
   }
-  setBlockF(id, k, v) { this.mut(s => { this.blockRec(s, id)[k] = (k === 'cards') ? (+v || 0) : v; }); }
+  setBlockF(id, k, v) {
+    const A = this.A;
+    this.mut(s => { A.blockRec(s, id)[k] = (k === 'cards') ? (+v || 0) : v; });
+  }
 
   setRetest(id, k, v) {
+    const A = this.A;
     this.mut(s => {
-      const b = this.blockRec(s, id);
+      const b = A.blockRec(s, id);
       b[k] = v;
-      // A failed D45 is not a bad mark, it is a reopening: the block goes
-      // back to studied-today with both retests cleared.
+      // A failed D45 is not a bad mark, it is a reopening: the block goes back
+      // to studied-today with both retests cleared.
       if (k === 'd45' && v === 'fail') {
-        b.inv = ''; b.topo = ''; b.gate = ''; b.studied = this.today(s);
+        b.inv = ''; b.topo = ''; b.gate = ''; b.studied = A.today(s);
         b.d14 = ''; b.d45 = ''; b.d14due = ''; b.d45due = '';
       }
     });
     this.toast(v === 'pass' ? '✓ retest passed' : 'reopened — back in the queue');
   }
   deferRetest(id, k, n) {
+    const A = this.A;
     this.mut(s => {
-      const cur = this.dueDate(s, id, k);
+      const cur = A.dueDate(s, id, k);
       if (!cur) return;
-      this.blockRec(s, id)[k + 'due'] = this.addDays(cur, n);
+      A.blockRec(s, id)[k + 'due'] = A.addDays(cur, n);
     });
   }
   spread() {
+    const A = this.A;
     this.mut(s => {
-      const t = this.today(s);
-      const per = this.inReentry(s) ? 3 : 6;
-      this.dueList(s).forEach((x, i) => {
-        this.blockRec(s, x.b.id)[x.k + 'due'] = this.addDays(t, Math.floor(i / per));
+      const t = A.today(s);
+      const per = A.inReentry(s) ? 3 : 6;
+      A.dueList(s).forEach((x, i) => {
+        A.blockRec(s, x.b.id)[x.k + 'due'] = A.addDays(t, Math.floor(i / per));
       });
     });
     this.toast('spread over the coming days');
   }
 
   pickRandom() {
+    const A = this.A;
     this.mut(s => {
-      const closed = this.allBlocks().filter(b => this.status(s, b.id) === 'closed');
+      const closed = A.allBlocks().filter(b => A.status(s, b.id) === 'closed');
       if (!closed.length) return;
-      const d = this.dayRec(s, this.today(s));
-      const cur = d.rand ? this.findBlock(d.rand) : null;
+      const d = A.dayRec(s, A.today(s));
+      const cur = d.rand ? A.findBlock(d.rand) : null;
       const pool = cur ? closed.filter(b => b.regionId !== cur.regionId) : closed;
       const from = pool.length ? pool : closed;
       d.rand = from[Math.floor(Math.random() * from.length)].id;
@@ -807,47 +593,47 @@ class Component extends DCLogic {
     });
   }
   setRandScore(v) {
+    const A = this.A;
     this.mut(s => {
-      const t = this.today(s);
-      const d = this.dayRec(s, t);
+      const t = A.today(s);
+      const d = A.dayRec(s, t);
       d.randScore = v;
       // Under 70 and it is not closed any more — reopen it honestly.
       if (v !== '' && parseFloat(v) < 70 && d.rand) {
-        const b = this.blockRec(s, d.rand);
+        const b = A.blockRec(s, d.rand);
         b.inv = ''; b.topo = ''; b.gate = ''; b.studied = t;
       }
     });
   }
   startBlock() {
+    const A = this.A;
     const id = this.state.pickId;
     if (!id) { this.toast('choose a block first'); return; }
-    this.mut(s => { this.blockRec(s, id).studied = this.today(s); });
+    this.mut(s => { A.blockRec(s, id).studied = A.today(s); });
     this.setState({ pickId: '' });
-    const b = this.findBlock(id);
+    const b = A.findBlock(id);
     this.toast('opened — ' + (b ? b.name : id));
   }
-
   setMeta(k, v) { this.mut(s => { s.meta[k] = +v || 0; }); }
 
   /* ── timer ── */
   startTimer(mins, kind) {
-    this.logTimer(true);
+    this.dropTimer();
     this.setState({ timerKind: kind, timerTotal: mins, timerEnd: Date.now() + mins * 60000, now: Date.now() });
   }
-  // silent = drop it without logging (used when replacing one timer with another)
-  logTimer(silent) {
+  dropTimer() { this.setState({ timerEnd: 0, timerKind: '', timerTotal: 0 }); }
+  stopAndLog() {
     const { timerEnd, timerKind, timerTotal } = this.state;
     if (!timerEnd) return;
-    if (!silent) {
-      const left = Math.max(0, Math.round((timerEnd - Date.now()) / 60000));
-      this.logMinutes(timerKind, Math.max(0, timerTotal - left));
-    }
-    this.setState({ timerEnd: 0, timerKind: '', timerTotal: 0 });
+    const left = Math.max(0, Math.round((timerEnd - Date.now()) / 60000));
+    this.dropTimer();
+    this.logMinutes(timerKind, Math.max(0, timerTotal - left));
   }
   logMinutes(kind, mins) {
     if (!kind || !mins) return;
+    const A = this.A;
     this.mut(s => {
-      const d = this.dayRec(s, this.today(s));
+      const d = A.dayRec(s, A.today(s));
       if (kind === 'read') d.minRead = (+d.minRead || 0) + mins;
       else d.minDraw = (+d.minDraw || 0) + mins;
     });
@@ -855,47 +641,42 @@ class Component extends DCLogic {
 
   /* ── regions open/shut, phone-first ── */
   isPhone() { try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; } }
-  regOpen(id) {
-    const v = this.state.shut[id];
-    return v === undefined ? !this.isPhone() : !v;
-  }
+  regOpen(id) { const v = this.state.shut[id]; return v === undefined ? !this.isPhone() : !v; }
   toggleReg(id) {
     this.setState(st => {
       const shut = Object.assign({}, st.shut);
-      shut[id] = this.regOpen(id);      // flip whatever it is showing now
+      shut[id] = this.regOpen(id);        // flip whatever it is showing now
       return { shut };
     });
   }
   setAllRegs(open) {
     const shut = {};
-    this.DATA.forEach(r => { shut[r.id] = !open; });
+    this.A.regions().forEach(r => { shut[r.id] = !open; });
     this.setState({ shut });
   }
 
   renderVals() {
     this.state.tick;
-    const S = this.read();
-    const t = this.today(S);
-    const day = S.days[t] || Object.assign({}, this.DAY_DEF);
-    const TIERS = this.TIERS;
-    const blocks = this.allBlocks();
+    const A = this.A;
+    const S = A.read();
+    const t = A.today(S);
+    const day = S.days[t] || Object.assign({}, A.DAY_DEF);
+    const TIERS = A.tiers();
+    const blocks = A.allBlocks();
     const view = this.state.view;
+    const sum = A.summary(S);
 
     // ── the bench ──
-    const open = blocks.filter(b => ['open', 'repeat', 'stale'].includes(this.status(S, b.id)));
-    const closed = blocks.filter(b => this.status(S, b.id) === 'closed');
-    let d45p = 0, d45f = 0;
-    blocks.forEach(b => { const r = this.blockRec(S, b.id); if (r.d45 === 'pass') d45p++; if (r.d45 === 'fail') d45f++; });
-    const d45rate = (d45p + d45f) ? Math.round(100 * d45p / (d45p + d45f)) : null;
-    const p0r = this.p0Rate(S, 14);
-    const lastPaper = this.lastPaperScore(S);
+    const open = A.openLoops(S);
     const bench = [
-      { n: String(open.length), label: 'Open loops', cls: open.length > 5 ? 'over' : '' },
-      { n: closed.length + '/' + blocks.length, label: 'Closed', cls: '' },
-      { n: p0r === null ? '—' : p0r + '%', label: 'Phase 0 · 14d', cls: (p0r !== null && p0r < 80) ? 'over' : '' },
-      { n: d45rate === null ? '—' : d45rate + '%', label: 'D45 held', cls: (d45rate !== null && d45rate < 70) ? 'over' : '' },
-      { n: lastPaper ? String(this.daysBetween(lastPaper, t)) : '—', label: 'Days since paper', cls: '' },
-      { n: String(this.daysBetween(t, this.GATE)), label: 'To thorax gate', cls: '' },
+      { n: String(sum.openLoops), label: 'Open loops', cls: sum.openLoops > 5 ? 'over' : '' },
+      { n: sum.closed + '/' + sum.total, label: 'Closed', cls: '' },
+      { n: sum.p0Rate14 === null ? '—' : sum.p0Rate14 + '%', label: 'Phase 0 · 14d',
+        cls: (sum.p0Rate14 !== null && sum.p0Rate14 < 80) ? 'over' : '' },
+      { n: sum.d45Rate === null ? '—' : sum.d45Rate + '%', label: 'D45 held',
+        cls: (sum.d45Rate !== null && sum.d45Rate < 70) ? 'over' : '' },
+      { n: sum.daysSincePaper === null ? '—' : String(sum.daysSincePaper), label: 'Days since paper', cls: '' },
+      { n: sum.daysToGate === null ? '—' : String(sum.daysToGate), label: 'To thorax gate', cls: '' },
     ];
 
     const tabs = [['today', 'Today'], ['blocks', 'Blocks'], ['log', 'Log']].map(([k, label]) => ({
@@ -903,16 +684,15 @@ class Component extends DCLogic {
     }));
 
     // ── re-entry / resume ──
-    const gap = this.gapDays(S);
-    const re = this.reentryInfo(S);
-    const reentry = re.on;
+    const gap = A.gapDays(S);
+    const reentry = sum.reentry;
     let hasBanner = false, bannerCls = '', bannerText = '';
     if (reentry) {
       hasBanner = true; bannerCls = '';
-      bannerText = 'Re-entry — ' + re.gap + ' days since the last logged day. No new blocks for two days, and overdue '
+      bannerText = 'Re-entry — ' + sum.gap + ' days since the last logged day. No new blocks for two days, and overdue '
         + 'retests are capped at three. Any block studied but never scored is stale now: re-study it at half depth '
         + 'rather than scoring it from memory. Run Core today — that is a full day by this system\'s standards.';
-    } else if (gap >= 1 && gap < 3 && this.lastActive(S)) {
+    } else if (gap >= 1 && gap < 3 && A.lastActive(S)) {
       hasBanner = true; bannerCls = 'ok';
       bannerText = gap + ' day' + (gap > 1 ? 's' : '') + ' since the last logged day. Normal resume — nothing has decayed.';
     }
@@ -927,15 +707,15 @@ class Component extends DCLogic {
 
     // ── Phase 0: blocks studied on an earlier day are the ones with a gate to clear ──
     const gateBlocks = open
-      .filter(b => { const r = this.blockRec(S, b.id); return r.studied && r.studied < t; })
+      .filter(b => { const r = A.blockRec(S, b.id); return r.studied && r.studied < t; })
       .map(b => {
-        const r = this.blockRec(S, b.id);
-        const st = this.status(S, b.id);
+        const r = A.blockRec(S, b.id);
+        const st = A.status(S, b.id);
         return {
           name: b.name + (st === 'stale' ? ' — stale' : ''),
           cls: st === 'stale' ? 'urgent' : '',
           hint: st === 'stale'
-            ? 'Studied ' + this.daysBetween(r.studied, t) + ' days ago and never scored. Re-study at half depth today, then score tomorrow. Don\'t score it from memory now.'
+            ? 'Studied ' + A.daysBetween(r.studied, t) + ' days ago and never scored. Re-study at half depth today, then score tomorrow. Don\'t score it from memory now.'
             : 'Redraw cold, then score against Moore\'s.',
           inv: r.inv, topo: r.topo,
           setInv: (e) => this.setScore(b.id, 'inv', e.target.value),
@@ -943,12 +723,13 @@ class Component extends DCLogic {
         };
       });
 
-    const randBlock = day.rand ? this.findBlock(day.rand) : null;
+    const closedBlocks = blocks.filter(b => A.status(S, b.id) === 'closed');
+    const randBlock = day.rand ? A.findBlock(day.rand) : null;
     const randUnder = day.randScore !== '' && parseFloat(day.randScore) < 70;
 
     // ── retests ──
-    const due = this.dueList(S);
-    const cap = reentry ? 3 : 6;
+    const due = A.dueList(S);
+    const cap = sum.retestCap;
     const shown = due.slice(0, cap);
     const deferredN = due.length - shown.length;
     const retests = shown.map(x => ({
@@ -960,19 +741,19 @@ class Component extends DCLogic {
     }));
 
     // ── block of the day ──
-    const blocked = open.length > 5 || reentry;
+    const blocked = sum.openLoops > 5 || reentry;
     const todoBlocks = [];
-    this.DATA.forEach(r => r.blocks.forEach(b => {
-      if (this.status(S, b.id) === 'todo') todoBlocks.push({ id: b.id, label: r.name + ' — ' + b.name });
+    A.regions().forEach(r => r.blocks.forEach(b => {
+      if (A.status(S, b.id) === 'todo') todoBlocks.push({ id: b.id, label: r.name + ' — ' + b.name });
     }));
 
     // ── the timer ──
     const left = this.state.timerEnd ? Math.max(0, this.state.timerEnd - this.state.now) : 0;
     if (this.state.timerEnd && left <= 0) {
-      // Fires once: the interval keeps ticking but timerEnd is cleared here.
+      // Fires once: timerEnd is cleared before the log lands.
       const kind = this.state.timerKind, total = this.state.timerTotal;
       setTimeout(() => {
-        this.setState({ timerEnd: 0, timerKind: '', timerTotal: 0 });
+        this.dropTimer();
         this.logMinutes(kind, total);
         this.toast(kind === 'read' ? 'Read block done — close both screens before you draw.'
                                    : 'Draw block done — open the books and correct in red.');
@@ -983,16 +764,16 @@ class Component extends DCLogic {
 
     // ── regions ──
     const badgeColor = { todo: '#A6A79F', open: '#854F0B', closed: '#2F6F5B', repeat: '#993C1D', stale: '#A32E27' };
-    const regions = this.DATA.map(r => {
-      const doneN = r.blocks.filter(b => this.status(S, b.id) === 'closed').length;
+    const regions = A.regions().map(r => {
+      const doneN = r.blocks.filter(b => A.status(S, b.id) === 'closed').length;
       const isOpen = this.regOpen(r.id);
       return {
         name: r.name, note: r.note, count: doneN + '/' + r.blocks.length + ' closed',
         open: isOpen, caret: isOpen ? '▾' : '▸', toggle: () => this.toggleReg(r.id),
         blocks: r.blocks.map(b => {
-          const rec = this.blockRec(S, b.id);
-          const st = this.status(S, b.id);
-          const cd = this.closedDate(S, b.id);
+          const rec = A.blockRec(S, b.id);
+          const st = A.status(S, b.id);
+          const cd = A.closedDate(S, b.id);
           const label = { todo: 'not started', open: 'open loop', closed: 'closed ' + cd,
                           repeat: 'repeat it', stale: 'stale — restudy' }[st];
           return {
@@ -1005,7 +786,7 @@ class Component extends DCLogic {
             setCards: (e) => this.setBlockF(b.id, 'cards', e.target.value),
             isClosed: !!cd,
             retests: ['d14', 'd45'].map(k => {
-              const dd = this.dueDate(S, b.id, k);
+              const dd = A.dueDate(S, b.id, k);
               const v = rec[k];
               const cls = v === 'pass' ? 'pass' : v === 'fail' ? 'fail' : (dd && dd <= t ? 'due' : '');
               const lab = v === 'pass' ? 'passed' : v === 'fail' ? 'failed' : (dd && dd <= t ? 'due now' : 'due ' + dd);
@@ -1021,40 +802,18 @@ class Component extends DCLogic {
     });
 
     // ── the week, and the tripwires ──
-    const wk = this.lastNDays(S, 7);
-    let read = 0, draw = 0, cn = 0, cf = 0, cc = 0, run = 0, p0kept = 0, missP0 = 0;
-    wk.forEach(d => {
-      const x = S.days[d];
-      if (!x || !x.tier) return;
-      if (x.tier !== 'rest') { run++; if (x.p0) p0kept++; else missP0++; }
-      read += +x.minRead || 0; draw += +x.minDraw || 0;
-      cn += +x.cardsNew || 0; cf += +x.cardsFixed || 0; cc += +x.cardsCut || 0;
-    });
-    const closedWk = blocks.filter(b => { const cd = this.closedDate(S, b.id); return cd && wk.includes(cd); }).length;
+    const w = A.weekStats(S);
     const weekStats = [
-      { n: String(closedWk), label: 'Blocks closed', cls: '' },
-      { n: run + '/7', label: 'Days run', cls: '' },
-      { n: (run ? Math.round(100 * p0kept / run) : 0) + '%', label: 'Phase 0 kept', cls: '' },
-      { n: String(read), label: 'Read min', cls: '' },
-      { n: String(draw), label: 'Draw min', cls: (draw < read && read > 0) ? 'over' : '' },
-      { n: String(cn), label: 'New cards', cls: '' },
-      { n: String(cf), label: 'Rewritten', cls: '' },
-      { n: String(cc), label: 'Cut', cls: '' },
+      { n: String(w.closed), label: 'Blocks closed', cls: '' },
+      { n: w.run + '/7', label: 'Days run', cls: '' },
+      { n: (w.run ? Math.round(100 * w.p0kept / w.run) : 0) + '%', label: 'Phase 0 kept', cls: '' },
+      { n: String(w.read), label: 'Read min', cls: '' },
+      { n: String(w.draw), label: 'Draw min', cls: (w.draw < w.read && w.read > 0) ? 'over' : '' },
+      { n: String(w.cardsNew), label: 'New cards', cls: '' },
+      { n: String(w.cardsFixed), label: 'Rewritten', cls: '' },
+      { n: String(w.cardsCut), label: 'Cut', cls: '' },
     ];
-
-    const paperGap = lastPaper ? this.daysBetween(lastPaper, t) : 999;
-    const thoraxRegion = this.DATA.find(r => r.id === 'thorax');
-    const thoraxStarted = thoraxRegion ? thoraxRegion.blocks.some(b => this.blockRec(S, b.id).studied) : true;
-    const trips = [
-      [open.length > 5, 'Open loops above 5 (' + open.length + '). No new block until they clear.'],
-      [missP0 >= 2, 'Phase 0 skipped ' + missP0 + ' times in the last 7 days. That week\'s checkmarks are void.'],
-      [paperGap >= 14, lastPaper ? paperGap + ' days since anything was scored on paper. Studying by impression again.'
-                                 : 'Nothing has been scored on paper yet.'],
-      [d45rate !== null && d45rate < 70, 'D45 pass rate ' + (d45rate || 0) + '%. Closure is not holding — card design or block size, not effort.'],
-      [draw < read * 0.6 && read > 0, 'Draw ' + draw + ' min against read ' + read + ' min this week. Intake is crowding out generation — the exact shape of last year.'],
-      [closedWk > 0 && cn / closedWk > 20, Math.round(cn / closedWk) + ' new cards per closed block this week. Authoring is expanding again; the ceiling is about 15.'],
-      [t >= this.GATE && !thoraxStarted, 'Past ' + this.GATE + ' and thorax has not started. Move unfinished regions to closure-track and begin.'],
-    ].map(([fired, text]) => ({ cls: fired ? 'fired' : '', text }));
+    const trips = A.tripwires(S).map(x => ({ cls: x.fired ? 'fired' : '', text: x.text }));
 
     // ── the log table ──
     const logRows = Object.keys(S.days).filter(d => S.days[d].tier).sort().reverse().slice(0, 30).map(d => {
@@ -1070,6 +829,7 @@ class Component extends DCLogic {
     });
 
     const rep = S.meta.repaired || 0;
+    const total = A.repairTotal();
     const attempts = Object.values(S.blocks).reduce((n, b) => n + ((b.reps || []).length), 0);
     const orphanN = Object.keys(S.orphans || {}).length;
     const dataRows = [
@@ -1083,11 +843,11 @@ class Component extends DCLogic {
     }
 
     let importNote = '';
-    if (this._imported) importNote = 'Adopted on first run from ' + this._imported + ', which was left in place.';
-    if (this._migrationNote) importNote = (importNote ? importNote + ' ' : '') + 'Upgraded on load: ' + this._migrationNote + '.';
+    if (A.importedFrom()) importNote = 'Adopted on first run from ' + A.importedFrom() + ', which was left in place.';
+    if (A.migrationNote()) importNote = (importNote ? importNote + ' ' : '') + 'Upgraded on load: ' + A.migrationNote() + '.';
 
     return {
-      dayStamp: 'Study day ' + t + ' · rollover ' + String(this.rollover(S)).padStart(2, '0') + ':00 · clock ' + this.clockNow(),
+      dayStamp: 'Study day ' + t + ' · rollover ' + String(A.rollover(S)).padStart(2, '0') + ':00 · clock ' + A.clockNow(),
       bench, tabs,
       isToday: view === 'today', isBlocks: view === 'blocks', isLog: view === 'log',
 
@@ -1096,10 +856,10 @@ class Component extends DCLogic {
 
       gateBlocks, noGate: gateBlocks.length === 0,
       randCls: day.randScore !== '' ? 'done' : '',
-      randHint: !closed.length ? 'Starts once something is closed.'
+      randHint: !closedBlocks.length ? 'Starts once something is closed.'
         : (!day.rand ? 'One older block, different region, redrawn cold. Under 70% and it goes back in the queue.'
                      : (randBlock ? randBlock.region + ' — ' + randBlock.name : day.rand)),
-      canDraw: closed.length > 0, hasRand: !!day.rand,
+      canDraw: closedBlocks.length > 0, hasRand: !!day.rand,
       drawLabel: day.rand ? 'Draw another' : 'Draw one',
       randScore: day.randScore, randReopened: randUnder,
       setRandScore: (e) => this.setRandScore(e.target.value),
@@ -1126,7 +886,7 @@ class Component extends DCLogic {
       timerDisp, timerCls: (left > 0 && left < 60000) ? 'warn' : '',
       read30: () => this.startTimer(30, 'read'),
       draw30: () => this.startTimer(30, 'draw'),
-      stopTimer: () => this.logTimer(false),
+      stopTimer: () => this.stopAndLog(),
 
       minRead: day.minRead, minDraw: day.minDraw, sheet: day.sheet,
       cardsNew: day.cardsNew, cardsFixed: day.cardsFixed, cardsCut: day.cardsCut,
@@ -1138,17 +898,17 @@ class Component extends DCLogic {
       setCut: (e) => this.setDayNum('cardsCut', e.target.value),
       dayNote: day.note || '', setNote: (e) => this.setDayF('note', e.target.value),
 
-      regions, blocksSummary: closed.length + ' of ' + blocks.length + ' closed · ' + open.length + ' open',
+      regions, blocksSummary: sum.closed + ' of ' + sum.total + ' closed · ' + sum.openLoops + ' open',
       openAll: () => this.setAllRegs(true), shutAll: () => this.setAllRegs(false),
 
       weekStats, trips, logRows, noLog: logRows.length === 0,
       repaired: rep,
-      repairLabel: rep + ' / ' + this.REPAIR_TOTAL + ' repaired — ' + (this.REPAIR_TOTAL ? Math.round(100 * rep / this.REPAIR_TOTAL) : 0) + '%',
+      repairLabel: rep + ' / ' + total + ' repaired — ' + (total ? Math.round(100 * rep / total) : 0) + '%',
       setRepaired: (e) => this.setMeta('repaired', e.target.value),
-      rollover: this.rollover(S),
+      rollover: A.rollover(S),
       rollOpts: [0, 1, 2, 3, 4, 5, 6, 7].map(v => ({ v, label: String(v).padStart(2, '0') + ':00' })),
       setRollover: (e) => this.setMeta('rollover', e.target.value),
-      rollNote: 'Clock says ' + this.clockNow() + '. Everything you log right now goes to ' + t + '.',
+      rollNote: 'Clock says ' + A.clockNow() + '. Everything you log right now goes to ' + t + '.',
       dataRows, importNote, hasImportNote: !!importNote,
 
       hasToast: !!this.state.toast, toast: this.state.toast,
