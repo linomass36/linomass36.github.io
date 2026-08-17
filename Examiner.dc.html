@@ -59,6 +59,17 @@
         <button onClick="{{ runBriefing }}" disabled="{{ busy }}" style="{{ runStyle }}">{{ runLabel }}</button>
         <sc-if value="{{ hasErr }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A32E27;">{{ err }}</span></sc-if>
       </div>
+      <sc-if value="{{ hasPrompt }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 14px; border: 1px solid #E4E2DD; border-left: 3px solid #185FA5; border-radius: 0 12px 12px 0; background: #FFFFFF; padding: 15px 18px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #185FA5;">No model on this page</div>
+          <div style="font-size: 13.5px; line-height: 1.6; color: #3a3b34; margin-top: 7px;">This is a static site — there is nothing here to run the examination. Your record has been compiled into a briefing below; copy it into any chat and you will get the same thing back.</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+            <button onClick="{{ copyPrompt }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; min-height: 44px; padding: 0 18px; border-radius: 11px; border: 1px solid #185FA5; background: #185FA5; color: #FFF; cursor: pointer;">{{ copyLabel }}</button>
+            <button onClick="{{ clearPrompt }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; min-height: 44px; padding: 0 16px; border-radius: 11px; border: 1px solid #DAD7D0; background: #FFF; color: #55564F; cursor: pointer;">Close</button>
+          </div>
+          <textarea readonly style="width: 100%; margin-top: 12px; min-height: 190px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; line-height: 1.55; padding: 12px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FCFBF8; color: #3a3b34; resize: vertical;" value="{{ prompt }}"></textarea>
+        </div>
+      </sc-if>
       <sc-if value="{{ busy }}" hint-placeholder-val="{{ false }}">
         <div style="margin-top: 14px; border: 1px dashed #E7CFC4; border-radius: 10px; background: #FBF6F0; padding: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #993C1D; animation: exPulse 1.6s ease infinite;">{{ busyText }}</div>
       </sc-if>
@@ -128,7 +139,7 @@ class Component extends DCLogic {
     ['mentor', 'Kind mentor', 'You are a warm, experienced mentor. Honest but encouraging. Notice genuine progress before problems. Speak like someone who wants this person to succeed long-term.'],
     ['pi', 'Skeptical PI', 'You are a skeptical principal investigator reviewing a student\'s progress report. Interrogate the evidence. Distinguish activity from output. Ask what would convince a committee.']
   ];
-  state = { tick: 0, lens: 'sergeant', busy: false, busyText: '', err: '', brief: null, q: '', answer: null, filedTs: 0 };
+  state = { tick: 0, lens: 'sergeant', busy: false, busyText: '', err: '', brief: null, q: '', answer: null, filedTs: 0, prompt: '', copied: '' };
 
   lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   read() { const d = this.lsJson(this.KEY, null); return (d && Array.isArray(d.briefs)) ? d : { briefs: [] }; }
@@ -203,7 +214,39 @@ class Component extends DCLogic {
     return L.join('\n');
   }
 
+  /* Is there a model on this page at all?
+     There is inside the builder this was exported from; there is not on the
+     deployed site, where window.claude is undefined. The old code called it
+     regardless, so pressing "run the briefing" on the real hub did nothing at
+     all — no output, no error, no message. A feature that accepts a click and
+     silently declines is worse than one that isn't there.
+     The digest is the valuable part and it is computed locally, so when there
+     is no model the page hands you the finished prompt to paste into a chat
+     instead of pretending. */
+  hasModel() {
+    try { return !!(window.claude && typeof window.claude.complete === 'function'); }
+    catch (e) { return false; }
+  }
+
+  async copyOut(text, what) {
+    try {
+      await navigator.clipboard.writeText(text);
+      this.setState({ copied: what });
+      clearTimeout(this._cp);
+      this._cp = setTimeout(() => this.setState({ copied: '' }), 2600);
+      return true;
+    } catch (e) {
+      this.setState({ err: 'could not reach the clipboard — select the text below and copy it by hand' });
+      return false;
+    }
+  }
+
   async callClaude(system, user, busyText) {
+    if (!this.hasModel()) {
+      // Compile it and hand it over.
+      this.setState({ prompt: system + '\n\n---\n\n' + user, err: '', busy: false, busyText: '' });
+      return null;
+    }
     this.setState({ busy: true, busyText, err: '' });
     try {
       const text = await window.claude.complete({
@@ -280,6 +323,14 @@ class Component extends DCLogic {
       runLabel: S.busy ? 'examining…' : 'run the briefing',
       runStyle: mono + 'font-size:11.5px;letter-spacing:.06em;min-height:46px;padding:0 24px;border-radius:23px;border:1px solid #A32E27;cursor:' + (S.busy ? 'wait' : 'pointer') + ';background:' + (S.busy ? '#FFF' : '#A32E27') + ';color:' + (S.busy ? '#A32E27' : '#FFF') + ';',
       hasErr: !!S.err, err: S.err,
+      // This was missing: runBriefing was defined but never returned, so the
+      // button's onClick resolved to undefined and pressing it did nothing at
+      // all — on every device, in every environment, since it was written.
+      runBriefing,
+      hasPrompt: !!S.prompt, prompt: S.prompt,
+      copyLabel: S.copied === 'prompt' ? 'copied ✓' : 'copy the briefing',
+      copyPrompt: () => this.copyOut(S.prompt, 'prompt'),
+      clearPrompt: () => this.setState({ prompt: '', copied: '' }),
       hasBrief: !!S.brief && !S.busy,
       briefLens: S.brief ? (lensName[S.brief.lens] || '') : '',
       briefWhen: S.brief ? this.fmtWhen(S.brief.ts) : '',

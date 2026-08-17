@@ -134,7 +134,13 @@
   function read() {
     var raw = null;
     try { raw = localStorage.getItem(KEY); } catch (e) {}
-    if (raw) { try { return migrate(JSON.parse(raw)); } catch (e) { return blank(); } }
+    if (raw) {
+      try {
+        var s = migrate(JSON.parse(raw));
+        if (backfillStudy(s)) write(s);
+        return s;
+      } catch (e) { return blank(); }
+    }
 
     // First run here: adopt whatever the standalone file left behind.
     for (var i = 0; i < IMPORT_FROM.length; i++) {
@@ -144,6 +150,7 @@
       try {
         var s = migrate(JSON.parse(r));
         lastImport = IMPORT_FROM[i];
+        backfillStudy(s);
         write(s);
         return s;
       } catch (e) {}
@@ -158,8 +165,65 @@
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
     return s;
   }
+  /* ── study hours reach the rest of the hub ────────────────────────────
+     Read and draw minutes are study time, and every "hours studied" figure
+     in the hub — the Study Engine's pacing bar, the weekly review's numbers,
+     the weekly export — is computed from the Life Log's sessions. Without
+     this they would be invisible there, and the week would be understated
+     the moment the closure log got used.
+
+     One session per anatomy day, tagged src:'anatomy' and rewritten in place
+     rather than appended, so correcting the minutes corrects the figure
+     instead of adding to it. Anchored at noon local so it lands on the same
+     calendar day the Life Log keys by. */
+  var LIFELOG_KEY = 'ct_lifelog_v1';
+
+  function dayMinutes(s, day) {
+    var r = s.days[day];
+    return r ? ((+r.minRead || 0) + (+r.minDraw || 0)) : 0;
+  }
+
+  function mirrorStudy(s, day) {
+    var mins = dayMinutes(s, day);
+    var ll = null;
+    try { ll = JSON.parse(localStorage.getItem(LIFELOG_KEY)); } catch (e) {}
+    if (!ll || typeof ll !== 'object') ll = {};
+    if (!Array.isArray(ll.sessions)) ll.sessions = [];
+    ll.sessions = ll.sessions.filter(function (x) {
+      return !(x && x.src === 'anatomy' && x.day === day);
+    });
+    if (mins > 0) {
+      var end = new Date(day + 'T12:00:00').getTime();
+      if (!isNaN(end)) {
+        ll.sessions.push({ type: 'study', subject: 'anatomy',
+                           start: end - mins * 60000, end: end,
+                           src: 'anatomy', day: day });
+      }
+    }
+    try { localStorage.setItem(LIFELOG_KEY, JSON.stringify(ll)); } catch (e) {}
+  }
+
+  // Minutes logged before this existed still count: mirrored once, then a
+  // flag in meta stops it happening again.
+  function backfillStudy(s) {
+    if (s.meta && s.meta.mirrored) return false;
+    Object.keys(s.days).forEach(function (d) {
+      if (dayMinutes(s, d) > 0) mirrorStudy(s, d);
+    });
+    s.meta.mirrored = 1;
+    return true;
+  }
+
   // Read, change, write — the only way anything in here is edited.
-  function mut(fn) { var s = read(); fn(s); write(s); return s; }
+  function mut(fn) {
+    var s = read();
+    var t = today(s);
+    var before = dayMinutes(s, t);
+    fn(s);
+    write(s);
+    if (dayMinutes(s, t) !== before) mirrorStudy(s, t);
+    return s;
+  }
 
   function blockRec(s, id) {
     if (!s.blocks[id]) s.blocks[id] = Object.assign({}, BLOCK_DEF, { reps: [] });
@@ -388,6 +452,7 @@
     p0Rate: p0Rate, lastPaperScore: lastPaperScore, d45Rate: d45Rate,
 
     weekStats: weekStats, tripwires: tripwires, summary: summary,
+    dayMinutes: dayMinutes, mirrorStudy: mirrorStudy,
     setTier: setTier, toggleP0: toggleP0,
 
     importedFrom: function () { return lastImport; },

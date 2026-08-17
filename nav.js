@@ -40,8 +40,7 @@
     ['Conference Radar.dc.html', 'Conference Radar'],
     ['Dossiers.dc.html', 'Dossiers'],
     ['Examiner.dc.html', 'Examiner'],
-    ['Vault.dc.html', 'Vault'],
-    ['Canvas.dc.html', 'Canvas']
+    ['Vault.dc.html', 'Vault']
   ];
 
   var BM_KEY = 'hub_bookmarks_v1';
