@@ -78,6 +78,16 @@
              border-radius: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
              border: 1px solid #E7E3DA; background: #FBF9F4; color: #6b6c63; }
   .td-chip.on { border-color: #3B6D11; background: #F1F7E9; color: #3B6D11; }
+  /* the same chip, but you can press it */
+  .td-chip.tap { flex: 1; justify-content: center; min-height: 48px; font-size: 13px;
+                 cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .td-chip.tap.on { border-color: #993C1D; background: #FBF2EE; color: #993C1D; }
+
+  /* the study stepper: a subject, then how long */
+  .td-study { display: flex; gap: 8px; margin-top: 10px; }
+  .td-study select { flex: 1; min-width: 0; min-height: 48px; font-size: 15px; padding: 0 10px;
+                     border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F; }
+  .td-study button { flex: none; min-width: 56px; padding: 0 10px; min-height: 48px; font-size: 13px; }
 
   .td-field { width: 100%; font-size: 16px; line-height: 1.5; padding: 12px 13px;
               border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F;
@@ -163,11 +173,22 @@
   <!-- ─── today, from the log ─── -->
   <div class="td-card">
     <div class="td-kicker"><b>Today</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">log →</a></div>
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-      <sc-for list="{{ todayChips }}" as="c" hint-placeholder-count="3">
-        <span class="td-chip {{ c.cls }}">{{ c.label }}</span>
+    <div style="display: flex; gap: 8px;">
+      <sc-for list="{{ trainChips }}" as="c" hint-placeholder-count="3">
+        <button onClick="{{ c.toggle }}" class="td-chip tap {{ c.cls }}">{{ c.label }}</button>
       </sc-for>
     </div>
+    <div class="td-study">
+      <select value="{{ subject }}" onChange="{{ setSubject }}">
+        <sc-for list="{{ subjects }}" as="s" hint-placeholder-count="5">
+          <option value="{{ s.id }}">{{ s.label }}</option>
+        </sc-for>
+      </select>
+      <sc-for list="{{ studyBtns }}" as="b" hint-placeholder-count="3">
+        <button onClick="{{ b.add }}" class="td-btn">{{ b.label }}</button>
+      </sc-for>
+    </div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A6A79F; margin-top: 8px;">{{ studyLine }}</div>
   </div>
 
   <!-- ─── capture ─── -->
@@ -200,7 +221,7 @@ class Component extends DCLogic {
   WKEY = 'ct_weekly_v1';
   JKEY = 'ct_journal_v1';
 
-  state = { tick: 0, noteId: null, noteBook: '', noteLoc: '', noteText: '', jotText: '', toast: '' };
+  state = { tick: 0, noteId: null, noteBook: '', noteLoc: '', noteText: '', jotText: '', toast: '', subject: 'anatomy' };
 
   readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -254,6 +275,72 @@ class Component extends DCLogic {
     this.setState({ noteId: null, noteText: '', noteLoc: '' });
     this.toast('✓ note saved');
     this.bump();
+  }
+
+  /* ── the life log ──────────────────────────────────────────────────────
+     Same store, same shapes, so a gym tap or a study block entered here is
+     indistinguishable from one entered on the Life Log page itself.
+
+     One thing to know about the day key: the Life Log keys its days by the
+     UTC date (`toISOString().slice(0,10)`) and filters sessions the same
+     way, so late-evening entries in a positive offset land on the next
+     day's key. That is its convention, not a bug to fix from here — this
+     page copies it exactly, which is why logDay() is not isoDay(). */
+  logDay() { return new Date().toISOString().slice(0, 10); }
+  SUBJECTS = [['anatomy', 'Anatomy'], ['math', 'Math'], ['python', 'Python'],
+              ['research', 'Research'], ['other', 'Other']];
+
+  readL() {
+    const d = Object.assign({ days: {}, sessions: [], active: null, syllabus: {}, targets: {}, budget: '' },
+                            this.readJSON(this.LKEY, {}) || {});
+    if (!d.days) d.days = {};
+    if (!Array.isArray(d.sessions)) d.sessions = [];
+    return d;
+  }
+  mutL(fn) { const d = this.readL(); fn(d); this.writeJSON(this.LKEY, d); this.bump(); }
+
+  toggleTrain(kind, label) {
+    const k = this.logDay();
+    let on = false;
+    this.mutL(d => {
+      if (!d.days[k]) d.days[k] = {};
+      if (!d.days[k][kind]) d.days[k][kind] = {};
+      d.days[k][kind].on = !d.days[k][kind].on;
+      on = !!d.days[k][kind].on;
+    });
+    this.toast(on ? '✓ ' + label + ' logged' : label + ' cleared');
+  }
+
+  // A block of study is written as a real session ending now — the same
+  // record the Life Log's timer appends when you stop it, so the day total,
+  // the week total and the weekly export all pick it up with no special case.
+  addStudy(mins, label) {
+    const end = Date.now();
+    const subject = this.state.subject || 'anatomy';
+    this.mutL(d => { d.sessions = d.sessions.concat([{ type: 'study', subject, start: end - mins * 60000, end }]); });
+    this.toast('✓ ' + label + ' of ' + subject);
+  }
+
+  // Mirrors the Life Log's studyHoursDay: a manual hours override for a
+  // subject wins, otherwise the subject's sessions are summed.
+  studyHoursToday() {
+    const k = this.logDay();
+    const d = this.readL();
+    const st = (d.days[k] || {}).study || {};
+    let h = 0;
+    this.SUBJECTS.forEach(([s]) => {
+      const ov = st[s] && st[s].h;
+      if (ov !== undefined && ov !== null && ov !== '') { h += parseFloat(ov) || 0; return; }
+      d.sessions.forEach(x => {
+        if (x.type === 'study' && x.subject === s && new Date(x.start).toISOString().slice(0, 10) === k) {
+          h += (x.end - x.start) / 3600000;
+        }
+      });
+    });
+    if (d.active && d.active.mode === 'study' && new Date(d.active.start).toISOString().slice(0, 10) === k) {
+      h += (Date.now() - d.active.start) / 3600000;
+    }
+    return h;
   }
 
   saveJot() {
@@ -317,19 +404,21 @@ class Component extends DCLogic {
     const wk = this.isoDay(mon);
     const prios = ((w.priorities || {})[wk] || []).filter(Boolean).map(t => ({ text: t }));
 
-    // ── today, from the life log ──
-    const log = this.readJSON(this.LKEY, {}) || {};
-    const day = ((log.days || {})[this.isoDay(now)]) || {};
-    let studyH = 0;
-    try {
-      const ss = day.study || {};
-      Object.keys(ss).forEach(k => { const v = ss[k]; if (typeof v === 'number') studyH += v; });
-    } catch (e) {}
-    const todayChips = [
-      { label: studyH ? studyH + 'h studied' : 'no study logged', cls: studyH ? 'on' : '' },
-      { label: (day.gym && day.gym.on) ? 'gym ✓' : 'no gym', cls: (day.gym && day.gym.on) ? 'on' : '' },
-      { label: (day.swim && day.swim.on) ? 'swim ✓' : 'no swim', cls: (day.swim && day.swim.on) ? 'on' : '' },
-    ];
+    // ── today, in the life log — readable and writable ──
+    const logStore = this.readL();
+    const day = (logStore.days[this.logDay()]) || {};
+    const trainChips = [['gym', '⚒ Gym'], ['swim', '≈ Swim'], ['climb', '▲ Climb']].map(([kind, label]) => ({
+      label, cls: (day[kind] && day[kind].on) ? 'on' : '',
+      toggle: () => this.toggleTrain(kind, label.slice(2)),
+    }));
+    const subjects = this.SUBJECTS.map(([id, label]) => ({ id, label }));
+    const studyBtns = [[15, '+15m'], [30, '+30m'], [60, '+1h']].map(([mins, label]) => ({
+      label, add: () => this.addStudy(mins, label.slice(1)),
+    }));
+    const studyH = this.studyHoursToday();
+    const studyLine = studyH
+      ? (Math.round(studyH * 10) / 10) + 'h studied today — it lands in the Life Log as a session'
+      : 'no study logged today';
 
     const jots = this.readJSON(this.JKEY, []) || [];
     const todayJots = (Array.isArray(jots) ? jots : []).filter(j => j.date === this.isoDay(now)).length;
@@ -380,7 +469,9 @@ class Component extends DCLogic {
       cancelNote: () => this.setState({ noteId: null, noteText: '', noteLoc: '' }),
 
       hasPrios: prios.length > 0, prios,
-      todayChips,
+      trainChips, subjects, studyBtns, studyLine,
+      subject: this.state.subject,
+      setSubject: (e) => this.setState({ subject: e.target.value }),
 
       jotText: this.state.jotText,
       setJot: (e) => this.setState({ jotText: e.target.value }),

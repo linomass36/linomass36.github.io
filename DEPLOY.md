@@ -175,9 +175,32 @@ at a glance and lets you put things in.
 - **The rare actions fold** behind one **⋯ more** chip — Surprise me, Obsidian,
   Import, Export. Search, the three views and ＋ Add a book stay out in the open.
 
-Measured on an iPhone 13 viewport, before → after: the Reading List went from
-55 screens of scroll to 5.6, from 367 controls to 67, from 166 tap targets under
-40px to 39, and from 858 pieces of text under 11px to 75.
+- **The Summer Sprint's moves are list items.** On a phone a move is one
+  full-width row you tap anywhere on — a 22px checkbox and the text, 50px tall
+  — and the ✕ *cut* and → *carry* buttons come off entirely: each opens a
+  prompt asking for a reason, which is a desk decision, and a 12px glyph with
+  2px of padding was never a phone control. The phases and the boards below
+  them start closed, each heading showing its own tally, and the habit grid
+  restacks so the seven days are thumb-sized buttons with the day letter
+  inside. The one section open by default is the habit grid — it is the daily
+  tap. A desktop keeps all of it: four columns, both buttons, nothing
+  collapsed.
+- **Plan Analysis opens on its summary.** It is an essay; on a phone you get
+  the three counters, the verdict and its two lists, then ten headings you open
+  one at a time.
+- **The drawer's rows are 44px**, not 37 — eighteen links in a column, and a
+  row that misses the thumb by 3px misses it eighteen times.
+
+Measured on an iPhone 13 viewport, before → after:
+
+| | screens of scroll | controls | under 40px | text under 11px |
+|---|---|---|---|---|
+| Reading List | 55.1 → 5.6 | 367 → 67 | 166 → 39 | 858 → 75 |
+| Summer Sprint | 11.5 → 4.9 | 207 → 61 | 193 → 5 | 85 → 14 |
+| Plan Analysis | 20.2 → 4.2 | 29 → 27 | 22 → 1 | 36 → 10 |
+
+Every one of these is a phone-only change behind a `max-width: 640px` query:
+the desktop renders at the same height, to the pixel, as it did before.
 
 ### Today
 `Today.dc.html` is the phone's front door — 2.6 screens, and everything on it
@@ -193,7 +216,19 @@ desktop (and syncs) exactly as if it had been typed there.
   **✓** marks it finished.
 - **The plan bar and this week's priorities**, read-only, so a glance answers
   "am I behind".
-- **Today's life-log chips** — what's already logged for today.
+- **The quick log.** ⚒ Gym, ≈ Swim and ▲ Climb are buttons, not badges — tap
+  one and the day is logged. Beside them a subject and **+15m / +30m / +1h**
+  add a block of study. These write the Life Log's own shapes: a training tap
+  is `days[date][kind].on`, and a study block is appended to `sessions` as a
+  real session ending now — the same record the Life Log's timer writes when
+  you stop it, so the day total, the week total and the weekly export all pick
+  it up. Open the Life Log afterwards and it is indistinguishable from having
+  been logged there.
+
+  One wrinkle worth knowing: the Life Log keys its days by the **UTC** date and
+  filters sessions the same way, so a late-evening entry in a positive offset
+  lands on the next day's key. That is its convention, and Today copies it
+  exactly rather than half-matching it.
 - **A journal box.** Type and save; it writes a normal daily entry that the
   Journal page opens.
 - **A grid of twelve tiles** to every other page, for when you want the real one.
@@ -304,7 +339,26 @@ follow you across devices. The vault folder handle itself is per-device
   - *Waiting to read the cloud* — this device could not read the cloud, so it deliberately will not write over it either (otherwise a phone with a months-old copy could wipe the laptop's). It retries every 15s.
 - `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note formats (one per book, one per reading plan), their parsers, the three-way merges, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
 - `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`), and on phones the **bottom tab bar** — Today, Reading, Journal, Log, Review. Injected on hub pages.
-- `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support. The service worker is network-first for pages (new deploys land at once) and cache-busts by version; the deploy stamps the version into it so each push updates the installed app.
+- `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support.
+
+  **How offline works, and why it can't go stale.** The worker is
+  **network-first**. Online, every request goes to the network and the
+  network's answer is what you see — there is no path by which a cached copy
+  is preferred over a live one. What comes back is copied into a cache on the
+  way past. When a fetch *actually fails*, and only then, the cached copy is
+  served: a page you have opened before still opens with no signal, and one
+  you never have says so in plain words instead of showing a browser error.
+
+  This matters because the worker used to be **cache-first**, which is why it
+  was ripped out: an installed app kept serving yesterday's copy, so the phone
+  showed an old layout and no sync. Network-first cannot reproduce that.
+
+  The cache is named for the app version, so a deploy starts a fresh one and
+  the old is deleted the moment the new worker activates. Two things are never
+  cached: `version.txt`, so the self-heal check can always discover that a new
+  version exists, and anything on the Firestore host, so a sync is never
+  answered from a cache. Data you type offline was already safe — it goes to
+  localStorage immediately and syncs when the signal returns.
 - `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.
 - `.github/workflows/deploy.yml` — builds `_site/` and deploys to Pages on every push.
 - `.github/inject.py` — injects the sync shim into hub pages at build time.

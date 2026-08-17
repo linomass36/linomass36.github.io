@@ -101,7 +101,10 @@
     '.hbnav-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:8px 10px 18px;}' +
     '.hbnav-sec{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.14em;' +
     'text-transform:uppercase;color:#A6A79F;padding:14px 8px 6px;}' +
-    '.hbnav-lnk{display:block;text-decoration:none;color:#26271F;font-size:14px;padding:9px 10px;' +
+    // 44px, not 37: every page's drawer is 18 of these in a column, and a
+    // row that misses the thumb by 3px misses it eighteen times.
+    '.hbnav-lnk{display:flex;align-items:center;min-height:44px;text-decoration:none;' +
+    'color:#26271F;font-size:14px;padding:9px 10px;' +
     'border-radius:9px;border:1px solid transparent;line-height:1.2;}' +
     '.hbnav-lnk:hover{background:#EFEDE7;}' +
     '.hbnav-lnk.on{background:#fff;border-color:#E4E2DD;border-left:3px solid #993C1D;' +
@@ -113,7 +116,7 @@
     '.hbnav-x:hover{color:#A32E27;background:#F5E9E7;}' +
     '.hbnav-add{margin:8px 8px 0;width:calc(100% - 16px);font-family:"IBM Plex Mono",monospace;' +
     'font-size:11px;color:#3B6D11;background:#F1F7E9;border:1px dashed #C9DDB0;border-radius:9px;' +
-    'padding:9px;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
+    'padding:9px;min-height:44px;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
     '.hbnav-add:hover{background:#e8f2dc;}' +
     '.hbnav-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;' +
     'margin:2px 8px 6px;padding:9px 10px;border:1px solid #E4E2DD;border-radius:9px;' +
@@ -270,7 +273,11 @@
       '#hb-tabs a.on{color:#993C1D;background:#FBF2EE;}' +
       '@media (max-width:640px){#hb-tabs{display:flex;}' +
       '  body{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));}' +
-      '  #hub-sync{bottom:calc(64px + env(safe-area-inset-bottom,0px));}}';
+      // sync.js positions its pill and panel with inline styles, so lifting
+      // them clear of the tab bar takes !important — without it the pill
+      // sits on top of the Today tab.
+      '  #hub-sync{bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;}' +
+      '  #hub-sync-panel{bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;}}';
     document.head.appendChild(css);
 
     var bar = document.createElement('nav');

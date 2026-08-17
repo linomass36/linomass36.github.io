@@ -24,28 +24,108 @@
   @keyframes sumIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   @keyframes sumPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
   @keyframes sumSheen { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+  /* ── The phone ────────────────────────────────────────────────────────
+     A desktop keeps its four-column phase board and its 190px habit grid.
+     A phone gets one column, sections that start closed, and a move row
+     that is a real full-width tap target instead of a 15px checkbox with
+     two 12px glyphs beside it. Nothing here touches the desktop. */
+  .ss-caret, .ss-tally, .ss-dlabel { display: none; }
+  @media (max-width: 640px) {
+    .ss-tally { display: block !important; }
+    .ss-page { padding-bottom: 96px !important; }
+    .ss-wrap { padding-left: 14px !important; padding-right: 14px !important; }
+    /* Right padding keeps the eyebrow and the title out from under the
+       floating hamburger. */
+    .ss-top { padding: 12px 62px 14px 14px !important; gap: 12px !important; }
+    .ss-top h1 { font-size: 21px !important; line-height: 1.12 !important; }
+    .ss-lede { display: none !important; }
+    .ss-stats { text-align: left !important; width: 100%; }
+    .ss-stats > div { justify-content: flex-start !important; }
+    .ss-bar { width: 100% !important; }
+    .ss-cols2, .ss-phases, .ss-endgrid { grid-template-columns: 1fr !important; }
+    .ss-card { padding: 15px 16px 12px !important; }
+
+    /* A section header becomes the control that opens it: 48px tall, and
+       the caret appears so it is visibly a thing you can tap. */
+    .ss-caret { display: inline-block !important; margin-right: 6px; color: #A6A79F; }
+    .ss-sech { min-height: 48px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+    /* The move row. The whole line is the label, so the tap target is the
+       width of the screen; cut (✕) and carry (→) are deliberate desktop
+       actions — each opens a prompt — and a 12px glyph at 2px of padding
+       was never a phone control, so they come off the phone entirely. */
+    .ss-move { display: block !important; padding: 0 !important; border-top: 1px solid #F2F0EB; }
+    .ss-move label { display: flex !important; gap: 12px; align-items: center;
+                     min-height: 50px; padding: 7px 2px; cursor: pointer; }
+    .ss-move input[type="checkbox"] { width: 22px !important; height: 22px !important; margin-top: 0 !important; }
+    .ss-move-txt { font-size: 14.5px !important; line-height: 1.35 !important; }
+    .ss-act { display: none !important; }
+
+    /* The other checkbox lists — pinned, October, money, Sunday — keep
+       their own look and just grow into a thumb. */
+    .ss-bigrow { min-height: 50px !important; align-items: center !important; }
+    .ss-bigrow input[type="checkbox"] { width: 21px !important; height: 21px !important; margin-top: 0 !important; }
+
+    /* Habits: the name goes on its own line and the seven days become a
+       row of thumb-sized buttons under it. */
+    .ss-hhead { display: none !important; }
+    .ss-hrow { grid-template-columns: repeat(7, 1fr) !important; gap: 5px !important;
+               padding-bottom: 12px; border-bottom: 1px solid #F2F0EB; }
+    .ss-hname { grid-column: 1 / -1; }
+    .ss-hstreak { grid-column: 1 / -1; text-align: left !important; }
+    /* The day letter moves into the cell, so the column heading is not
+       needed and each button says what it is on its own. */
+    .ss-hday { height: 42px !important; }
+    .ss-dlabel { display: inline !important; }
+
+    /* Steppers and the row buttons everywhere else reach 44px. */
+    .ss-step { width: 44px !important; height: 44px !important; }
+    .ss-rowbtn { min-width: 40px; min-height: 40px; font-size: 15px !important; }
+    .ss-pill { min-height: 34px; }
+    .ss-back { padding: 9px 14px !important; }
+
+    /* The three status strips are a dot, a sentence and a tag on one line.
+       At 390px the sentence gets a third of the width and sets in a
+       ribbon; it takes the whole line here and the tag, which only ever
+       repeated the sentence, comes off. */
+    .ss-strip { flex-wrap: wrap !important; padding: 12px 14px !important; }
+    .ss-striptext { flex: 1 1 100% !important; }
+    .ss-striptag, .ss-stripdot { display: none !important; }
+    .ss-link { display: inline-block; padding: 10px 0; }
+
+    /* Every 8.5–10.5px run on this page is a mono micro-caption written
+       inline — eyebrows, streaks, dates, tallies. On a phone the floor is
+       11px, and the inline size is the only handle they share. */
+    .ss-page [style*="font-size: 8.5px"], .ss-page [style*="font-size: 9px"],
+    .ss-page [style*="font-size: 9.5px"], .ss-page [style*="font-size: 10px"],
+    .ss-page [style*="font-size: 10.5px"] { font-size: 11px !important; }
+    .ss-addrow { flex-wrap: wrap; }
+    .ss-addrow input, .ss-addrow select { min-height: 44px; font-size: 16px !important; }
+    .ss-addrow button { min-height: 44px; }
+  }
 </style>
 </helmet>
-<div data-screen-label="Summer Sprint" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 72px;">
+<div class="ss-page" data-screen-label="Summer Sprint" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 72px;">
 
   <!-- TOP BAR -->
   <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+    <div class="ss-top" style="max-width: 1180px; margin: 0 auto; padding: 18px 24px 16px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
       <div style="flex: 1; min-width: 320px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #3B6D11; color: #3B6D11;">← Mission Control</a>
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #3B6D11;">01 · The Summer Sprint</span>
+          <a class="ss-back" href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #3B6D11; color: #3B6D11;">← Mission Control</a>
+          <span class="ss-lede" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #3B6D11;">01 · The Summer Sprint</span>
         </div>
         <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 30px; line-height: 1.04; margin: 8px 0 0; letter-spacing: -.01em;">Set the operating system for the decade</h1>
-        <div style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 600px; line-height: 1.5; font-style: italic;">"{{ positioning }}"</div>
+        <div class="ss-lede" style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 600px; line-height: 1.5; font-style: italic;">"{{ positioning }}"</div>
       </div>
-      <div style="text-align: right;">
+      <div class="ss-stats" style="text-align: right;">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">{{ todayLabel }}</div>
         <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px; justify-content: flex-end;">
           <span style="font-family: 'Newsreader', serif; font-size: 34px; font-weight: 500; color: #3B6D11; line-height: 1;">{{ sprintPct }}%</span>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ sprintDone }} / {{ sprintActive }} moves</span>
         </div>
-        <div style="height: 6px; width: 230px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px;">
+        <div class="ss-bar" style="height: 6px; width: 230px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px;">
           <div style="height: 100%; border-radius: 3px; background: #3B6D11; width: {{ sprintPct }}%; transition: width .4s ease;"></div>
         </div>
         <div style="display: flex; gap: 14px; justify-content: flex-end; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">
@@ -56,13 +136,13 @@
     </div>
   </div>
 
-  <div style="max-width: 1180px; margin: 0 auto; padding: 22px 24px 0;">
+  <div class="ss-wrap" style="max-width: 1180px; margin: 0 auto; padding: 22px 24px 0;">
 
     <!-- MILESTONE CELEBRATION -->
     <sc-if value="{{ celebrate }}" hint-placeholder-val="{{ false }}">
-      <div style="border: 1px solid #C9DDB0; border-radius: 14px; background: linear-gradient(100deg, #F1F7E9, #FBFDF6); padding: 15px 22px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; animation: sumPop .35s ease;">
+      <div class="ss-strip" style="border: 1px solid #C9DDB0; border-radius: 14px; background: linear-gradient(100deg, #F1F7E9, #FBFDF6); padding: 15px 22px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; animation: sumPop .35s ease;">
         <span style="font-family: 'Newsreader', serif; font-size: 30px; color: #3B6D11; line-height: 1;">{{ celebratePct }}%</span>
-        <div style="flex: 1;">
+        <div class="ss-striptext" style="flex: 1;">
           <div style="font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500; color: #274d0b;">{{ celebrateText }}</div>
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #5c7a3a; margin-top: 3px;">{{ celebrateSub }}</div>
         </div>
@@ -72,29 +152,29 @@
 
     <!-- RECOVERY NUDGE -->
     <sc-if value="{{ showRecovery }}" hint-placeholder-val="{{ false }}">
-      <div style="border: 1px solid #E6D6B0; border-radius: 14px; background: #FBF6EA; padding: 14px 22px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; animation: sumIn .3s ease;">
-        <span style="width: 9px; height: 9px; border-radius: 50%; background: #b0741a; flex: none;"></span>
-        <div style="flex: 1; font-size: 13px; color: #6e5417; line-height: 1.5;">{{ recoveryText }}</div>
-        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #b0741a; flex: none;">gentle nudge</span>
+      <div class="ss-strip" style="border: 1px solid #E6D6B0; border-radius: 14px; background: #FBF6EA; padding: 14px 22px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; animation: sumIn .3s ease;">
+        <span class="ss-stripdot" style="width: 9px; height: 9px; border-radius: 50%; background: #b0741a; flex: none;"></span>
+        <div class="ss-striptext" style="flex: 1; font-size: 13px; color: #6e5417; line-height: 1.5;">{{ recoveryText }}</div>
+        <span class="ss-striptag" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #b0741a; flex: none;">gentle nudge</span>
       </div>
     </sc-if>
 
     <!-- REST CYCLE STRIP -->
-    <div style="display: flex; align-items: center; gap: 12px; border: 1px solid {{ restBorder }}; border-radius: 12px; background: {{ restBg }}; padding: 11px 18px; margin-bottom: 16px;">
-      <span style="width: 9px; height: 9px; border-radius: 50%; background: {{ restDot }}; flex: none;"></span>
-      <div style="flex: 1; font-size: 13px; color: {{ restTextColor }}; line-height: 1.5;">{{ restText }}</div>
+    <div class="ss-strip" style="display: flex; align-items: center; gap: 12px; border: 1px solid {{ restBorder }}; border-radius: 12px; background: {{ restBg }}; padding: 11px 18px; margin-bottom: 16px;">
+      <span class="ss-stripdot" style="width: 9px; height: 9px; border-radius: 50%; background: {{ restDot }}; flex: none;"></span>
+      <div class="ss-striptext" style="flex: 1; font-size: 13px; color: {{ restTextColor }}; line-height: 1.5;">{{ restText }}</div>
       <div style="display: flex; gap: 3px; align-items: center;">
         <sc-for list="{{ restPips }}" as="p" hint-placeholder-count="10">
           <span style="width: 8px; height: 8px; border-radius: 2px; background: {{ p.color }};"></span>
         </sc-for>
       </div>
-      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: {{ restTag }}; flex: none;">{{ restLabel }}</span>
+      <span class="ss-striptag" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: {{ restTag }}; flex: none;">{{ restLabel }}</span>
     </div>
 
     <!-- THIS WEEK PIN + BURN-UP -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch;">
+    <div class="ss-cols2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch;">
 
-      <div style="border: 1px solid #E4E2DD; border-top: 3px solid #3B6D11; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; animation: sumIn .3s ease;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-top: 3px solid #3B6D11; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; animation: sumIn .3s ease;">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #3B6D11;">Pinned for this week</div>
@@ -104,7 +184,7 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
           <sc-for list="{{ pinItems }}" as="it" hint-placeholder-count="3">
-            <label style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid #ECEAE4; background: #FCFBF8; cursor: pointer;" style-hover="border-color: #C9DDB0;">
+            <label class="ss-bigrow" style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid #ECEAE4; background: #FCFBF8; cursor: pointer;" style-hover="border-color: #C9DDB0;">
               <input type="checkbox" checked="{{ it.checked }}" onChange="{{ it.toggle }}" style="margin-top: 1px; width: 16px; height: 16px; flex-shrink: 0; accent-color: #3B6D11; cursor: pointer;">
               <span style="flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.4; color: #26271F;">{{ it.label }}</span>
             </label>
@@ -115,7 +195,7 @@
         </div>
       </div>
 
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; animation: sumIn .3s ease;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; animation: sumIn .3s ease;">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
           <div style="font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500;">Burn-up to October</div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ paceColor }};">{{ paceText }}</span>
@@ -142,15 +222,16 @@
     <!-- PHASES -->
     <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 14px;">
       <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 22px; margin: 0;">The 35 moves, in phases</h2>
-      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">checking a move syncs with the plan &amp; the hub</span>
+      <span class="ss-lede" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">checking a move syncs with the plan &amp; the hub</span>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 16px;">
+    <div class="ss-phases" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 16px;">
       <sc-for list="{{ phaseRows }}" as="p" hint-placeholder-count="4">
-        <div style="border: 1px solid #E4E2DD; border-top: 3px solid {{ p.color }}; border-radius: 14px; background: #FFFFFF; padding: 18px 18px 8px; animation: sumIn .3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+        <div class="ss-card" style="border: 1px solid #E4E2DD; border-top: 3px solid {{ p.color }}; border-radius: 14px; background: #FFFFFF; padding: 18px 18px 8px; animation: sumIn .3s ease;">
+          <div class="ss-sech" onClick="{{ p.toggle }}" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
             <div>
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: {{ p.color }};">{{ p.month }}</div>
-              <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">{{ p.name }}</div>
+              <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ p.caret }}</span>{{ p.name }}</div>
+              <div class="ss-tally" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 3px;">{{ p.tally }}</div>
             </div>
             <div style="position: relative; width: 46px; height: 46px; flex-shrink: 0;">
               <svg width="46" height="46" viewBox="0 0 46 46">
@@ -160,27 +241,31 @@
               <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: {{ p.color }};">{{ p.pct }}</div>
             </div>
           </div>
-          <div style="font-size: 12px; color: #77786F; line-height: 1.5; margin-top: 6px; min-height: 34px;">{{ p.sub }}</div>
-          <div style="display: flex; flex-direction: column; margin-top: 8px;">
-            <sc-for list="{{ p.items }}" as="it" hint-placeholder-count="5">
-              <div style="display: flex; gap: 9px; align-items: flex-start; padding: 8px 2px; border-top: 1px solid #F2F0EB;">
-                <input type="checkbox" checked="{{ it.checked }}" onChange="{{ it.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: {{ it.accent }}; cursor: pointer;">
-                <span style="flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: {{ it.textColor }}; text-decoration: {{ it.strike }};">{{ it.label }}<sc-if value="{{ it.tagged }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase; color: {{ it.tagColor }}; border: 1px solid {{ it.tagColor }}; border-radius: 10px; padding: 1px 6px; margin-left: 6px; white-space: nowrap;">{{ it.tagLabel }}</span></sc-if></span>
-                <button onClick="{{ it.carry }}" title="Carry over to the academic year" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1; background: transparent; border: none; color: #C4C2BA; cursor: pointer; padding: 2px;" style-hover="color: #2E6A86;">→</button>
-                <button onClick="{{ it.kill }}" title="Cut this move" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1; background: transparent; border: none; color: #C4C2BA; cursor: pointer; padding: 2px;" style-hover="color: #A32E27;">✕</button>
-              </div>
-            </sc-for>
-          </div>
+          <div class="ss-lede" style="font-size: 12px; color: #77786F; line-height: 1.5; margin-top: 6px; min-height: 34px;">{{ p.sub }}</div>
+          <sc-if value="{{ p.open }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; margin-top: 8px;">
+              <sc-for list="{{ p.items }}" as="it" hint-placeholder-count="5">
+                <div class="ss-move" style="display: flex; gap: 9px; align-items: flex-start; padding: 8px 2px; border-top: 1px solid #F2F0EB;">
+                  <label style="display: contents;">
+                    <input type="checkbox" checked="{{ it.checked }}" onChange="{{ it.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: {{ it.accent }}; cursor: pointer;">
+                    <span class="ss-move-txt" style="flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: {{ it.textColor }}; text-decoration: {{ it.strike }};">{{ it.label }}<sc-if value="{{ it.tagged }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase; color: {{ it.tagColor }}; border: 1px solid {{ it.tagColor }}; border-radius: 10px; padding: 1px 6px; margin-left: 6px; white-space: nowrap;">{{ it.tagLabel }}</span></sc-if></span>
+                  </label>
+                  <button class="ss-act" onClick="{{ it.carry }}" title="Carry over to the academic year" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1; background: transparent; border: none; color: #C4C2BA; cursor: pointer; padding: 2px;" style-hover="color: #2E6A86;">→</button>
+                  <button class="ss-act" onClick="{{ it.kill }}" title="Cut this move" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1; background: transparent; border: none; color: #C4C2BA; cursor: pointer; padding: 2px;" style-hover="color: #A32E27;">✕</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
         </div>
       </sc-for>
     </div>
 
     <!-- OCTOBER END-STATE SCOREBOARD -->
-    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #185FA5; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 22px;">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+    <div class="ss-card" style="border: 1px solid #E4E2DD; border-top: 3px solid #185FA5; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 22px;">
+      <div class="ss-sech" onClick="{{ sec.oct.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
         <div>
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #185FA5;">Definition of done</div>
-          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Where October has to land</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.oct.caret }}</span>Where October has to land</div>
         </div>
         <div style="display: flex; align-items: baseline; gap: 10px;">
           <span style="font-family: 'Newsreader', serif; font-size: 28px; font-weight: 500; color: #185FA5; line-height: 1;">{{ endDone }}<span style="font-size: 15px; color: #A6A79F;">/{{ endTotal }}</span></span>
@@ -193,11 +278,11 @@
       <sc-if value="{{ endAllDone }}" hint-placeholder-val="{{ false }}">
         <div style="margin-top: 14px; padding: 16px; border: 1px dashed #C9DDB0; border-radius: 10px; text-align: center; font-size: 13px; color: #3B6D11; line-height: 1.5;">Every October outcome is locked. 🌱 The operating system is online — enter the year recovered, not depleted.</div>
       </sc-if>
-      <sc-if value="{{ endHasRemaining }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ octOpen }}" hint-placeholder-val="{{ true }}">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 14px;">still open</div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 4px 18px; margin-top: 6px;">
+        <div class="ss-endgrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 4px 18px; margin-top: 6px;">
           <sc-for list="{{ endRows }}" as="e" hint-placeholder-count="8">
-            <label style="display: flex; gap: 9px; align-items: flex-start; padding: 6px 2px; cursor: pointer;">
+            <label class="ss-bigrow" style="display: flex; gap: 9px; align-items: flex-start; padding: 6px 2px; cursor: pointer;">
               <input type="checkbox" checked="{{ e.checked }}" onChange="{{ e.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: #185FA5; cursor: pointer;">
               <span style="flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: #26271F;">{{ e.label }}</span>
             </label>
@@ -207,20 +292,22 @@
     </div>
 
     <!-- HABITS -->
-    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 22px;">
+    <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 22px;">
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
-        <div>
+        <div class="ss-sech" onClick="{{ sec.habits.toggle }}">
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #3B6D11;">The foundation habits</div>
-          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Weekly cadence</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.habits.caret }}</span>Weekly cadence</div>
+          <div class="ss-tally" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 3px;">{{ habitTally }}</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <button onClick="{{ prevWeek }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #FFF; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 9px; cursor: pointer;">‹</button>
+        <div class="ss-addrow" style="display: flex; align-items: center; gap: 10px;">
+          <button class="ss-rowbtn" onClick="{{ prevWeek }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #FFF; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 9px; cursor: pointer;">‹</button>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ weekLabel }}</span>
-          <button onClick="{{ nextWeek }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #FFF; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 9px; cursor: pointer;">›</button>
+          <button class="ss-rowbtn" onClick="{{ nextWeek }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #FFF; border: 1px solid #E4E2DD; border-radius: 8px; padding: 3px 9px; cursor: pointer;">›</button>
         </div>
       </div>
+      <sc-if value="{{ sec.habits.open }}" hint-placeholder-val="{{ true }}">
       <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 14px;">
-        <div style="display: grid; grid-template-columns: 190px repeat(7, 1fr) 74px; gap: 6px; align-items: center;">
+        <div class="ss-hhead" style="display: grid; grid-template-columns: 190px repeat(7, 1fr) 74px; gap: 6px; align-items: center;">
           <span></span>
           <sc-for list="{{ dayHeads }}" as="d" hint-placeholder-count="7">
             <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-align: center; color: #A6A79F;">{{ d.label }}</span>
@@ -228,31 +315,34 @@
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-align: right; color: #A6A79F;">streak</span>
         </div>
         <sc-for list="{{ habitRows }}" as="h" hint-placeholder-count="4">
-          <div style="display: grid; grid-template-columns: 190px repeat(7, 1fr) 74px; gap: 6px; align-items: center;">
-            <div style="display: flex; align-items: baseline; gap: 7px; min-width: 0;">
+          <div class="ss-hrow" style="display: grid; grid-template-columns: 190px repeat(7, 1fr) 74px; gap: 6px; align-items: center;">
+            <div class="ss-hname" style="display: flex; align-items: baseline; gap: 7px; min-width: 0;">
               <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ h.dot }}; flex: none;"></span>
               <span style="font-size: 13px; color: #26271F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ h.label }}</span>
               <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: {{ h.metColor }};">{{ h.count }}/{{ h.target }}</span>
             </div>
             <sc-for list="{{ h.days }}" as="c" hint-placeholder-count="7">
-              <button onClick="{{ c.toggle }}" style="height: 26px; border-radius: 7px; border: 1px solid {{ c.border }}; background: {{ c.bg }}; cursor: pointer;" style-hover="border-color: #3B6D11;"></button>
+              <button class="ss-hday" onClick="{{ c.toggle }}" title="{{ c.title }}" style="height: 26px; border-radius: 7px; border: 1px solid {{ c.border }}; background: {{ c.bg }}; cursor: pointer;" style-hover="border-color: #3B6D11;"><span class="ss-dlabel" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ c.labelColor }};">{{ c.label }}</span></button>
             </sc-for>
-            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-align: right; color: {{ h.streakColor }};">{{ h.streakLabel }}</span>
+            <span class="ss-hstreak" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-align: right; color: {{ h.streakColor }};">{{ h.streakLabel }}</span>
           </div>
         </sc-for>
       </div>
-      <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Tap a cell to log the day. Green means the week hit its target — this is the recovery the whole sprint is built on.</div>
+      <div class="ss-lede" style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Tap a cell to log the day. Green means the week hit its target — this is the recovery the whole sprint is built on.</div>
+      </sc-if>
     </div>
 
     <!-- THE GUIDE PIPELINE -->
-    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+    <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
+      <div class="ss-sech" onClick="{{ sec.guide.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
         <div>
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">The summer's product</div>
-          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">The guide — draft to first sales</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.guide.caret }}</span>The guide — draft to first sales</div>
+          <div class="ss-tally" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 3px;">{{ guideTally }}</div>
         </div>
         <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">$49 · Gumroad</span>
       </div>
+      <sc-if value="{{ sec.guide.open }}" hint-placeholder-val="{{ true }}">
       <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
         <sc-for list="{{ guideStages }}" as="g" hint-placeholder-count="3">
           <button onClick="{{ g.set }}" style="flex: 1; min-width: 130px; text-align: left; padding: 11px 13px; border-radius: 11px; cursor: pointer; border: 1px solid {{ g.border }}; background: {{ g.bg }};">
@@ -262,16 +352,16 @@
           </button>
         </sc-for>
       </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px;">
+      <div class="ss-cols2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px;">
         <div style="padding: 14px; border: 1px solid #ECEAE4; border-radius: 11px; background: #FCFBF8;">
           <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <span style="font-size: 12.5px; color: #55564F;">Sections drafted — one per morning</span>
             <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #534AB7;">{{ guideSecLabel }}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
-            <button onClick="{{ decSec }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFF; font-size: 18px; color: #55564F; cursor: pointer;">−</button>
+            <button class="ss-step" onClick="{{ decSec }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFF; font-size: 18px; color: #55564F; cursor: pointer;">−</button>
             <div style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; color: #534AB7; line-height: 1; min-width: 46px; text-align: center;">{{ guideSections }}</div>
-            <button onClick="{{ incSec }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #D3CFEA; background: #F0EFFA; font-size: 18px; color: #534AB7; cursor: pointer;">+</button>
+            <button class="ss-step" onClick="{{ incSec }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #D3CFEA; background: #F0EFFA; font-size: 18px; color: #534AB7; cursor: pointer;">+</button>
             <div style="flex: 1; height: 7px; border-radius: 4px; background: #EAE7F3; overflow: hidden;">
               <div style="height: 100%; border-radius: 4px; background: #534AB7; width: {{ guideSecPct }}%; transition: width .4s ease;"></div>
             </div>
@@ -283,60 +373,65 @@
             <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #0F6E56;">{{ guideRevenue }}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
-            <button onClick="{{ decSale }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFF; font-size: 18px; color: #55564F; cursor: pointer;">−</button>
+            <button class="ss-step" onClick="{{ decSale }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #DAD7D0; background: #FFF; font-size: 18px; color: #55564F; cursor: pointer;">−</button>
             <div style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; color: #0F6E56; line-height: 1; min-width: 46px; text-align: center;">{{ guideSales }}</div>
-            <button onClick="{{ incSale }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #B9DDCF; background: #EAF5F0; font-size: 18px; color: #0F6E56; cursor: pointer;">+</button>
+            <button class="ss-step" onClick="{{ incSale }}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid #B9DDCF; background: #EAF5F0; font-size: 18px; color: #0F6E56; cursor: pointer;">+</button>
             <div style="flex: 1; height: 7px; border-radius: 4px; background: #E2EFE9; overflow: hidden;">
               <div style="height: 100%; border-radius: 4px; background: #0F6E56; width: {{ guideSalesPct }}%; transition: width .4s ease;"></div>
             </div>
           </div>
         </div>
       </div>
-      <div style="font-size: 11px; color: #A6A79F; margin-top: 12px; line-height: 1.5;">{{ guideHint }}</div>
+      <div class="ss-lede" style="font-size: 11px; color: #A6A79F; margin-top: 12px; line-height: 1.5;">{{ guideHint }}</div>
+      </sc-if>
     </div>
 
     <!-- TWO-COLUMN: GUIDE BOARD + MONEY -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+    <div class="ss-cols2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
 
       <!-- GUIDE VALIDATION BOARD -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div class="ss-sech" onClick="{{ sec.comm.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #534AB7;">Validate the guide</div>
-            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Community board</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.comm.caret }}</span>Community board</div>
           </div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ commSummary }}</span>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <sc-if value="{{ sec.comm.open }}" hint-placeholder-val="{{ true }}">
+        <div class="ss-addrow" style="display: flex; gap: 8px; margin-top: 12px;">
           <input value="{{ commName }}" onChange="{{ setCommName }}" onKeyDown="{{ commKey }}" placeholder="Community / forum name" style="flex: 1; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
           <button onClick="{{ addComm }}" style="font-size: 13px; font-weight: 600; padding: 8px 15px; border-radius: 9px; border: none; background: #534AB7; color: #FFF; cursor: pointer;">Add</button>
         </div>
         <div style="display: flex; flex-direction: column; margin-top: 6px;">
           <sc-for list="{{ commRows }}" as="c" hint-placeholder-count="3">
             <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid #F2F0EB;">
-              <button onClick="{{ c.cycle }}" title="Advance: contributing → posted → responses → validated / didn't land" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .04em; text-transform: uppercase; padding: 4px 8px; border-radius: 14px; cursor: pointer; border: 1px solid {{ c.statusColor }}; color: {{ c.statusColor }}; background: {{ c.statusBg }};">{{ c.statusLabel }}</button>
+              <button class="ss-pill" onClick="{{ c.cycle }}" title="Advance: contributing → posted → responses → validated / didn't land" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .04em; text-transform: uppercase; padding: 4px 8px; border-radius: 14px; cursor: pointer; border: 1px solid {{ c.statusColor }}; color: {{ c.statusColor }}; background: {{ c.statusBg }};">{{ c.statusLabel }}</button>
               <div style="flex: 1; min-width: 0;">
                 <div style="font-size: 13px; color: #26271F;">{{ c.name }}</div>
                 <div style="font-size: 11.5px; color: #8a8577; line-height: 1.4; margin-top: 2px; font-style: italic;">{{ c.note }}</div>
               </div>
-              <button onClick="{{ c.editNote }}" title="Capture feedback" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #534AB7;">✎</button>
-              <button onClick="{{ c.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
+              <button class="ss-rowbtn" onClick="{{ c.editNote }}" title="Capture feedback" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #534AB7;">✎</button>
+              <button class="ss-rowbtn" onClick="{{ c.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
             </div>
           </sc-for>
           <sc-if value="{{ commEmpty }}" hint-placeholder-val="{{ true }}">
             <div style="margin-top: 6px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Add the 3 communities you'll validate in. Advance each pill as you contribute, post, and gather responses.</div>
           </sc-if>
         </div>
+        </sc-if>
       </div>
 
       <!-- MONEY LADDER -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div class="ss-sech" onClick="{{ sec.money.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B;">The money moves</div>
-            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Capital ladder</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.money.caret }}</span>Capital ladder</div>
           </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ savingsLabel }}</span>
         </div>
+        <sc-if value="{{ sec.money.open }}" hint-placeholder-val="{{ true }}">
         <div style="margin-top: 12px; padding: 12px 14px; border: 1px solid #EFE7D6; border-radius: 11px; background: #FBF7EE;">
           <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <span style="font-size: 12px; color: #6e5417;">Saved from the juice shop</span>
@@ -345,60 +440,65 @@
           <div style="height: 7px; border-radius: 4px; background: #EADFC7; overflow: hidden; margin-top: 8px;">
             <div style="height: 100%; border-radius: 4px; background: #854F0B; width: {{ savingsPct }}%; transition: width .4s ease;"></div>
           </div>
-          <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <div class="ss-addrow" style="display: flex; gap: 8px; margin-top: 10px;">
             <input value="{{ savingsInput }}" onChange="{{ setSavingsInput }}" placeholder="e.g. 12000" inputmode="numeric" style="flex: 1; font-size: 13px; padding: 7px 11px; border: 1px solid #DAD7D0; border-radius: 8px; background: #FFF;">
             <button onClick="{{ saveSavings }}" style="font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: none; background: #854F0B; color: #FFF; cursor: pointer;">Set PLN</button>
           </div>
         </div>
         <div style="display: flex; flex-direction: column; margin-top: 10px;">
           <sc-for list="{{ moneyRows }}" as="m" hint-placeholder-count="5">
-            <label style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-top: 1px solid #F2F0EB; cursor: pointer;">
+            <label class="ss-bigrow" style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-top: 1px solid #F2F0EB; cursor: pointer;">
               <input type="checkbox" checked="{{ m.checked }}" onChange="{{ m.toggle }}" style="margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: #854F0B; cursor: pointer;">
               <span style="flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: #26271F;">{{ m.label }}</span>
               <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #854F0B; white-space: nowrap;">{{ m.amount }}</span>
             </label>
           </sc-for>
         </div>
+        </sc-if>
       </div>
     </div>
 
     <!-- TWO-COLUMN: READING + BOSTON -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+    <div class="ss-cols2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
 
       <!-- READING THROUGHPUT -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div class="ss-sech" onClick="{{ sec.papers.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #4A5B7A;">Literature engine</div>
-            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Papers triaged</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.papers.caret }}</span>Papers triaged</div>
+            <div class="ss-tally" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; margin-top: 3px;">{{ papersTally }}</div>
           </div>
-          <a href="Library.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86;">open the library →</a>
+          <a class="ss-link" href="Library.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86;">open the library →</a>
         </div>
+        <sc-if value="{{ sec.papers.open }}" hint-placeholder-val="{{ true }}">
         <div style="display: flex; align-items: center; gap: 18px; margin-top: 16px;">
-          <button onClick="{{ decPaper }}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid #DAD7D0; background: #FCFBF8; font-size: 20px; color: #55564F; cursor: pointer;">−</button>
+          <button class="ss-step" onClick="{{ decPaper }}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid #DAD7D0; background: #FCFBF8; font-size: 20px; color: #55564F; cursor: pointer;">−</button>
           <div style="text-align: center;">
             <div style="font-family: 'Newsreader', serif; font-size: 40px; font-weight: 500; color: #4A5B7A; line-height: 1;">{{ papersWeek }}</div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 4px;">this week</div>
           </div>
-          <button onClick="{{ incPaper }}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid #C7D2E0; background: #EEF3F8; font-size: 20px; color: #4A5B7A; cursor: pointer;">+</button>
+          <button class="ss-step" onClick="{{ incPaper }}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid #C7D2E0; background: #EEF3F8; font-size: 20px; color: #4A5B7A; cursor: pointer;">+</button>
           <div style="flex: 1; border-left: 1px solid #F2F0EB; padding-left: 18px;">
             <div style="font-family: 'Newsreader', serif; font-size: 26px; font-weight: 500; color: #26271F; line-height: 1;">{{ papersTotal }}</div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 4px;">all summer</div>
           </div>
         </div>
-        <div style="font-size: 11px; color: #A6A79F; margin-top: 14px; line-height: 1.5;">Zotero + 5 PubMed alerts feeding the pipe. Keep a steady throughput and the lead track picks itself.</div>
+        <div class="ss-lede" style="font-size: 11px; color: #A6A79F; margin-top: 14px; line-height: 1.5;">Zotero + 5 PubMed alerts feeding the pipe. Keep a steady throughput and the lead track picks itself.</div>
+        </sc-if>
       </div>
 
       <!-- BOSTON THREAD -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div class="ss-sech" onClick="{{ sec.boston.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">The anchor relationship</div>
-            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Boston surgeon thread</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.boston.caret }}</span>Boston surgeon thread</div>
           </div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ bostonWarnColor }};">{{ bostonLast }}</span>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <sc-if value="{{ sec.boston.open }}" hint-placeholder-val="{{ true }}">
+        <div class="ss-addrow" style="display: flex; gap: 8px; margin-top: 12px;">
           <select value="{{ bostonKind }}" onChange="{{ setBostonKind }}" style="font-size: 12.5px; padding: 8px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
             <option value="call">call</option>
             <option value="email">email</option>
@@ -415,28 +515,30 @@
                 <div style="font-size: 12.5px; color: #26271F; line-height: 1.4;">{{ b.text }}</div>
                 <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F; margin-top: 2px;">{{ b.when }}</div>
               </div>
-              <button onClick="{{ b.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
+              <button class="ss-rowbtn" onClick="{{ b.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
             </div>
           </sc-for>
           <sc-if value="{{ bostonEmpty }}" hint-placeholder-val="{{ true }}">
             <div style="margin-top: 6px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Log every touch here — relationship, not pitch. The first move: call, don't email.</div>
           </sc-if>
         </div>
+        </sc-if>
       </div>
     </div>
 
     <!-- SUNDAY REVIEW -->
-    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+    <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
+      <div class="ss-sech" onClick="{{ sec.sunday.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
         <div>
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B;">The Sunday ritual</div>
-          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">Close the week</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.sunday.caret }}</span>Close the week</div>
         </div>
         <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ sundayColor }};">{{ sundayLabel }}</span>
       </div>
+      <sc-if value="{{ sec.sunday.open }}" hint-placeholder-val="{{ true }}">
       <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 12px;">
         <sc-for list="{{ sundayRows }}" as="r" hint-placeholder-count="5">
-          <label style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid {{ r.border }}; background: {{ r.bg }}; cursor: pointer;">
+          <label class="ss-bigrow" style="display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid {{ r.border }}; background: {{ r.bg }}; cursor: pointer;">
             <input type="checkbox" checked="{{ r.checked }}" onChange="{{ r.toggle }}" style="margin-top: 1px; width: 16px; height: 16px; flex-shrink: 0; accent-color: #854F0B; cursor: pointer;">
             <span style="flex: 1; min-width: 0;">
               <span style="font-size: 13.5px; line-height: 1.4; color: #26271F;">{{ r.label }}</span>
@@ -446,22 +548,24 @@
           </label>
         </sc-for>
       </div>
-      <div style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Ten quiet minutes every Sunday — the loop that keeps the sprint honest. Resets fresh each week; use the week arrows above to review a past one.</div>
+      <div class="ss-lede" style="font-size: 11px; color: #A6A79F; margin-top: 10px; line-height: 1.5;">Ten quiet minutes every Sunday — the loop that keeps the sprint honest. Resets fresh each week; use the week arrows above to review a past one.</div>
+      </sc-if>
     </div>
 
     <!-- SHIPPED LOG + KILL LIST -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+    <div class="ss-cols2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
 
       <!-- FRIDAY SHIPPED LOG -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div class="ss-sech" onClick="{{ sec.ship.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0F6E56;">Every Friday</div>
-            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">What actually shipped</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.ship.caret }}</span>What actually shipped</div>
           </div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ shipCount }} logged</span>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <sc-if value="{{ sec.ship.open }}" hint-placeholder-val="{{ true }}">
+        <div class="ss-addrow" style="display: flex; gap: 8px; margin-top: 12px;">
           <input value="{{ shipText }}" onChange="{{ setShipText }}" onKeyDown="{{ shipKey }}" placeholder="One line: what shipped this week" style="flex: 1; font-size: 13px; padding: 8px 11px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF8;">
           <button onClick="{{ addShip }}" style="font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 9px; border: none; background: #0F6E56; color: #FFF; cursor: pointer;">Log</button>
         </div>
@@ -470,24 +574,26 @@
             <div style="display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid #F2F0EB;">
               <span style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #0F6E56; min-width: 54px;">{{ s.week }}</span>
               <span style="flex: 1; min-width: 0; font-size: 12.5px; color: #26271F; line-height: 1.4;">{{ s.text }}</span>
-              <button onClick="{{ s.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
+              <button class="ss-rowbtn" onClick="{{ s.remove }}" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: transparent; border: none; color: #C4C2BA; cursor: pointer;" style-hover="color: #A32E27;">✕</button>
             </div>
           </sc-for>
           <sc-if value="{{ shipEmpty }}" hint-placeholder-val="{{ true }}">
             <div style="margin-top: 6px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">One honest line each Friday builds the summer's story — the raw material for October's review.</div>
           </sc-if>
         </div>
+        </sc-if>
       </div>
 
       <!-- KILL LIST / CARRYOVER -->
-      <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div class="ss-card" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 18px 20px;">
+        <div class="ss-sech" onClick="{{ sec.kill.toggle }}" style="display: flex; justify-content: space-between; align-items: baseline;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A32E27;">Cut &amp; carried</div>
-            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">The kill list</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;"><span class="ss-caret">{{ sec.kill.caret }}</span>The kill list</div>
           </div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ killSummary }}</span>
         </div>
+        <sc-if value="{{ sec.kill.open }}" hint-placeholder-val="{{ true }}">
         <div style="display: flex; flex-direction: column; margin-top: 10px;">
           <sc-for list="{{ killRows }}" as="k" hint-placeholder-count="2">
             <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid #F2F0EB;">
@@ -496,13 +602,14 @@
                 <div style="font-size: 12.5px; color: #55564F; line-height: 1.4; text-decoration: {{ k.strike }};">{{ k.label }}</div>
                 <sc-if value="{{ k.hasReason }}" hint-placeholder-val="{{ false }}"><div style="font-size: 11.5px; color: #8a8577; font-style: italic; margin-top: 2px;">{{ k.reason }}</div></sc-if>
               </div>
-              <button onClick="{{ k.revive }}" title="Bring it back" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; background: transparent; border: 1px solid #E4E2DD; border-radius: 12px; padding: 3px 9px; color: #55564F; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">revive</button>
+              <button class="ss-pill" onClick="{{ k.revive }}" title="Bring it back" style="flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; background: transparent; border: 1px solid #E4E2DD; border-radius: 12px; padding: 3px 9px; color: #55564F; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">revive</button>
             </div>
           </sc-for>
           <sc-if value="{{ killEmpty }}" hint-placeholder-val="{{ true }}">
             <div style="margin-top: 4px; padding: 16px; border: 1px dashed #DAD7D0; border-radius: 10px; text-align: center; font-size: 12.5px; color: #77786F; line-height: 1.5;">Nothing cut yet. Use ✕ on a move to kill it (with a reason), or → to carry it into the academic year. Killing on purpose is a skill.</div>
           </sc-if>
         </div>
+        </sc-if>
       </div>
     </div>
 
@@ -577,9 +684,37 @@ class Component extends DCLogic {
     this.bump();
   }
 
+  // ---------- sections: closed on a phone, open on a desktop ----------
+  // Eleven boards stacked on a 390px screen is eleven screens of scrolling
+  // before the one you came for. On a phone each starts closed with its
+  // heading and tally showing, except the habit grid — that is the daily
+  // tap. A desktop has the width for all of them, so nothing collapses
+  // there. Either way the choice you make is remembered and synced.
+  PHONE_OPEN = { habits: true };
+  isPhone() {
+    try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; }
+  }
+  secIsOpen(key) {
+    const saved = (this.readS().secs || {})[key];
+    if (saved !== undefined) return !!saved;
+    return this.isPhone() ? !!this.PHONE_OPEN[key] : true;
+  }
+  mkSec(key) {
+    const open = this.secIsOpen(key);
+    return {
+      open, caret: open ? '▾' : '▸',
+      toggle: () => {
+        const secs = Object.assign({}, this.readS().secs || {});
+        secs[key] = !open;
+        this.writeS({ secs });
+        this.bump();
+      },
+    };
+  }
+
   // ---------- summer store ----------
   readS() {
-    const empty = { habits: {}, communities: [], boston: [], shipped: [], papers: {}, savings: 0, celebrated: {}, guideSections: 0, guideStage: 'draft', guideSales: 0, reviews: {} };
+    const empty = { habits: {}, communities: [], boston: [], shipped: [], papers: {}, savings: 0, celebrated: {}, guideSections: 0, guideStage: 'draft', guideSales: 0, reviews: {}, secs: {} };
     let saved = null;
     try { const raw = localStorage.getItem(this.SKEY); if (raw) saved = JSON.parse(raw); } catch (e) {}
     return Object.assign({}, empty, saved || {});
@@ -635,7 +770,12 @@ class Component extends DCLogic {
     const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const now = new Date(); const nowMs = now.getTime();
     const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
-    if (!data) return { todayLabel, positioning: '', sprintPct: 0, sprintDone: 0, sprintActive: 0, daysLeft: 0, sprintDay: 0, sprintDays: 52, phaseRows: [], pinItems: [], habitRows: [], dayHeads: [], moneyRows: [], commRows: [], bostonRows: [], shipRows: [], killRows: [], quoteText: '', quoteBy: '', quoteSub: '' };
+    if (!data) {
+      const off = { open: true, caret: '▾', toggle: () => {} };
+      return { todayLabel, positioning: '', sprintPct: 0, sprintDone: 0, sprintActive: 0, daysLeft: 0, sprintDay: 0, sprintDays: 52, phaseRows: [], pinItems: [], habitRows: [], dayHeads: [], moneyRows: [], commRows: [], bostonRows: [], shipRows: [], killRows: [], quoteText: '', quoteBy: '', quoteSub: '',
+        sec: { oct: off, habits: off, guide: off, comm: off, money: off, papers: off, boston: off, sunday: off, ship: off, kill: off },
+        octOpen: false, habitTally: '', guideTally: '', papersTally: '' };
+    }
 
     const ex = data.extras;
     const plan = this.readPlan();
@@ -672,9 +812,12 @@ class Component extends DCLogic {
       const active = items.filter(it => !isKilled(it.id));
       const doneN = active.filter(it => isChecked(it.id)).length;
       const pct = active.length ? Math.round(doneN / active.length * 100) : 0;
+      const phSec = this.mkSec('ph-' + pd.key);
       return {
         name: pd.name, month: pd.month, sub: pd.sub, color: pd.color, pct: pct + '%',
         ringDash: (pct / 100 * RC).toFixed(1) + ' ' + RC.toFixed(1),
+        open: phSec.open, caret: phSec.caret, toggle: phSec.toggle,
+        tally: doneN + ' of ' + active.length + ' done',
         items: items.map(it => {
           const killed = isKilled(it.id), carry = isCarry(it.id);
           return {
@@ -766,9 +909,18 @@ class Component extends DCLogic {
         metColor: met ? '#3B6D11' : '#A6A79F',
         streakColor: streak > 0 ? '#3B6D11' : '#C4C2BA',
         streakLabel: streak > 0 ? streak + 'w' : '–',
+        // The day letter rides in the cell, so a phone can drop the column
+        // heading and every button still says which day it is.
         days: [0, 1, 2, 3, 4, 5, 6].map(di => {
           const on = !!wdata[di];
-          return { on, bg: on ? (habitDots[hm.id] || '#3B6D11') : '#FCFBF8', border: on ? (habitDots[hm.id] || '#3B6D11') : '#ECEAE4', toggle: () => this.toggleHabitDay(hm.id, wk, di) };
+          const col = habitDots[hm.id] || '#3B6D11';
+          return {
+            on, bg: on ? col : '#FCFBF8', border: on ? col : '#ECEAE4',
+            label: ['M', 'T', 'W', 'T', 'F', 'S', 'S'][di],
+            labelColor: on ? '#FFFFFF' : '#A6A79F',
+            title: hm.label + ' · ' + ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][di],
+            toggle: () => this.toggleHabitDay(hm.id, wk, di),
+          };
         }),
       };
     });
@@ -941,6 +1093,19 @@ class Component extends DCLogic {
     const carryN = killRows.length - cutN;
     const killSummary = cutN + ' cut · ' + carryN + ' carried';
 
+    // ---- collapsible sections + the tallies that stand in for them ----
+    const sec = {
+      oct: this.mkSec('oct'), habits: this.mkSec('habits'), guide: this.mkSec('guide'),
+      comm: this.mkSec('comm'), money: this.mkSec('money'), papers: this.mkSec('papers'),
+      boston: this.mkSec('boston'), sunday: this.mkSec('sunday'), ship: this.mkSec('ship'),
+      kill: this.mkSec('kill'),
+    };
+    const octOpen = endHasRemaining && sec.oct.open;
+    const habitsMet = habitRows.filter(h => h.count >= h.target).length;
+    const habitTally = habitsMet + ' of ' + habitRows.length + ' hit this week';
+    const guideTally = guideSecLabel + ' · ' + guideSalesN + ' sold';
+    const papersTally = papersWeek + ' this week · ' + papersTotal + ' all summer';
+
     // ---- quote (rotated daily) ----
     const quotes = (window.CT_QUOTES && window.CT_QUOTES.length) ? window.CT_QUOTES : [{ q: 'The best preparation for tomorrow is to do today\'s work superbly well.', by: 'Sir William Osler', sub: 'father of modern medicine' }];
     const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
@@ -965,6 +1130,7 @@ class Component extends DCLogic {
       endDone, endTotal, endPct, endAllDone, endHasRemaining, endRows,
       sundayRows, sundayLabel, sundayColor,
       killSummary, killRows, killEmpty,
+      sec, octOpen, habitTally, guideTally, papersTally,
       quoteText: qq.q, quoteBy: qq.by, quoteSub: qq.sub,
     };
   }
