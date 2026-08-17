@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="./mobile.css">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#993C1D"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="15" fill="#FFFFFF">TD</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<script src="./reading-data.js"></script>
+<script src="./hub-data.js"></script>
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     Today — the phone's front door.
+
+     Not a narrower Mission Control. One column, one thumb, four
+     questions answered in the order they get asked: what am I
+     reading, what did I do today, where is the plan, and what do I
+     want to write down. Everything else is a big tile at the bottom.
+
+     Nothing here is smaller than 15px or shorter than 44px.
+     ───────────────────────────────────────────────────────────── */
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F4F1EB; }
+  button, input, textarea { font-family: inherit; }
+  a { text-decoration: none; }
+  @keyframes tdIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .td { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A;
+        max-width: 620px; margin: 0 auto;
+        padding: calc(14px + env(safe-area-inset-top, 0px)) 14px 120px; }
+
+  .td-card { background: #FFFDF8; border: 1px solid #E7E3DA; border-radius: 18px;
+             padding: 16px 16px 14px; margin-bottom: 14px; animation: tdIn .3s ease both;
+             box-shadow: 0 1px 2px rgba(40,30,15,.04); }
+  .td-kicker { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .14em;
+               text-transform: uppercase; color: #8f9088; margin-bottom: 10px; display: flex;
+               align-items: center; gap: 8px; }
+  .td-kicker b { font-weight: 600; color: #993C1D; letter-spacing: .16em; }
+
+  /* a row you can hit with a thumb without looking */
+  .td-row { display: flex; align-items: center; gap: 12px; padding: 12px 0;
+            border-top: 1px solid #F1EDE3; }
+  .td-row:first-of-type { border-top: none; }
+  .td-title { font-family: 'Newsreader', serif; font-size: 19px; line-height: 1.25; color: #26271F;
+              flex: 1; min-width: 0; }
+  .td-sub { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+            color: #8a8577; margin-top: 3px; }
+
+  .td-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            min-height: 46px; padding: 0 18px; border-radius: 14px; cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; letter-spacing: .01em;
+            border: 1px solid #DAD7D0; background: #FFFFFF; color: #3f4038; flex: none; }
+  .td-btn.wide { width: 100%; }
+  .td-btn.go { border-color: #3B6D11; background: #3B6D11; color: #fff; }
+  .td-btn.amber { border-color: #E0CB98; background: #FBF6EA; color: #7d4c09; }
+  .td-btn.icon { min-width: 52px; padding: 0 12px; font-size: 16px; }
+
+  /* the numbers you want without reading anything */
+  .td-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .td-stat { background: #FFFDF8; border: 1px solid #E7E3DA; border-radius: 16px;
+             padding: 13px 12px; text-align: center; }
+  .td-stat b { display: block; font-family: 'Newsreader', serif; font-size: 27px; font-weight: 500;
+               line-height: 1; color: #26271F; }
+  .td-stat span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+                  letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-top: 6px; }
+
+  .td-bar { height: 8px; border-radius: 4px; background: #EDE8DC; overflow: hidden; margin-top: 10px; }
+  .td-bar span { display: block; height: 100%; border-radius: 4px; background: #3B6D11; }
+
+  .td-chip { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px;
+             border-radius: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+             border: 1px solid #E7E3DA; background: #FBF9F4; color: #6b6c63; }
+  .td-chip.on { border-color: #3B6D11; background: #F1F7E9; color: #3B6D11; }
+  /* the same chip, but you can press it */
+  .td-chip.tap { flex: 1; justify-content: center; min-height: 48px; font-size: 13px;
+                 cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .td-chip.tap.on { border-color: #993C1D; background: #FBF2EE; color: #993C1D; }
+
+  /* the study stepper: a subject, then how long */
+  .td-study { display: flex; gap: 8px; margin-top: 10px; }
+  .td-study select { flex: 1; min-width: 0; min-height: 48px; font-size: 15px; padding: 0 10px;
+                     border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F; }
+  .td-study button { flex: none; min-width: 56px; padding: 0 10px; min-height: 48px; font-size: 13px; }
+
+  .td-field { width: 100%; font-size: 16px; line-height: 1.5; padding: 12px 13px;
+              border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F;
+              resize: vertical; }
+
+  /* every page, as a tile — nothing behind a menu */
+  .td-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .td-tile { display: flex; flex-direction: column; justify-content: space-between; min-height: 78px;
+             padding: 12px 13px; border-radius: 16px; border: 1px solid #E7E3DA; background: #FFFDF8;
+             color: #26271F; }
+  .td-tile b { font-family: 'Newsreader', serif; font-size: 16.5px; font-weight: 500; line-height: 1.2; }
+  .td-tile span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8f9088; margin-top: 6px; }
+
+  @media (min-width: 560px) { .td-tiles { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</helmet>
+<div class="td" data-screen-label="Today">
+
+  <div style="margin-bottom: 14px; padding-right: 62px;">
+    <div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #993C1D;">{{ dayName }}</div>
+      <div style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; line-height: 1.05; margin-top: 2px;">{{ dateLine }}</div>
+    </div>
+  </div>
+
+  <!-- ─── the three numbers ─── -->
+  <div class="td-stats" style="margin-bottom: 14px;">
+    <div class="td-stat"><b>{{ readPctLabel }}</b><span>read</span></div>
+    <div class="td-stat"><b>{{ readingN }}</b><span>on the go</span></div>
+    <div class="td-stat"><b>{{ planPctLabel }}</b><span>plan done</span></div>
+  </div>
+
+  <!-- ─── what you are reading ─── -->
+  <div class="td-card">
+    <div class="td-kicker"><b>Reading now</b><span style="flex:1"></span><a href="Reading List.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">all books →</a></div>
+    <sc-if value="{{ hasReading }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ reading }}" as="r" hint-placeholder-count="2">
+        <div class="td-row">
+          <span class="td-title">{{ r.title }}<span class="td-sub">{{ r.sub }}</span></span>
+          <button onClick="{{ r.note }}" class="td-btn icon" title="Add a note">✎</button>
+          <button onClick="{{ r.done }}" class="td-btn icon amber" title="Finished">✓</button>
+        </div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ noReading }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size: 15px; color: #77786F; line-height: 1.5; padding: 4px 0 10px;">Nothing on the go. {{ nextLine }}</div>
+      <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ startNext }}" class="td-btn go wide">Start {{ nextTitle }}</button>
+      </sc-if>
+    </sc-if>
+  </div>
+
+  <!-- ─── writing a note, without leaving the page ─── -->
+  <sc-if value="{{ noteOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="td-card" style="border-color: #E0CB98; background: #FCFAF3;">
+      <div class="td-kicker"><b style="color:#7d4c09;">A note on {{ noteBook }}</b></div>
+      <input value="{{ noteLoc }}" onInput="{{ setNoteLoc }}" placeholder="p. 128 · ch. 4 · 01:12:30" class="td-field" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px;">
+      <textarea value="{{ noteText }}" onInput="{{ setNoteText }}" rows="4" placeholder="What struck you, right where you are." class="td-field" style="margin-top: 9px;"></textarea>
+      <div style="display: flex; gap: 9px; margin-top: 11px;">
+        <button onClick="{{ saveNote }}" class="td-btn go" style="flex: 1;">Save the note</button>
+        <button onClick="{{ cancelNote }}" class="td-btn">Cancel</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ─── the plan, and the week ─── -->
+  <div class="td-card">
+    <div class="td-kicker"><b>The plan</b><span style="flex:1"></span><a href="Weekly Review.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">review →</a></div>
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <span style="font-family: 'Newsreader', serif; font-size: 21px;">{{ planDone }} <span style="font-size: 14px; color: #A6A79F;">of {{ planTotal }} steps</span></span>
+    </div>
+    <div class="td-bar"><span style="width: {{ planPct }}%;"></span></div>
+    <sc-if value="{{ hasPrios }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top: 13px;">
+        <div class="td-kicker" style="margin-bottom: 7px;">This week</div>
+        <sc-for list="{{ prios }}" as="p" hint-placeholder-count="2">
+          <div style="font-size: 15.5px; line-height: 1.5; color: #3f4038; padding: 5px 0;">· {{ p.text }}</div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- ─── today, from the log ─── -->
+  <div class="td-card">
+    <div class="td-kicker"><b>Today</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">log →</a></div>
+    <div style="display: flex; gap: 8px;">
+      <sc-for list="{{ trainChips }}" as="c" hint-placeholder-count="3">
+        <button onClick="{{ c.toggle }}" class="td-chip tap {{ c.cls }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <div class="td-study">
+      <select value="{{ subject }}" onChange="{{ setSubject }}">
+        <sc-for list="{{ subjects }}" as="s" hint-placeholder-count="5">
+          <option value="{{ s.id }}">{{ s.label }}</option>
+        </sc-for>
+      </select>
+      <sc-for list="{{ studyBtns }}" as="b" hint-placeholder-count="3">
+        <button onClick="{{ b.add }}" class="td-btn">{{ b.label }}</button>
+      </sc-for>
+    </div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A6A79F; margin-top: 8px;">{{ studyLine }}</div>
+  </div>
+
+  <!-- ─── capture ─── -->
+  <div class="td-card">
+    <div class="td-kicker"><b>Write it down</b><span style="flex:1"></span><a href="Journal.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">journal →</a></div>
+    <textarea value="{{ jotText }}" onInput="{{ setJot }}" rows="3" placeholder="A line for today's note…" class="td-field"></textarea>
+    <button onClick="{{ saveJot }}" class="td-btn go wide" style="margin-top: 10px;">Add to the journal</button>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 8px;">{{ jotHint }}</div>
+  </div>
+
+  <!-- ─── everything else, in the open ─── -->
+  <div class="td-kicker" style="margin: 20px 0 10px 4px;"><b>Everywhere else</b></div>
+  <div class="td-tiles">
+    <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="6">
+      <a href="{{ t.href }}" class="td-tile"><b>{{ t.name }}</b><span>{{ t.note }}</span></a>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 950; max-width: 92vw; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 12px 20px; border-radius: 22px; color: #FFFDF8; background: #3B6D11; box-shadow: 0 8px 26px rgba(26,27,26,.28); animation: tdIn .2s ease;">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:1400}}">
+class Component extends DCLogic {
+  RKEY = 'ct_reading_v1';
+  RBOOKS = 'ct_reading_books_v1';
+  LKEY = 'ct_lifelog_v1';
+  PKEY = 'ct-master-plan-v2';
+  WKEY = 'ct_weekly_v1';
+  JKEY = 'ct_journal_v1';
+
+  state = { tick: 0, noteId: null, noteBook: '', noteLoc: '', noteText: '', jotText: '', toast: '', subject: 'anatomy' };
+
+  readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
+  writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  bump() { this.setState(s => ({ tick: s.tick + 1 })); }
+  toast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  isoDay(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  /* The reading store is shared with the Reading List page, so everything
+     written here uses exactly the shapes that page expects. */
+  readR() { return Object.assign({ status: {}, history: {}, notes: {}, plans: [] }, this.readJSON(this.RKEY, {}) || {}); }
+  writeR(patch) { const cur = this.readR(); Object.assign(cur, patch); this.writeJSON(this.RKEY, cur); }
+
+  allBooks() {
+    const out = [];
+    ((window.READING_DATA || {}).shelves || []).forEach(s => (s.items || []).forEach(it => out.push(it)));
+    const mine = this.readJSON(this.RBOOKS, []) || [];
+    (Array.isArray(mine) ? mine : []).forEach(b => out.push(b));
+    return out;
+  }
+
+  finish(id, title) {
+    const st = this.readR();
+    const status = Object.assign({}, st.status);
+    status[id] = 'read';
+    const history = Object.assign({}, st.history);
+    const h = Object.assign({}, history[id]);
+    const now = new Date().toISOString();
+    h.started = h.started || now; h.finished = now; h.readAt = now;
+    history[id] = h;
+    this.writeR({ status, history });
+    this.toast('✓ finished ' + title);
+    this.bump();
+  }
+
+  openNote(id, title) { this.setState({ noteId: id, noteBook: title, noteText: '', noteLoc: '' }); }
+  saveNote() {
+    const id = this.state.noteId;
+    const text = (this.state.noteText || '').trim();
+    const loc = (this.state.noteLoc || '').trim();
+    if (!id || (!text && !loc)) { this.setState({ noteId: null }); return; }
+    const st = this.readR();
+    const notes = Object.assign({}, st.notes);
+    const at = new Date(Math.floor(Date.now() / 60000) * 60000).toISOString();   // minute precision, as the vault expects
+    notes[id] = (notes[id] || []).concat([{ at, loc, text }]);
+    const status = Object.assign({}, st.status);
+    if (status[id] !== 'read') status[id] = 'reading';
+    this.writeR({ notes, status });
+    this.setState({ noteId: null, noteText: '', noteLoc: '' });
+    this.toast('✓ note saved');
+    this.bump();
+  }
+
+  /* ── the life log ──────────────────────────────────────────────────────
+     Same store, same shapes, so a gym tap or a study block entered here is
+     indistinguishable from one entered on the Life Log page itself.
+
+     One thing to know about the day key: the Life Log keys its days by the
+     UTC date (`toISOString().slice(0,10)`) and filters sessions the same
+     way, so late-evening entries in a positive offset land on the next
+     day's key. That is its convention, not a bug to fix from here — this
+     page copies it exactly, which is why logDay() is not isoDay(). */
+  logDay() { return new Date().toISOString().slice(0, 10); }
+  SUBJECTS = [['anatomy', 'Anatomy'], ['math', 'Math'], ['python', 'Python'],
+              ['research', 'Research'], ['other', 'Other']];
+
+  readL() {
+    const d = Object.assign({ days: {}, sessions: [], active: null, syllabus: {}, targets: {}, budget: '' },
+                            this.readJSON(this.LKEY, {}) || {});
+    if (!d.days) d.days = {};
+    if (!Array.isArray(d.sessions)) d.sessions = [];
+    return d;
+  }
+  mutL(fn) { const d = this.readL(); fn(d); this.writeJSON(this.LKEY, d); this.bump(); }
+
+  toggleTrain(kind, label) {
+    const k = this.logDay();
+    let on = false;
+    this.mutL(d => {
+      if (!d.days[k]) d.days[k] = {};
+      if (!d.days[k][kind]) d.days[k][kind] = {};
+      d.days[k][kind].on = !d.days[k][kind].on;
+      on = !!d.days[k][kind].on;
+    });
+    this.toast(on ? '✓ ' + label + ' logged' : label + ' cleared');
+  }
+
+  // A block of study is written as a real session ending now — the same
+  // record the Life Log's timer appends when you stop it, so the day total,
+  // the week total and the weekly export all pick it up with no special case.
+  addStudy(mins, label) {
+    const end = Date.now();
+    const subject = this.state.subject || 'anatomy';
+    this.mutL(d => { d.sessions = d.sessions.concat([{ type: 'study', subject, start: end - mins * 60000, end }]); });
+    this.toast('✓ ' + label + ' of ' + subject);
+  }
+
+  // Mirrors the Life Log's studyHoursDay: a manual hours override for a
+  // subject wins, otherwise the subject's sessions are summed.
+  studyHoursToday() {
+    const k = this.logDay();
+    const d = this.readL();
+    const st = (d.days[k] || {}).study || {};
+    let h = 0;
+    this.SUBJECTS.forEach(([s]) => {
+      const ov = st[s] && st[s].h;
+      if (ov !== undefined && ov !== null && ov !== '') { h += parseFloat(ov) || 0; return; }
+      d.sessions.forEach(x => {
+        if (x.type === 'study' && x.subject === s && new Date(x.start).toISOString().slice(0, 10) === k) {
+          h += (x.end - x.start) / 3600000;
+        }
+      });
+    });
+    if (d.active && d.active.mode === 'study' && new Date(d.active.start).toISOString().slice(0, 10) === k) {
+      h += (Date.now() - d.active.start) / 3600000;
+    }
+    return h;
+  }
+
+  saveJot() {
+    const body = (this.state.jotText || '').trim();
+    if (!body) return;
+    const list = this.readJSON(this.JKEY, []) || [];
+    const now = Date.now();
+    (Array.isArray(list) ? list : []).push({
+      id: 'j' + now + Math.floor(Math.random() * 999), type: 'daily',
+      date: this.isoDay(new Date()), title: '', body, tags: [], created: now, updated: now,
+    });
+    this.writeJSON(this.JKEY, Array.isArray(list) ? list : []);
+    this.setState({ jotText: '' });
+    this.toast('✓ added to the journal');
+    this.bump();
+  }
+
+  renderVals() {
+    this.state.tick;
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const now = new Date();
+    const st = this.readR();
+    const statusOf = id => (st.status || {})[id] || 'unread';
+
+    // ── books ──
+    const books = this.allBooks();
+    const total = books.length;
+    const readN = books.filter(b => statusOf(b.id) === 'read').length;
+    const reading = books.filter(b => statusOf(b.id) === 'reading').map(b => {
+      const h = (st.history || {})[b.id] || {};
+      const nNotes = ((st.notes || {})[b.id] || []).length;
+      const bits = [];
+      if (h.progress) bits.push(h.progress);
+      if (nNotes) bits.push(nNotes + (nNotes === 1 ? ' note' : ' notes'));
+      return {
+        title: b.title, sub: bits.join(' · ') || (b.by || ''),
+        note: () => this.openNote(b.id, b.title),
+        done: () => this.finish(b.id, b.title),
+      };
+    });
+
+    // the first unread step of the first plan that still has one
+    let next = null;
+    (st.plans || []).forEach(p => {
+      if (next) return;
+      const s = (p.steps || []).filter(x => statusOf(x.book) !== 'read')[0];
+      if (s) next = { id: s.book, title: s.title || '', plan: p.title };
+    });
+
+    // ── the master plan ──
+    const items = ((window.HUB_DATA || {}).items) || [];
+    const plan = this.readJSON(this.PKEY, {}) || {};
+    const checked = plan.checked || {};
+    const planTotal = items.length;
+    const planDone = items.filter(it => checked[it.id]).length;
+
+    // ── this week's priorities ──
+    const w = this.readJSON(this.WKEY, {}) || {};
+    const mon = new Date(now); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7)); mon.setHours(0, 0, 0, 0);
+    const wk = this.isoDay(mon);
+    const prios = ((w.priorities || {})[wk] || []).filter(Boolean).map(t => ({ text: t }));
+
+    // ── today, in the life log — readable and writable ──
+    const logStore = this.readL();
+    const day = (logStore.days[this.logDay()]) || {};
+    const trainChips = [['gym', '⚒ Gym'], ['swim', '≈ Swim'], ['climb', '▲ Climb']].map(([kind, label]) => ({
+      label, cls: (day[kind] && day[kind].on) ? 'on' : '',
+      toggle: () => this.toggleTrain(kind, label.slice(2)),
+    }));
+    const subjects = this.SUBJECTS.map(([id, label]) => ({ id, label }));
+    const studyBtns = [[15, '+15m'], [30, '+30m'], [60, '+1h']].map(([mins, label]) => ({
+      label, add: () => this.addStudy(mins, label.slice(1)),
+    }));
+    const studyH = this.studyHoursToday();
+    const studyLine = studyH
+      ? (Math.round(studyH * 10) / 10) + 'h studied today — it lands in the Life Log as a session'
+      : 'no study logged today';
+
+    const jots = this.readJSON(this.JKEY, []) || [];
+    const todayJots = (Array.isArray(jots) ? jots : []).filter(j => j.date === this.isoDay(now)).length;
+
+    const tiles = [
+      ['Reading List.dc.html', 'Reading List', total + ' books'],
+      ['Journal.dc.html', 'Journal', (Array.isArray(jots) ? jots.length : 0) + ' entries'],
+      ['Life Log.dc.html', 'Life Log', 'days & sessions'],
+      ['Summer Sprint.dc.html', 'Summer Sprint', 'the run to term'],
+      ['Weekly Review.dc.html', 'Weekly Review', 'the ritual'],
+      ['Study Engine.dc.html', 'Study Engine', 'what to study'],
+      ['Hub.dc.html', 'Mission Control', 'everything'],
+      ['CT Master Plan.html', 'Master Plan', planTotal + ' steps'],
+      ['Library.dc.html', 'Library', 'papers & files'],
+      ['Network Map.dc.html', 'Network Map', 'people'],
+      ['Conference Radar.dc.html', 'Conferences', 'deadlines'],
+      ['Timeline.dc.html', 'Timeline', 'the long view'],
+    ].map(t => ({ href: t[0], name: t[1], note: t[2] }));
+
+    return {
+      dayName: DAYS[now.getDay()],
+      dateLine: MON[now.getMonth()] + ' ' + now.getDate(),
+      readPctLabel: (total ? Math.round(readN / total * 100) : 0) + '%',
+      planPctLabel: (planTotal ? Math.round(planDone / planTotal * 100) : 0) + '%',
+      readingN: reading.length,
+      planPct: planTotal ? Math.round(planDone / planTotal * 100) : 0,
+      planDone, planTotal,
+
+      reading, hasReading: reading.length > 0, noReading: reading.length === 0,
+      hasNext: !!next, nextTitle: next ? next.title : '',
+      nextLine: next ? 'Next in ' + next.plan + ':' : 'Pick something from the shelf.',
+      startNext: () => {
+        if (!next) return;
+        const s2 = this.readR();
+        const status = Object.assign({}, s2.status); status[next.id] = 'reading';
+        const history = Object.assign({}, s2.history);
+        const h = Object.assign({}, history[next.id]);
+        h.started = h.started || new Date().toISOString(); history[next.id] = h;
+        this.writeR({ status, history });
+        this.toast('✓ started ' + next.title); this.bump();
+      },
+
+      noteOpen: !!this.state.noteId, noteBook: this.state.noteBook,
+      noteLoc: this.state.noteLoc, noteText: this.state.noteText,
+      setNoteLoc: (e) => this.setState({ noteLoc: e.target.value }),
+      setNoteText: (e) => this.setState({ noteText: e.target.value }),
+      saveNote: () => this.saveNote(),
+      cancelNote: () => this.setState({ noteId: null, noteText: '', noteLoc: '' }),
+
+      hasPrios: prios.length > 0, prios,
+      trainChips, subjects, studyBtns, studyLine,
+      subject: this.state.subject,
+      setSubject: (e) => this.setState({ subject: e.target.value }),
+
+      jotText: this.state.jotText,
+      setJot: (e) => this.setState({ jotText: e.target.value }),
+      saveJot: () => this.saveJot(),
+      jotHint: todayJots ? todayJots + (todayJots === 1 ? ' entry' : ' entries') + ' written today' : 'nothing written today yet',
+
+      tiles,
+      hasToast: !!this.state.toast, toast: this.state.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

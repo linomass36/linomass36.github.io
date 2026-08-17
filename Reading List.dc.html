@@ -268,6 +268,27 @@
     animation: rlPaperIn .34s .14s both;
   }
   .rl-cols { display: grid; grid-template-columns: 210px 1fr; gap: 22px; }
+
+  /* ─────────── On a phone ───────────
+     Not a smaller copy of the desktop page: the blurb goes, the header
+     shrinks to a line, the rare actions fold behind one chip, and what
+     you are reading now is the first thing on screen. */
+  .rl-extra { display: contents; }
+  .rl-more { display: none; }
+  @media (max-width: 640px) {
+    .rl-blurb { display: none; }
+    .rl-more { display: inline-flex; }
+    .rl-extra { display: none; }
+    .rl-extra.is-open { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; margin-top: 2px; }
+    .rl-topbar { padding: 12px 16px !important; }
+    .rl-topbar h1 { font-size: 21px !important; margin-top: 4px !important; }
+    .rl-stats { min-width: 0 !important; text-align: left !important; }
+    .rl-stats > div { justify-content: flex-start !important; }
+    .rl-stats .rl-bar { margin-left: 0 !important; width: 100% !important; }
+    .rl-wrap { padding-left: 16px !important; padding-right: 16px !important; }
+    /* room for the tab bar */
+    .rl-page { padding-bottom: 96px !important; }
+  }
   @media (max-width: 720px) { .rl-cols { grid-template-columns: 1fr; } }
 
   /* A plan is a sheet of paper, not a book — ruled margin, no cover. */
@@ -294,24 +315,24 @@
   html.hb-dark .rl-shelfrow { background: #efe9df; box-shadow: inset 0 10px 22px rgba(255,255,255,.35); }
 </style>
 </helmet>
-<div data-screen-label="Reading List" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 90px;">
+<div class="rl-page" data-screen-label="Reading List" style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; min-height: 100vh; padding-bottom: 90px;">
 
   <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
-    <div style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 20px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+    <div class="rl-topbar" style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 20px; display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
       <div style="flex: 1; min-width: 320px;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <a href="Hub.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #4A5B7A; color: #4A5B7A;">← Mission Control</a>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #4A5B7A;">12 · The Reading List</span>
         </div>
         <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 32px; line-height: 1.03; margin: 8px 0 0; letter-spacing: -.01em;">Everything worth reading, tracked</h1>
-        <div style="font-size: 13.5px; color: #55564F; margin-top: 8px; max-width: 620px; line-height: 1.55;">The papers that built your field and the wider ideas beside them — and the books a physician-builder should carry for a lifetime. Tap any title to move it: <b>to read → reading → read</b>. Open a book — from the shelf, or the <b>open ▸</b> link — to keep notes against a page, and sync the lot to Obsidian.</div>
+        <div class="rl-blurb" style="font-size: 13.5px; color: #55564F; margin-top: 8px; max-width: 620px; line-height: 1.55;">The papers that built your field and the wider ideas beside them — and the books a physician-builder should carry for a lifetime. Tap any title to move it: <b>to read → reading → read</b>. Open a book — from the shelf, or the <b>open ▸</b> link — to keep notes against a page, and sync the lot to Obsidian.</div>
       </div>
-      <div style="text-align: right; min-width: 220px;">
+      <div class="rl-stats" style="text-align: right; min-width: 220px;">
         <div style="display: flex; align-items: baseline; gap: 10px; justify-content: flex-end;">
           <span style="font-family: 'Newsreader', serif; font-size: 36px; font-weight: 500; color: #3B6D11; line-height: 1;">{{ pct }}%</span>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F;">{{ readN }} / {{ totalN }} read</span>
         </div>
-        <div style="height: 6px; width: 220px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px; margin-left: auto;">
+        <div class="rl-bar" style="height: 6px; width: 220px; border-radius: 3px; background: #E7E4DE; overflow: hidden; margin-top: 7px; margin-left: auto;">
           <div style="height: 100%; border-radius: 3px; background: #3B6D11; width: {{ pct }}%; transition: width .4s ease;"></div>
         </div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">
@@ -322,7 +343,7 @@
     </div>
   </div>
 
-  <div style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 0;">
+  <div class="rl-wrap" style="max-width: 1000px; margin: 0 auto; padding: 20px 28px 0;">
 
     <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ true }}">
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
@@ -344,12 +365,28 @@
         <button onClick="{{ v.set }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ v.border }}; background: {{ v.bg }}; color: {{ v.color }};">{{ v.label }}</button>
       </sc-for>
       <span style="flex: 1;"></span>
-      <button onClick="{{ surprise }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #E6D6B0; background: #FBF6EA; color: #854F0B;">🎲 Surprise me</button>
-      <button onClick="{{ addBook }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #3B6D11; background: #3B6D11; color: #FFFFFF;">＋ Add a book</button>
+      <button onClick="{{ addBook }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; min-height: 36px; padding: 0 15px; border-radius: 20px; cursor: pointer; border: 1px solid #3B6D11; background: #3B6D11; color: #FFFFFF;">＋ Add a book</button>
+      <button onClick="{{ toggleMore }}" class="rl-more" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 36px; padding: 0 14px; border-radius: 20px; cursor: pointer; border: 1px solid #E4E2DD; background: #FFFFFF; color: #55564F;">{{ moreLabel }}</button>
+      <span class="rl-extra {{ moreCls }}">
+      <button onClick="{{ surprise }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; min-height: 36px; padding: 0 13px; border-radius: 20px; cursor: pointer; border: 1px solid #E6D6B0; background: #FBF6EA; color: #854F0B;">🎲 Surprise me</button>
       <button onClick="{{ openObs }}" title="Sync your books and notes with an Obsidian vault" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid {{ obsChipBorder }}; background: {{ obsChipBg }}; color: {{ obsChipColor }};">◆ {{ obsChipLabel }}</button>
       <button onClick="{{ openImport }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #534AB7; background: #F4F2FB; color: #534AB7;">⭳ Import</button>
-      <button onClick="{{ exportAll }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid #E4E2DD; background: #FFFFFF; color: #55564F;">⭱ Export</button>
+      <button onClick="{{ exportAll }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .02em; min-height: 36px; padding: 0 13px; border-radius: 20px; cursor: pointer; border: 1px solid #E4E2DD; background: #FFFFFF; color: #55564F;">⭱ Export</button>
+      </span>
     </div>
+
+    <sc-if value="{{ hasOnDeck }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px solid #E6D6B0; border-radius: 14px; background: #FCFAF3; padding: 12px 14px; margin-bottom: 14px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B; margin-bottom: 2px;">Reading now</div>
+        <sc-for list="{{ onDeck }}" as="d" hint-placeholder-count="2">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 0; border-top: 1px solid #F2ECDD;">
+            <a onClick="{{ d.open }}" style="font-family: 'Newsreader', serif; font-size: 16px; line-height: 1.25; color: #26271F; flex: 1; min-width: 160px; cursor: pointer;">{{ d.title }}<span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A6A79F;"> {{ d.where }}</span></a>
+            <a onClick="{{ d.note }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 34px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 17px; border: 1px solid #E6D6B0; background: #FFFFFF; color: #854F0B; cursor: pointer;">✎ note</a>
+            <a onClick="{{ d.done }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 34px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 17px; border: 1px solid #3B6D11; background: #F1F7E9; color: #3B6D11; cursor: pointer;">✓ finished</a>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
 
     <sc-if value="{{ hasTags }}" hint-placeholder-val="{{ false }}">
       <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
@@ -367,18 +404,6 @@
         <button onClick="{{ pickRead }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 6px 12px; border-radius: 16px; border: 1px solid #854F0B; background: #854F0B; color: #fff; cursor: pointer;">Start reading</button>
         <button onClick="{{ surprise }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 6px 12px; border-radius: 16px; border: 1px solid #E6D6B0; background: #fff; color: #854F0B; cursor: pointer;">Again</button>
         <button onClick="{{ clearPick }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; border: none; background: none; color: #A6A79F; cursor: pointer; line-height: 1;">×</button>
-      </div>
-    </sc-if>
-
-    <sc-if value="{{ hasOnDeck }}" hint-placeholder-val="{{ false }}">
-      <div style="border: 1px solid #E6D6B0; border-radius: 14px; background: #FCFAF3; padding: 14px 18px; margin-bottom: 16px;">
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #854F0B; margin-bottom: 6px;">On deck · reading now</div>
-        <sc-for list="{{ onDeck }}" as="d" hint-placeholder-count="2">
-          <button onClick="{{ d.cycle }}" style="display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; border: none; background: none; padding: 7px 0; border-top: 1px solid #F2ECDD; cursor: pointer;">
-            <span style="font-family: 'Newsreader', serif; font-size: 15px; color: #26271F; flex: 1; min-width: 0;">{{ d.title }}</span>
-            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #A6A79F; white-space: nowrap;">{{ d.shelfName }}</span>
-          </button>
-        </sc-for>
       </div>
     </sc-if>
 
@@ -921,7 +946,7 @@ class Component extends DCLogic {
   KEY_BOOKS = 'ct_reading_books_v1';   // books you add yourself (syncs across devices)
   state = { tick: 0, filter: 'all', query: '', tag: '', pick: null, openId: null, draft: null,
             noteLoc: '', noteText: '',
-            planId: null, planEdit: false, stepQuery: '', fromPlan: null,
+            planId: null, planEdit: false, stepQuery: '', fromPlan: null, moreOpen: false,
             flight: null, flyPhase: null,
             importOpen: false, importText: '', importMsg: '', promptCopied: false,
             obsOpen: false, obsMsg: '', obsBad: false, obsBusy: false, obsVault: '',
@@ -932,11 +957,20 @@ class Component extends DCLogic {
 
   // ── UI prefs: list/shelf view + collapsed shelves, persisted & synced ──
   readUI() { const st = this.read(); return Object.assign({ view: 'list', collapsed: {} }, st.ui || {}); }
+  isPhone() {
+    try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; }
+  }
+  // A shelf you have never touched is open on a desktop and closed on a
+  // phone, where 31 open shelves is fifty-odd screens of scrolling.
+  shelfOpen(id, collapsed) {
+    return collapsed[id] === undefined ? !this.isPhone() : !collapsed[id];
+  }
   setView(v) { const ui = this.readUI(); ui.view = v; this.write({ ui }); this.bump(); }
   toggleCollapse(id, e) {
     if (e && e.stopPropagation) e.stopPropagation();
     const ui = this.readUI(); const c = Object.assign({}, ui.collapsed);
-    c[id] = !c[id]; ui.collapsed = c; this.write({ ui }); this.bump();
+    c[id] = this.shelfOpen(id, c);          // flip whatever it is showing now
+    ui.collapsed = c; this.write({ ui }); this.bump();
   }
 
   // ── Tags per item, stored in the synced store ──
@@ -1905,7 +1939,7 @@ class Component extends DCLogic {
     const view = ui.view || 'list';
     const collapsed = ui.collapsed || {};
     if (!data) return { pct: 0, readN: 0, totalN: 0, readingN: 0, shelfN: 0, filterChips: [], viewChips: [], tagChips: [], shelves: [], onDeck: [], isListView: true, isShelfView: false, addBook: () => this.addBook(), exportAll: () => this.exportAll(), openImport: () => this.openImport(), closeImport: () => this.closeImport(), setImportText: (e) => this.setImportText(e), importPaste: () => this.runImport(this.state.importText, 'merge'), pickImportFile: () => this.pickImportFile(), copyPrompt: () => this.copyPrompt(), promptText: this.importPromptText(), copyLabel: '⧉ copy prompt', copyBg: '#FFFFFF', copyColor: '#534AB7', importOpen: !!this.state.importOpen, importText: this.state.importText || '', importMsg: this.state.importMsg || '', hasImportMsg: !!this.state.importMsg, hasToast: !!this.state.toastMsg, toastMsg: this.state.toastMsg || '', toastBg: '#3B6D11',
-      hasFlight: false, flyScrim: false, fly: { cls: '' }, showBook: false, bk: { statusBtns: [], notes: [], tags: [], files: [], plans: [] }, logFields: [], closeBook: () => {}, addNote: () => {}, setNoteLoc: () => {}, setNoteText: () => {}, noteLoc: '', noteText: '', nowLabel: '',
+      hasFlight: false, flyScrim: false, fly: { cls: '' }, toggleMore: () => {}, moreLabel: '⋯ more', moreCls: '', showBook: false, bk: { statusBtns: [], notes: [], tags: [], files: [], plans: [] }, logFields: [], closeBook: () => {}, addNote: () => {}, setNoteLoc: () => {}, setNoteText: () => {}, noteLoc: '', noteText: '', nowLabel: '',
       isBrowse: true, isPlansView: false, planCards: [], hasPlans: false, noPlans: true, showPlan: false,
       pl: { steps: [], whyParas: [], stepHits: [] }, closePlan: () => this.closePlan(), newPlan: () => this.newPlan(),
       obsOpen: false, obs: { transportChips: [], folder: 'Reading List' }, openObs: () => this.openObs(), closeObs: () => this.closeObs(), obsChipLabel: 'Obsidian', obsChipBorder: '#E4E2DD', obsChipBg: '#FFFFFF', obsChipColor: '#55564F' };
@@ -1989,7 +2023,7 @@ class Component extends DCLogic {
       .map(({ s, matched }) => {
         matchN += matched.length;
         const done = matched.filter(it => statusOf(it.id) === 'read').length;
-        const open = !collapsed[s.id];
+        const open = this.shelfOpen(s.id, collapsed);
         return {
           id: s.id, accent: s.accent, name: s.name,
           kindLabel: s.kind === 'paper' ? 'Publications' : 'Books',
@@ -2049,9 +2083,17 @@ class Component extends DCLogic {
 
     // On deck — what you're reading right now
     const onDeck = allShelves.reduce((a, s) => a.concat(
-      s.items.filter(it => statusOf(it.id) === 'reading').map(it => ({
-        title: it.title, shelfName: s.name, cycle: () => this.cycle(it.id, it.title),
-      }))
+      s.items.filter(it => statusOf(it.id) === 'reading').map(it => {
+        const h = (store.history || {})[it.id] || {};
+        return {
+          title: it.title, shelfName: s.name,
+          where: h.progress ? '· ' + h.progress : '',
+          open: (e) => this.openBook(it.id, e),
+          note: (e) => this.openBook(it.id, e),        // the note box is the first thing in there
+          done: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.setStatus(it.id, 'read'); this.toast('✓ finished ' + it.title); },
+          cycle: () => this.cycle(it.id, it.title),
+        };
+      })
     ), []);
 
     const stop = e => { if (e && e.stopPropagation) e.stopPropagation(); };
@@ -2297,6 +2339,9 @@ class Component extends DCLogic {
       newPlan: () => this.newPlan(),
       onDeck, hasOnDeck: onDeck.length > 0 && view !== 'plans',
       surprise: () => this.surprise(),
+      toggleMore: () => this.setState(st2 => ({ moreOpen: !st2.moreOpen })),
+      moreLabel: this.state.moreOpen ? '× less' : '⋯ more',
+      moreCls: this.state.moreOpen ? 'is-open' : '',
       hasPick: !!pick && view !== 'plans', pickTitle: pick ? pick.title : '', pickShelf: pick ? pick._shelf : '',
       pickRead: () => { if (this.state.pick) this.cycle(this.state.pick.id, this.state.pick.title); },
       clearPick: () => this.setState({ pick: null }),

@@ -152,6 +152,90 @@ there — reorder the list, rewrite a step's reasoning, add a numbered line for 
 book that isn't on the list yet — and the next sync brings it back, creating any
 book the new step needs. Deleting a plan here deletes its note there.
 
+## On a phone
+The phone is not a smaller copy of the desktop page — it shows what you need
+at a glance and lets you put things in.
+
+- **Signing in on a phone lands on Today**, not on Mission Control. Mission
+  Control is a wall of nine panels built for a wide screen; Today is one column
+  you read top to bottom in a thumb's reach. A desktop still lands on Mission
+  Control. The page is set by `mobileHubUrl` in `config.js` — set it to `''` to
+  send phones to the desktop hub as well.
+- **A tab bar along the bottom** (phones only) with Today, Reading, Journal, Log
+  and Review, current one lit. Everything else stays in the drawer, but the five
+  you use daily are one tap, not two.
+- **The Reading List opens on what you're reading.** A *Reading now* card sits
+  above everything: each book with where you are in it, **✎ note** (straight into
+  the note box) and **✓ finished**.
+- **Shelves start closed on a phone.** Thirty-one open shelves was fifty-five
+  screens of scrolling; closed, the whole list is about five and you open the one
+  you want. On a desktop they still start open. Either way, once you open or
+  close a shelf yourself that choice is remembered.
+- **The desktop blurb is hidden** and the header is one line.
+- **The rare actions fold** behind one **⋯ more** chip — Surprise me, Obsidian,
+  Import, Export. Search, the three views and ＋ Add a book stay out in the open.
+
+- **The Summer Sprint's moves are list items.** On a phone a move is one
+  full-width row you tap anywhere on — a 22px checkbox and the text, 50px tall
+  — and the ✕ *cut* and → *carry* buttons come off entirely: each opens a
+  prompt asking for a reason, which is a desk decision, and a 12px glyph with
+  2px of padding was never a phone control. The phases and the boards below
+  them start closed, each heading showing its own tally, and the habit grid
+  restacks so the seven days are thumb-sized buttons with the day letter
+  inside. The one section open by default is the habit grid — it is the daily
+  tap. A desktop keeps all of it: four columns, both buttons, nothing
+  collapsed.
+- **Plan Analysis opens on its summary.** It is an essay; on a phone you get
+  the three counters, the verdict and its two lists, then ten headings you open
+  one at a time.
+- **The drawer's rows are 44px**, not 37 — eighteen links in a column, and a
+  row that misses the thumb by 3px misses it eighteen times.
+
+Measured on an iPhone 13 viewport, before → after:
+
+| | screens of scroll | controls | under 40px | text under 11px |
+|---|---|---|---|---|
+| Reading List | 55.1 → 5.6 | 367 → 67 | 166 → 39 | 858 → 75 |
+| Summer Sprint | 11.5 → 4.9 | 207 → 61 | 193 → 5 | 85 → 14 |
+| Plan Analysis | 20.2 → 4.2 | 29 → 27 | 22 → 1 | 36 → 10 |
+
+Every one of these is a phone-only change behind a `max-width: 640px` query:
+the desktop renders at the same height, to the pixel, as it did before.
+
+### Today
+`Today.dc.html` is the phone's front door — 2.6 screens, and everything on it
+either tells you where you stand or takes something in. It reads and writes the
+same localStorage keys as the full pages, so anything typed here shows up on the
+desktop (and syncs) exactly as if it had been typed there.
+
+- **The date, and three tiles** — books read this year against your target,
+  how many you're reading now, and how far through the master plan you are.
+- **Reading now.** Each book you're partway through, with its place, and the two
+  buttons that are the whole daily job: **✎** opens a note box right there
+  (text plus where you are — page, chapter, timestamp, whatever you type) and
+  **✓** marks it finished.
+- **The plan bar and this week's priorities**, read-only, so a glance answers
+  "am I behind".
+- **The quick log.** ⚒ Gym, ≈ Swim and ▲ Climb are buttons, not badges — tap
+  one and the day is logged. Beside them a subject and **+15m / +30m / +1h**
+  add a block of study. These write the Life Log's own shapes: a training tap
+  is `days[date][kind].on`, and a study block is appended to `sessions` as a
+  real session ending now — the same record the Life Log's timer writes when
+  you stop it, so the day total, the week total and the weekly export all pick
+  it up. Open the Life Log afterwards and it is indistinguishable from having
+  been logged there.
+
+  One wrinkle worth knowing: the Life Log keys its days by the **UTC** date and
+  filters sessions the same way, so a late-evening entry in a positive offset
+  lands on the next day's key. That is its convention, and Today copies it
+  exactly rather than half-matching it.
+- **A journal box.** Type and save; it writes a normal daily entry that the
+  Journal page opens.
+- **A grid of twelve tiles** to every other page, for when you want the real one.
+
+Nothing on Today is unique to Today: it is a shortcut to the pages, never a
+second copy of the data.
+
 ## Syncing with Obsidian
 One book = one Markdown note, and it goes both ways: write in Obsidian or write
 on the site, and a sync reconciles the two. Open **◆ Obsidian** in the toolbar
@@ -224,11 +308,57 @@ follow you across devices. The vault folder handle itself is per-device
 - **Anyone else** → the **ACCESS VIOLATION** prank, then bounced. Hub pages are protected too: opening one directly without the owner session redirects to the gate.
 
 ## Files in this system
-- `config.js` — the one place you edit (owner email + Firebase keys).
-- `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = offline. Tap it to force a sync now; `window.hubSync.state` / `window.hubSync.syncNow()` are available in the console.
+- `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
+- `Today.dc.html` — the phone's front door: the day at a glance, plus a note box, a ✓ and a journal box. See **On a phone** above.
+- `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = not syncing. Tap it for a panel showing the account, both revisions, the size of what this device is holding, its biggest keys, and **which keys have not made it to the cloud yet** — that last line is the one that answers "why isn't this on my other device". The panel's **Sync now** pulls before it pushes, so one tap brings a device that missed an update back in line. `window.hubSync.state` / `window.hubSync.syncNow()` do the same from the console.
+
+  **How a push works.** It is not an overwrite. The device reads the cloud
+  first and merges: the cloud's copy, plus the keys *this device actually
+  edited* since its last push, plus any key the cloud has never seen. So a
+  phone carrying a week-old copy can only ever affect what was typed into
+  it — it cannot stamp its whole localStorage over an evening's work on the
+  laptop. If the cloud moved on since this device last applied it, that is
+  pulled in first and the reload re-pushes.
+
+  **A copy a day.** Each device keeps the last three days of your whole store,
+  under a `__sync` key — which means the cloud never sees it (it costs nothing
+  against the 1 MB limit) and *an incoming sync cannot overwrite it*. That is the
+  point: the copy you want after a bad arrival is the one the arrival could not
+  touch. The pill's panel lists the days it holds and restores one with a tap.
+
+  **Undo.** Whatever an incoming change lands on top of is kept on the
+  device first. If a sync arrives and takes something you wanted, tap the
+  pill → **Undo last sync**: it puts this device's previous copy back and
+  pushes it, so the correction reaches your other devices too.
+
+  **When a device stops syncing, the pill says which of these it is:**
+  - *Sync library blocked* — the Firebase SDK could not be fetched from `gstatic.com`. Content blockers, a VPN, iCloud Private Relay and locked-down wifi all do this. It retries each script twice, and again whenever the network returns or you come back to the tab.
+  - *Sign in to sync* — not signed in as `authorizedEmail` on that device; it runs local-only.
+  - *Blocked: publish Firestore rules* — the rules from step 1 above were never published.
+  - *Too big: N MB* — everything in localStorage goes into **one** Firestore document, and a document tops out at 1 MiB. Nothing syncs past that. The panel's "biggest" line names the keys to prune.
+  - *Waiting to read the cloud* — this device could not read the cloud, so it deliberately will not write over it either (otherwise a phone with a months-old copy could wipe the laptop's). It retries every 15s.
 - `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note formats (one per book, one per reading plan), their parsers, the three-way merges, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
-- `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`). Injected on hub pages.
-- `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support. The service worker is network-first for pages (new deploys land at once) and cache-busts by version; the deploy stamps the version into it so each push updates the installed app.
+- `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`), and on phones the **bottom tab bar** — Today, Reading, Journal, Log, Review. Injected on hub pages.
+- `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support.
+
+  **How offline works, and why it can't go stale.** The worker is
+  **network-first**. Online, every request goes to the network and the
+  network's answer is what you see — there is no path by which a cached copy
+  is preferred over a live one. What comes back is copied into a cache on the
+  way past. When a fetch *actually fails*, and only then, the cached copy is
+  served: a page you have opened before still opens with no signal, and one
+  you never have says so in plain words instead of showing a browser error.
+
+  This matters because the worker used to be **cache-first**, which is why it
+  was ripped out: an installed app kept serving yesterday's copy, so the phone
+  showed an old layout and no sync. Network-first cannot reproduce that.
+
+  The cache is named for the app version, so a deploy starts a fresh one and
+  the old is deleted the moment the new worker activates. Two things are never
+  cached: `version.txt`, so the self-heal check can always discover that a new
+  version exists, and anything on the Firestore host, so a sync is never
+  answered from a cache. Data you type offline was already safe — it goes to
+  localStorage immediately and syncs when the signal returns.
 - `index.dc.html` — the gate (Google sign-in + intruder prank). Becomes `index.html` at deploy.
 - `.github/workflows/deploy.yml` — builds `_site/` and deploys to Pages on every push.
 - `.github/inject.py` — injects the sync shim into hub pages at build time.

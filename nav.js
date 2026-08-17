@@ -20,6 +20,7 @@
 
   // Every hub page, in reading order. Filenames must match the deploy.
   var PAGES = [
+    ['Today.dc.html', 'Today · phone home'],
     ['Hub.dc.html', 'Mission Control'],
     ['CT Master Plan.html', 'CT Master Plan'],
     ['Summer Sprint.dc.html', 'Summer Sprint'],
@@ -100,7 +101,10 @@
     '.hbnav-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:8px 10px 18px;}' +
     '.hbnav-sec{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.14em;' +
     'text-transform:uppercase;color:#A6A79F;padding:14px 8px 6px;}' +
-    '.hbnav-lnk{display:block;text-decoration:none;color:#26271F;font-size:14px;padding:9px 10px;' +
+    // 44px, not 37: every page's drawer is 18 of these in a column, and a
+    // row that misses the thumb by 3px misses it eighteen times.
+    '.hbnav-lnk{display:flex;align-items:center;min-height:44px;text-decoration:none;' +
+    'color:#26271F;font-size:14px;padding:9px 10px;' +
     'border-radius:9px;border:1px solid transparent;line-height:1.2;}' +
     '.hbnav-lnk:hover{background:#EFEDE7;}' +
     '.hbnav-lnk.on{background:#fff;border-color:#E4E2DD;border-left:3px solid #993C1D;' +
@@ -112,7 +116,7 @@
     '.hbnav-x:hover{color:#A32E27;background:#F5E9E7;}' +
     '.hbnav-add{margin:8px 8px 0;width:calc(100% - 16px);font-family:"IBM Plex Mono",monospace;' +
     'font-size:11px;color:#3B6D11;background:#F1F7E9;border:1px dashed #C9DDB0;border-radius:9px;' +
-    'padding:9px;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
+    'padding:9px;min-height:44px;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
     '.hbnav-add:hover{background:#e8f2dc;}' +
     '.hbnav-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;' +
     'margin:2px 8px 6px;padding:9px 10px;border:1px solid #E4E2DD;border-radius:9px;' +
@@ -236,6 +240,59 @@
     render();
     document.body.appendChild(btn);
     document.body.appendChild(root);
+    buildTabs();
+  }
+
+  /* ─────────── The tab bar, phones only ───────────
+     On a phone everything was behind the hamburger: one tap to open the
+     drawer, another to find the page. The five things actually used day
+     to day sit in a bar along the bottom instead, always visible, with
+     the current one lit. The drawer stays for the other thirteen. */
+  var TABS = [
+    ['Today.dc.html', 'Today', '◆'],
+    ['Reading List.dc.html', 'Reading', '▤'],
+    ['Journal.dc.html', 'Journal', '✎'],
+    ['Life Log.dc.html', 'Log', '◷'],
+    ['Weekly Review.dc.html', 'Review', '◈']
+  ];
+
+  function buildTabs() {
+    if (document.getElementById('hb-tabs')) return;
+    var here = currentFile();
+    var css = document.createElement('style');
+    css.textContent =
+      '#hb-tabs{position:fixed;left:0;right:0;bottom:0;z-index:2147482000;display:none;' +
+      'background:rgba(255,253,248,.97);border-top:1px solid #E4E2DD;' +
+      'padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));' +
+      '-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);}' +
+      '#hb-tabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;' +
+      'min-height:46px;justify-content:center;text-decoration:none;border-radius:12px;' +
+      'font:600 9.5px/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.03em;color:#8a8577;' +
+      '-webkit-tap-highlight-color:transparent;}' +
+      '#hb-tabs a .g{font-size:15px;line-height:1;}' +
+      '#hb-tabs a.on{color:#993C1D;background:#FBF2EE;}' +
+      '@media (max-width:640px){#hb-tabs{display:flex;}' +
+      '  body{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));}' +
+      // sync.js positions its pill and panel with inline styles, so lifting
+      // them clear of the tab bar takes !important — without it the pill
+      // sits on top of the Today tab.
+      '  #hub-sync{bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;}' +
+      '  #hub-sync-panel{bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;}}';
+    document.head.appendChild(css);
+
+    var bar = document.createElement('nav');
+    bar.id = 'hb-tabs';
+    bar.setAttribute('aria-label', 'Main sections');
+    TABS.forEach(function (t) {
+      var a = document.createElement('a');
+      a.href = t[0];
+      if (t[0] === here) { a.className = 'on'; a.setAttribute('aria-current', 'page'); }
+      a.innerHTML = '<span class="g"></span><span class="l"></span>';
+      a.firstChild.textContent = t[2];
+      a.lastChild.textContent = t[1];
+      bar.appendChild(a);
+    });
+    document.body.appendChild(bar);
   }
 
   if (document.readyState === 'loading') {

@@ -100,12 +100,39 @@
         txt += row('uid', u ? u.uid.slice(0, 10) + '…' : '—');
         txt += row('device rev', rev ? new Date(+rev).toLocaleString() : 'none');
         txt += extra;
+        var u = null; try { u = JSON.parse(localStorage.getItem('__sync_undo')); } catch (e) {}
+        txt += row('undo available', u && u.at ? new Date(u.at).toLocaleString() + ' (' + Object.keys(u.keys).length + ' keys)' : 'none');
+        var days = window.hubSync.backups();
+        txt += row('daily copies', days.length
+          ? days.map(function (d) { return d.day + ' (' + d.keys + ' keys, ' + d.kb + 'KB)'; }).join(', ')
+          : 'none yet');
         txt += row('last error', lastErr || 'none');
         p.textContent = txt;
         var btn = document.createElement('button');
         btn.textContent = 'Sync now';
         btn.style.cssText = 'margin-top:8px;margin-right:8px;font:600 11px "IBM Plex Mono",monospace;padding:6px 12px;border-radius:16px;border:1px solid #3B6D11;background:#3B6D11;color:#fff;cursor:pointer;';
         btn.onclick = function () { window.hubSync.syncNow(); };
+        var undo = document.createElement('button');
+        var uAt = 0;
+        try { uAt = (JSON.parse(localStorage.getItem('__sync_undo')) || {}).at || 0; } catch (e) {}
+        undo.textContent = uAt ? 'Undo last sync' : 'Nothing to undo';
+        undo.disabled = !uAt;
+        undo.style.cssText = 'margin-top:8px;margin-right:8px;font:600 11px "IBM Plex Mono",monospace;padding:6px 12px;' +
+          'border-radius:16px;border:1px solid ' + (uAt ? '#A32E27' : '#DAD7D0') + ';background:' +
+          (uAt ? '#FBF1F0' : '#fff') + ';color:' + (uAt ? '#A32E27' : '#B9B8B0') + ';cursor:' + (uAt ? 'pointer' : 'default') + ';';
+        undo.onclick = function () { window.hubSync.undoLastSync(); };
+        p.appendChild(undo);
+
+        window.hubSync.backups().slice().reverse().forEach(function (d) {
+          var r = document.createElement('button');
+          r.textContent = '⤺ ' + d.day;
+          r.title = 'Put back the copy kept on ' + d.day;
+          r.style.cssText = 'margin-top:8px;margin-right:8px;font:600 11px "IBM Plex Mono",monospace;padding:6px 12px;' +
+            'border-radius:16px;border:1px solid #B98900;background:#FFFBF0;color:#8a6600;cursor:pointer;';
+          r.onclick = function () { window.hubSync.restoreDay(d.day); };
+          p.appendChild(r);
+        });
+
         var cls = document.createElement('button');
         cls.textContent = 'Close';
         cls.style.cssText = 'margin-top:8px;font:600 11px "IBM Plex Mono",monospace;padding:6px 12px;border-radius:16px;border:1px solid #DAD7D0;background:#fff;color:#55564F;cursor:pointer;';
@@ -118,9 +145,14 @@
         docRef().get().then(function (snap) {
           if (!snap.exists) { render(row('cloud', 'NO DOC — never pushed')); return; }
           var d = snap.data() || {}; var store = d.store || {};
+          var mine = localSnapshot();
           var extra = row('cloud rev', d.updatedAt ? new Date(+d.updatedAt).toLocaleString() : '?');
           extra += row('cloud keys', Object.keys(store).length);
-          extra += row('cloud has library', store.ct_library_v1 ? ('yes (' + store.ct_library_v1.length + ' chars)') : 'NO');
+          extra += row('this device', Object.keys(mine).length + ' keys, ' + Math.round(sizeOf(mine) / 1024) + ' KB of 950');
+          extra += row('biggest', biggestKeys(mine).map(function (x) { return x.key + ' ' + x.kb + 'KB'; }).join(', '));
+          // the keys that differ are exactly the ones that have not made it across
+          var behind = Object.keys(mine).filter(function (k) { return store[k] !== mine[k]; });
+          extra += row('not yet in the cloud', behind.length ? behind.join(', ') : 'none — in step');
           render(extra);
         }).catch(function (e) {
           render(row('cloud', 'READ FAILED: ' + ((e && e.code) || (e && e.message) || e)));
@@ -137,29 +169,63 @@
     return;
   }
 
-  UI.set('connecting', 'Connecting…');
+  // Declared up here because the loader reports through them.
+  var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0, lastErr = '', cloudRead = false, touched = {};
 
   var SDK = '10.12.2';
   var BASE = 'https://www.gstatic.com/firebasejs/' + SDK + '/';
-  loadSeq([
+  var SDK_URLS = [
     BASE + 'firebase-app-compat.js',
     BASE + 'firebase-auth-compat.js',
     BASE + 'firebase-firestore-compat.js'
-  ], start);
+  ];
+  var booted = false, loading = false;
 
-  function loadSeq(urls, done) {
+  function boot() {
+    if (booted || loading) return;
+    loading = true;
+    UI.set('connecting', 'Connecting…');
+    loadSeq(SDK_URLS, function () { loading = false; booted = true; start(); },
+      function (url) {
+        loading = false;
+        lastErr = 'sdk: could not load ' + url;
+        console.error('[sync] giving up on', url, '— retrying when the network returns');
+        // A blocked or dropped SDK is not the same as being offline, and
+        // saying so is the difference between "wait" and "check your blocker".
+        UI.set('offline', navigator.onLine === false ? 'Offline' : 'Sync library blocked');
+      });
+  }
+  boot();
+
+  // A phone drops a request, sleeps a tab, or walks out of signal. Any of
+  // those used to kill syncing until a manual reload; now the moment the
+  // network or the tab comes back, we try again.
+  window.addEventListener('online', boot);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) boot(); });
+
+  // Each script gets a few goes with a widening gap before we give up.
+  function loadSeq(urls, done, fail) {
     var i = 0;
-    (function next() {
+    next();
+    function next() {
       if (i >= urls.length) return done();
+      one(urls[i], 0);
+    }
+    function one(url, attempt) {
       var s = document.createElement('script');
-      s.src = urls[i];
+      s.src = url + (attempt ? '?retry=' + attempt : '');
       s.onload = function () { i++; next(); };
-      s.onerror = function () { console.error('[sync] failed to load', urls[i]); UI.set('offline', 'Offline'); };
+      s.onerror = function () {
+        s.remove();
+        if (attempt < 2) {
+          console.warn('[sync] retrying', url, '(' + (attempt + 1) + ')');
+          setTimeout(function () { one(url, attempt + 1); }, 600 * Math.pow(2, attempt));
+        } else fail(url);
+      };
       document.head.appendChild(s);
-    })();
+    }
   }
 
-  var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0, lastErr = '';
 
   // Turn a Firebase error into a pill label that says what's actually wrong.
   // "permission-denied" is the big one: Firestore created in production mode
@@ -197,7 +263,14 @@
         return;
       }
       uid = u.uid;
-      window.hubSync.syncNow = function () { UI.set('saving', 'Saving…'); return pushNow(); };
+      window.hubSync.syncNow = function () {
+        UI.set('connecting', 'Checking…');
+        return docRef().get().then(function (snap) {
+          cloudRead = true;
+          if (applyIfNewer(snap)) { location.reload(); return; }  // the cloud was ahead
+          return pushNow();
+        }).catch(function (e) { fail('sync now', e); });
+      };
       hydrate();
     });
   }
@@ -211,6 +284,13 @@
       if (k && k.indexOf('__sync') !== 0) o[k] = localStorage.getItem(k);
     }
     return o;
+  }
+
+  function biggestKeys(store) {
+    return Object.keys(store)
+      .map(function (k) { return { key: k, kb: Math.round((store[k] || '').length / 1024) }; })
+      .sort(function (a, b) { return b.kb - a.kb; })
+      .slice(0, 4);
   }
 
   function applyToLocal(store) {
@@ -227,12 +307,41 @@
     var rev = String(data.updatedAt || '');
     var store = data.store || {};
     if (rev && rev === localStorage.getItem('__sync_rev')) return false; // already applied
+    keepUndo(store);
     applyingRemote = true;
     var changed = applyToLocal(store);
     localStorage.setItem('__sync_rev', rev);
     applyingRemote = false;
     return changed;
   }
+
+  /* Whatever a remote change is about to land on top of is kept here first,
+     so an arrival that turns out to be wrong is one tap away from being put
+     back. Only the keys actually about to change, and only if it is small
+     enough to be worth keeping. */
+  function keepUndo(store) {
+    try {
+      var prev = {}, n = 0;
+      Object.keys(store).forEach(function (k) {
+        var was = localStorage.getItem(k);
+        if (was !== null && was !== store[k]) { prev[k] = was; n += was.length; }
+      });
+      if (!n || n > 400000) return;
+      localStorage.setItem('__sync_undo', JSON.stringify({ at: Date.now(), keys: prev }));
+    } catch (e) {}
+  }
+
+  window.hubSync.undoLastSync = function () {
+    var u = null;
+    try { u = JSON.parse(localStorage.getItem('__sync_undo')); } catch (e) {}
+    if (!u || !u.keys) { alert('Nothing to undo — no sync has replaced anything on this device.'); return; }
+    var names = Object.keys(u.keys);
+    if (!confirm('Put back what this device held before the last sync?\n\n' + names.join(', ') +
+                 '\n\nfrom ' + new Date(u.at).toLocaleString())) return;
+    names.forEach(function (k) { localStorage.setItem(k, u.keys[k]); });  // patched → marks them touched
+    localStorage.removeItem('__sync_undo');
+    pushNow('undo').then(function () { location.reload(); });
+  };
 
   function syncedLabel() {
     lastSync = Date.now();
@@ -241,41 +350,162 @@
 
   function hydrate() {
     docRef().get().then(function (snap) {
+      cloudRead = true;                       // we know what the cloud holds
       if (snap.exists) {
         if (applyIfNewer(snap)) { location.reload(); return; }
       } else {
-        pushNow(); // first run for this account: seed the cloud from local
+        pushNow('seed'); // first run for this account: seed the cloud from local
       }
       watch();
       patch();
+      dailyBackup();      // once we know we are in step, keep today's copy
       syncedLabel();
     }).catch(function (e) {
+      // We could not read the cloud, so we must not write over it: this
+      // device's copy may be months behind. Listen and retry instead.
+      cloudRead = false;
       fail('hydrate', e);
       watch(); patch();
+      setTimeout(hydrate, 15000);
     });
   }
 
-  function pushNow() {
-    if (!uid) return Promise.resolve();
-    var rev = Date.now();
-    localStorage.setItem('__sync_rev', String(rev)); // our own write — don't echo-reload
-    UI.set('saving', 'Saving…');
-    return docRef().set({ store: localSnapshot(), updatedAt: rev })
-      .then(function () { syncedLabel(); })
-      .catch(function (e) { fail('push', e); });
+  var LIMIT = 950 * 1024;   // a Firestore document tops out at 1 MiB
+
+  function sizeOf(o) {
+    try { return new Blob([JSON.stringify(o)]).size; }
+    catch (e) { return JSON.stringify(o).length; }
   }
+
+  /* A push used to be: take everything this device holds and stamp it over
+     the cloud. That is how a phone carrying a week-old copy can erase a
+     laptop's evening of work. Now a push reads first and merges:
+
+       the cloud's copy,
+       + the keys this device actually edited since its last push,
+       + any key the cloud has never seen.
+
+     Nothing else of the cloud's is touched, so a stale device can only
+     ever affect what was typed into it. And if the cloud moved since we
+     last applied it, we take that first and let the reload re-push. */
+  function pushNow(reason) {
+    if (!uid) return Promise.resolve();
+    if (!cloudRead) {                        // see hydrate()
+      console.warn('[sync] holding the push back — this device has not read the cloud yet');
+      UI.set('offline', 'Waiting to read the cloud');
+      return Promise.resolve();
+    }
+    UI.set('saving', 'Saving…');
+    return docRef().get().then(function (snap) {
+      var d = (snap.exists && snap.data()) || {};
+      var base = d.store || {};
+      var cloudRev = String(d.updatedAt || '');
+      var mine = String(localStorage.getItem('__sync_rev') || '');
+
+      // The cloud has moved on since we last applied it — take it, don't
+      // paste over it. applyIfNewer reloads, and the reload pushes again.
+      if (cloudRev && mine && cloudRev !== mine && applyIfNewer(snap)) {
+        console.warn('[sync] the cloud moved first — pulling that in before pushing');
+        location.reload();
+        return;
+      }
+
+      var local = localSnapshot();
+      var merged = {}, k;
+      for (k in base) if (Object.prototype.hasOwnProperty.call(base, k)) merged[k] = base[k];
+      Object.keys(touched).forEach(function (key) {
+        if (touched[key] === 'del') delete merged[key];
+        else if (local[key] != null) merged[key] = local[key];
+      });
+      // additive only: anything the cloud has never held goes up as well
+      Object.keys(local).forEach(function (key) { if (!(key in merged)) merged[key] = local[key]; });
+
+      var bytes = sizeOf(merged);
+      if (bytes > LIMIT) {
+        lastErr = 'payload ' + Math.round(bytes / 1024) + ' KB — over the 1 MB document limit';
+        console.error('[sync] ' + lastErr, biggestKeys(merged));
+        UI.set('offline', 'Too big: ' + (bytes / 1048576).toFixed(2) + ' MB');
+        return;
+      }
+
+      var rev = Date.now();
+      localStorage.setItem('__sync_rev', String(rev)); // our own write — don't echo-reload
+      return docRef().set({ store: merged, updatedAt: rev }).then(function () {
+        touched = {};
+        syncedLabel();
+      });
+    }).catch(function (e) { fail('push' + (reason ? ' (' + reason + ')' : ''), e); });
+  }
+
+  /* ─────────── A copy a day ───────────
+     Kept on the device, under a __sync key, which means two things: the
+     cloud never sees it (so it costs nothing against the 1 MB document
+     limit) and an incoming sync can never overwrite it. That is the point
+     — the copy you want after a bad arrival is the one the arrival could
+     not touch. Three days, oldest dropped first. */
+  var DAILY_KEY = '__sync_daily', DAILY_KEEP = 3, DAILY_MAX = 700 * 1024;
+
+  function readDaily() {
+    try { var a = JSON.parse(localStorage.getItem(DAILY_KEY)); return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function writeDaily(list) {
+    try { localStorage.setItem(DAILY_KEY, JSON.stringify(list)); return true; }
+    catch (e) {                                   // out of room: drop the oldest and try again
+      if (list.length > 1) return writeDaily(list.slice(1));
+      console.warn('[sync] no room for a daily backup', e);
+      return false;
+    }
+  }
+
+  function dailyBackup() {
+    var day = new Date().toISOString().slice(0, 10);
+    var all = readDaily();
+    if (all.length && all[all.length - 1].day === day) return;   // today is already kept
+    var store = localSnapshot();
+    var bytes = sizeOf(store);
+    if (!Object.keys(store).length) return;
+    if (bytes > DAILY_MAX) {
+      console.warn('[sync] daily backup skipped — ' + Math.round(bytes / 1024) + ' KB is too much to keep locally');
+      return;
+    }
+    all.push({ day: day, at: Date.now(), store: store });
+    while (all.length > DAILY_KEEP) all.shift();
+    if (writeDaily(all)) console.log('[sync] kept a copy of ' + Object.keys(store).length + ' keys for ' + day);
+  }
+
+  window.hubSync.backups = function () {
+    return readDaily().map(function (b) {
+      return { day: b.day, at: new Date(b.at).toLocaleString(), keys: Object.keys(b.store).length,
+               kb: Math.round(sizeOf(b.store) / 1024) };
+    });
+  };
+
+  /* Put a day back. Additive by default: it restores the keys that day
+     held and leaves anything newer alone, because the usual reason to
+     reach for this is that one thing was lost, not that everything was. */
+  window.hubSync.restoreDay = function (day) {
+    var b = readDaily().filter(function (x) { return x.day === day; })[0];
+    if (!b) { alert('No backup kept for ' + day); return; }
+    var names = Object.keys(b.store);
+    if (!confirm('Put back ' + names.length + ' keys as they were on ' + b.day + '?\n\n' +
+                 names.join(', ') + '\n\nAnything you have changed since will be overwritten.')) return;
+    names.forEach(function (k) { localStorage.setItem(k, b.store[k]); });   // patched → marked as ours
+    pushNow('restore').then(function () { location.reload(); });
+  };
+
   function pushSoon() { clearTimeout(pushTimer); UI.set('saving', 'Saving…'); pushTimer = setTimeout(pushNow, 800); }
 
   function patch() {
     var setItem = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (k, v) {
       setItem(k, v);
-      if (!applyingRemote && String(k).indexOf('__sync') !== 0) pushSoon();
+      if (!applyingRemote && String(k).indexOf('__sync') !== 0) { touched[k] = 1; pushSoon(); }
     };
     var removeItem = localStorage.removeItem.bind(localStorage);
     localStorage.removeItem = function (k) {
       removeItem(k);
-      if (!applyingRemote) pushSoon();
+      if (!applyingRemote && String(k).indexOf('__sync') !== 0) { touched[k] = 'del'; pushSoon(); }
     };
   }
 
