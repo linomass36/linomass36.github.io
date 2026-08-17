@@ -13,6 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<script src="./anatomy-data.js"></script>
+<script src="./anatomy-core.js"></script>
 <script src="./reading-data.js"></script>
 <script src="./hub-data.js"></script>
 <style>
@@ -82,6 +84,10 @@
   .td-chip.tap { flex: 1; justify-content: center; min-height: 48px; font-size: 13px;
                  cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .td-chip.tap.on { border-color: #993C1D; background: #FBF2EE; color: #993C1D; }
+
+  .td-warn { border: 1px solid #E0CB98; background: #FBF6EA; color: #7d4c09;
+             border-radius: 12px; padding: 10px 13px; margin-bottom: 10px;
+             font-size: 13.5px; line-height: 1.5; }
 
   /* the study stepper: a subject, then how long */
   .td-study { display: flex; gap: 8px; margin-top: 10px; }
@@ -190,6 +196,25 @@
     </div>
     <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A6A79F; margin-top: 8px;">{{ studyLine }}</div>
   </div>
+
+  <!-- ─── the anatomy day ─── -->
+  <sc-if value="{{ hasAnatomy }}" hint-placeholder-val="{{ true }}">
+  <div class="td-card">
+    <div class="td-kicker"><b>Anatomy</b><span style="flex:1"></span><a href="Anatomy.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">closure log →</a></div>
+    <sc-if value="{{ anWarn }}" hint-placeholder-val="{{ false }}">
+      <div class="td-warn">{{ anWarnText }}</div>
+    </sc-if>
+    <div style="display: flex; gap: 8px;">
+      <sc-for list="{{ anTiers }}" as="t" hint-placeholder-count="4">
+        <button onClick="{{ t.pick }}" class="td-chip tap {{ t.cls }}">{{ t.label }}</button>
+      </sc-for>
+    </div>
+    <sc-if value="{{ anDeclared }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ anP0 }}" class="td-btn wide {{ anP0Cls }}" style="margin-top: 10px;">{{ anP0Label }}</button>
+    </sc-if>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A6A79F; margin-top: 8px;">{{ anLine }}</div>
+  </div>
+  </sc-if>
 
   <!-- ─── capture ─── -->
   <div class="td-card">
@@ -343,6 +368,13 @@ class Component extends DCLogic {
     return h;
   }
 
+  /* ── the anatomy day ────────────────────────────────────────────────────
+     Declaring the tier and ticking Phase 0 are the two things that have to be
+     possible from a phone; everything else about a block belongs on a desk.
+     Both go through anatomy-core.js, so this cannot disagree with the Anatomy
+     page about what a day is or when re-entry applies. */
+  anatomy() { return window.AnatomyCore || null; }
+
   saveJot() {
     const body = (this.state.jotText || '').trim();
     if (!body) return;
@@ -356,6 +388,44 @@ class Component extends DCLogic {
     this.setState({ jotText: '' });
     this.toast('✓ added to the journal');
     this.bump();
+  }
+
+  anatomyVals() {
+    const A = this.anatomy();
+    if (!A) return { hasAnatomy: false, anTiers: [], anDeclared: false, anLine: '',
+                     anP0: () => {}, anP0Cls: '', anP0Label: '', anWarn: false, anWarnText: '' };
+    const S = A.read();
+    const sum = A.summary(S);
+    const tiers = A.tiers();
+
+    const anTiers = Object.keys(tiers).map(k => ({
+      label: tiers[k].label,
+      cls: sum.tier === k ? 'on' : '',
+      pick: () => { A.setTier(k); this.toast('day set to ' + tiers[k].label.toLowerCase()); this.bump(); },
+    }));
+
+    // One line that answers "is there anything I have to do about this today".
+    let line;
+    if (!sum.declared) {
+      line = sum.openLoops + ' open · ' + sum.dueToday + ' retest' + (sum.dueToday === 1 ? '' : 's') + ' due';
+    } else if (sum.tier === 'rest') {
+      line = 'rest declared — nothing accrues today';
+    } else {
+      line = (sum.p0 ? 'Phase 0 done' : 'Phase 0 still open') + ' · ' + sum.openLoops + ' loops · '
+           + sum.dueToday + ' retest' + (sum.dueToday === 1 ? '' : 's') + ' due';
+    }
+
+    return {
+      hasAnatomy: true,
+      anTiers,
+      anDeclared: sum.declared && sum.tier !== 'rest',
+      anP0: () => { A.toggleP0(); this.bump(); },
+      anP0Cls: sum.p0 ? 'amber' : 'go',
+      anP0Label: sum.p0 ? 'Phase 0 done ✓' : 'Mark Phase 0 done',
+      anLine: line,
+      anWarn: sum.reentry,
+      anWarnText: 'Re-entry — ' + sum.gap + ' days since the last logged day. Run Core; that is a full day today.',
+    };
   }
 
   renderVals() {
@@ -469,6 +539,9 @@ class Component extends DCLogic {
       cancelNote: () => this.setState({ noteId: null, noteText: '', noteLoc: '' }),
 
       hasPrios: prios.length > 0, prios,
+
+      ...this.anatomyVals(),
+
       trainChips, subjects, studyBtns, studyLine,
       subject: this.state.subject,
       setSubject: (e) => this.setState({ subject: e.target.value }),

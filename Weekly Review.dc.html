@@ -13,6 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<script src="./anatomy-data.js"></script>
+<script src="./anatomy-core.js"></script>
 <script src="./hub-data.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -93,6 +95,41 @@
         </sc-if>
       </div>
     </div>
+
+    <!-- ANATOMY · the week the closure system had -->
+    <sc-if value="{{ hasAnat }}" hint-placeholder-val="{{ true }}">
+    <div style="border: 1px solid #E4E2DD; border-left: 3px solid #2F6F5B; border-radius: 14px; background: #FFFFFF; padding: 18px 20px; margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #2F6F5B;">Anatomy · the closure system</div>
+          <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">{{ anatHead }}</div>
+        </div>
+        <a href="Anatomy.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2F6F5B;">open the log →</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px;">
+        <sc-for list="{{ anatStats }}" as="a" hint-placeholder-count="4">
+          <div style="border: 1px solid #E4E2DD; border-radius: 11px; background: #FCFBF8; padding: 11px 12px;">
+            <div style="font-family: 'Newsreader', serif; font-size: 23px; font-weight: 500; line-height: 1; color: {{ a.color }};">{{ a.n }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-top: 5px;">{{ a.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 16px;">{{ tripHead }}</div>
+      <div style="margin-top: 6px;">
+        <sc-for list="{{ anatTrips }}" as="t" hint-placeholder-count="3">
+          <div style="display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid #F2F0EB; font-size: 13px; line-height: 1.55; color: {{ t.color }};">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ t.dot }}; flex: none; margin-top: 6px;"></span>
+            <span>{{ t.text }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ anatClean }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size: 13px; color: #345018; line-height: 1.55; padding: 10px 0;">Nothing tripped this week. The system is holding.</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
 
     <!-- STEP 2 · OPEN LOOPS + PEOPLE -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
@@ -255,6 +292,41 @@ class Component extends DCLogic {
   }
   setStep(key) { const w = this.readW(); const wk = this.wkKey(new Date()); const steps = Object.assign({}, w.steps); const s = Object.assign({}, steps[wk] || {}); s[key] = s[key] ? 0 : 1; steps[wk] = s; this.writeW({ steps }); this.bump(); }
 
+  /* ── the closure system's week ─────────────────────────────────────────
+     Read through anatomy-core.js, so the tripwires here are the same ones the
+     Anatomy page shows — not a second implementation that drifts. */
+  anatomyVals() {
+    const A = window.AnatomyCore;
+    if (!A) return { hasAnat: false, anatHead: '', anatStats: [], anatTrips: [], anatClean: false, tripHead: '' };
+    const S = A.read();
+    const sum = A.summary(S);
+    const w = A.weekStats(S);
+
+    // Nothing logged, ever: the panel would be seven zeros and a scolding.
+    if (!A.activeDays(S).length && !sum.closed) {
+      return {
+ hasAnat: false, anatHead: '', anatStats: [], anatTrips: [], anatClean: false, tripHead: '' };
+    }
+
+    const fired = A.tripwires(S).filter(t => t.fired);
+    return {
+      hasAnat: true,
+      anatHead: w.closed + ' block' + (w.closed === 1 ? '' : 's') + ' closed this week',
+      anatStats: [
+        { n: w.run + '/7', label: 'Days run', color: '#26271F' },
+        { n: (w.run ? Math.round(100 * w.p0kept / w.run) : 0) + '%', label: 'Phase 0 kept',
+          color: (w.run && w.p0kept / w.run < 0.8) ? '#A32E27' : '#2F6F5B' },
+        { n: w.draw + '/' + w.read, label: 'Draw vs read min',
+          color: (w.read > 0 && w.draw < w.read * 0.6) ? '#A32E27' : '#26271F' },
+        { n: String(sum.openLoops), label: 'Open loops',
+          color: sum.openLoops > 5 ? '#A32E27' : '#26271F' },
+      ],
+      tripHead: fired.length ? fired.length + ' tripwire' + (fired.length === 1 ? '' : 's') + ' fired' : 'Tripwires',
+      anatTrips: fired.map(t => ({ text: t.text, color: '#7d2721', dot: '#A32E27' })),
+      anatClean: fired.length === 0,
+    };
+  }
+
   renderVals() {
     this.state.tick;
     const data = window.HUB_DATA;
@@ -406,6 +478,8 @@ class Component extends DCLogic {
     const wb = stepBtn(steps.wins), lb = stepBtn(steps.loops), pb = stepBtn(steps.people);
 
     return {
+      ...this.anatomyVals(),
+
       todayLabel, dowLabel, ritualDone, reviewComplete, reviewWhen,
       todayItems, todayStripSummary,
       wins, winsEmpty, winsCountText, toggleWins: () => this.setStep('wins'), winsBtn: wb.btn, winsBorder: wb.border, winsColor: wb.color, winsBg: wb.bg,

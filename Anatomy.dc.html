@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./mobile.css">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#2F6F5B"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">AN</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<script src="./anatomy-data.js"></script>
+<script src="./anatomy-core.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes anIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+  .an-page { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A;
+             min-height: 100vh; padding-bottom: 80px; }
+  .an-wrap { max-width: 1080px; margin: 0 auto; padding: 20px 24px 0; }
+
+  .an-panel { border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF;
+              padding: 18px 20px; margin-top: 16px; animation: anIn .25s ease; }
+  .an-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em;
+                text-transform: uppercase; color: #2F6F5B; }
+  .an-h2 { font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin: 3px 0 0; }
+  .an-h3 { font-size: 13px; font-weight: 600; margin: 18px 0 8px; color: #26271F; }
+  .an-note { font-size: 12px; color: #77786F; line-height: 1.55; margin-top: 6px; }
+
+  /* Buttons. Everything is at least 44px because this gets used standing up
+     with a pen in the other hand. */
+  .an-btn { display: inline-flex; align-items: center; justify-content: center;
+            min-height: 44px; padding: 0 15px; border-radius: 11px; cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+            border: 1px solid #DAD7D0; background: #FFFFFF; color: #3f4038;
+            -webkit-tap-highlight-color: transparent; }
+  .an-btn.go { border-color: #2F6F5B; background: #2F6F5B; color: #fff; }
+  .an-btn.no { border-color: #C6A7A3; background: #FBF2F1; color: #A32E27; }
+  .an-btn.sel { border-color: #2F6F5B; background: #E7F1EC; color: #235448; font-weight: 600; }
+  .an-btn.wide { flex: 1; }
+
+  .an-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+  .an-field { display: flex; flex-direction: column; gap: 3px; }
+  .an-field label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .06em;
+                    text-transform: uppercase; color: #A6A79F; }
+  .an-field input, .an-field select {
+    min-height: 44px; font-size: 15px; padding: 0 10px; width: 108px;
+    border: 1px solid #DAD7D0; border-radius: 10px; background: #FCFBF8; color: #26271F; }
+  .an-field.grow { flex: 1; min-width: 150px; }
+  .an-field.grow input { width: 100%; }
+  textarea.an-ta { width: 100%; font-size: 15px; line-height: 1.5; padding: 11px 12px;
+                   border: 1px solid #DAD7D0; border-radius: 11px; background: #FCFBF8;
+                   color: #26271F; resize: vertical; font-family: inherit; }
+
+  /* The bench — six numbers that say whether the system is holding. */
+  .an-bench { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 14px; }
+  .an-stat { border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; padding: 12px 13px; }
+  .an-stat b { display: block; font-family: 'Newsreader', serif; font-size: 26px; font-weight: 500;
+               line-height: 1; color: #26271F; }
+  .an-stat span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
+                  letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-top: 6px; }
+  .an-stat.over { border-color: #E2B7B2; background: #FCF4F3; }
+  .an-stat.over b { color: #A32E27; }
+
+  .an-banner { border-radius: 12px; padding: 13px 17px; margin-top: 14px; font-size: 13.5px;
+               line-height: 1.6; border: 1px solid #E6D6B0; background: #FBF6EA; color: #6e5417; }
+  .an-banner.ok { border-color: #C9DDB0; background: #F6FAF0; color: #345018; }
+  .an-banner.bad { border-color: #E2B7B2; background: #FCF4F3; color: #7d2721; }
+
+  .an-task { border: 1px solid #ECEAE4; border-radius: 12px; background: #FCFBF8;
+             padding: 13px 15px; margin-top: 10px; }
+  .an-task.urgent { border-color: #E2B7B2; background: #FCF4F3; }
+  .an-task.done { border-color: #C9DDB0; background: #F6FAF0; }
+  .an-task-t { font-size: 14.5px; font-weight: 600; color: #26271F; line-height: 1.35; }
+  .an-task-d { font-size: 12.5px; color: #77786F; line-height: 1.55; margin-top: 3px; }
+
+  .an-empty { font-size: 13px; color: #8a8577; line-height: 1.55; padding: 14px 0 4px; font-style: italic; }
+
+  /* Regions and blocks */
+  .an-reg { border: 1px solid #E4E2DD; border-radius: 13px; background: #FFFFFF;
+            margin-top: 10px; overflow: hidden; }
+  .an-reghead { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px;
+                padding: 10px 16px; background: none; border: none; cursor: pointer; text-align: left;
+                -webkit-tap-highlight-color: transparent; }
+  .an-chev { font-size: 11px; color: #A6A79F; width: 12px; flex: none; }
+  .an-regname { flex: 1; font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500; color: #26271F; }
+  .an-regcount { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; white-space: nowrap; }
+  .an-regbody { padding: 0 16px 14px; }
+  .an-regnote { font-size: 12.5px; color: #77786F; line-height: 1.6; padding-bottom: 10px;
+                border-bottom: 1px solid #F2F0EB; }
+  .an-block { border-top: 1px solid #F2F0EB; padding: 13px 0; }
+  .an-block:first-of-type { border-top: none; }
+  .an-bname { font-size: 14.5px; font-weight: 600; color: #26271F; line-height: 1.35; }
+  .an-brel { font-size: 12px; color: #8a8577; line-height: 1.6; margin-top: 4px; }
+  .an-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .06em;
+              text-transform: uppercase; border-radius: 12px; padding: 4px 9px; white-space: nowrap;
+              border: 1px solid currentColor; }
+  .an-hist { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 8px; }
+  .an-retests { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
+  .an-retest { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #E4E2DD;
+               border-radius: 12px; padding: 5px 6px 5px 11px; font-family: 'IBM Plex Mono', monospace;
+               font-size: 11px; color: #77786F; background: #FCFBF8; }
+  .an-retest.due { border-color: #E6D6B0; background: #FBF6EA; color: #8a6314; }
+  .an-retest.pass { border-color: #C9DDB0; background: #F6FAF0; color: #345018; }
+  .an-retest.fail { border-color: #E2B7B2; background: #FCF4F3; color: #A32E27; }
+  .an-mini { min-height: 34px; padding: 0 10px; font-size: 12px; border-radius: 9px;
+             border: 1px solid #DAD7D0; background: #FFF; cursor: pointer;
+             font-family: 'IBM Plex Mono', monospace; }
+  .an-mini.go { border-color: #2F6F5B; color: #2F6F5B; }
+  .an-mini.no { border-color: #C6A7A3; color: #A32E27; }
+
+  /* Tripwires — a fired one has to look different from a quiet one at a glance. */
+  .an-trip { display: flex; gap: 11px; align-items: flex-start; padding: 10px 0;
+             border-top: 1px solid #F2F0EB; font-size: 13px; line-height: 1.55; color: #A6A79F; }
+  .an-trip:first-of-type { border-top: none; }
+  .an-trip.fired { color: #7d2721; font-weight: 500; }
+  .an-dot { width: 8px; height: 8px; border-radius: 50%; background: #DEDBD3;
+            flex: none; margin-top: 6px; }
+  .an-trip.fired .an-dot { background: #A32E27; }
+
+  .an-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 620px; }
+  .an-table th { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em;
+                 text-transform: uppercase; color: #A6A79F; font-weight: 400; text-align: left;
+                 padding: 8px 10px; border-bottom: 1px solid #E4E2DD; white-space: nowrap; }
+  .an-table td { padding: 9px 10px; border-bottom: 1px solid #F2F0EB; color: #3a3b34;
+                 font-variant-numeric: tabular-nums; }
+  .an-table tr.rest td { color: #A6A79F; font-style: italic; }
+  .an-table tr.miss td { background: #FCF7F6; }
+  .an-scroll { overflow-x: auto; margin-top: 10px; }
+
+  .an-timer { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 600;
+              color: #26271F; min-width: 92px; font-variant-numeric: tabular-nums; }
+  .an-timer.warn { color: #A32E27; }
+
+  .an-tabs { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+  .an-toast { position: fixed; left: 50%; bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+              transform: translateX(-50%); z-index: 950; max-width: 92vw;
+              font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 12px 20px;
+              border-radius: 22px; color: #FFFDF8; background: #2F6F5B;
+              box-shadow: 0 8px 26px rgba(26,27,26,.28); animation: anIn .2s ease; }
+
+  /* ── The phone ───────────────────────────────────────────────────────
+     Same decisions as the rest of the hub: one column, regions closed,
+     nothing under 44px, and the desktop prose out of the way. */
+  @media (max-width: 640px) {
+    .an-page { padding-bottom: 96px; }
+    .an-wrap { padding: 14px 14px 0; }
+    .an-top { padding-right: 62px; }
+    .an-top .an-btn { min-height: 44px !important; }
+    .an-bench { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .an-stat { padding: 10px 11px; }
+    .an-stat b { font-size: 22px; }
+    .an-field input, .an-field select { width: 100%; font-size: 16px; }
+    .an-field { flex: 1; min-width: 120px; }
+    .an-panel { padding: 15px 15px; }
+    .an-brel { display: none; }
+    .an-table { min-width: 520px; }
+  }
+</style>
+</helmet>
+
+<div class="an-page" data-screen-label="Anatomy">
+
+  <!-- TOP -->
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
+    <div class="an-wrap an-top" style="padding-top: 16px; padding-bottom: 14px;">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <a href="Hub.dc.html" class="an-btn" style="min-height: 36px; font-size: 11px; border-radius: 20px;">← Mission Control</a>
+        <span class="an-eyebrow">Block closure system</span>
+      </div>
+      <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 28px; line-height: 1.06;
+                 margin: 10px 0 0; letter-spacing: -.01em;">Closure log</h1>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 7px;">{{ dayStamp }}</div>
+
+      <div class="an-bench">
+        <sc-for list="{{ bench }}" as="s" hint-placeholder-count="6">
+          <div class="an-stat {{ s.cls }}"><b>{{ s.n }}</b><span>{{ s.label }}</span></div>
+        </sc-for>
+      </div>
+
+      <div class="an-tabs">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.pick }}" class="an-btn {{ t.cls }}">{{ t.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div class="an-wrap">
+
+    <!-- ══ TODAY ══ -->
+    <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ hasBanner }}" hint-placeholder-val="{{ false }}">
+        <div class="an-banner {{ bannerCls }}">{{ bannerText }}</div>
+      </sc-if>
+
+      <div class="an-panel">
+        <div class="an-eyebrow">1 · Declare the day</div>
+        <div class="an-h2">What are you running?</div>
+        <div class="an-row" style="margin-top: 12px;">
+          <sc-for list="{{ tierBtns }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.pick }}" class="an-btn wide {{ t.cls }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+        <div class="an-note">{{ tierDesc }}</div>
+      </div>
+
+      <sc-if value="{{ isRest }}" hint-placeholder-val="{{ false }}">
+        <div class="an-panel">
+          <div class="an-h2">Rest, declared</div>
+          <div class="an-note">Logged. No open loops accrue against you today and re-entry will not trigger. Close the laptop.</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ dayOpen }}" hint-placeholder-val="{{ true }}">
+        <!-- Phase 0 -->
+        <div class="an-panel">
+          <div class="an-eyebrow">2 · Phase 0 — the gate</div>
+          <div class="an-h2">Blank paper, before anything else</div>
+          <div class="an-note">This is the engine; everything else is optional by comparison.</div>
+
+          <sc-for list="{{ gateBlocks }}" as="g" hint-placeholder-count="1">
+            <div class="an-task {{ g.cls }}">
+              <div class="an-task-t">{{ g.name }}</div>
+              <div class="an-task-d">{{ g.hint }}</div>
+              <div class="an-row" style="margin-top: 10px;">
+                <div class="an-field"><label>Inventory %</label>
+                  <input type="number" min="0" max="100" inputmode="numeric" value="{{ g.inv }}" onChange="{{ g.setInv }}"></div>
+                <div class="an-field"><label>Topology %</label>
+                  <input type="number" min="0" max="100" inputmode="numeric" value="{{ g.topo }}" onChange="{{ g.setTopo }}"></div>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; padding-bottom: 12px;">closes at 80 / 80</span>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noGate }}" hint-placeholder-val="{{ false }}">
+            <div class="an-empty">No block waiting on a gate. If you studied one today, it appears here tomorrow.</div>
+          </sc-if>
+
+          <div class="an-task {{ randCls }}">
+            <div class="an-task-t">Random already-closed block</div>
+            <div class="an-task-d">{{ randHint }}</div>
+            <sc-if value="{{ canDraw }}" hint-placeholder-val="{{ true }}">
+              <div class="an-row" style="margin-top: 10px;">
+                <sc-if value="{{ hasRand }}" hint-placeholder-val="{{ false }}">
+                  <div class="an-field"><label>Score %</label>
+                    <input type="number" min="0" max="100" inputmode="numeric" value="{{ randScore }}" onChange="{{ setRandScore }}"></div>
+                </sc-if>
+                <button onClick="{{ pickRandom }}" class="an-btn">{{ drawLabel }}</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ randReopened }}" hint-placeholder-val="{{ false }}">
+              <div class="an-task-d" style="color: #A32E27; margin-top: 7px;">Under 70 — reopened and back in the active queue.</div>
+            </sc-if>
+          </div>
+
+          <div class="an-row" style="margin-top: 12px;">
+            <button onClick="{{ toggleP0 }}" class="an-btn {{ p0Cls }}">{{ p0Label }}</button>
+          </div>
+        </div>
+
+        <!-- Retests -->
+        <div class="an-panel">
+          <div class="an-eyebrow">3 · Retests due</div>
+          <div class="an-h2">{{ retestTitle }}</div>
+          <sc-for list="{{ retests }}" as="r" hint-placeholder-count="2">
+            <div class="an-task">
+              <div class="an-task-t">{{ r.name }}</div>
+              <div class="an-task-d">{{ r.hint }}</div>
+              <div class="an-row" style="margin-top: 10px;">
+                <button onClick="{{ r.pass }}" class="an-btn go">Passed</button>
+                <button onClick="{{ r.fail }}" class="an-btn no">Failed</button>
+                <button onClick="{{ r.push }}" class="an-btn">Push a day</button>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noRetests }}" hint-placeholder-val="{{ true }}">
+            <div class="an-empty">Nothing due.</div>
+          </sc-if>
+          <sc-if value="{{ hasDeferred }}" hint-placeholder-val="{{ false }}">
+            <div class="an-row" style="margin-top: 12px;">
+              <span class="an-note" style="flex: 1; min-width: 180px;">{{ deferredNote }}</span>
+              <button onClick="{{ spread }}" class="an-btn">{{ spreadLabel }}</button>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- Block of the day -->
+        <sc-if value="{{ showSession }}" hint-placeholder-val="{{ true }}">
+          <div class="an-panel">
+            <div class="an-eyebrow">4 · Block of the day</div>
+            <div class="an-h2">Construction</div>
+
+            <sc-if value="{{ blocked }}" hint-placeholder-val="{{ false }}">
+              <div class="an-banner bad">{{ blockedWhy }}</div>
+            </sc-if>
+            <sc-if value="{{ canStart }}" hint-placeholder-val="{{ true }}">
+              <div class="an-row" style="margin-top: 12px;">
+                <div class="an-field grow"><label>Pick a block</label>
+                  <select value="{{ pickId }}" onChange="{{ setPick }}">
+                    <option value="">— choose —</option>
+                    <sc-for list="{{ todoBlocks }}" as="b" hint-placeholder-count="5">
+                      <option value="{{ b.id }}">{{ b.label }}</option>
+                    </sc-for>
+                  </select></div>
+                <button onClick="{{ startBlock }}" class="an-btn go">Mark studied today</button>
+              </div>
+              <div class="an-note">Marking it studied opens a loop. It closes tomorrow morning, or not at all.</div>
+            </sc-if>
+
+            <div class="an-h3">Phase 2 &amp; 3 — read, then draw</div>
+            <div class="an-row">
+              <span class="an-timer {{ timerCls }}">{{ timerDisp }}</span>
+              <button onClick="{{ read30 }}" class="an-btn">Read 30</button>
+              <button onClick="{{ draw30 }}" class="an-btn">Draw 30</button>
+              <button onClick="{{ stopTimer }}" class="an-btn">Stop &amp; log</button>
+            </div>
+            <div class="an-note">Read is both screens open. Draw is both screens <em>closed</em> — that transition is the only part of this the page cannot check.</div>
+            <div class="an-row" style="margin-top: 12px;">
+              <div class="an-field"><label>Read min</label>
+                <input type="number" inputmode="numeric" value="{{ minRead }}" onChange="{{ setRead }}"></div>
+              <div class="an-field"><label>Draw min</label>
+                <input type="number" inputmode="numeric" value="{{ minDraw }}" onChange="{{ setDraw }}"></div>
+              <div class="an-field grow"><label>Red sheet ref</label>
+                <input type="text" value="{{ sheet }}" onChange="{{ setSheet }}" placeholder="e.g. 2026-08-02 nk6"></div>
+            </div>
+
+            <div class="an-h3">Phase 4 — cards</div>
+            <div class="an-row">
+              <div class="an-field"><label>New</label>
+                <input type="number" inputmode="numeric" value="{{ cardsNew }}" onChange="{{ setNew }}"></div>
+              <div class="an-field"><label>Rewritten</label>
+                <input type="number" inputmode="numeric" value="{{ cardsFixed }}" onChange="{{ setFixed }}"></div>
+              <div class="an-field"><label>Cut</label>
+                <input type="number" inputmode="numeric" value="{{ cardsCut }}" onChange="{{ setCut }}"></div>
+            </div>
+            <div class="an-note">Ceiling is about 15 new per block. Above that you are authoring, not closing.</div>
+          </div>
+        </sc-if>
+
+        <div class="an-panel">
+          <div class="an-eyebrow">5 · Close the day</div>
+          <div class="an-h2">One line worth remembering</div>
+          <textarea class="an-ta" rows="3" style="margin-top: 10px;" value="{{ dayNote }}" onChange="{{ setNote }}" placeholder="Anything worth remembering about today."></textarea>
+          <div class="an-note">Everything is saved as you go. Nothing else to press.</div>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <!-- ══ BLOCKS ══ -->
+    <sc-if value="{{ isBlocks }}" hint-placeholder-val="{{ false }}">
+      <div class="an-row" style="margin-top: 16px;">
+        <button onClick="{{ openAll }}" class="an-btn">Open all</button>
+        <button onClick="{{ shutAll }}" class="an-btn">Close all</button>
+        <span class="an-note" style="flex: 1; min-width: 160px;">{{ blocksSummary }}</span>
+      </div>
+      <sc-for list="{{ regions }}" as="r" hint-placeholder-count="7">
+        <div class="an-reg">
+          <button class="an-reghead" onClick="{{ r.toggle }}">
+            <span class="an-chev">{{ r.caret }}</span>
+            <span class="an-regname">{{ r.name }}</span>
+            <span class="an-regcount">{{ r.count }}</span>
+          </button>
+          <sc-if value="{{ r.open }}" hint-placeholder-val="{{ true }}">
+            <div class="an-regbody">
+              <div class="an-regnote">{{ r.note }}</div>
+              <sc-for list="{{ r.blocks }}" as="b" hint-placeholder-count="5">
+                <div class="an-block">
+                  <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="flex: 1; min-width: 0;">
+                      <div class="an-bname">{{ b.name }}</div>
+                      <div class="an-brel">{{ b.rel }}</div>
+                    </div>
+                    <span class="an-badge" style="color: {{ b.badgeColor }};">{{ b.badge }}</span>
+                  </div>
+                  <div class="an-row" style="margin-top: 10px;">
+                    <div class="an-field"><label>Studied</label>
+                      <input type="date" value="{{ b.studied }}" onChange="{{ b.setStudied }}"></div>
+                    <button onClick="{{ b.studyToday }}" class="an-btn">Today</button>
+                    <div class="an-field"><label>Inventory %</label>
+                      <input type="number" min="0" max="100" inputmode="numeric" value="{{ b.inv }}" onChange="{{ b.setInv }}"></div>
+                    <div class="an-field"><label>Topology %</label>
+                      <input type="number" min="0" max="100" inputmode="numeric" value="{{ b.topo }}" onChange="{{ b.setTopo }}"></div>
+                    <div class="an-field"><label>Cards repaired</label>
+                      <input type="number" inputmode="numeric" value="{{ b.cards }}" onChange="{{ b.setCards }}"></div>
+                  </div>
+                  <sc-if value="{{ b.isClosed }}" hint-placeholder-val="{{ false }}">
+                    <div class="an-retests">
+                      <sc-for list="{{ b.retests }}" as="rt" hint-placeholder-count="2">
+                        <span class="an-retest {{ rt.cls }}">{{ rt.label }}
+                          <button onClick="{{ rt.pass }}" class="an-mini go">✓</button>
+                          <button onClick="{{ rt.fail }}" class="an-mini no">✕</button>
+                        </span>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ b.hasHist }}" hint-placeholder-val="{{ false }}">
+                    <div class="an-hist">{{ b.hist }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <!-- ══ LOG ══ -->
+    <sc-if value="{{ isLog }}" hint-placeholder-val="{{ false }}">
+      <div class="an-panel">
+        <div class="an-eyebrow">This week</div>
+        <div class="an-h2">Seven days behind you</div>
+        <div class="an-bench" style="grid-template-columns: repeat(4, 1fr);">
+          <sc-for list="{{ weekStats }}" as="w" hint-placeholder-count="8">
+            <div class="an-stat {{ w.cls }}"><b>{{ w.n }}</b><span>{{ w.label }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="an-panel">
+        <div class="an-eyebrow">Tripwires</div>
+        <div class="an-h2">What the numbers are saying</div>
+        <div style="margin-top: 10px;">
+          <sc-for list="{{ trips }}" as="t" hint-placeholder-count="7">
+            <div class="an-trip {{ t.cls }}"><span class="an-dot"></span><span>{{ t.text }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="an-panel">
+        <div class="an-eyebrow">Anki repair queue</div>
+        <div class="an-h2">{{ repairLabel }}</div>
+        <div class="an-row" style="margin-top: 12px;">
+          <div class="an-field"><label>Repaired</label>
+            <input type="number" inputmode="numeric" value="{{ repaired }}" onChange="{{ setRepaired }}"></div>
+          <div class="an-field"><label>Day rollover</label>
+            <select value="{{ rollover }}" onChange="{{ setRollover }}">
+              <sc-for list="{{ rollOpts }}" as="o" hint-placeholder-count="8">
+                <option value="{{ o.v }}">{{ o.label }}</option>
+              </sc-for>
+            </select></div>
+        </div>
+        <div class="an-note">{{ rollNote }}</div>
+      </div>
+
+      <div class="an-panel">
+        <div class="an-eyebrow">Day log</div>
+        <div class="an-h2">Last 30 days run</div>
+        <div class="an-scroll">
+          <table class="an-table">
+            <tr><th>Date</th><th>Tier</th><th>P0</th><th>Read</th><th>Draw</th><th>New</th><th>Fixed</th><th>Cut</th><th>Sheet</th><th>Note</th></tr>
+            <sc-for list="{{ logRows }}" as="l" hint-placeholder-count="6">
+              <tr class="{{ l.cls }}"><td>{{ l.date }}</td><td>{{ l.tier }}</td><td>{{ l.p0 }}</td>
+                <td>{{ l.read }}</td><td>{{ l.draw }}</td><td>{{ l.cn }}</td><td>{{ l.cf }}</td><td>{{ l.cc }}</td>
+                <td>{{ l.sheet }}</td><td>{{ l.note }}</td></tr>
+            </sc-for>
+          </table>
+        </div>
+        <sc-if value="{{ noLog }}" hint-placeholder-val="{{ true }}">
+          <div class="an-empty">Nothing logged yet.</div>
+        </sc-if>
+      </div>
+
+      <div class="an-panel">
+        <div class="an-eyebrow">Data</div>
+        <div class="an-h2">What is stored, and where it came from</div>
+        <div class="an-scroll">
+          <table class="an-table" style="min-width: 380px;">
+            <sc-for list="{{ dataRows }}" as="d" hint-placeholder-count="4">
+              <tr class="{{ d.cls }}"><td style="color: #A6A79F; white-space: nowrap;">{{ d.k }}</td><td>{{ d.v }}</td></tr>
+            </sc-for>
+          </table>
+        </div>
+        <sc-if value="{{ hasImportNote }}" hint-placeholder-val="{{ false }}">
+          <div class="an-note">{{ importNote }}</div>
+        </sc-if>
+        <div class="an-note">This store syncs with the rest of the hub and is included in its backups. The standalone file it came from is left untouched.</div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div class="an-toast">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1400}}">
+/* ─────────────────────────────────────────────────────────────────────────
+   The closure log, ported into the hub.
+
+   Every rule lives in anatomy-core.js — what an open loop is, when a retest
+   falls due, whether you are in re-entry, which tripwires have fired. Today
+   and Weekly Review read the same module, so the three cannot drift apart.
+   This file is the screen: the day, the blocks, the log.
+   ───────────────────────────────────────────────────────────────────────── */
+class Component extends DCLogic {
+  get A() { return window.AnatomyCore; }
+
+  state = { tick: 0, view: 'today', pickId: '', shut: {}, toast: '',
+            timerEnd: 0, timerKind: '', timerTotal: 0, now: Date.now() };
+
+  componentDidMount() {
+    this._t = setInterval(() => { if (this.state.timerEnd) this.setState({ now: Date.now() }); }, 250);
+  }
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._toast); }
+
+  bump() { this.setState(s => ({ tick: s.tick + 1 })); }
+  toast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._toast);
+    this._toast = setTimeout(() => this.setState({ toast: '' }), 3200);
+  }
+  mut(fn) { this.A.mut(fn); this.bump(); }
+
+  /* ── actions ── */
+  setTier(k) { this.A.setTier(k); this.bump(); }
+  toggleP0() { this.A.toggleP0(); this.bump(); }
+  setDayF(k, v) { const A = this.A; this.mut(s => { A.dayRec(s, A.today(s))[k] = v; }); }
+  setDayNum(k, v) { const A = this.A; this.mut(s => { A.dayRec(s, A.today(s))[k] = +v || 0; }); }
+
+  setScore(id, k, v) {
+    const A = this.A;
+    this.mut(s => {
+      const t = A.today(s);
+      const b = A.blockRec(s, id);
+      b[k] = v;
+      if (b.inv !== '' && b.topo !== '') {
+        if (!b.gate) b.gate = t;
+        const reps = (b.reps || []).filter(r => r.date !== t);
+        reps.push({ date: t, inv: b.inv, topo: b.topo });
+        b.reps = reps;
+      } else {
+        b.gate = '';
+      }
+    });
+  }
+  setBlockF(id, k, v) {
+    const A = this.A;
+    this.mut(s => { A.blockRec(s, id)[k] = (k === 'cards') ? (+v || 0) : v; });
+  }
+
+  setRetest(id, k, v) {
+    const A = this.A;
+    this.mut(s => {
+      const b = A.blockRec(s, id);
+      b[k] = v;
+      // A failed D45 is not a bad mark, it is a reopening: the block goes back
+      // to studied-today with both retests cleared.
+      if (k === 'd45' && v === 'fail') {
+        b.inv = ''; b.topo = ''; b.gate = ''; b.studied = A.today(s);
+        b.d14 = ''; b.d45 = ''; b.d14due = ''; b.d45due = '';
+      }
+    });
+    this.toast(v === 'pass' ? '✓ retest passed' : 'reopened — back in the queue');
+  }
+  deferRetest(id, k, n) {
+    const A = this.A;
+    this.mut(s => {
+      const cur = A.dueDate(s, id, k);
+      if (!cur) return;
+      A.blockRec(s, id)[k + 'due'] = A.addDays(cur, n);
+    });
+  }
+  spread() {
+    const A = this.A;
+    this.mut(s => {
+      const t = A.today(s);
+      const per = A.inReentry(s) ? 3 : 6;
+      A.dueList(s).forEach((x, i) => {
+        A.blockRec(s, x.b.id)[x.k + 'due'] = A.addDays(t, Math.floor(i / per));
+      });
+    });
+    this.toast('spread over the coming days');
+  }
+
+  pickRandom() {
+    const A = this.A;
+    this.mut(s => {
+      const closed = A.allBlocks().filter(b => A.status(s, b.id) === 'closed');
+      if (!closed.length) return;
+      const d = A.dayRec(s, A.today(s));
+      const cur = d.rand ? A.findBlock(d.rand) : null;
+      const pool = cur ? closed.filter(b => b.regionId !== cur.regionId) : closed;
+      const from = pool.length ? pool : closed;
+      d.rand = from[Math.floor(Math.random() * from.length)].id;
+      d.randScore = '';
+    });
+  }
+  setRandScore(v) {
+    const A = this.A;
+    this.mut(s => {
+      const t = A.today(s);
+      const d = A.dayRec(s, t);
+      d.randScore = v;
+      // Under 70 and it is not closed any more — reopen it honestly.
+      if (v !== '' && parseFloat(v) < 70 && d.rand) {
+        const b = A.blockRec(s, d.rand);
+        b.inv = ''; b.topo = ''; b.gate = ''; b.studied = t;
+      }
+    });
+  }
+  startBlock() {
+    const A = this.A;
+    const id = this.state.pickId;
+    if (!id) { this.toast('choose a block first'); return; }
+    this.mut(s => { A.blockRec(s, id).studied = A.today(s); });
+    this.setState({ pickId: '' });
+    const b = A.findBlock(id);
+    this.toast('opened — ' + (b ? b.name : id));
+  }
+  setMeta(k, v) { this.mut(s => { s.meta[k] = +v || 0; }); }
+
+  /* ── timer ── */
+  startTimer(mins, kind) {
+    this.dropTimer();
+    this.setState({ timerKind: kind, timerTotal: mins, timerEnd: Date.now() + mins * 60000, now: Date.now() });
+  }
+  dropTimer() { this.setState({ timerEnd: 0, timerKind: '', timerTotal: 0 }); }
+  stopAndLog() {
+    const { timerEnd, timerKind, timerTotal } = this.state;
+    if (!timerEnd) return;
+    const left = Math.max(0, Math.round((timerEnd - Date.now()) / 60000));
+    this.dropTimer();
+    this.logMinutes(timerKind, Math.max(0, timerTotal - left));
+  }
+  logMinutes(kind, mins) {
+    if (!kind || !mins) return;
+    const A = this.A;
+    this.mut(s => {
+      const d = A.dayRec(s, A.today(s));
+      if (kind === 'read') d.minRead = (+d.minRead || 0) + mins;
+      else d.minDraw = (+d.minDraw || 0) + mins;
+    });
+  }
+
+  /* ── regions open/shut, phone-first ── */
+  isPhone() { try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; } }
+  regOpen(id) { const v = this.state.shut[id]; return v === undefined ? !this.isPhone() : !v; }
+  toggleReg(id) {
+    this.setState(st => {
+      const shut = Object.assign({}, st.shut);
+      shut[id] = this.regOpen(id);        // flip whatever it is showing now
+      return { shut };
+    });
+  }
+  setAllRegs(open) {
+    const shut = {};
+    this.A.regions().forEach(r => { shut[r.id] = !open; });
+    this.setState({ shut });
+  }
+
+  renderVals() {
+    this.state.tick;
+    const A = this.A;
+    const S = A.read();
+    const t = A.today(S);
+    const day = S.days[t] || Object.assign({}, A.DAY_DEF);
+    const TIERS = A.tiers();
+    const blocks = A.allBlocks();
+    const view = this.state.view;
+    const sum = A.summary(S);
+
+    // ── the bench ──
+    const open = A.openLoops(S);
+    const bench = [
+      { n: String(sum.openLoops), label: 'Open loops', cls: sum.openLoops > 5 ? 'over' : '' },
+      { n: sum.closed + '/' + sum.total, label: 'Closed', cls: '' },
+      { n: sum.p0Rate14 === null ? '—' : sum.p0Rate14 + '%', label: 'Phase 0 · 14d',
+        cls: (sum.p0Rate14 !== null && sum.p0Rate14 < 80) ? 'over' : '' },
+      { n: sum.d45Rate === null ? '—' : sum.d45Rate + '%', label: 'D45 held',
+        cls: (sum.d45Rate !== null && sum.d45Rate < 70) ? 'over' : '' },
+      { n: sum.daysSincePaper === null ? '—' : String(sum.daysSincePaper), label: 'Days since paper', cls: '' },
+      { n: sum.daysToGate === null ? '—' : String(sum.daysToGate), label: 'To thorax gate', cls: '' },
+    ];
+
+    const tabs = [['today', 'Today'], ['blocks', 'Blocks'], ['log', 'Log']].map(([k, label]) => ({
+      label, cls: view === k ? 'sel' : '', pick: () => this.setState({ view: k }),
+    }));
+
+    // ── re-entry / resume ──
+    const gap = A.gapDays(S);
+    const reentry = sum.reentry;
+    let hasBanner = false, bannerCls = '', bannerText = '';
+    if (reentry) {
+      hasBanner = true; bannerCls = '';
+      bannerText = 'Re-entry — ' + sum.gap + ' days since the last logged day. No new blocks for two days, and overdue '
+        + 'retests are capped at three. Any block studied but never scored is stale now: re-study it at half depth '
+        + 'rather than scoring it from memory. Run Core today — that is a full day by this system\'s standards.';
+    } else if (gap >= 1 && gap < 3 && A.lastActive(S)) {
+      hasBanner = true; bannerCls = 'ok';
+      bannerText = gap + ' day' + (gap > 1 ? 's' : '') + ' since the last logged day. Normal resume — nothing has decayed.';
+    }
+
+    // ── tiers ──
+    const tierBtns = Object.keys(TIERS).map(k => ({
+      label: TIERS[k].label, cls: day.tier === k ? 'sel' : '', pick: () => this.setTier(k),
+    }));
+    const tierDesc = day.tier ? TIERS[day.tier].desc : 'Pick a tier to open the day.';
+    const isRest = day.tier === 'rest';
+    const dayOpen = !!day.tier && !isRest;
+
+    // ── Phase 0: blocks studied on an earlier day are the ones with a gate to clear ──
+    const gateBlocks = open
+      .filter(b => { const r = A.blockRec(S, b.id); return r.studied && r.studied < t; })
+      .map(b => {
+        const r = A.blockRec(S, b.id);
+        const st = A.status(S, b.id);
+        return {
+          name: b.name + (st === 'stale' ? ' — stale' : ''),
+          cls: st === 'stale' ? 'urgent' : '',
+          hint: st === 'stale'
+            ? 'Studied ' + A.daysBetween(r.studied, t) + ' days ago and never scored. Re-study at half depth today, then score tomorrow. Don\'t score it from memory now.'
+            : 'Redraw cold, then score against Moore\'s.',
+          inv: r.inv, topo: r.topo,
+          setInv: (e) => this.setScore(b.id, 'inv', e.target.value),
+          setTopo: (e) => this.setScore(b.id, 'topo', e.target.value),
+        };
+      });
+
+    const closedBlocks = blocks.filter(b => A.status(S, b.id) === 'closed');
+    const randBlock = day.rand ? A.findBlock(day.rand) : null;
+    const randUnder = day.randScore !== '' && parseFloat(day.randScore) < 70;
+
+    // ── retests ──
+    const due = A.dueList(S);
+    const cap = sum.retestCap;
+    const shown = due.slice(0, cap);
+    const deferredN = due.length - shown.length;
+    const retests = shown.map(x => ({
+      name: x.b.name + ' · ' + x.k.toUpperCase(),
+      hint: x.b.region + ' — redraw cold. The bar is about 70/70; you are detecting collapse, not imperfection.',
+      pass: () => this.setRetest(x.b.id, x.k, 'pass'),
+      fail: () => this.setRetest(x.b.id, x.k, 'fail'),
+      push: () => this.deferRetest(x.b.id, x.k, 1),
+    }));
+
+    // ── block of the day ──
+    const blocked = sum.openLoops > 5 || reentry;
+    const todoBlocks = [];
+    A.regions().forEach(r => r.blocks.forEach(b => {
+      if (A.status(S, b.id) === 'todo') todoBlocks.push({ id: b.id, label: r.name + ' — ' + b.name });
+    }));
+
+    // ── the timer ──
+    const left = this.state.timerEnd ? Math.max(0, this.state.timerEnd - this.state.now) : 0;
+    if (this.state.timerEnd && left <= 0) {
+      // Fires once: timerEnd is cleared before the log lands.
+      const kind = this.state.timerKind, total = this.state.timerTotal;
+      setTimeout(() => {
+        this.dropTimer();
+        this.logMinutes(kind, total);
+        this.toast(kind === 'read' ? 'Read block done — close both screens before you draw.'
+                                   : 'Draw block done — open the books and correct in red.');
+      }, 0);
+    }
+    const timerDisp = String(Math.floor(left / 60000)).padStart(2, '0') + ':'
+                    + String(Math.floor(left % 60000 / 1000)).padStart(2, '0');
+
+    // ── regions ──
+    const badgeColor = { todo: '#A6A79F', open: '#854F0B', closed: '#2F6F5B', repeat: '#993C1D', stale: '#A32E27' };
+    const regions = A.regions().map(r => {
+      const doneN = r.blocks.filter(b => A.status(S, b.id) === 'closed').length;
+      const isOpen = this.regOpen(r.id);
+      return {
+        name: r.name, note: r.note, count: doneN + '/' + r.blocks.length + ' closed',
+        open: isOpen, caret: isOpen ? '▾' : '▸', toggle: () => this.toggleReg(r.id),
+        blocks: r.blocks.map(b => {
+          const rec = A.blockRec(S, b.id);
+          const st = A.status(S, b.id);
+          const cd = A.closedDate(S, b.id);
+          const label = { todo: 'not started', open: 'open loop', closed: 'closed ' + cd,
+                          repeat: 'repeat it', stale: 'stale — restudy' }[st];
+          return {
+            name: b.name, rel: b.rel, badge: label, badgeColor: badgeColor[st],
+            studied: rec.studied, inv: rec.inv, topo: rec.topo, cards: rec.cards || 0,
+            setStudied: (e) => this.setBlockF(b.id, 'studied', e.target.value),
+            studyToday: () => this.setBlockF(b.id, 'studied', t),
+            setInv: (e) => this.setScore(b.id, 'inv', e.target.value),
+            setTopo: (e) => this.setScore(b.id, 'topo', e.target.value),
+            setCards: (e) => this.setBlockF(b.id, 'cards', e.target.value),
+            isClosed: !!cd,
+            retests: ['d14', 'd45'].map(k => {
+              const dd = A.dueDate(S, b.id, k);
+              const v = rec[k];
+              const cls = v === 'pass' ? 'pass' : v === 'fail' ? 'fail' : (dd && dd <= t ? 'due' : '');
+              const lab = v === 'pass' ? 'passed' : v === 'fail' ? 'failed' : (dd && dd <= t ? 'due now' : 'due ' + dd);
+              return { cls, label: k.toUpperCase() + ' · ' + lab,
+                       pass: () => this.setRetest(b.id, k, 'pass'),
+                       fail: () => this.setRetest(b.id, k, 'fail') };
+            }),
+            hasHist: !!(rec.reps && rec.reps.length),
+            hist: 'Attempts: ' + (rec.reps || []).map(x => x.date + ' · ' + x.inv + '/' + x.topo).join('   '),
+          };
+        }),
+      };
+    });
+
+    // ── the week, and the tripwires ──
+    const w = A.weekStats(S);
+    const weekStats = [
+      { n: String(w.closed), label: 'Blocks closed', cls: '' },
+      { n: w.run + '/7', label: 'Days run', cls: '' },
+      { n: (w.run ? Math.round(100 * w.p0kept / w.run) : 0) + '%', label: 'Phase 0 kept', cls: '' },
+      { n: String(w.read), label: 'Read min', cls: '' },
+      { n: String(w.draw), label: 'Draw min', cls: (w.draw < w.read && w.read > 0) ? 'over' : '' },
+      { n: String(w.cardsNew), label: 'New cards', cls: '' },
+      { n: String(w.cardsFixed), label: 'Rewritten', cls: '' },
+      { n: String(w.cardsCut), label: 'Cut', cls: '' },
+    ];
+    const trips = A.tripwires(S).map(x => ({ cls: x.fired ? 'fired' : '', text: x.text }));
+
+    // ── the log table ──
+    const logRows = Object.keys(S.days).filter(d => S.days[d].tier).sort().reverse().slice(0, 30).map(d => {
+      const x = S.days[d];
+      return {
+        cls: x.tier === 'rest' ? 'rest' : (!x.p0 ? 'miss' : ''),
+        date: d, tier: (TIERS[x.tier] || {}).label || x.tier,
+        p0: x.tier === 'rest' ? '—' : (x.p0 ? '✓' : '✕'),
+        read: x.minRead || 0, draw: x.minDraw || 0,
+        cn: x.cardsNew || 0, cf: x.cardsFixed || 0, cc: x.cardsCut || 0,
+        sheet: x.sheet || '', note: (x.note || '').slice(0, 40),
+      };
+    });
+
+    const rep = S.meta.repaired || 0;
+    const total = A.repairTotal();
+    const attempts = Object.values(S.blocks).reduce((n, b) => n + ((b.reps || []).length), 0);
+    const orphanN = Object.keys(S.orphans || {}).length;
+    const dataRows = [
+      { k: 'Schema', v: 'v' + S.schema + ' · ' + S.app, cls: '' },
+      { k: 'Last saved', v: S.savedAt ? S.savedAt.replace('T', ' ').slice(0, 16) : '—', cls: '' },
+      { k: 'Records', v: Object.keys(S.blocks).length + ' blocks · ' + Object.keys(S.days).length + ' days · ' + attempts + ' scored attempts', cls: '' },
+    ];
+    if (orphanN) {
+      dataRows.push({ k: 'Parked', cls: 'miss',
+        v: orphanN + ' record' + (orphanN > 1 ? 's' : '') + ' whose block id is not in this build — kept, not deleted' });
+    }
+
+    let importNote = '';
+    if (A.importedFrom()) importNote = 'Adopted on first run from ' + A.importedFrom() + ', which was left in place.';
+    if (A.migrationNote()) importNote = (importNote ? importNote + ' ' : '') + 'Upgraded on load: ' + A.migrationNote() + '.';
+
+    return {
+      dayStamp: 'Study day ' + t + ' · rollover ' + String(A.rollover(S)).padStart(2, '0') + ':00 · clock ' + A.clockNow(),
+      bench, tabs,
+      isToday: view === 'today', isBlocks: view === 'blocks', isLog: view === 'log',
+
+      hasBanner, bannerCls, bannerText,
+      tierBtns, tierDesc, isRest, dayOpen,
+
+      gateBlocks, noGate: gateBlocks.length === 0,
+      randCls: day.randScore !== '' ? 'done' : '',
+      randHint: !closedBlocks.length ? 'Starts once something is closed.'
+        : (!day.rand ? 'One older block, different region, redrawn cold. Under 70% and it goes back in the queue.'
+                     : (randBlock ? randBlock.region + ' — ' + randBlock.name : day.rand)),
+      canDraw: closedBlocks.length > 0, hasRand: !!day.rand,
+      drawLabel: day.rand ? 'Draw another' : 'Draw one',
+      randScore: day.randScore, randReopened: randUnder,
+      setRandScore: (e) => this.setRandScore(e.target.value),
+      pickRandom: () => this.pickRandom(),
+      toggleP0: () => this.toggleP0(),
+      p0Cls: day.p0 ? 'sel' : 'go',
+      p0Label: day.p0 ? 'Phase 0 done' : 'Mark Phase 0 done',
+
+      retestTitle: due.length ? due.length + ' waiting' : 'Nothing waiting',
+      retests, noRetests: due.length === 0,
+      hasDeferred: deferredN > 0,
+      deferredNote: deferredN + ' more held back so today stays doable.',
+      spreadLabel: 'Spread at ' + cap + ' a day',
+      spread: () => this.spread(),
+
+      showSession: day.tier !== 'core',
+      blocked, canStart: !blocked,
+      blockedWhy: reentry ? 'Re-entry: no new block today. Clear the gate and the retests.'
+                          : 'Six or more open loops. No new block until they clear.',
+      todoBlocks, pickId: this.state.pickId,
+      setPick: (e) => this.setState({ pickId: e.target.value }),
+      startBlock: () => this.startBlock(),
+
+      timerDisp, timerCls: (left > 0 && left < 60000) ? 'warn' : '',
+      read30: () => this.startTimer(30, 'read'),
+      draw30: () => this.startTimer(30, 'draw'),
+      stopTimer: () => this.stopAndLog(),
+
+      minRead: day.minRead, minDraw: day.minDraw, sheet: day.sheet,
+      cardsNew: day.cardsNew, cardsFixed: day.cardsFixed, cardsCut: day.cardsCut,
+      setRead: (e) => this.setDayNum('minRead', e.target.value),
+      setDraw: (e) => this.setDayNum('minDraw', e.target.value),
+      setSheet: (e) => this.setDayF('sheet', e.target.value),
+      setNew: (e) => this.setDayNum('cardsNew', e.target.value),
+      setFixed: (e) => this.setDayNum('cardsFixed', e.target.value),
+      setCut: (e) => this.setDayNum('cardsCut', e.target.value),
+      dayNote: day.note || '', setNote: (e) => this.setDayF('note', e.target.value),
+
+      regions, blocksSummary: sum.closed + ' of ' + sum.total + ' closed · ' + sum.openLoops + ' open',
+      openAll: () => this.setAllRegs(true), shutAll: () => this.setAllRegs(false),
+
+      weekStats, trips, logRows, noLog: logRows.length === 0,
+      repaired: rep,
+      repairLabel: rep + ' / ' + total + ' repaired — ' + (total ? Math.round(100 * rep / total) : 0) + '%',
+      setRepaired: (e) => this.setMeta('repaired', e.target.value),
+      rollover: A.rollover(S),
+      rollOpts: [0, 1, 2, 3, 4, 5, 6, 7].map(v => ({ v, label: String(v).padStart(2, '0') + ':00' })),
+      setRollover: (e) => this.setMeta('rollover', e.target.value),
+      rollNote: 'Clock says ' + A.clockNow() + '. Everything you log right now goes to ' + t + '.',
+      dataRows, importNote, hasImportNote: !!importNote,
+
+      hasToast: !!this.state.toast, toast: this.state.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./mobile.css">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#A8761F"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">GB</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500&display=swap" rel="stylesheet">
+<script src="./grind-data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; }
+  input, select, button, textarea { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  @keyframes gbIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+  .gb-page { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A;
+             min-height: 100vh; padding-bottom: 84px; }
+  .gb-wrap { max-width: 1080px; margin: 0 auto; padding: 20px 24px 0; }
+
+  .gb-panel { border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF;
+              padding: 18px 20px; margin-top: 16px; animation: gbIn .25s ease; }
+  .gb-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em;
+                text-transform: uppercase; color: #A8761F; }
+  .gb-h2 { font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin: 3px 0 0; }
+  .gb-note { font-size: 12px; color: #77786F; line-height: 1.55; margin-top: 6px; }
+
+  .gb-btn { display: inline-flex; align-items: center; justify-content: center;
+            min-height: 44px; padding: 0 15px; border-radius: 11px; cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+            border: 1px solid #DAD7D0; background: #FFFFFF; color: #3f4038;
+            -webkit-tap-highlight-color: transparent; }
+  .gb-btn.go { border-color: #A8761F; background: #A8761F; color: #fff; }
+  .gb-btn.sel { border-color: #A8761F; background: #FAF3E6; color: #7d5713; font-weight: 600; }
+  .gb-btn.done { border-color: #C9DDB0; background: #F1F7E9; color: #345018; }
+  .gb-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  /* The week: a ring of sessions, not a date. */
+  .gb-weekbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+  .gb-wknum { font-family: 'Newsreader', serif; font-size: 34px; font-weight: 500; line-height: 1; color: #26271F; }
+  .gb-wktag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em;
+              text-transform: uppercase; border-radius: 12px; padding: 4px 10px;
+              border: 1px solid currentColor; }
+  .gb-pips { display: flex; gap: 4px; }
+  .gb-pip { width: 26px; height: 8px; border-radius: 3px; background: #E7E4DE; }
+  .gb-pip.on { background: #A8761F; }
+  .gb-pip.now { background: #26271F; }
+
+  .gb-days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .gb-day { flex: 1; min-width: 62px; min-height: 56px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px; border-radius: 11px;
+            border: 1px solid #E4E2DD; background: #FFFFFF; cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #55564F;
+            -webkit-tap-highlight-color: transparent; }
+  .gb-day.on { border-color: #A8761F; background: #FAF3E6; color: #7d5713; font-weight: 600; }
+  .gb-day.today { box-shadow: inset 0 0 0 2px #26271F; }
+  .gb-day small { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #A6A79F; }
+
+  /* The timeline */
+  .gb-slot { display: grid; grid-template-columns: 96px 4px 1fr; gap: 12px; padding: 9px 0;
+             border-top: 1px solid #F2F0EB; align-items: start; }
+  .gb-slot:first-of-type { border-top: none; }
+  .gb-time { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A6A79F;
+             white-space: nowrap; padding-top: 2px; }
+  .gb-bar { width: 4px; border-radius: 2px; background: #E4E2DD; align-self: stretch; min-height: 20px; }
+  .gb-slot.k-train .gb-bar { background: #A8761F; }
+  .gb-slot.k-deep  .gb-bar { background: #2E6A86; }
+  .gb-slot.k-work  .gb-bar { background: #8a8577; }
+  .gb-slot.k-rest  .gb-bar { background: #C9DDB0; }
+  .gb-slot.k-people .gb-bar { background: #993C1D; }
+  .gb-slot.k-faith .gb-bar { background: #6E4B8A; }
+  .gb-slot.k-upkeep .gb-bar { background: #DEDBD3; }
+  .gb-label { font-size: 14px; color: #26271F; line-height: 1.35; }
+  .gb-sub { font-size: 12px; color: #8a8577; line-height: 1.5; margin-top: 2px; }
+
+  /* Checklists, grouped by the slot they belong to */
+  .gb-grp { border: 1px solid #ECEAE4; border-radius: 12px; background: #FCFBF8;
+            margin-top: 10px; overflow: hidden; }
+  .gb-grph { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px;
+             padding: 8px 14px; background: none; border: none; cursor: pointer; text-align: left;
+             font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #55564F;
+             -webkit-tap-highlight-color: transparent; }
+  .gb-grph span:first-child { flex: 1; }
+  .gb-cnt { font-size: 11px; color: #A6A79F; }
+  .gb-cnt.part { color: #A8761F; }
+  .gb-cnt.all { color: #3B6D11; }
+  .gb-item { display: flex; gap: 11px; align-items: center; min-height: 46px; padding: 4px 14px;
+             border-top: 1px solid #F2F0EB; cursor: pointer; }
+  .gb-item input { width: 20px; height: 20px; flex: none; accent-color: #A8761F; cursor: pointer; }
+  .gb-item .lbl { flex: 1; font-size: 13.5px; color: #26271F; line-height: 1.35; }
+  .gb-item.done .lbl { color: #9a9b93; text-decoration: line-through; }
+  .gb-item .sets { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; white-space: nowrap; }
+
+  .gb-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+  .gb-table th { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em;
+                 text-transform: uppercase; color: #A6A79F; font-weight: 400; text-align: left;
+                 padding: 8px 10px; border-bottom: 1px solid #E4E2DD; }
+  .gb-table td { padding: 10px; border-bottom: 1px solid #F2F0EB; color: #3a3b34; }
+  .gb-table tr.dl td { background: #FBF6EA; }
+  .gb-table input[type="checkbox"] { width: 20px; height: 20px; accent-color: #A8761F; }
+  .gb-table input[type="text"] { min-height: 40px; width: 100%; font-size: 14px; padding: 0 9px;
+                                 border: 1px solid #DAD7D0; border-radius: 8px; background: #FCFBF8; }
+  .gb-scroll { overflow-x: auto; margin-top: 10px; }
+
+  .gb-ex { border: 1px solid #ECEAE4; border-radius: 12px; background: #FCFBF8;
+           padding: 12px 15px; margin-top: 10px; }
+  .gb-exh { display: flex; justify-content: space-between; gap: 10px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A8761F;
+            letter-spacing: .06em; text-transform: uppercase; }
+  .gb-exrow { padding: 8px 0; border-top: 1px solid #F2F0EB; }
+  .gb-exrow:first-of-type { border-top: none; }
+  .gb-exn { font-size: 13.5px; color: #26271F; }
+  .gb-exs { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A8761F; }
+  .gb-exd { font-size: 12px; color: #8a8577; line-height: 1.5; margin-top: 2px; }
+
+  .gb-toast { position: fixed; left: 50%; bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+              transform: translateX(-50%); z-index: 950; max-width: 92vw;
+              font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 12px 20px;
+              border-radius: 22px; color: #FFFDF8; background: #A8761F;
+              box-shadow: 0 8px 26px rgba(26,27,26,.28); animation: gbIn .2s ease; }
+
+  @media (max-width: 640px) {
+    .gb-page { padding-bottom: 96px; }
+    .gb-wrap { padding: 14px 14px 0; }
+    .gb-top { padding-right: 62px; }
+    .gb-panel { padding: 15px 15px; }
+    .gb-slot { grid-template-columns: 74px 4px 1fr; gap: 9px; }
+    .gb-time { font-size: 11px; }
+    .gb-day { min-width: 40px; }
+    .gb-table { min-width: 460px; }
+  }
+</style>
+</helmet>
+
+<div class="gb-page" data-screen-label="Grind">
+
+  <div style="border-bottom: 1px solid #E4E2DD; background: rgba(247,245,241,.92);">
+    <div class="gb-wrap gb-top" style="padding-top: 16px; padding-bottom: 14px;">
+      <div class="gb-row">
+        <a href="Hub.dc.html" class="gb-btn" style="min-height: 44px; font-size: 11px; border-radius: 20px;">← Mission Control</a>
+        <span class="gb-eyebrow">Nine-week block</span>
+      </div>
+      <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 28px; line-height: 1.06;
+                 margin: 10px 0 0; letter-spacing: -.01em;">Grind board</h1>
+
+      <div class="gb-weekbar">
+        <span class="gb-wknum">{{ weekLabel }}</span>
+        <sc-if value="{{ hasWkTag }}" hint-placeholder-val="{{ false }}">
+          <span class="gb-wktag" style="color: {{ wkTagColor }};">{{ wkTag }}</span>
+        </sc-if>
+        <div class="gb-pips">
+          <sc-for list="{{ pips }}" as="p" hint-placeholder-count="9">
+            <span class="gb-pip {{ p.cls }}" title="{{ p.title }}"></span>
+          </sc-for>
+        </div>
+        <span style="flex: 1;"></span>
+        <button onClick="{{ prevWeek }}" class="gb-btn">‹</button>
+        <button onClick="{{ nextWeek }}" class="gb-btn">›</button>
+      </div>
+      <div class="gb-note">{{ weekLine }}</div>
+
+      <sc-if value="{{ weekDone }}" hint-placeholder-val="{{ false }}">
+        <div class="gb-row" style="margin-top: 12px;">
+          <button onClick="{{ advance }}" class="gb-btn go wide">{{ advanceLabel }}</button>
+        </div>
+      </sc-if>
+
+      <div class="gb-row" style="margin-top: 12px;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+          <button onClick="{{ t.pick }}" class="gb-btn {{ t.cls }}">{{ t.label }}</button>
+        </sc-for>
+        <span style="flex: 1;"></span>
+        <sc-for list="{{ modes }}" as="m" hint-placeholder-count="2">
+          <button onClick="{{ m.pick }}" class="gb-btn {{ m.cls }}">{{ m.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div class="gb-wrap">
+
+    <!-- ══ DAY ══ -->
+    <sc-if value="{{ isDay }}" hint-placeholder-val="{{ true }}">
+      <div class="gb-days">
+        <sc-for list="{{ dayBtns }}" as="d" hint-placeholder-count="7">
+          <button onClick="{{ d.pick }}" class="gb-day {{ d.cls }}">{{ d.d }}<small>{{ d.mark }}</small></button>
+        </sc-for>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">{{ dayShift }}</div>
+        <div class="gb-h2">{{ dayTitle }}</div>
+        <div class="gb-note">{{ dayFocus }}</div>
+        <div class="gb-row" style="margin-top: 12px;">
+          <button onClick="{{ toggleSession }}" class="gb-btn {{ sessionCls }} wide">{{ sessionLabel }}</button>
+        </div>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">The shape of it</div>
+        <div class="gb-h2">{{ slotCount }}</div>
+        <div style="margin-top: 12px;">
+          <sc-for list="{{ slots }}" as="s" hint-placeholder-count="12">
+            <div class="gb-slot k-{{ s.kind }}">
+              <span class="gb-time">{{ s.time }}</span>
+              <span class="gb-bar"></span>
+              <span>
+                <span class="gb-label">{{ s.label }}</span>
+                <sc-if value="{{ s.hasSub }}" hint-placeholder-val="{{ false }}">
+                  <span class="gb-sub">{{ s.sub }}</span>
+                </sc-if>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Today's list</div>
+        <div class="gb-h2">{{ checkHead }}</div>
+        <sc-for list="{{ groups }}" as="g" hint-placeholder-count="4">
+          <div class="gb-grp">
+            <button class="gb-grph" onClick="{{ g.toggle }}">
+              <span>{{ g.title }}</span>
+              <span class="gb-cnt {{ g.cntCls }}">{{ g.count }}</span>
+              <span style="color: #A6A79F;">{{ g.caret }}</span>
+            </button>
+            <sc-if value="{{ g.open }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="4">
+                  <label class="gb-item {{ it.cls }}">
+                    <input type="checkbox" checked="{{ it.on }}" onChange="{{ it.toggle }}">
+                    <span class="lbl">{{ it.label }}</span>
+                    <span class="sets">{{ it.sets }}</span>
+                  </label>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noChecks }}" hint-placeholder-val="{{ false }}">
+          <div class="gb-note">Nothing to tick on this day.</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ══ WEEK ══ -->
+    <sc-if value="{{ isWeek }}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{ weekRows }}" as="w" hint-placeholder-count="7">
+        <div class="gb-panel" style="margin-top: 10px;">
+          <div class="gb-row">
+            <div style="flex: 1; min-width: 0;">
+              <div class="gb-eyebrow">{{ w.day }} · {{ w.shift }}</div>
+              <div class="gb-h2">{{ w.focus }}</div>
+              <div class="gb-note">{{ w.sub }}</div>
+            </div>
+            <button onClick="{{ w.pick }}" class="gb-btn {{ w.cls }}">{{ w.mark }}</button>
+          </div>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <!-- ══ LIFTING ══ -->
+    <sc-if value="{{ isLift }}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{ lifts }}" as="l" hint-placeholder-count="5">
+        <div class="gb-panel">
+          <div class="gb-eyebrow">{{ l.day }} · {{ l.mins }}</div>
+          <div class="gb-h2">{{ l.title }}</div>
+          <sc-for list="{{ l.blocks }}" as="bk" hint-placeholder-count="3">
+            <div class="gb-ex">
+              <div class="gb-exh"><span>{{ bk.name }}</span><span>{{ bk.mins }}</span></div>
+              <sc-for list="{{ bk.items }}" as="e" hint-placeholder-count="4">
+                <div class="gb-exrow">
+                  <div class="gb-row" style="gap: 10px; align-items: baseline;">
+                    <span class="gb-exn" style="flex: 1; min-width: 0;">{{ e.n }}</span>
+                    <span class="gb-exs">{{ e.s }}</span>
+                  </div>
+                  <sc-if value="{{ e.hasD }}" hint-placeholder-val="{{ true }}">
+                    <div class="gb-exd">{{ e.d }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <!-- ══ RUNS ══ -->
+    <sc-if value="{{ isRuns }}" hint-placeholder-val="{{ false }}">
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Nine weeks</div>
+        <div class="gb-h2">Run progression</div>
+        <div class="gb-note">Ratios are jog:walk in minutes. Ticking a week here is what advances the block — there is no calendar underneath it.</div>
+        <div class="gb-scroll">
+          <table class="gb-table">
+            <tr><th></th><th>Wk</th><th>Short — Tuesday</th><th>Long — Friday</th><th>Distance</th></tr>
+            <sc-for list="{{ runRows }}" as="r" hint-placeholder-count="9">
+              <tr class="{{ r.cls }}">
+                <td><input type="checkbox" checked="{{ r.on }}" onChange="{{ r.toggle }}"></td>
+                <td>{{ r.w }}</td><td>{{ r.a }}</td><td>{{ r.b }}</td><td>{{ r.d }}</td>
+              </tr>
+            </sc-for>
+          </table>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ══ BENCHMARKS ══ -->
+    <sc-if value="{{ isBm }}" hint-placeholder-val="{{ false }}">
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Eight measures</div>
+        <div class="gb-h2">Baseline against now</div>
+        <div class="gb-note">Set the baseline once at the start of the block, then re-measure in the test week. The gap is the only proof the nine weeks did anything.</div>
+        <div class="gb-scroll">
+          <table class="gb-table">
+            <tr><th>Measure</th><th>Unit</th><th>Baseline</th><th>Latest</th></tr>
+            <sc-for list="{{ bmRows }}" as="m" hint-placeholder-count="8">
+              <tr>
+                <td>{{ m.name }}</td>
+                <td style="color: #A6A79F; font-size: 11.5px;">{{ m.unit }}</td>
+                <td><input type="text" value="{{ m.base }}" onChange="{{ m.setBase }}"></td>
+                <td><input type="text" value="{{ m.latest }}" onChange="{{ m.setLatest }}"></td>
+              </tr>
+            </sc-for>
+          </table>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div class="gb-toast">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1400}}">
+/* ─────────────────────────────────────────────────────────────────────────
+   The grind board, ported into the hub.
+
+   The standalone board told you what to do and then recorded nothing: the
+   week number was a manual up/down, and the day's checklist was a scratchpad
+   keyed by weekday, so it was silently overwritten every seven days.
+   Tomorrow's board looked exactly like today's whether or not you had done
+   the work.
+
+   So the record is the part that is new. There is deliberately NO START DATE:
+   the week advances when its sessions are done, not when the calendar moves.
+   A fortnight away costs nothing — the board is simply still on week 4, where
+   you left it.
+
+   STORAGE CONTRACT
+     ct_grind_v1 = { v:1, week:1..9, mode:'gym'|'home',
+                     sessions:{ "<week>|<dayId>": true },   // the five lifts
+                     runs:{ "w<week>": true },              // the two runs
+                     checks:{ "<week>|<dayId>": { <itemId>: true } },
+                     bm:{ base:{<name>:str}, latest:{<name>:str} },
+                     open:{ <groupId>: true } }
+
+   Everything else — the lifts, the runs, the armor menus, the timetable —
+   lives in grind-data.js and never enters the store.
+   ───────────────────────────────────────────────────────────────────────── */
+class Component extends DCLogic {
+  KEY = 'ct_grind_v1';
+  DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+  state = { tick: 0, view: 'day', day: '', toast: '' };
+
+  get G() { return window.GRIND_DATA || null; }
+
+  componentWillUnmount() { clearTimeout(this._toast); }
+  bump() { this.setState(s => ({ tick: s.tick + 1 })); }
+  toast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._toast);
+    this._toast = setTimeout(() => this.setState({ toast: '' }), 2800);
+  }
+
+  read() {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(this.KEY)); } catch (e) {}
+    const d = Object.assign({ v: 1, week: 1, mode: 'gym', sessions: {}, runs: {}, checks: {},
+                              bm: { base: {}, latest: {} }, open: {} }, s || {});
+    d.bm = Object.assign({ base: {}, latest: {} }, d.bm || {});
+    ['sessions', 'runs', 'checks', 'open'].forEach(k => { if (!d[k]) d[k] = {}; });
+    d.week = Math.max(1, Math.min(this.G ? this.G.weeks : 9, +d.week || 1));
+    return d;
+  }
+  write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} }
+  mut(fn) { const d = this.read(); fn(d); this.write(d); this.bump(); }
+
+  todayId() { return this.DAYS[new Date().getDay()]; }
+  curDay(d) { return this.state.day || this.todayId(); }
+
+  /* The week is done when every lift and both runs are ticked. That — not a
+     date — is what lets it advance. */
+  weekKeys(week) { return Object.keys((this.G && this.G.GYM) || {}).map(id => week + '|' + id); }
+  weekProgress(d) {
+    const lifts = this.weekKeys(d.week);
+    const doneLifts = lifts.filter(k => d.sessions[k]).length;
+    const runDone = d.runs['w' + d.week] ? 1 : 0;
+    return { done: doneLifts + runDone, total: lifts.length + 1, lifts: doneLifts, liftTotal: lifts.length, runDone: !!runDone };
+  }
+
+  setWeek(n) {
+    const max = this.G ? this.G.weeks : 9;
+    this.mut(d => { d.week = Math.max(1, Math.min(max, n)); });
+  }
+  setMode(m) { this.mut(d => { d.mode = m; }); }
+  toggleSession(dayId) {
+    let on = false;
+    this.mut(d => {
+      const k = d.week + '|' + dayId;
+      if (d.sessions[k]) delete d.sessions[k]; else d.sessions[k] = true;
+      on = !!d.sessions[k];
+    });
+    this.toast(on ? '✓ session logged' : 'session cleared');
+  }
+  toggleCheck(dayId, id) {
+    this.mut(d => {
+      const k = d.week + '|' + dayId;
+      if (!d.checks[k]) d.checks[k] = {};
+      if (d.checks[k][id]) delete d.checks[k][id]; else d.checks[k][id] = true;
+    });
+  }
+  toggleRun(w) {
+    this.mut(d => { const k = 'w' + w; if (d.runs[k]) delete d.runs[k]; else d.runs[k] = true; });
+  }
+  toggleGroup(gid) {
+    this.mut(d => { if (d.open[gid]) delete d.open[gid]; else d.open[gid] = true; });
+  }
+  setBm(which, name, v) { this.mut(d => { d.bm[which][name] = v; }); }
+
+  advance() {
+    const d = this.read();
+    const max = this.G ? this.G.weeks : 9;
+    if (d.week >= max) { this.toast('block complete — nine weeks done'); return; }
+    this.setWeek(d.week + 1);
+    this.toast('week ' + (d.week + 1) + ' — carry on');
+  }
+
+  renderVals() {
+    this.state.tick;
+    const G = this.G;
+    if (!G) {
+      return { weekLabel: '—', hasWkTag: false, wkTag: '', wkTagColor: '', pips: [], weekLine: 'The programme did not load.',
+               weekDone: false, advanceLabel: '', advance: () => {}, prevWeek: () => {}, nextWeek: () => {},
+               tabs: [], modes: [], isDay: false, isWeek: false, isLift: false, isRuns: false, isBm: false,
+               dayBtns: [], dayShift: '', dayTitle: '', dayFocus: '', slots: [], slotCount: '', groups: [],
+               noChecks: true, checkHead: '', sessionCls: '', sessionLabel: '', toggleSession: () => {},
+               weekRows: [], lifts: [], runRows: [], bmRows: [], hasToast: false, toast: '' };
+    }
+    const d = this.read();
+    const dayId = this.curDay(d);
+    const today = this.todayId();
+    const prog = this.weekProgress(d);
+    const isDeload = G.deloads.indexOf(d.week) > -1;
+    const isTest = d.week === G.testWeek;
+
+    const pips = [];
+    for (let i = 1; i <= G.weeks; i++) {
+      const p = this.weekProgress({ week: i, sessions: d.sessions, runs: d.runs });
+      pips.push({ cls: i === d.week ? 'now' : (p.done === p.total ? 'on' : ''),
+                  title: 'Week ' + i + ' — ' + p.done + '/' + p.total });
+    }
+
+    const tabs = [['day', 'Day'], ['week', 'Week'], ['lift', 'Lifting'], ['runs', 'Runs'], ['bm', 'Benchmarks']]
+      .map(([k, label]) => ({ label, cls: this.state.view === k ? 'sel' : '', pick: () => this.setState({ view: k }) }));
+    const modes = [['gym', 'Gym'], ['home', 'Home']]
+      .map(([k, label]) => ({ label, cls: d.mode === k ? 'sel' : '', pick: () => this.setMode(k) }));
+
+    // ── the day ──
+    const wd = G.WEEK.filter(x => x.id === dayId)[0] || G.WEEK[0];
+    const slotsRaw = G.build(dayId, d.mode, d.week) || [];
+    const slots = slotsRaw.map(s => ({
+      time: s[0] + '–' + s[1], kind: s[2] || 'rest', label: s[3],
+      sub: s[4] || '', hasSub: !!s[4],
+    }));
+
+    // Checklist items, grouped by the slot they belong to — the same ids the
+    // standalone board used, so a group keeps its identity week to week.
+    const checks = d.checks[d.week + '|' + dayId] || {};
+    const groups = [];
+    slotsRaw.forEach((s, i) => {
+      const items = [];
+      if (s[6]) s[6].forEach(x => items.push({ id: 'x:' + i + ':' + x, label: x, sets: '' }));
+      if (s[5] && s[5].b) s[5].b.forEach((b, bi) => (b.l || []).forEach((e, ei) =>
+        items.push({ id: 'e:' + i + ':' + bi + ':' + ei, label: e.n, sets: e.s || '' })));
+      if (!items.length) return;
+      const gid = dayId + '|' + s[0] + '|' + s[3];
+      const doneN = items.filter(it => checks[it.id]).length;
+      groups.push({
+        title: s[0] + ' · ' + s[3],
+        count: doneN + '/' + items.length,
+        cntCls: doneN === items.length ? 'all' : (doneN ? 'part' : ''),
+        open: !!d.open[gid], caret: d.open[gid] ? '▾' : '▸',
+        toggle: () => this.toggleGroup(gid),
+        items: items.map(it => ({
+          label: it.label, sets: it.sets, on: !!checks[it.id],
+          cls: checks[it.id] ? 'done' : '',
+          toggle: () => this.toggleCheck(dayId, it.id),
+        })),
+      });
+    });
+    const allItems = groups.reduce((n, g) => n + g.items.length, 0);
+    const allDone = groups.reduce((n, g) => n + g.items.filter(i => i.on).length, 0);
+
+    const dayBtns = G.WEEK.map(x => {
+      const on = !!d.sessions[d.week + '|' + x.id];
+      const isLiftDay = !!(G.GYM || {})[x.id];
+      return {
+        d: x.d, cls: (x.id === dayId ? 'on ' : '') + (x.id === today ? 'today' : ''),
+        mark: isLiftDay ? (on ? '✓' : '·') : '',
+        pick: () => this.setState({ view: 'day', day: x.id }),
+      };
+    });
+
+    const isLiftDay = !!(G.GYM || {})[dayId];
+    const sessionOn = !!d.sessions[d.week + '|' + dayId];
+
+    // ── the week view ──
+    const weekRows = G.WEEK.map(x => {
+      const on = !!d.sessions[d.week + '|' + x.id];
+      const lift = !!(G.GYM || {})[x.id];
+      return {
+        day: x.d, shift: x.shift, focus: x.focus, sub: x.sub,
+        cls: on ? 'done' : '', mark: lift ? (on ? 'Done ✓' : 'Mark done') : 'Open',
+        pick: () => (lift ? this.toggleSession(x.id) : this.setState({ view: 'day', day: x.id })),
+      };
+    });
+
+    // ── lifting ──
+    const lifts = Object.keys(G.GYM).map(id => {
+      const s = (d.mode === 'home' ? G.HOME : G.GYM)[id];
+      const wdx = G.WEEK.filter(x => x.id === id)[0] || {};
+      return {
+        day: wdx.d || id, mins: s.m || '', title: s.t || '',
+        blocks: (s.b || []).map(b => ({
+          name: b.n, mins: b.m,
+          items: (b.l || []).map(e => ({ n: e.n, s: e.s || '', d: e.d || '', hasD: !!e.d })),
+        })),
+      };
+    });
+
+    // ── runs ──
+    const runRows = G.RUN.map(r => ({
+      w: r.w, a: r.a, b: r.b, d: r.d, cls: r.dl ? 'dl' : '',
+      on: !!d.runs['w' + r.w], toggle: () => this.toggleRun(r.w),
+    }));
+
+    // ── benchmarks ──
+    const bmRows = G.BM.map(([name, unit]) => ({
+      name, unit,
+      base: d.bm.base[name] || '', latest: d.bm.latest[name] || '',
+      setBase: (e) => this.setBm('base', name, e.target.value),
+      setLatest: (e) => this.setBm('latest', name, e.target.value),
+    }));
+
+    return {
+      weekLabel: 'Week ' + d.week,
+      hasWkTag: isDeload || isTest,
+      wkTag: isTest ? 'test week' : 'deload',
+      wkTagColor: isTest ? '#2E6A86' : '#A8761F',
+      pips,
+      weekLine: prog.done + ' of ' + prog.total + ' sessions done — ' + prog.lifts + '/' + prog.liftTotal
+              + ' lifts and ' + (prog.runDone ? 'the runs' : 'no runs yet')
+              + '. No dates here: the week moves when the work does.',
+      weekDone: prog.done === prog.total,
+      advanceLabel: d.week >= G.weeks ? 'Nine weeks done' : 'Week complete — go to week ' + (d.week + 1),
+      advance: () => this.advance(),
+      prevWeek: () => this.setWeek(d.week - 1),
+      nextWeek: () => this.setWeek(d.week + 1),
+
+      tabs, modes,
+      isDay: this.state.view === 'day', isWeek: this.state.view === 'week',
+      isLift: this.state.view === 'lift', isRuns: this.state.view === 'runs',
+      isBm: this.state.view === 'bm',
+
+      dayBtns,
+      dayShift: (G.DAYNAME[dayId] || wd.d) + (wd.off ? '' : ''),
+      dayTitle: wd.focus, dayFocus: wd.sub,
+      sessionCls: sessionOn ? 'done' : (isLiftDay ? 'go' : ''),
+      sessionLabel: !isLiftDay ? (sessionOn ? 'Day marked done ✓' : 'Mark the day done')
+                               : (sessionOn ? 'Session done ✓' : 'Mark the session done'),
+      toggleSession: () => this.toggleSession(dayId),
+
+      slots, slotCount: slots.length + ' blocks, ' + (wd.shift === 'Clear' ? 'no shift' : 'shift ' + wd.shift),
+      groups, noChecks: groups.length === 0,
+      checkHead: allDone + ' of ' + allItems + ' ticked',
+
+      weekRows, lifts, runRows, bmRows,
+      hasToast: !!this.state.toast, toast: this.state.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F7F5F1; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+  /* ── live bits: the ninety days and the gates ────────────────────────── */
+  .rp-item { display: flex; gap: 10px; align-items: flex-start; min-height: 52px;
+             padding: 11px 12px; border-bottom: 1px solid #F0EEE9; cursor: pointer; }
+  .rp-item:last-child { border-bottom: none; }
+  .rp-item input { width: 20px; height: 20px; flex: none; margin-top: 1px; accent-color: #2E6A86; cursor: pointer; }
+  .rp-itxt { font-size: 13px; font-weight: 500; line-height: 1.35; color: #26271F; }
+  .rp-item.done .rp-itxt { color: #9a9b93; text-decoration: line-through; }
+
+  .rp-gate { border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF;
+             padding: 14px 16px; margin-bottom: 10px; }
+  .rp-gate.called { border-left: 3px solid #A6A79F; }
+  .rp-gate.called.advance { border-left-color: #3B6D11; }
+  .rp-gate.called.pause { border-left-color: #854F0B; }
+  .rp-gate.called.cut { border-left-color: #A32E27; }
+  .rp-gtop { display: flex; gap: 12px; align-items: baseline; }
+  .rp-crit { margin-top: 9px; padding-top: 9px; border-top: 1px solid #F2F0EB; }
+  .rp-grow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 11px; }
+  .rp-btn { min-height: 40px; padding: 0 14px; border-radius: 10px; cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+            border: 1px solid #DAD7D0; background: #FFF; color: #55564F; }
+  .rp-btn.on.advance { border-color: #3B6D11; background: #F1F7E9; color: #3B6D11; font-weight: 600; }
+  .rp-btn.on.pause { border-color: #E0CB98; background: #FBF6EA; color: #854F0B; font-weight: 600; }
+  .rp-btn.on.cut { border-color: #E2B7B2; background: #FCF4F3; color: #A32E27; font-weight: 600; }
+
+  /* ── the phone ──────────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .rp-90 { grid-template-columns: 1fr !important; }
+    .rp-btn { min-height: 44px; flex: 1; }
+    .rp-item { min-height: 56px; }
+  }
+
+  .rp-caret { display: none; }
+  @media (max-width: 640px) {
+    .rp-caret { display: inline-block !important; margin-right: 8px; color: #A6A79F; }
+    .rp-sech { min-height: 52px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .rp-sech p { display: none !important; }
+  }
+</style>
+</helmet>
+
+<div style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A; background: #F7F5F1; padding: 48px 40px 80px; min-height: 100vh;">
+<div style="max-width: 1200px; margin: 0 auto;">
+
+<!-- ============ MASTHEAD ============ -->
+<section data-screen-label="Masthead" style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 34px 38px; box-shadow: 0 1px 2px rgba(26,27,26,0.03);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; flex-wrap: wrap;">
+    <div style="max-width: 640px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #2E6A86;">Cardiothoracic Research Program &nbsp;·&nbsp; Execution Roadmap</div>
+      <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 40px; line-height: 1.08; letter-spacing: -0.01em; margin: 14px 0 12px;">Research Program Action Plan</h1>
+      <p style="font-size: 15px; line-height: 1.55; color: #55564F; margin: 0; max-width: 560px;">A sequenced, time-bound roadmap for the five-track portfolio — from now through the ~2-year runway to NY rotations. This is the plan you run against and update weekly; it pairs with the portfolio sheet (the snapshot) and the networking tools (the collaborator side of the dependencies).</p>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr; gap: 12px; min-width: 216px;">
+      <div style="border: 1px solid #E4E2DD; border-radius: 10px; padding: 12px 14px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A8B84;">Runway</div>
+        <div style="font-size: 15px; font-weight: 600; margin-top: 3px;">Jul 2026 → Q2 2028</div>
+        <div style="font-size: 12px; color: #8A8B84; margin-top: 1px;">≈ 8 quarters to NY rotations</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="border: 1px solid #E4E2DD; border-radius: 10px; padding: 12px 14px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A8B84;">Active</div>
+          <div style="font-size: 22px; font-weight: 700; margin-top: 2px;">4<span style="font-size: 14px; font-weight: 500; color: #A6A79F;">/5</span></div>
+        </div>
+        <div style="border: 1px solid #E4E2DD; border-radius: 10px; padding: 12px 14px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A8B84;">Updated</div>
+          <div style="font-size: 15px; font-weight: 600; margin-top: 4px;">Jul 5, 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div style="display: flex; flex-wrap: wrap; gap: 22px 30px; align-items: center; margin-top: 26px; padding-top: 22px; border-top: 1px solid #ECEAE4;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #A6A79F;">Status</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 50%; background: #3E7C54;"></span>Advancing</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 50%; background: #2E6A86;"></span>On track</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 50%; background: #B7822E;"></span>At risk</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 50%; background: #8B8C85;"></span>Paused</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 50%; background: #B0453C;"></span>Cut</span>
+    <span style="width: 1px; height: 16px; background: #E4E2DD;"></span>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #A6A79F;">Blocker</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #6B7FA8;"></span>Collaborator</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #8A6BA8;"></span>Data / IRB</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #A87B6B;"></span>Materials</span>
+    <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #55564F;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #6BA88C;"></span>Funding</span>
+  </div>
+</section>
+
+<!-- ============ PORTFOLIO AT A GLANCE ============ -->
+<section data-screen-label="Portfolio at a glance" style="margin-top: 40px;">
+  <div class="rp-sech" onClick="{{ sec.portfolioata.toggle }}" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E6A86;">01</span>
+    <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 25px; margin: 0; letter-spacing: -0.01em;"><span class="rp-caret">{{ sec.portfolioata.caret }}</span>Portfolio at a glance</h2>
+    <span style="font-size: 12.5px; color: #A6A79F; margin-left: auto;">Snapshot — see the portfolio sheet for full detail</span>
+  </div>
+  <sc-if value="{{ sec.portfolioata.open }}" hint-placeholder-val="{{ true }}">
+
+
+  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
+    <!-- Card 1 CAV -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #3E7C54; border-radius: 12px; background: #FFFFFF; padding: 18px 16px; display: flex; flex-direction: column;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #3E7C54;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #3E7C54;"></span>Advancing</div>
+      <div style="font-size: 15px; font-weight: 600; margin-top: 12px; line-height: 1.25;">CAV Biomarker Panel</div>
+      <div style="font-size: 12px; color: #77786F; line-height: 1.45; margin-top: 6px; flex: 1;">Circulating signature for early cardiac allograft vasculopathy post-transplant.</div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #ECEAE4;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.06em;">OUTPUT</div>
+        <div style="font-size: 12.5px; font-weight: 500; margin-top: 2px;">Journal pub · Q3 2027</div>
+      </div>
+    </div>
+    <!-- Card 2 LVAD -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #2E6A86; border-radius: 12px; background: #FFFFFF; padding: 18px 16px; display: flex; flex-direction: column;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2E6A86;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #2E6A86;"></span>On track</div>
+      <div style="font-size: 15px; font-weight: 600; margin-top: 12px; line-height: 1.25;">LVAD Anti-thrombotic Coating</div>
+      <div style="font-size: 12px; color: #77786F; line-height: 1.45; margin-top: 6px; flex: 1;">Biocompatible surface coating to cut pump thrombosis on inflow components.</div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #ECEAE4;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.06em;">OUTPUT</div>
+        <div style="font-size: 12.5px; font-weight: 500; margin-top: 2px;">Device stage · Q2 2028</div>
+      </div>
+    </div>
+    <!-- Card 3 Redo -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #3E7C54; border-radius: 12px; background: #FFFFFF; padding: 18px 16px; display: flex; flex-direction: column;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #3E7C54;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #3E7C54;"></span>Advancing</div>
+      <div style="font-size: 15px; font-weight: 600; margin-top: 12px; line-height: 1.25;">Redo-Sternotomy Outcomes</div>
+      <div style="font-size: 12px; color: #77786F; line-height: 1.45; margin-top: 6px; flex: 1;">Retrospective on risk factors &amp; outcomes — the fast near-term win.</div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #ECEAE4;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.06em;">OUTPUT</div>
+        <div style="font-size: 12.5px; font-weight: 500; margin-top: 2px;">Abstract Q4 '26 · pub Q2 '27</div>
+      </div>
+    </div>
+    <!-- Card 4 Valve -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #B7822E; border-radius: 12px; background: #FFFFFF; padding: 18px 16px; display: flex; flex-direction: column;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #B7822E;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #B7822E;"></span>At risk</div>
+      <div style="font-size: 15px; font-weight: 600; margin-top: 12px; line-height: 1.25;">Decellularized Valve Scaffold</div>
+      <div style="font-size: 12px; color: #77786F; line-height: 1.45; margin-top: 6px; flex: 1;">Exploratory tissue-engineered scaffold feasibility — long horizon.</div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #ECEAE4;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.06em;">OUTPUT</div>
+        <div style="font-size: 12.5px; font-weight: 500; margin-top: 2px;">Pilot → grant · Q2 2028</div>
+      </div>
+    </div>
+    <!-- Card 5 AI -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #8B8C85; border-radius: 12px; background: #FBFAF8; padding: 18px 16px; display: flex; flex-direction: column;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8C85;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #8B8C85;"></span>Paused</div>
+      <div style="font-size: 15px; font-weight: 600; margin-top: 12px; line-height: 1.25; color: #77786F;">AI Surgical Risk Model</div>
+      <div style="font-size: 12px; color: #9A9B92; line-height: 1.45; margin-top: 6px; flex: 1;">ML for post-cardiotomy complications — gate triggered, held.</div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #ECEAE4;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.06em;">OUTPUT</div>
+        <div style="font-size: 12.5px; font-weight: 500; margin-top: 2px; color: #9A9B92;">Held — revisit on data</div>
+      </div>
+    </div>
+  </div>
+
+  </sc-if>
+  </section>
+
+<!-- ============ MILESTONE TIMELINE ============ -->
+<section data-screen-label="Milestone timeline" style="margin-top: 46px;">
+  <div class="rp-sech" onClick="{{ sec.milestonetim.toggle }}" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E6A86;">02</span>
+    <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 25px; margin: 0; letter-spacing: -0.01em;"><span class="rp-caret">{{ sec.milestonetim.caret }}</span>Milestone timeline</h2>
+    <span style="font-size: 12.5px; color: #A6A79F; margin-left: auto;">Each bar shows the path to output: data → analysis → writeup → submission → publication / device</span>
+  </div>
+  <sc-if value="{{ sec.milestonetim.open }}" hint-placeholder-val="{{ true }}">
+
+
+  <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; padding: 22px 24px 26px;">
+
+    <!-- Quarter header -->
+    <div style="display: grid; grid-template-columns: 210px 1fr; gap: 0;">
+      <div></div>
+      <div style="display: grid; grid-template-columns: repeat(8, 1fr); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #8A8B84; letter-spacing: 0.04em;">
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6; color: #2E6A86; font-weight: 600;">Q3 '26<div style="font-size: 9px; color: #B0B1AA; font-weight: 400;">now</div></div>
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6;">Q4 '26</div>
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6;">Q1 '27</div>
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6;">Q2 '27</div>
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6;">Q3 '27</div>
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6;">Q4 '27</div>
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6;">Q1 '28</div>
+        <div style="padding: 0 0 10px 6px; border-left: 1px solid #EDEBE6; color: #B0453C; font-weight: 600;">Q2 '28<div style="font-size: 9px; color: #C89A94; font-weight: 400;">NY rotations →</div></div>
+      </div>
+    </div>
+
+    <!-- Lane: CAV -->
+    <div style="display: grid; grid-template-columns: 210px 1fr; align-items: center; border-top: 1px solid #F0EEE9;">
+      <div style="padding: 0 16px 0 0;"><div style="font-size: 13px; font-weight: 600;">CAV Biomarker</div><div style="font-size: 10.5px; color: #A6A79F; font-family: 'IBM Plex Mono', monospace;">journal · priority</div></div>
+      <div style="position: relative; height: 58px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 1px), #F0EEE9 calc(12.5% - 1px), #F0EEE9 12.5%);">
+        <div style="position: absolute; top: 11px; bottom: 11px; left: 0%; width: 62.5%; background: #F0F5F1; border: 1px solid #CFE0D5; border-left: 3px solid #3E7C54; border-radius: 7px; display: flex; overflow: hidden; font-family: 'IBM Plex Mono', monospace;">
+          <div style="flex: 1.1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #DDE9E0; font-size: 9.5px; color: #3E7C54; font-weight: 600;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Data</div>
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #DDE9E0; font-size: 9.5px; color: #3E7C54; font-weight: 600;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Analysis</div>
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #DDE9E0; font-size: 9.5px; color: #6E8A78;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #6E8A78; box-sizing: border-box;"></span>Writeup</div>
+          <div style="flex: 0.95; display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 9.5px; color: #6E8A78;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #6E8A78; box-sizing: border-box;"></span>Submit</div>
+        </div>
+        <div style="position: absolute; top: 20px; left: 62.5%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;"><span style="width: 12px; height: 12px; border-radius: 50%; background: #3E7C54; border: 2px solid #fff; box-shadow: 0 0 0 1px #3E7C54;"></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; color: #3E7C54; margin-top: 3px; white-space: nowrap; font-weight: 600;">PUB</span></div>
+      </div>
+    </div>
+
+    <!-- Lane: LVAD -->
+    <div style="display: grid; grid-template-columns: 210px 1fr; align-items: center; border-top: 1px solid #F0EEE9;">
+      <div style="padding: 0 16px 0 0;"><div style="font-size: 13px; font-weight: 600;">LVAD Coating</div><div style="font-size: 10.5px; color: #A6A79F; font-family: 'IBM Plex Mono', monospace;">device · priority</div></div>
+      <div style="position: relative; height: 58px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 1px), #F0EEE9 calc(12.5% - 1px), #F0EEE9 12.5%);">
+        <div style="position: absolute; top: 11px; bottom: 11px; left: 0%; width: 100%; background: #EEF3F6; border: 1px solid #CBDEE7; border-left: 3px solid #2E6A86; border-radius: 7px; display: flex; overflow: hidden; font-family: 'IBM Plex Mono', monospace;">
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #D6E5EC; font-size: 9.5px; color: #2E6A86; font-weight: 600;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2E6A86;"></span>Synthesis</div>
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #D6E5EC; font-size: 9.5px; color: #2E6A86; font-weight: 600;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2E6A86;"></span>Bench test</div>
+          <div style="flex: 1.2; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #D6E5EC; font-size: 9.5px; color: #5E8093;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #5E8093; box-sizing: border-box;"></span>Preclinical</div>
+          <div style="flex: 0.9; display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 9.5px; color: #5E8093;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #5E8093; box-sizing: border-box;"></span>Writeup</div>
+        </div>
+        <div style="position: absolute; top: 20px; left: 100%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;"><span style="width: 12px; height: 12px; border-radius: 50%; background: #2E6A86; border: 2px solid #fff; box-shadow: 0 0 0 1px #2E6A86;"></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; color: #2E6A86; margin-top: 3px; white-space: nowrap; font-weight: 600;">DEVICE</span></div>
+      </div>
+    </div>
+
+    <!-- Lane: Redo -->
+    <div style="display: grid; grid-template-columns: 210px 1fr; align-items: center; border-top: 1px solid #F0EEE9;">
+      <div style="padding: 0 16px 0 0;"><div style="font-size: 13px; font-weight: 600;">Redo-Sternotomy</div><div style="font-size: 10.5px; color: #A6A79F; font-family: 'IBM Plex Mono', monospace;">abstract → pub</div></div>
+      <div style="position: relative; height: 58px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 1px), #F0EEE9 calc(12.5% - 1px), #F0EEE9 12.5%);">
+        <div style="position: absolute; top: 11px; bottom: 11px; left: 0%; width: 50%; background: #F0F5F1; border: 1px solid #CFE0D5; border-left: 3px solid #3E7C54; border-radius: 7px; display: flex; overflow: hidden; font-family: 'IBM Plex Mono', monospace;">
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #DDE9E0; font-size: 9.5px; color: #3E7C54; font-weight: 600;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Data</div>
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #DDE9E0; font-size: 9.5px; color: #3E7C54; font-weight: 600;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Analysis</div>
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 9.5px; color: #6E8A78;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #6E8A78; box-sizing: border-box;"></span>Writeup</div>
+        </div>
+        <div style="position: absolute; top: 20px; left: 25%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;"><span style="width: 11px; height: 11px; border-radius: 50%; background: #B7822E; border: 2px solid #fff; box-shadow: 0 0 0 1px #B7822E;"></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; color: #B7822E; margin-top: 3px; white-space: nowrap; font-weight: 600;">ABSTR</span></div>
+        <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;"><span style="width: 12px; height: 12px; border-radius: 50%; background: #3E7C54; border: 2px solid #fff; box-shadow: 0 0 0 1px #3E7C54;"></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; color: #3E7C54; margin-top: 3px; white-space: nowrap; font-weight: 600;">PUB</span></div>
+      </div>
+    </div>
+
+    <!-- Lane: Valve -->
+    <div style="display: grid; grid-template-columns: 210px 1fr; align-items: center; border-top: 1px solid #F0EEE9;">
+      <div style="padding: 0 16px 0 0;"><div style="font-size: 13px; font-weight: 600;">Valve Scaffold</div><div style="font-size: 10.5px; color: #A6A79F; font-family: 'IBM Plex Mono', monospace;">pilot → grant</div></div>
+      <div style="position: relative; height: 58px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 1px), #F0EEE9 calc(12.5% - 1px), #F0EEE9 12.5%);">
+        <div style="position: absolute; top: 11px; bottom: 11px; left: 25%; width: 75%; background: #F8F2E7; border: 1px solid #E6D6B8; border-left: 3px solid #B7822E; border-radius: 7px; display: flex; overflow: hidden; font-family: 'IBM Plex Mono', monospace;">
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #ECDFC4; font-size: 9.5px; color: #9A7328;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #9A7328; box-sizing: border-box;"></span>Materials</div>
+          <div style="flex: 1.2; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-right: 1px solid #ECDFC4; font-size: 9.5px; color: #9A7328;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #9A7328; box-sizing: border-box;"></span>Pilot runs</div>
+          <div style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 9.5px; color: #9A7328;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #9A7328; box-sizing: border-box;"></span>Writeup</div>
+        </div>
+        <div style="position: absolute; top: 20px; left: 100%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;"><span style="width: 12px; height: 12px; border-radius: 50%; background: #B7822E; border: 2px solid #fff; box-shadow: 0 0 0 1px #B7822E;"></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; color: #B7822E; margin-top: 3px; white-space: nowrap; font-weight: 600;">GRANT</span></div>
+      </div>
+    </div>
+
+    <!-- Lane: AI paused -->
+    <div style="display: grid; grid-template-columns: 210px 1fr; align-items: center; border-top: 1px solid #F0EEE9;">
+      <div style="padding: 0 16px 0 0;"><div style="font-size: 13px; font-weight: 600; color: #9A9B92;">AI Risk Model</div><div style="font-size: 10.5px; color: #B8B9B1; font-family: 'IBM Plex Mono', monospace;">paused</div></div>
+      <div style="position: relative; height: 52px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 1px), #F0EEE9 calc(12.5% - 1px), #F0EEE9 12.5%);">
+        <div style="position: absolute; top: 11px; bottom: 11px; left: 0%; width: 25%; background: repeating-linear-gradient(45deg, #F2F1EE 0, #F2F1EE 6px, #EAE8E3 6px, #EAE8E3 12px); border: 1px dashed #C4C5BD; border-radius: 7px; display: flex; align-items: center; padding: 0 10px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #9A9B92;">Scoping</div>
+        <div style="position: absolute; top: 15px; left: 25%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;"><span style="width: 12px; height: 12px; border-radius: 2px; background: #8B8C85; border: 2px solid #fff; box-shadow: 0 0 0 1px #8B8C85; transform: rotate(45deg);"></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; color: #8B8C85; margin-top: 5px; white-space: nowrap; font-weight: 600;">⏸ GATE — PAUSED</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #F0EEE9; display: flex; gap: 22px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9A9B92;">
+      <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #55564F;"></span>Stage complete / active</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #9A9B92; box-sizing: border-box;"></span>Stage upcoming</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; border-radius: 50%; background: #55564F; border: 2px solid #fff; box-shadow: 0 0 0 1px #55564F;"></span>Output milestone</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 9px; height: 9px; background: #8B8C85; transform: rotate(45deg);"></span>Decision gate</span>
+    </div>
+  </div>
+
+  </sc-if>
+  </section>
+
+<!-- ============ NEXT 90 DAYS ============ -->
+<section data-screen-label="Next 90 days" style="margin-top: 46px;">
+  <div class="rp-sech" onClick="{{ sec.next90days.toggle }}" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E6A86;">03</span>
+    <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 25px; margin: 0; letter-spacing: -0.01em;"><span class="rp-caret">{{ sec.next90days.caret }}</span>Next 90 days</h2>
+    <span style="font-size: 12.5px; color: #A6A79F; margin-left: auto;">Jul – Sep 2026 · while you're in the States, near contacts</span>
+  </div>
+  <sc-if value="{{ sec.next90days.open }}" hint-placeholder-val="{{ true }}">
+
+  <p style="font-size: 13px; color: #77786F; margin: 0 0 18px 34px; max-width: 720px;">Front-load anything that needs in-person access or a warm face-to-face — those windows close when you leave. <span style="color: #2E6A86; font-weight: 600;">◉ in-person</span> items are the ones to protect; everything else can continue async.</p>
+
+  <div class="rp-90" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+    <sc-for list="{{ months }}" as="m" hint-placeholder-count="3">
+      <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; overflow: hidden;">
+        <div style="background: #2E6A86; color: #fff; padding: 11px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; gap: 8px;">{{ m.name }}<span style="font-size: 10px; opacity: 0.85;">{{ m.done }}</span></div>
+        <div>
+          <sc-for list="{{ m.items }}" as="it" hint-placeholder-count="3">
+            <label class="rp-item {{ it.cls }}">
+              <input type="checkbox" checked="{{ it.on }}" onChange="{{ it.toggle }}">
+              <span style="color: {{ it.dotColor }}; font-size: 13px; line-height: 1.3; flex: none;">{{ it.dot }}</span>
+              <span style="flex: 1; min-width: 0;">
+                <span class="rp-itxt">{{ it.text }}</span>
+                <span style="display: block; font-size: 11px; color: #A6A79F; font-family: 'IBM Plex Mono', monospace; margin-top: 5px;">{{ it.meta }}</span>
+              </span>
+            </label>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin: 12px 0 0 34px;">{{ ninetyLine }}</div>
+  
+  </sc-if>
+  </section>
+
+<!-- ============ TRACK DETAIL ============ -->
+<section data-screen-label="Track detail" style="margin-top: 46px;">
+  <div class="rp-sech" onClick="{{ sec.trackdetail.toggle }}" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E6A86;">04</span>
+    <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 25px; margin: 0; letter-spacing: -0.01em;"><span class="rp-caret">{{ sec.trackdetail.caret }}</span>Track detail — active tracks</h2>
+  </div>
+  <sc-if value="{{ sec.trackdetail.open }}" hint-placeholder-val="{{ true }}">
+
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+    <!-- CAV detail -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; padding: 22px 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+        <div><div style="font-size: 17px; font-weight: 600;">CAV Biomarker Panel</div><div style="font-size: 12px; color: #77786F; margin-top: 3px;">Target: journal publication · Q3 2027</div></div>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #3E7C54; background: #EAF1EC; padding: 5px 10px; border-radius: 100px; white-space: nowrap;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Advancing</span>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 20px;">Next actions</div>
+      <ol style="margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #33342E;">
+        <li>Lock inclusion criteria + sign data-use (Jul)</li>
+        <li>Finalize analysis plan with biostatistician (Aug)</li>
+        <li>Run biomarker assays on retrospective cohort → analysis</li>
+        <li>File IRB amendment for prospective arm</li>
+      </ol>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 18px;">Path to output</div>
+      <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; flex-wrap: wrap;"><span style="color: #3E7C54; font-weight: 600;">Data ✓</span><span style="color: #C4C5BD;">→</span><span style="color: #3E7C54; font-weight: 600;">Analysis ●</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Writeup</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Submit</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Pub</span></div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #F0EEE9;">
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #EEF1F6; color: #4A5A78; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #6B7FA8;"></span>Biostatistician</span>
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #F2EEF6; color: #5E4A78; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #8A6BA8;"></span>IRB amendment</span>
+      </div>
+      <div style="font-size: 11.5px; color: #8A8B84; margin-top: 12px; font-family: 'IBM Plex Mono', monospace;">Owner: you (lead) · Transplant Cardiology PI</div>
+    </div>
+
+    <!-- LVAD detail -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; padding: 22px 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+        <div><div style="font-size: 17px; font-weight: 600;">LVAD Anti-thrombotic Coating</div><div style="font-size: 12px; color: #77786F; margin-top: 3px;">Target: preclinical / device stage · Q2 2028</div></div>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #2E6A86; background: #E7EFF3; padding: 5px 10px; border-radius: 100px; white-space: nowrap;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2E6A86;"></span>On track</span>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 20px;">Next actions</div>
+      <ol style="margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #33342E;">
+        <li>Secure polymer batch (6-wk lead time) — order now</li>
+        <li>First adhesion + thrombogenicity bench test (Aug)</li>
+        <li>Close MTA with industry partner</li>
+        <li>Design preclinical protocol pending bench gate</li>
+      </ol>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 18px;">Path to output</div>
+      <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; flex-wrap: wrap;"><span style="color: #2E6A86; font-weight: 600;">Synthesis ●</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Bench</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Preclinical</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Device</span></div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #F0EEE9;">
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #F5EFEA; color: #7A5A48; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #A87B6B;"></span>Polymer batch</span>
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #EEF1F6; color: #4A5A78; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #6B7FA8;"></span>Industry MTA</span>
+      </div>
+      <div style="font-size: 11.5px; color: #8A8B84; margin-top: 12px; font-family: 'IBM Plex Mono', monospace;">Owner: you · Biomaterials Lab PI · industry partner</div>
+    </div>
+
+    <!-- Redo detail -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; padding: 22px 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+        <div><div style="font-size: 17px; font-weight: 600;">Redo-Sternotomy Outcomes</div><div style="font-size: 12px; color: #77786F; margin-top: 3px;">Target: abstract Q4 '26 → publication Q2 '27</div></div>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #3E7C54; background: #EAF1EC; padding: 5px 10px; border-radius: 100px; white-space: nowrap;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Advancing</span>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 20px;">Next actions</div>
+      <ol style="margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #33342E;">
+        <li>Complete on-site case pull (Jul)</li>
+        <li>Univariate + multivariate analysis (Aug)</li>
+        <li>Draft &amp; submit abstract (Sep)</li>
+        <li>Expand to full manuscript on acceptance</li>
+      </ol>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 18px;">Path to output</div>
+      <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; flex-wrap: wrap;"><span style="color: #3E7C54; font-weight: 600;">Data ●</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Analysis</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Abstract</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Pub</span></div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #F0EEE9;">
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #F2EEF6; color: #5E4A78; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #8A6BA8;"></span>Data-use agreement</span>
+      </div>
+      <div style="font-size: 11.5px; color: #8A8B84; margin-top: 12px; font-family: 'IBM Plex Mono', monospace;">Owner: you · Cardiac Surgery attending · DB manager</div>
+    </div>
+
+    <!-- Valve detail -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 12px; background: #FFFFFF; padding: 22px 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+        <div><div style="font-size: 17px; font-weight: 600;">Decellularized Valve Scaffold</div><div style="font-size: 12px; color: #77786F; margin-top: 3px;">Target: pilot data → seed grant · Q2 2028</div></div>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #B7822E; background: #F6EFDF; padding: 5px 10px; border-radius: 100px; white-space: nowrap;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #B7822E;"></span>At risk</span>
+      </div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 20px;">Next actions</div>
+      <ol style="margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #33342E;">
+        <li>Identify bioengineering collaborator (from network)</li>
+        <li>Source decellularization reagents + funding line</li>
+        <li>Scope pilot protocol before leaving the States</li>
+        <li>Hold for seed grant before scaling</li>
+      </ol>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 18px;">Path to output</div>
+      <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; flex-wrap: wrap;"><span style="color: #A6A79F;">Materials</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Pilot</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Writeup</span><span style="color: #C4C5BD;">→</span><span style="color: #A6A79F;">Grant</span></div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #F0EEE9;">
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #EAF3EE; color: #3E6A54; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #6BA88C;"></span>Seed funding</span>
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #F5EFEA; color: #7A5A48; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #A87B6B;"></span>Reagents</span>
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #EEF1F6; color: #4A5A78; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 2px; background: #6B7FA8;"></span>Collaborator</span>
+      </div>
+      <div style="font-size: 11.5px; color: #8A8B84; margin-top: 12px; font-family: 'IBM Plex Mono', monospace;">Owner: you · Bioengineering collaborator (TBD)</div>
+    </div>
+  </div>
+
+  </sc-if>
+  </section>
+
+<!-- ============ DECISION GATES ============ -->
+<section data-screen-label="Decision gates" style="margin-top: 46px;">
+  <div class="rp-sech" onClick="{{ sec.decisiongate.toggle }}" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E6A86;">05</span>
+    <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 25px; margin: 0; letter-spacing: -0.01em;"><span class="rp-caret">{{ sec.decisiongate.caret }}</span>Decision gates</h2>
+    <span style="font-size: 12.5px; color: #A6A79F; margin-left: auto;">Where a track advances, pauses, or gets cut</span>
+  </div>
+  <sc-if value="{{ sec.decisiongate.open }}" hint-placeholder-val="{{ true }}">
+
+
+  <div class="rp-gates" style="margin-top: 16px;">
+    <sc-for list="{{ gates }}" as="g" hint-placeholder-count="5">
+      <div class="rp-gate {{ g.cls }}">
+        <div class="rp-gtop">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14.5px; font-weight: 600; color: #26271F;">{{ g.track }}</div>
+            <div style="font-size: 12px; color: #77786F; margin-top: 2px;">{{ g.at }}</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; white-space: nowrap;">{{ g.when }}</span>
+        </div>
+        <div class="rp-crit">
+          <sc-for list="{{ g.criteria }}" as="c" hint-placeholder-count="3">
+            <div style="font-size: 12.5px; line-height: 1.55; color: #3a3b34; padding: 3px 0;">
+              <b style="color: {{ c.color }};">{{ c.k }}</b> {{ c.text }}
+            </div>
+          </sc-for>
+        </div>
+        <div class="rp-grow">
+          <sc-for list="{{ g.calls }}" as="c" hint-placeholder-count="3">
+            <button onClick="{{ c.pick }}" class="rp-btn {{ c.cls }}">{{ c.label }}</button>
+          </sc-for>
+          <span style="flex: 1;"></span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ g.callColor }};">{{ g.callLabel }}</span>
+        </div>
+      </div>
+    </sc-for>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 12px;">{{ gateLine }}</div>
+  </div>
+  
+  </sc-if>
+  </section>
+
+<!-- ============ DEPENDENCY VIEW ============ -->
+<section data-screen-label="Dependency view" style="margin-top: 46px;">
+  <div class="rp-sech" onClick="{{ sec.dependencyvi.toggle }}" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E6A86;">06</span>
+    <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 25px; margin: 0; letter-spacing: -0.01em;"><span class="rp-caret">{{ sec.dependencyvi.caret }}</span>Dependency &amp; blocker view</h2>
+    <span style="font-size: 12.5px; color: #A6A79F; margin-left: auto;">What to unblock deliberately</span>
+  </div>
+  <sc-if value="{{ sec.dependencyvi.open }}" hint-placeholder-val="{{ true }}">
+
+  <p style="font-size: 13px; color: #77786F; margin: 0 0 18px 34px; max-width: 720px;">Collaborator blockers hand off to the networking tools — that's where warm intros and outreach live.</p>
+
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+    <!-- Collaborators -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #6B7FA8; border-radius: 12px; background: #FFFFFF; padding: 18px 16px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5A78;">Collaborators</div>
+      <div style="font-size: 10.5px; color: #A6A79F; margin-top: 2px;">→ networking tools</div>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="padding-bottom: 12px; border-bottom: 1px solid #F0EEE9;"><div style="font-size: 12.5px; font-weight: 500;">Biostatistician</div><div style="font-size: 11px; color: #8A8B84;">CAV · warm intro pending</div></div>
+        <div style="padding-bottom: 12px; border-bottom: 1px solid #F0EEE9;"><div style="font-size: 12.5px; font-weight: 500;">Industry partner</div><div style="font-size: 11px; color: #8A8B84;">LVAD · MTA in progress</div></div>
+        <div><div style="font-size: 12.5px; font-weight: 500;">Bioeng. collaborator</div><div style="font-size: 11px; color: #B7822E;">Valve · not yet identified</div></div>
+      </div>
+    </div>
+    <!-- Data / IRB -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #8A6BA8; border-radius: 12px; background: #FFFFFF; padding: 18px 16px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5E4A78;">Data / IRB</div>
+      <div style="font-size: 10.5px; color: #A6A79F; margin-top: 2px;">approvals &amp; access</div>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="padding-bottom: 12px; border-bottom: 1px solid #F0EEE9;"><div style="font-size: 12.5px; font-weight: 500;">CAV prospective arm</div><div style="font-size: 11px; color: #B7822E;">IRB amendment pending</div></div>
+        <div style="padding-bottom: 12px; border-bottom: 1px solid #F0EEE9;"><div style="font-size: 12.5px; font-weight: 500;">Redo data-use</div><div style="font-size: 11px; color: #8A8B84;">agreement to sign (Jul)</div></div>
+        <div><div style="font-size: 12.5px; font-weight: 500;">AI dataset access</div><div style="font-size: 11px; color: #B0453C;">blocked — pause driver</div></div>
+      </div>
+    </div>
+    <!-- Materials -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #A87B6B; border-radius: 12px; background: #FFFFFF; padding: 18px 16px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7A5A48;">Materials</div>
+      <div style="font-size: 10.5px; color: #A6A79F; margin-top: 2px;">lead times</div>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="padding-bottom: 12px; border-bottom: 1px solid #F0EEE9;"><div style="font-size: 12.5px; font-weight: 500;">LVAD polymer batch</div><div style="font-size: 11px; color: #B7822E;">6-wk lead — order now</div></div>
+        <div><div style="font-size: 12.5px; font-weight: 500;">Decell. reagents</div><div style="font-size: 11px; color: #8A8B84;">Valve · scope + quote</div></div>
+      </div>
+    </div>
+    <!-- Funding -->
+    <div style="border: 1px solid #E4E2DD; border-top: 3px solid #6BA88C; border-radius: 12px; background: #FFFFFF; padding: 18px 16px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #3E6A54;">Funding</div>
+      <div style="font-size: 10.5px; color: #A6A79F; margin-top: 2px;">runway</div>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="padding-bottom: 12px; border-bottom: 1px solid #F0EEE9;"><div style="font-size: 12.5px; font-weight: 500;">LVAD preclinical</div><div style="font-size: 11px; color: #3E7C54;">industry-funded ✓</div></div>
+        <div><div style="font-size: 12.5px; font-weight: 500;">Valve pilot</div><div style="font-size: 11px; color: #B0453C;">seed grant needed</div></div>
+      </div>
+    </div>
+  </div>
+
+  </sc-if>
+  </section>
+
+<!-- ============ DETAILED EXECUTION PLANS ============ -->
+<section data-screen-label="Detailed execution plans" style="margin-top: 46px;">
+  <div class="rp-sech" onClick="{{ sec.detailedexec.toggle }}" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E6A86;">07</span>
+    <h2 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 25px; margin: 0; letter-spacing: -0.01em;"><span class="rp-caret">{{ sec.detailedexec.caret }}</span>Detailed execution plans — track by track</h2>
+    <span style="font-size: 12.5px; color: #A6A79F; margin-left: auto;">Every phase, every step, in sequence</span>
+  </div>
+  <sc-if value="{{ sec.detailedexec.open }}" hint-placeholder-val="{{ true }}">
+
+  <p style="font-size: 13px; color: #77786F; margin: 0 0 22px 34px; max-width: 760px;">Each track broken into phases, each phase into ordered steps with owner and dependency. Phases run top-to-bottom; a <span style="color: #33342E; font-weight: 600;">◆ gate</span> ends a phase and decides whether the next one starts. Dates are targets — re-baseline at each gate.</p>
+
+  <div style="display: flex; flex-direction: column; gap: 22px;">
+
+    <!-- ========== TRACK 1: CAV ========== -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; background: #F3F7F4; border-bottom: 1px solid #E4E2DD; border-left: 4px solid #3E7C54; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: #3E7C54;">T1</span>
+          <div style="font-size: 18px; font-weight: 600;">CAV Biomarker Panel</div>
+          <span style="font-size: 12px; color: #77786F;">→ journal publication</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;">
+          <span style="color: #77786F;">Target <span style="color: #33342E; font-weight: 600;">Q3 2027</span></span>
+          <span style="color: #77786F;">Est. effort <span style="color: #33342E; font-weight: 600;">~12 mo</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 6px; color: #3E7C54; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Advancing</span>
+        </div>
+      </div>
+      <div style="padding: 6px 24px 22px;">
+
+        <!-- Phase 1 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #3E7C54; border: 2px solid #fff; box-shadow: 0 0 0 1px #3E7C54;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #3E7C54; font-weight: 600;">Phase 1</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">Governance &amp; cohort setup</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Jul – Aug 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.1</span><div><div style="font-size: 13px; line-height: 1.4;">Finalize inclusion / exclusion criteria and the biomarker candidate list with Transplant Cardiology PI.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + PI · <span style="color: #2E6A86;">◉ in-person</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.2</span><div><div style="font-size: 13px; line-height: 1.4;">Sign the data-use agreement covering the retrospective transplant registry.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + PI · dep: <span style="color: #5E4A78;">Data/IRB</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.3</span><div><div style="font-size: 13px; line-height: 1.4;">Secure warm intro to biostatistician and hold a scoping call; agree the analysis framework.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #4A5A78;">Collaborator</span> → networking tools</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.4</span><div><div style="font-size: 13px; line-height: 1.4;">Pull and clean the retrospective cohort; confirm ≥ 60 usable cases before assays.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · deliverable: locked cohort table</div></div></div>
+          </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #3E7C54; border: 2px solid #fff; box-shadow: 0 0 0 1px #3E7C54;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #3E7C54; font-weight: 600;">Phase 2</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">Assay &amp; data generation</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Sep – Dec 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.1</span><div><div style="font-size: 13px; line-height: 1.4;">Run biomarker assays on retrospective samples in batches; log QC per batch.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + lab · deliverable: assay dataset</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.2</span><div><div style="font-size: 13px; line-height: 1.4;">Draft &amp; file the IRB amendment for the prospective arm (submit early — review lag).</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #5E4A78;">IRB amendment</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.3</span><div><div style="font-size: 13px; line-height: 1.4;">Merge assay results with clinical outcomes; hand the clean matrix to the biostatistician.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + stats · deliverable: analysis-ready dataset</div></div></div>
+          </div>
+        </div>
+
+        <!-- Gate -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 18px 20px 18px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -8px; top: 20px; width: 12px; height: 12px; background: #B7822E; border: 2px solid #fff; box-shadow: 0 0 0 1px #B7822E; transform: rotate(45deg);"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #B7822E; font-weight: 600;">◆ Gate</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q1 2027</div>
+          </div>
+          <div style="padding: 14px 0 14px 24px;"><div style="font-size: 12.5px; color: #33342E; line-height: 1.5;">Analysis readout. <span style="color: #3E7C54; font-weight: 600;">Advance</span> if n ≥ 60 &amp; signal p &lt; 0.05 · <span style="color: #B7822E; font-weight: 600;">Pause</span> &amp; add sites if weak · <span style="color: #B0453C; font-weight: 600;">Cut</span> if usable cohort &lt; 40.</div></div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #9CBFA6; box-shadow: 0 0 0 1px #fff;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #6E8A78; font-weight: 600;">Phase 3</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3; color: #55564F;">Manuscript &amp; publication</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Apr – Q3 2027</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6E8A78; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.1</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Finalize figures &amp; statistical tables; write full draft.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + co-authors</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6E8A78; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.2</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Select target journal, format, and submit; track through revision cycles.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · <span style="color: #3E7C54;">◉ output: PUB Q3 2027</span></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TRACK 2: LVAD ========== -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; background: #F1F5F7; border-bottom: 1px solid #E4E2DD; border-left: 4px solid #2E6A86; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: #2E6A86;">T2</span>
+          <div style="font-size: 18px; font-weight: 600;">LVAD Anti-thrombotic Coating</div>
+          <span style="font-size: 12px; color: #77786F;">→ preclinical / device stage</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;">
+          <span style="color: #77786F;">Target <span style="color: #33342E; font-weight: 600;">Q2 2028</span></span>
+          <span style="color: #77786F;">Est. effort <span style="color: #33342E; font-weight: 600;">~21 mo</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 6px; color: #2E6A86; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2E6A86;"></span>On track</span>
+        </div>
+      </div>
+      <div style="padding: 6px 24px 22px;">
+
+        <!-- Phase 1 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E6ECEF; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #2E6A86; border: 2px solid #fff; box-shadow: 0 0 0 1px #2E6A86;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #2E6A86; font-weight: 600;">Phase 1</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">Materials &amp; agreements</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Jul – Aug 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2E6A86; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.1</span><div><div style="font-size: 13px; line-height: 1.4;">Order the polymer batch now — 6-week lead time is on the critical path.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #7A5A48;">Materials</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2E6A86; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.2</span><div><div style="font-size: 13px; line-height: 1.4;">Close the MTA with the industry partner; confirm preclinical funding line.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + partner · dep: <span style="color: #4A5A78;">Industry MTA</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2E6A86; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.3</span><div><div style="font-size: 13px; line-height: 1.4;">Reserve bench time &amp; define adhesion + thrombogenicity test protocol with Biomaterials Lab PI.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + lab PI · <span style="color: #2E6A86;">◉ in-person</span></div></div></div>
+          </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E6ECEF; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #2E6A86; border: 2px solid #fff; box-shadow: 0 0 0 1px #2E6A86;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #2E6A86; font-weight: 600;">Phase 2</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">Bench testing</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Aug – Dec 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2E6A86; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.1</span><div><div style="font-size: 13px; line-height: 1.4;">Coat inflow-component coupons; run first adhesion bench test (target August).</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + lab · <span style="color: #2E6A86;">◉ in-person</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2E6A86; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.2</span><div><div style="font-size: 13px; line-height: 1.4;">Run thrombogenicity assay under flow; compare vs uncoated control against threshold.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + lab · deliverable: bench results memo</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2E6A86; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.3</span><div><div style="font-size: 13px; line-height: 1.4;">If adhesion fails, reformulate &amp; re-test one cycle before the gate.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">contingency</div></div></div>
+          </div>
+        </div>
+
+        <!-- Gate -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 18px 20px 18px 0; border-right: 2px solid #E6ECEF; position: relative;">
+            <span style="position: absolute; right: -8px; top: 20px; width: 12px; height: 12px; background: #B7822E; border: 2px solid #fff; box-shadow: 0 0 0 1px #B7822E; transform: rotate(45deg);"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #B7822E; font-weight: 600;">◆ Gate</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q4 2026</div>
+          </div>
+          <div style="padding: 14px 0 14px 24px;"><div style="font-size: 12.5px; color: #33342E; line-height: 1.5;">Bench test readout. <span style="color: #3E7C54; font-weight: 600;">Advance</span> if adhesion + thrombogenicity meet threshold · <span style="color: #B7822E; font-weight: 600;">Pause</span> &amp; reformulate if adhesion fails · <span style="color: #B0453C; font-weight: 600;">Cut</span> if partner withdraws MTA.</div></div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E6ECEF; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #A0BDCB; box-shadow: 0 0 0 1px #fff;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #5E8093; font-weight: 600;">Phase 3</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3; color: #55564F;">Preclinical design &amp; approvals</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q1 – Q2 2027</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5E8093; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.1</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Write preclinical protocol &amp; power calc; submit IACUC / regulatory package.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + partner · dep: approvals</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5E8093; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.2</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Scale coating process for study articles; lock supply.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + lab</div></div></div>
+          </div>
+        </div>
+
+        <!-- Phase 4 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E6ECEF; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #A0BDCB; box-shadow: 0 0 0 1px #fff;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #5E8093; font-weight: 600;">Phase 4</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3; color: #55564F;">Preclinical run &amp; device writeup</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q3 2027 – Q2 2028</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5E8093; font-weight: 700; flex-shrink: 0; margin-top: 1px;">4.1</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Execute preclinical study; collect patency &amp; thrombosis endpoints.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + partner</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5E8093; font-weight: 700; flex-shrink: 0; margin-top: 1px;">4.2</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Analyze results; compile device-stage report &amp; IP disclosure.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · <span style="color: #2E6A86;">◉ output: DEVICE Q2 2028</span></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TRACK 3: REDO ========== -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; background: #F3F7F4; border-bottom: 1px solid #E4E2DD; border-left: 4px solid #3E7C54; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: #3E7C54;">T3</span>
+          <div style="font-size: 18px; font-weight: 600;">Redo-Sternotomy Outcomes</div>
+          <span style="font-size: 12px; color: #77786F;">→ abstract then publication · the fast win</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;">
+          <span style="color: #77786F;">Target <span style="color: #33342E; font-weight: 600;">Q2 2027</span></span>
+          <span style="color: #77786F;">Est. effort <span style="color: #33342E; font-weight: 600;">~9 mo</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 6px; color: #3E7C54; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3E7C54;"></span>Advancing</span>
+        </div>
+      </div>
+      <div style="padding: 6px 24px 22px;">
+
+        <!-- Phase 1 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #3E7C54; border: 2px solid #fff; box-shadow: 0 0 0 1px #3E7C54;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #3E7C54; font-weight: 600;">Phase 1</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">On-site data pull</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Jul 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.1</span><div><div style="font-size: 13px; line-height: 1.4;">Sign the data-use agreement with the Cardiac Surgery attending.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #5E4A78;">Data-use</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.2</span><div><div style="font-size: 13px; line-height: 1.4;">Pull redo cases on-site with the database manager; define variables &amp; outcomes.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + DB mgr · <span style="color: #2E6A86;">◉ in-person</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.3</span><div><div style="font-size: 13px; line-height: 1.4;">Clean, de-identify &amp; validate the dataset; document exclusions.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · deliverable: analysis dataset</div></div></div>
+          </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #3E7C54; border: 2px solid #fff; box-shadow: 0 0 0 1px #3E7C54;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #3E7C54; font-weight: 600;">Phase 2</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">Analysis</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Aug 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.1</span><div><div style="font-size: 13px; line-height: 1.4;">Run univariate risk-factor analysis; build the descriptive table.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you (async, can leave the States)</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.2</span><div><div style="font-size: 13px; line-height: 1.4;">Fit multivariate model; produce key figures.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · deliverable: results set</div></div></div>
+          </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #3E7C54; border: 2px solid #fff; box-shadow: 0 0 0 1px #3E7C54;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #3E7C54; font-weight: 600;">Phase 3</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">Abstract</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Sep – Q4 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.1</span><div><div style="font-size: 13px; line-height: 1.4;">Draft abstract to the fall conference template; circulate to co-authors.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + attending</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3E7C54; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.2</span><div><div style="font-size: 13px; line-height: 1.4;">Submit abstract by the deadline.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · <span style="color: #B7822E;">◉ milestone: ABSTR Q4 2026</span></div></div></div>
+          </div>
+        </div>
+
+        <!-- Gate -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 18px 20px 18px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -8px; top: 20px; width: 12px; height: 12px; background: #B7822E; border: 2px solid #fff; box-shadow: 0 0 0 1px #B7822E; transform: rotate(45deg);"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #B7822E; font-weight: 600;">◆ Gate</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q1 2027</div>
+          </div>
+          <div style="padding: 14px 0 14px 24px;"><div style="font-size: 12.5px; color: #33342E; line-height: 1.5;">Abstract decision. <span style="color: #3E7C54; font-weight: 600;">Advance</span> to manuscript if accepted · <span style="color: #B7822E; font-weight: 600;">Pause</span> &amp; reframe/resubmit if rejected · <span style="color: #B0453C; font-weight: 600;">Cut</span> if not novel vs literature.</div></div>
+        </div>
+
+        <!-- Phase 4 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #E9EDE9; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #9CBFA6; box-shadow: 0 0 0 1px #fff;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #6E8A78; font-weight: 600;">Phase 4</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3; color: #55564F;">Full manuscript &amp; publication</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q1 – Q2 2027</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6E8A78; font-weight: 700; flex-shrink: 0; margin-top: 1px;">4.1</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Expand abstract to full manuscript; add sensitivity analyses.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + co-authors</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6E8A78; font-weight: 700; flex-shrink: 0; margin-top: 1px;">4.2</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Submit to target journal; manage revisions.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · <span style="color: #3E7C54;">◉ output: PUB Q2 2027</span></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TRACK 4: VALVE ========== -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; background: #F8F4EC; border-bottom: 1px solid #E4E2DD; border-left: 4px solid #B7822E; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: #B7822E;">T4</span>
+          <div style="font-size: 18px; font-weight: 600;">Decellularized Valve Scaffold</div>
+          <span style="font-size: 12px; color: #77786F;">→ pilot data then seed grant · long horizon</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;">
+          <span style="color: #77786F;">Target <span style="color: #33342E; font-weight: 600;">Q2 2028</span></span>
+          <span style="color: #77786F;">Est. effort <span style="color: #33342E; font-weight: 600;">~18 mo</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 6px; color: #B7822E; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #B7822E;"></span>At risk</span>
+        </div>
+      </div>
+      <div style="padding: 6px 24px 22px;">
+
+        <!-- Phase 1 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #EEE7D8; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #B7822E; border: 2px solid #fff; box-shadow: 0 0 0 1px #B7822E;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #9A7328; font-weight: 600;">Phase 1</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3;">Collaborator &amp; scoping</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Jul – Sep 2026</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9A7328; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.1</span><div><div style="font-size: 13px; line-height: 1.4;">Identify &amp; secure a bioengineering collaborator — the top unblock for this track.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #4A5A78;">Collaborator</span> → networking tools</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9A7328; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.2</span><div><div style="font-size: 13px; line-height: 1.4;">Scope the pilot protocol &amp; build the reagents/materials list before leaving the States.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · <span style="color: #2E6A86;">◉ in-person</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9A7328; font-weight: 700; flex-shrink: 0; margin-top: 1px;">1.3</span><div><div style="font-size: 13px; line-height: 1.4;">Shortlist seed-grant targets &amp; deadlines.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #3E6A54;">Funding</span></div></div></div>
+          </div>
+        </div>
+
+        <!-- Gate -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 18px 20px 18px 0; border-right: 2px solid #EEE7D8; position: relative;">
+            <span style="position: absolute; right: -8px; top: 20px; width: 12px; height: 12px; background: #B7822E; border: 2px solid #fff; box-shadow: 0 0 0 1px #B7822E; transform: rotate(45deg);"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #B7822E; font-weight: 600;">◆ Gate</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q4 2026</div>
+          </div>
+          <div style="padding: 14px 0 14px 24px;"><div style="font-size: 12.5px; color: #33342E; line-height: 1.5;">Readiness check. <span style="color: #3E7C54; font-weight: 600;">Advance</span> if collaborator + funding line secured · <span style="color: #B7822E; font-weight: 600;">Pause</span> if either unsecured by Q4 '26 · <span style="color: #B0453C; font-weight: 600;">Shelve</span> if no seed grant lands.</div></div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #EEE7D8; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #D6BE86; box-shadow: 0 0 0 1px #fff;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #9A7328; font-weight: 600;">Phase 2</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3; color: #55564F;">Funding &amp; materials</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q4 2026 – Q1 2027</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9A7328; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.1</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Submit seed-grant application; secure the funding line.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #3E6A54;">Seed funding</span></div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9A7328; font-weight: 700; flex-shrink: 0; margin-top: 1px;">2.2</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Order decellularization reagents once funded.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · dep: <span style="color: #7A5A48;">Reagents</span></div></div></div>
+          </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div style="display: grid; grid-template-columns: 176px 1fr; gap: 0; border-top: 1px solid #F0EEE9;">
+          <div style="padding: 20px 20px 20px 0; border-right: 2px solid #EEE7D8; position: relative;">
+            <span style="position: absolute; right: -7px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #D6BE86; box-shadow: 0 0 0 1px #fff;"></span>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #9A7328; font-weight: 600;">Phase 3</div>
+            <div style="font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.3; color: #55564F;">Pilot runs &amp; grant</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8B84; margin-top: 6px;">Q2 2027 – Q2 2028</div>
+          </div>
+          <div style="padding: 16px 0 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9A7328; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.1</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Run decellularization pilots with collaborator; test scaffold integrity.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you + collaborator</div></div></div>
+            <div style="display: flex; gap: 10px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9A7328; font-weight: 700; flex-shrink: 0; margin-top: 1px;">3.2</span><div><div style="font-size: 13px; line-height: 1.4; color: #33342E;">Write up pilot data; submit the full grant application.</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; margin-top: 3px;">you · <span style="color: #B7822E;">◉ output: GRANT Q2 2028</span></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TRACK 5: AI (paused) ========== -->
+    <div style="border: 1px solid #E4E2DD; border-radius: 14px; background: #FBFAF8; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; background: #F4F3F1; border-bottom: 1px solid #E4E2DD; border-left: 4px solid #8B8C85; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: #8B8C85;">T5</span>
+          <div style="font-size: 18px; font-weight: 600; color: #77786F;">AI Surgical Risk Model</div>
+          <span style="font-size: 12px; color: #A6A79F;">held at gate — reactivation plan only</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;">
+          <span style="color: #A6A79F;">No active hours</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px; color: #8B8C85; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;"><span style="width: 8px; height: 8px; background: #8B8C85; transform: rotate(45deg); display: inline-block;"></span>Paused</span>
+        </div>
+      </div>
+      <div style="padding: 18px 24px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #A6A79F;">Why paused</div>
+          <p style="font-size: 12.5px; color: #77786F; line-height: 1.55; margin: 8px 0 0;">Gate triggered Q2 2026: failed the novelty check versus published risk models, and labeled-dataset access is unresolved. No further hours are spent until a labeled dataset is secured.</p>
+        </div>
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #A6A79F;">Reactivation checklist — all must clear</div>
+          <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 10px;">
+            <div style="display: flex; gap: 9px; align-items: flex-start;"><span style="color: #C4C5BD; font-size: 13px; line-height: 1.2;">○</span><span style="font-size: 12.5px; color: #55564F; line-height: 1.4;">Labeled post-cardiotomy dataset secured with data-use in place.</span></div>
+            <div style="display: flex; gap: 9px; align-items: flex-start;"><span style="color: #C4C5BD; font-size: 13px; line-height: 1.2;">○</span><span style="font-size: 12.5px; color: #55564F; line-height: 1.4;">A defensible novelty angle vs existing published models.</span></div>
+            <div style="display: flex; gap: 9px; align-items: flex-start;"><span style="color: #C4C5BD; font-size: 13px; line-height: 1.2;">○</span><span style="font-size: 12.5px; color: #55564F; line-height: 1.4;">Capacity free without displacing CAV, LVAD, or Redo.</span></div>
+          </div>
+          <p style="font-size: 11.5px; color: #A6A79F; margin: 12px 0 0; font-family: 'IBM Plex Mono', monospace;">Re-scored at the Sep 2026 go/no-go memo (see Next 90 days).</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  </sc-if>
+  </section>
+
+<!-- Footer -->
+<div style="margin-top: 44px; padding-top: 20px; border-top: 1px solid #E4E2DD; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">Review weekly · re-baseline at each decision gate · pairs with the portfolio sheet + networking tools</span>
+  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F;">CT Research Program · v1 · Jul 5 2026</span>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1040,&quot;height&quot;:2000}}">
+/* ─────────────────────────────────────────────────────────────────────────
+   The research action plan, ported into the hub.
+
+   Most of it stays what it was: a considered document. The milestone bars,
+   the dependency view and the phase-by-phase execution plans are prose, and
+   turning every line into a checkbox would make them worse.
+
+   Two parts are different, because they are the parts that decay if nothing
+   updates them — the next ninety days, and the decision gates. Those are
+   live, and they live in their OWN track rather than in the master plan, so
+   research progress is counted separately from the summer sprint.
+
+   STORAGE CONTRACT
+     ct_research_v1 = { v:1,
+                        done:{ <itemId>: true },        // the 90-day items
+                        gates:{ <gateId>: { call:'advance'|'pause'|'cut',
+                                            at:'YYYY-MM-DD' } } }
+   ───────────────────────────────────────────────────────────────────────── */
+class Component extends DCLogic {
+  KEY = 'ct_research_v1';
+  UKEY = 'ct_research_ui_v1';
+  // Closed on a phone, open on a desktop — except the ninety days, which is
+  // the part you actually act on.
+  PHONE_OPEN = { next90days: true };
+  state = { tick: 0 };
+
+  ITEMS = [{"id": "jul-lock-cav-cohort-criteria-sign-data", "month": "JULY", "inPerson": true, "text": "Lock CAV cohort criteria & sign data-use with Transplant Cardiology PI", "meta": "CAV · owner: you + PI"}, {"id": "jul-on-site-pull-of-redo-sternotomy-ca", "month": "JULY", "inPerson": true, "text": "On-site pull of redo-sternotomy cases with database manager", "meta": "Redo · owner: you + DB mgr"}, {"id": "jul-draft-cav-prospective-arm-irb-amen", "month": "JULY", "inPerson": false, "text": "Draft CAV prospective-arm IRB amendment", "meta": "CAV · async"}, {"id": "aug-run-first-coating-adhesion-bench-t", "month": "AUGUST", "inPerson": true, "text": "Run first coating adhesion bench test at Biomaterials Lab", "meta": "LVAD · owner: you + lab PI"}, {"id": "aug-commit-cav-analysis-plan-with-bios", "month": "AUGUST", "inPerson": true, "text": "Commit CAV analysis plan with biostatistician (warm intro from network)", "meta": "CAV · owner: you + stats"}, {"id": "aug-draft-redo-sternotomy-abstract-fal", "month": "AUGUST", "inPerson": false, "text": "Draft redo-sternotomy abstract (fall conference deadline)", "meta": "Redo · async"}, {"id": "sep-submit-redo-sternotomy-abstract", "month": "SEPTEMBER", "inPerson": false, "text": "Submit redo-sternotomy abstract", "meta": "Redo · gate: acceptance"}, {"id": "sep-write-ai-go-no-go-memo-confirm-the", "month": "SEPTEMBER", "inPerson": false, "text": "Write AI go/no-go memo — confirm the pause or kill it", "meta": "AI · decision"}, {"id": "sep-scope-valve-scaffold-materials-lis", "month": "SEPTEMBER", "inPerson": false, "text": "Scope valve-scaffold materials list & seed-grant targets before leaving", "meta": "Valve · async"}];
+
+  // Verbatim from the document, with the AI gate's worked example kept as the
+  // decision it already is.
+  GATES = [
+    { id: 'cav', track: 'CAV Biomarker', at: 'at analysis readout', when: 'Q1 2027', criteria: [
+      ['Advance', 'if n ≥ 60 usable cases & signal p < 0.05'],
+      ['Pause', 'if signal weak — add cohort sites'],
+      ['Cut', 'if usable cohort < 40'] ] },
+    { id: 'lvad', track: 'LVAD Coating', at: 'at bench test', when: 'Q4 2026', criteria: [
+      ['Advance', 'if adhesion + thrombogenicity meet threshold'],
+      ['Pause', 'if adhesion fails — reformulate'],
+      ['Cut', 'if industry partner withdraws MTA'] ] },
+    { id: 'redo', track: 'Redo-Sternotomy', at: 'at abstract decision', when: 'Q1 2027', criteria: [
+      ['Advance', 'to full manuscript if accepted'],
+      ['Pause', 'if rejected — reframe & resubmit'],
+      ['Cut', 'if finding not novel vs literature'] ] },
+    { id: 'valve', track: 'Valve Scaffold', at: 'at pilot readout', when: 'Q2 2028', criteria: [
+      ['Advance', 'to grant if scaffold retains integrity'],
+      ['Pause', "if collaborator or funding not secured by Q4 '26"],
+      ['Cut', 'or shelve if no seed grant landed'] ] },
+    { id: 'ai', track: 'AI Risk Model', at: 'gate triggered — worked example', when: 'Q2 2026', criteria: [
+      ['Paused', '— failed novelty check vs published models; labeled-data access unresolved.'],
+      ['Revisit', 'only if a labeled dataset is secured. No further hours until then.'] ] },
+  ];
+
+  read() {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(this.KEY)); } catch (e) {}
+    const d = Object.assign({ v: 1, done: {}, gates: {} }, s || {});
+    if (!d.done) d.done = {};
+    if (!d.gates) d.gates = {};
+    return d;
+  }
+  write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} }
+  mut(fn) { const d = this.read(); fn(d); this.write(d); this.setState(s => ({ tick: s.tick + 1 })); }
+
+  isoDay() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  toggle(id) { this.mut(d => { if (d.done[id]) delete d.done[id]; else d.done[id] = true; }); }
+  call(gid, k) {
+    this.mut(d => {
+      if (d.gates[gid] && d.gates[gid].call === k) delete d.gates[gid];
+      else d.gates[gid] = { call: k, at: this.isoDay() };
+    });
+  }
+
+  readUI() { try { return JSON.parse(localStorage.getItem(this.UKEY)) || {}; } catch (e) { return {}; } }
+  isPhone() { try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; } }
+  mkSec(k) {
+    const saved = this.readUI()[k];
+    const open = saved === undefined ? (this.isPhone() ? !!this.PHONE_OPEN[k] : true) : !!saved;
+    return { open, caret: open ? '▾' : '▸', toggle: () => {
+      const ui = this.readUI(); ui[k] = !open;
+      try { localStorage.setItem(this.UKEY, JSON.stringify(ui)); } catch (e) {}
+      this.setState(st => ({ tick: st.tick + 1 }));
+    } };
+  }
+
+  renderVals() {
+    this.state.tick;
+    const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const now = new Date();
+    const until = s => Math.max(0, Math.ceil((new Date(s + 'T00:00:00') - now) / 86400000));
+    const D = this.read();
+
+    // ── the ninety days ──
+    const names = [];
+    this.ITEMS.forEach(i => { if (names.indexOf(i.month) < 0) names.push(i.month); });
+    const months = names.map(name => {
+      const mine = this.ITEMS.filter(i => i.month === name);
+      const doneN = mine.filter(i => D.done[i.id]).length;
+      return {
+        name,
+        done: doneN + '/' + mine.length,
+        items: mine.map(i => ({
+          text: i.text, meta: i.meta, on: !!D.done[i.id],
+          cls: D.done[i.id] ? 'done' : '',
+          dot: i.inPerson ? '◉' : '○',
+          dotColor: i.inPerson ? '#2E6A86' : '#C4C5BD',
+          toggle: () => this.toggle(i.id),
+        })),
+      };
+    });
+    const doneAll = this.ITEMS.filter(i => D.done[i.id]).length;
+    const person = this.ITEMS.filter(i => i.inPerson);
+    const personLeft = person.filter(i => !D.done[i.id]).length;
+    const ninetyLine = doneAll + ' of ' + this.ITEMS.length + ' done · '
+      + (personLeft ? personLeft + ' in-person item' + (personLeft === 1 ? '' : 's') + ' still open — those windows close when you leave'
+                    : 'every in-person item is closed');
+
+    // ── the gates ──
+    const tone = { Advance: '#3B6D11', Pause: '#854F0B', Cut: '#A32E27', Paused: '#854F0B', Revisit: '#55564F' };
+    const called = { advance: 'Advanced', pause: 'Paused', cut: 'Cut' };
+    const gates = this.GATES.map(g => {
+      const rec = D.gates[g.id];
+      return {
+        track: g.track, at: g.at, when: g.when,
+        cls: rec ? 'called ' + rec.call : '',
+        criteria: g.criteria.map(([k, text]) => ({ k, text, color: tone[k] || '#55564F' })),
+        calls: ['advance', 'pause', 'cut'].map(k => ({
+          label: k.charAt(0).toUpperCase() + k.slice(1),
+          cls: rec && rec.call === k ? 'on ' + k : '',
+          pick: () => this.call(g.id, k),
+        })),
+        callLabel: rec ? called[rec.call] + ' ' + rec.at : 'not called yet',
+        callColor: rec ? (rec.call === 'cut' ? '#A32E27' : rec.call === 'pause' ? '#854F0B' : '#3B6D11') : '#A6A79F',
+      };
+    });
+    const calledN = this.GATES.filter(g => D.gates[g.id]).length;
+    const gateLine = calledN + ' of ' + this.GATES.length + ' gates called. A gate with no decision recorded is a track running on momentum.';
+
+    return {
+      todayLabel: DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear(),
+      daysToOct: until('2026-10-01'),
+      monthsToPoland: Math.round(until('2028-07-01') / 30.44),
+      yearsToMatch: (until('2031-03-21') / 365.25).toFixed(1),
+      months, ninetyLine, gates, gateLine,
+      sec: { portfolioata: this.mkSec('portfolioata'), milestonetim: this.mkSec('milestonetim'), next90days: this.mkSec('next90days'), trackdetail: this.mkSec('trackdetail'), decisiongate: this.mkSec('decisiongate'), dependencyvi: this.mkSec('dependencyvi'), detailedexec: this.mkSec('detailedexec') },
+    };
+  }
+}
+</script>
+</body>
+</html>
