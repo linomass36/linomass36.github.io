@@ -25,6 +25,7 @@
     ['CT Master Plan.html', 'CT Master Plan'],
     ['Summer Sprint.dc.html', 'Summer Sprint'],
     ['Plan Analysis.dc.html', 'Plan Analysis'],
+    ['Anatomy.dc.html', 'Anatomy · closure log'],
     ['Study Engine.dc.html', 'Study Engine'],
     ['Reading List.dc.html', 'Reading List'],
     ['Library.dc.html', 'Library'],
