@@ -394,11 +394,106 @@ them:
 Both live in `ct_research_v1` — **their own track, not the master plan**, so
 research progress is counted separately from the summer sprint.
 
+## Twenty-two pages become nineteen
+
+The hub was audited page by page, at both widths, counting screens and
+controls rather than trading opinions. Three pages were doing nothing, two
+pairs of pages were doing the same job twice, and the front page had become
+the longest read in the hub. What follows is what changed and why.
+
+### One weekly review, not two
+
+The Review Room and the Weekly Review were both the Sunday ritual. The Review
+Room's five questions — what moved, what stalled, what you learned, what gets
+cut, the one thing that must happen — were the better half, so they moved into
+the Weekly Review and the Review Room is gone. Its store is read once on first
+load, copied across, and then left alone forever; it is never written to and
+never deleted.
+
+### The Library folds into the Reading List
+
+Both were a shelf with a queue, a reading state and a done state. The Reading
+List already held publications and already had a takeaway field in its
+reflection log, so the Library was the same page twice. Its papers come across
+on first load as publications, its statuses map onto the shelf's
+(`queue → unread`, `done → read`), and its takeaways land in the reflection
+log. The one rule worth keeping came with them: **a paper is not read until
+its takeaway is written**, and opening a paper marked read with nothing
+written says so.
+
+### Dossiers and the Network Map, linked rather than merged
+
+These two look alike and are not the same thing. The map is the visual — who
+is where, who you owe a touch, which trips overlap with which meetings. The
+Dossiers page is the file: every conversation with a person, in order, for
+reference. So they stay two pages and each opens the other on the same person
+— the map's pin links straight into that person's file, and the file links
+back to their pin.
+
+### The shelf opens where the work is
+
+Shelves used to all start open, which on a phone meant scrolling past a
+hundred and sixty books to reach the four you are actually reading. Now a
+shelf starts open only if something on it is in progress; everything else
+starts closed, with its read count on the header. Once you open or close a
+shelf by hand, that choice is remembered and the rule stops applying to it.
+
+A shelf also carries one kind, because the Books / Papers filter reads it —
+so a paper you added is grouped as a paper, not filed under Books where the
+filter that exists to find it would hide it.
+
+### The drawer is grouped
+
+Nineteen pages in one flat list is a wall. The drawer now groups them the way
+the days actually divide: **Every day** (Today, Mission Control), **Study**
+(Anatomy, Study Engine, Reading List), **Body** (Grind board, Life Log),
+**The plan** (Master Plan, Summer Sprint, Plan Analysis, Timeline),
+**Research** (Research Plan, Conference Radar), **People & money** (Network
+Map, Dossiers, Vault), and **Looking back** (Weekly Review, Journal,
+Examiner).
+
+### Mission Control is a glance again
+
+It had grown to eight screens of panels, most of which restated a page you
+could open. The deck of live numbers and **DO THESE NEXT** are the glance and
+stay at the top; every section below them — rooms, plan & risk, analytics,
+the conference desk, decisions — now starts **closed**, on a desktop as well
+as a phone, and opens with one tap. That choice is remembered per section.
+The six-item plan-view strip and the sticky in-page nav both went: with the
+sections collapsed there is nothing left to jump past.
+
+Desktop went from 7.7 screens to 1.3, a phone from 9.9 to 3.2.
+
+**One bug found on the way.** Folding the Library left a call reading a store
+whose key had been removed, and it threw inside `renderVals()` — which does
+not crash the page, it falls back to the empty defaults. Mission Control had
+been shipping as a fully-formed but empty shell. There is now a sweep
+(`crash.js`) that loads every page at both widths and fails on a `renderVals()`
+throw or a body with almost no text in it, because that is the failure this
+framework hides best.
+
+## Close the day
+
+At the bottom of Today, and on the Life Log, there is a short end-of-day
+block: total screen time, how much of it was social or entertainment, pickups,
+what the eating was like, and a line about the evening. It takes under a
+minute and it is the only input the analysis needs.
+
+The Life Log's **Trends** panel then reads it against everything else already
+being logged — sleep, study hours, training, diet — and reports the
+correlations, in plain words with the number beside them. It will not report
+one until there are at least eight days that carry both figures, and it says
+so rather than showing a shape drawn from three points. Correlation is not
+cause and the panel says that too; what it is for is noticing that the bad
+weeks and the four-hour phone days are the same weeks.
+
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
 - `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
 - `Grind.dc.html` + `grind-data.js` — the nine-week board and its programme.
 - `Research Plan.dc.html` — the five-track portfolio, with a live ninety days and live gates.
+- `Hub.dc.html` — Mission Control: the deck of live numbers, what to do next, and five collapsed sections holding the detail. See **Twenty-two pages become nineteen** above.
+- `Life Log.dc.html` — the day's record, the close-the-day block, and the **Trends** panel that correlates screen time against sleep, study, training and diet. See **Close the day** above.
 - `Today.dc.html` — the phone's front door: the day at a glance, plus a note box, a ✓ and a journal box. See **On a phone** above.
 - `sync.js` — Firestore ↔ localStorage sync + owner-only guard. Loaded on hub pages. Shows a small **sync-status pill** (bottom-left): grey = off / sign-in / local-only, amber = saving, green = synced, red = not syncing. Tap it for a panel showing the account, both revisions, the size of what this device is holding, its biggest keys, and **which keys have not made it to the cloud yet** — that last line is the one that answers "why isn't this on my other device". The panel's **Sync now** pulls before it pushes, so one tap brings a device that missed an update back in line. `window.hubSync.state` / `window.hubSync.syncNow()` do the same from the console.
 
@@ -428,7 +523,7 @@ research progress is counted separately from the summer sprint.
   - *Too big: N MB* — everything in localStorage goes into **one** Firestore document, and a document tops out at 1 MiB. Nothing syncs past that. The panel's "biggest" line names the keys to prune.
   - *Waiting to read the cloud* — this device could not read the cloud, so it deliberately will not write over it either (otherwise a phone with a months-old copy could wipe the laptop's). It retries every 15s.
 - `obsidian.js` — the Reading List ↔ Obsidian bridge: the Markdown note formats (one per book, one per reading plan), their parsers, the three-way merges, and the two transports (vault folder via the File System Access API, or the Local REST API plugin). Loaded by the Reading List page only.
-- `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`), and on phones the **bottom tab bar** — Today, Reading, Journal, Log, Review. Injected on hub pages.
+- `nav.js` — the bookmark sidebar: a slide-in drawer (top-right button, or swipe in from the right edge) listing every hub page **grouped by what it is for** (current one highlighted) plus your own saved links (`hub_bookmarks_v1`, so they sync). Also holds the **Dark mode** toggle (`hub_theme_v1`), and on phones the **bottom tab bar** — Today, Reading, Journal, Log, Review. Injected on hub pages.
 - `manifest.json` + `sw.js` + `icons/` — the installable-PWA layer. Add the site to your home screen to get an app icon, full-screen launch, and offline support.
 
   **How offline works, and why it can't go stale.** The worker is

@@ -216,6 +216,27 @@
   </div>
   </sc-if>
 
+  <!-- ─── close the day ─── -->
+  <div class="td-card">
+    <div class="td-kicker"><b>Close the day</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">trends →</a></div>
+    <div class="td-study">
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">Screen h</div>
+        <input type="number" step="0.25" inputmode="decimal" value="{{ scrTotal }}" onChange="{{ setScrTotal }}" placeholder="6.5" class="td-field">
+      </div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">Social / fun h</div>
+        <input type="number" step="0.25" inputmode="decimal" value="{{ scrSocial }}" onChange="{{ setScrSocial }}" placeholder="2" class="td-field">
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; margin-top: 10px;">
+      <sc-for list="{{ dietChips }}" as="c" hint-placeholder-count="4">
+        <button onClick="{{ c.pick }}" class="td-chip tap {{ c.cls }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: {{ scrColor }}; margin-top: 9px;">{{ scrLine }}</div>
+  </div>
+
   <!-- ─── capture ─── -->
   <div class="td-card">
     <div class="td-kicker"><b>Write it down</b><span style="flex:1"></span><a href="Journal.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">journal →</a></div>
@@ -428,6 +449,56 @@ class Component extends DCLogic {
     };
   }
 
+  /* ── closing the day from the phone ────────────────────────────────────
+     The same two fields the Life Log holds, on the page you already have open
+     at 11pm. Written straight into the Life Log's day record, so the Trends
+     panel there reads them without a second store. */
+  LL_DIET = [['clean', 'Clean'], ['ok', 'Ordinary'], ['loose', 'Loose'], ['bad', 'Off']];
+
+  llDay() {
+    const d = this.readJSON(this.LKEY, {}) || {};
+    if (!d.days) d.days = {};
+    return d;
+  }
+  llSet(section, field, v) {
+    const k = this.logDay();
+    const d = this.llDay();
+    if (!d.days[k]) d.days[k] = {};
+    if (!d.days[k][section]) d.days[k][section] = {};
+    d.days[k][section][field] = v;
+    this.writeJSON(this.LKEY, d);
+    this.bump();
+  }
+
+  closeDayVals() {
+    const k = this.logDay();
+    const day = (this.llDay().days || {})[k] || {};
+    const scr = day.screen || {};
+    const n = (v) => { const x = parseFloat(v); return isNaN(x) ? null : x; };
+    const t = n(scr.total), so = n(scr.social);
+
+    let scrLine = 'straight off the phone\u2019s own report', scrColor = '#A6A79F';
+    if (t != null && so != null && t > 0) {
+      const share = Math.round(100 * Math.min(so, t) / t);
+      scrLine = share + '% of your screen was social or fun';
+      scrColor = share >= 60 ? '#A32E27' : share >= 35 ? '#7d4c09' : '#3B6D11';
+    } else if (so != null && so > 0) {
+      scrLine = so + 'h social — add the total for the share';
+      scrColor = '#7d4c09';
+    }
+
+    const now = (day.diet || {}).q || '';
+    return {
+      scrTotal: scr.total || '', setScrTotal: (e) => this.llSet('screen', 'total', e.target.value),
+      scrSocial: scr.social || '', setScrSocial: (e) => this.llSet('screen', 'social', e.target.value),
+      scrLine, scrColor,
+      dietChips: this.LL_DIET.map(([id, label]) => ({
+        label, cls: now === id ? 'on' : '',
+        pick: () => this.llSet('diet', 'q', now === id ? '' : id),
+      })),
+    };
+  }
+
   renderVals() {
     this.state.tick;
     const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -502,7 +573,7 @@ class Component extends DCLogic {
       ['Study Engine.dc.html', 'Study Engine', 'what to study'],
       ['Hub.dc.html', 'Mission Control', 'everything'],
       ['CT Master Plan.html', 'Master Plan', planTotal + ' steps'],
-      ['Library.dc.html', 'Library', 'papers & files'],
+      
       ['Network Map.dc.html', 'Network Map', 'people'],
       ['Conference Radar.dc.html', 'Conferences', 'deadlines'],
       ['Timeline.dc.html', 'Timeline', 'the long view'],
@@ -541,6 +612,7 @@ class Component extends DCLogic {
       hasPrios: prios.length > 0, prios,
 
       ...this.anatomyVals(),
+      ...this.closeDayVals(),
 
       trainChips, subjects, studyBtns, studyLine,
       subject: this.state.subject,

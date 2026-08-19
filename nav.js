@@ -19,30 +19,46 @@
   var VERSION = (window.APP_CONFIG && window.APP_CONFIG.version) || '';
 
   // Every hub page, in reading order. Filenames must match the deploy.
-  var PAGES = [
-    ['Today.dc.html', 'Today · phone home'],
-    ['Hub.dc.html', 'Mission Control'],
-    ['CT Master Plan.html', 'CT Master Plan'],
-    ['Summer Sprint.dc.html', 'Summer Sprint'],
-    ['Plan Analysis.dc.html', 'Plan Analysis'],
-    ['Research Plan.dc.html', 'Research Plan'],
-    ['Anatomy.dc.html', 'Anatomy · closure log'],
-    ['Study Engine.dc.html', 'Study Engine'],
-    ['Reading List.dc.html', 'Reading List'],
-    ['Library.dc.html', 'Library'],
-    ['Journal.dc.html', 'Journal'],
-    ['Grind.dc.html', 'Grind board'],
-    ['Life Log.dc.html', 'Life Log'],
-    ['Weekly Review.dc.html', 'Weekly Review'],
-    ['Review Room.dc.html', 'Review Room'],
-    ['Timeline.dc.html', 'Timeline'],
-    ['Network Map.dc.html', 'Network Map'],
-    ['Conference Radar.dc.html', 'Conference Radar'],
-    ['Dossiers.dc.html', 'Dossiers'],
-    ['Examiner.dc.html', 'Examiner'],
-    ['Vault.dc.html', 'Vault'],
-    ['Canvas.dc.html', 'Canvas']
+  /* Nineteen pages in one flat column is a list you scan; seven groups is a
+     list you use. The order is the order of a day: what you do, then what you
+     are building, then who and what it runs on, then the review. */
+  var GROUPS = [
+    ['Every day', [
+      ['Today.dc.html', 'Today'],
+      ['Hub.dc.html', 'Mission Control'],
+    ]],
+    ['Study', [
+      ['Anatomy.dc.html', 'Anatomy · closure log'],
+      ['Study Engine.dc.html', 'Study Engine'],
+      ['Reading List.dc.html', 'Reading List'],
+    ]],
+    ['Body', [
+      ['Grind.dc.html', 'Grind board'],
+      ['Life Log.dc.html', 'Life Log'],
+    ]],
+    ['The plan', [
+      ['CT Master Plan.html', 'CT Master Plan'],
+      ['Summer Sprint.dc.html', 'Summer Sprint'],
+      ['Plan Analysis.dc.html', 'Plan Analysis'],
+      ['Timeline.dc.html', 'Timeline'],
+    ]],
+    ['Research', [
+      ['Research Plan.dc.html', 'Research Plan'],
+      ['Conference Radar.dc.html', 'Conference Radar'],
+    ]],
+    ['People &amp; money', [
+      ['Network Map.dc.html', 'Network Map'],
+      ['Dossiers.dc.html', 'Dossiers · the files'],
+      ['Vault.dc.html', 'Vault'],
+    ]],
+    ['Looking back', [
+      ['Weekly Review.dc.html', 'Weekly Review'],
+      ['Journal.dc.html', 'Journal'],
+      ['Examiner.dc.html', 'Examiner'],
+    ]],
   ];
+  var PAGES = GROUPS.reduce(function (a, g) { return a.concat(g[1]); }, []);
+
 
   var BM_KEY = 'hub_bookmarks_v1';
 
@@ -104,6 +120,9 @@
     '.hbnav-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:8px 10px 18px;}' +
     '.hbnav-sec{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.14em;' +
     'text-transform:uppercase;color:#A6A79F;padding:14px 8px 6px;}' +
+    '.hbnav-grp{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.14em;' +
+    'text-transform:uppercase;color:#B4B2A9;padding:13px 10px 4px;}' +
+    '.hbnav-grp:first-child{padding-top:4px;}' +
     // 44px, not 37: every page's drawer is 18 of these in a column, and a
     // row that misses the thumb by 3px misses it eighteen times.
     '.hbnav-lnk{display:flex;align-items:center;min-height:44px;text-decoration:none;' +
@@ -160,9 +179,12 @@
     root.appendChild(panel);
 
     function render() {
-      var pageLinks = PAGES.map(function (p) {
-        var on = p[0] === here ? ' on' : '';
-        return '<a class="hbnav-lnk' + on + '" href="' + esc(p[0]) + '">' + esc(p[1]) + '</a>';
+      var pageLinks = GROUPS.map(function (g) {
+        var links = g[1].map(function (p) {
+          var on = p[0] === here ? ' on' : '';
+          return '<a class="hbnav-lnk' + on + '" href="' + esc(p[0]) + '">' + esc(p[1]) + '</a>';
+        }).join('');
+        return '<div class="hbnav-grp">' + g[0] + '</div>' + links;
       }).join('');
 
       var bms = readBookmarks();

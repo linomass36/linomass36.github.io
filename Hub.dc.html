@@ -74,9 +74,7 @@
         <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 28px; line-height: 1.05; margin: 6px 0 0; letter-spacing: -.01em;">CT Surgeon-Entrepreneur, by 30</h1>
         <div style="font-size: 13px; color: #55564F; margin-top: 8px; max-width: 560px; line-height: 1.5; font-style: italic;">"{{ positioningNow }}"</div>
         <div data-mchips style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center;">
-          <sc-for list="{{ planViewChips }}" as="v" hint-placeholder-count="6">
-            <a href="CT Master Plan.html" onClick="{{ v.go }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 10px;" style-hover="border-color: #993C1D; color: #993C1D;">{{ v.label }}</a>
-          </sc-for>
+          <a href="CT Master Plan.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 12px;" style-hover="border-color: #993C1D; color: #993C1D;">the master plan →</a>
           <button onClick="{{ openSearch }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #FFFFFF; background: #1A1B1A; border: 1px solid #1A1B1A; border-radius: 20px; padding: 4px 12px; cursor: pointer;">⌕ search everything · ⌘K</button>
           <button onClick="{{ openGuide }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: #55564F; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 20px; padding: 4px 12px; cursor: pointer;" style-hover="border-color: #0F6E56; color: #0F6E56;">? what is all this</button>
           <button onClick="{{ doBackup }}" title="{{ bkTitle }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; background: #FFFFFF; border-radius: 20px; padding: 4px 12px; cursor: pointer; color: {{ bkColor }}; border: 1px solid {{ bkBorder }};">{{ bkLabel }}</button>
@@ -89,14 +87,6 @@
     </div>
   </div>
 
-  <!-- QUICK NAV (sticky) -->
-  <div data-quicknav>
-    <div>
-      <sc-for list="{{ quickNav }}" as="q" hint-placeholder-count="7">
-        <a href="#" onClick="{{ q.go }}">{{ q.label }}</a>
-      </sc-for>
-    </div>
-  </div>
 
   <!-- MISSION DECK — the whole system at a glance -->
   <div class="hw anchor" id="sec-deck" style="max-width: 1280px; margin: 0 auto; padding: 18px 24px 0;">
@@ -1190,7 +1180,7 @@ class Component extends DCLogic {
     this.setState(s => ({ tick: s.tick + 1 }));
   }
 
-  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_reviewroom_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_library_v1', 'ct_examiner_v1', 'ct_reading_v1', 'ct_reading_books_v1', 'ct_obsidian_cfg_v1', 'ct_anatomy_v1', 'ct_grind_v1', 'ct_research_v1'];
+  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_examiner_v1', 'ct_reading_v1', 'ct_reading_books_v1', 'ct_obsidian_cfg_v1', 'ct_anatomy_v1', 'ct_grind_v1', 'ct_research_v1'];
   doBackupAction = () => {
     const out = { __ct_hub_backup: 1, ts: Date.now(), data: {} };
     this.BKEYS.forEach(k => { try { const v = localStorage.getItem(k); if (v != null) out.data[k] = v; } catch (e) {} });
@@ -1233,7 +1223,13 @@ class Component extends DCLogic {
     const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
     if (!data) return {
       todayLabel, pctShow: 0, pctBar: 0, done: 0, total: 0, ringDash: '0 145', branchCount: 0, positioningNow: '', streakText: '', momentumText: '', momentumColor: '#8A8B84',
-      planViewChips: [], contactCount: '—', owedCount: 0, nextConfDays: '—', nextConfAcr: '', upcomingCount: 0,
+      deck: [], deckActions: [], goActions: () => {},
+      zO_rooms: false, zT_rooms: () => {}, zC_rooms: '▸', zS_rooms: '',
+      zO_plan: false, zT_plan: () => {}, zC_plan: '▸', zS_plan: '',
+      zO_analytics: false, zT_analytics: () => {}, zC_analytics: '▸', zS_analytics: '',
+      zO_confs: false, zT_confs: () => {}, zC_confs: '▸', zS_confs: '',
+      zO_desks: false, zT_desks: () => {}, zC_desks: '▸', zS_desks: '',
+      contactCount: '—', owedCount: 0, nextConfDays: '—', nextConfAcr: '', upcomingCount: 0,
       spofRows: [], nextActions: [], radarRows: [], trackRows: [], calibrationText: '', branchRows: [], owedList: [], confRows: [],
       yearTicks: [], todayLeft: '0%', milestoneMarks: [], confMarks: [],
       curvePts: '', curveNowX: 40, curveNowY: 150, whatifX2: 40, whatifY2: 150, curveYMax: '', movesWk: 12, setMovesWk: () => {}, paceText: '', whatifText: '',
@@ -1842,22 +1838,18 @@ class Component extends DCLogic {
     const studyD = lsJson('ct_study_v1', { cards: [], exams: [] });
     const todayIso2 = new Date(nowMs).toISOString().slice(0, 10);
     const dueN = (studyD.cards || []).filter(c => c && c.due && c.due <= todayIso2).length;
-    const libD = lsJson('ct_library_v1', { items: [] });
-    const libI = libD.items || [];
-    const libLine = libI.length ? (libI.filter(i => i.st === 'queue').length + ' queued · ' + libI.filter(i => i.st === 'reading').length + ' reading · ' + libI.filter(i => i.st === 'done').length + ' read') : 'shelf is empty';
     const wkR = lsJson('ct_weekly_v1', { reviews: {} });
     const wkMon = (() => { const x = new Date(nowMs); const d = (x.getDay() + 6) % 7; x.setDate(x.getDate() - d); x.setHours(0, 0, 0, 0); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); })();
     const wkReviewed = !!(wkR.reviews && wkR.reviews[wkMon]);
     const roomRows = [
       { href: 'Summer Sprint.dc.html', color: '#3B6D11', num: '01 · The 52-day sprint', name: 'Summer Sprint', line: 'the 35 moves, habits, guide & capital ladder' },
       { href: 'Plan Analysis.dc.html', color: '#6E4B8A', num: '01 · The strategic read', name: 'Plan Analysis', line: 'summer → year → decade, examined for gaps' },
-      { href: 'Weekly Review.dc.html', color: '#993C1D', num: '00 · The Sunday ritual', name: 'Weekly Review', line: wkReviewed ? 'done this week ✓' : 'guided — wins, loops, people, next 3' },
+      { href: 'Weekly Review.dc.html', color: '#993C1D', num: '00 · The Sunday ritual', name: 'Weekly Review', line: wkReviewed ? 'done this week ✓' : (lastWeekly ? dAgo(lastWeekly) + 'd since the last one' : 'guided — wins, loops, people, next 3') },
       { href: 'Timeline.dc.html', color: '#2E6A86', num: '00 · One axis', name: 'Collision Timeline', line: 'checkpoints + conferences + deadlines, merged' },
-      { href: 'Review Room.dc.html', color: '#6E4B8A', num: '06 · The ritual', name: 'Review Room', line: lastWeekly ? (dAgo(lastWeekly) === 0 ? 'reviewed today' : dAgo(lastWeekly) + 'd since last review') : 'first ritual pending' },
       { href: 'Dossiers.dc.html', color: '#185FA5', num: '07 · The people files', name: 'Dossiers', line: contacts.length + ' people · ' + dosTouches + ' touches logged' },
       { href: 'Vault.dc.html', color: '#854F0B', num: '08 · The money', name: 'The Vault', line: vNet != null ? 'net $' + Math.round(vNet).toLocaleString('en-US') : 'no snapshot yet' },
       { href: 'Study Engine.dc.html', color: '#3B6D11', num: '09 · The reps', name: 'Study Engine', line: (studyD.cards || []).length ? dueN + ' due today · ' + (studyD.cards || []).length + ' cards' : 'no error cards yet' },
-      { href: 'Library.dc.html', color: '#4A5B7A', num: '10 · The shelf', name: 'The Library', line: libLine },
+      
       { href: 'Reading List.dc.html', color: '#4A5B7A', num: '12 · The reading list', name: 'Reading List', line: 'papers & books to read — medicine, science & the classics' },
       { href: 'Examiner.dc.html', color: '#A32E27', num: '11 · The examiner', name: 'The Examiner', line: (() => { const ex = lsJson('ct_examiner_v1', { briefs: [] }); const b = (ex.briefs || [])[0]; return b ? 'last examined ' + Math.floor((nowMs - b.ts) / 86400000) + 'd ago' : 'never examined — run it'; })() }
     ];
@@ -1905,11 +1897,6 @@ class Component extends DCLogic {
       { icon: '▦', head: 'The five smaller rooms', body: 'below the big cards — Review Room (the Sunday ritual), Dossiers (a file on every person), the Vault (monthly net worth), Study Engine (errors re-asked on a schedule) and the Library (papers with mandatory takeaways). All included in backups.' }
     ];
 
-    const planViewChips = [
-      { id: 'today', label: 'Today' }, { id: 'map', label: 'Map' }, { id: 'timeline', label: 'Timeline' },
-      { id: 'decisions', label: 'Decisions' }, { id: 'identity', label: 'Identity' }, { id: 'resilience', label: 'Resilience' }
-    ].map(v => ({ label: v.label, go: () => this.writePlan({ view: v.id }) }));
-
     // ── Mission deck: one holistic tile per subsystem ──────────────
     const deck = (() => {
       const tiles = [];
@@ -1935,15 +1922,7 @@ class Component extends DCLogic {
           big: rRead + '/' + rTotal, badge: rNow ? rNow + ' open' : '', accentColor: '#854F0B',
           bar: pctOf(rRead, rTotal), sub: rNow ? rNow + ' in progress right now' : 'nothing in progress — pick one' });
       } catch (e) {}
-      // 4 · Library
-      try {
-        const li = (lsJson('ct_library_v1', { items: [] }).items) || [];
-        const lDone = li.filter(x => x.st === 'done').length, lNow = li.filter(x => x.st === 'reading').length;
-        tiles.push({ label: 'Library intake', href: 'Library.dc.html', color: '#0F6E56',
-          big: lDone + '/' + li.length, badge: lNow ? lNow + ' open' : '', accentColor: '#854F0B',
-          bar: pctOf(lDone, li.length), sub: li.length ? (li.length - lDone - lNow) + ' queued · ' + lNow + ' reading' : 'shelf is empty' });
-      } catch (e) {}
-      // 5 · Journal
+      // 4 · Journal
       try {
         const jn = this.readJournal();
         let lastTxt = 'no entries yet', jBar = 0;
@@ -1976,7 +1955,11 @@ class Component extends DCLogic {
 
     // ── Collapsible zones (persisted in hub_zones_v1, phone collapses heavy ones) ──
     const isPhone = (typeof window !== 'undefined' && window.innerWidth <= 640);
-    const zoneDefaults = { rooms: 1, plan: 1, analytics: isPhone ? 0 : 1, confs: isPhone ? 0 : 1, desks: isPhone ? 0 : 1 };
+    /* Every zone starts closed, on a desktop as well as a phone. This page is
+       the one you glance at, and it was the second-longest read in the hub —
+       eight screens of panels that each restate a page you can open. The deck
+       above is the glance; these are the detail, and they are one tap away. */
+    const zoneDefaults = { rooms: 0, plan: 0, analytics: 0, confs: 0, desks: 0 };
     const zSaved = lsJson('hub_zones_v1', {});
     const zOpen = {};
     Object.keys(zoneDefaults).forEach(k => { zOpen[k] = zSaved[k] != null ? !!zSaved[k] : !!zoneDefaults[k]; });
@@ -1998,20 +1981,11 @@ class Component extends DCLogic {
       if (zone) zOpenNow(zone);
       setTimeout(() => { const el = document.getElementById(sec); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
     };
-    const quickNav = [
-      { label: '◎ Overview', go: goSec('sec-deck', null) },
-      { label: '▦ Rooms', go: goSec('sec-rooms', 'rooms') },
-      { label: '→ Next actions', go: goSec('sec-actions', 'plan') },
-      { label: '∿ Analytics', go: goSec('sec-analytics', 'analytics') },
-      { label: '✈ Conferences', go: goSec('sec-confs', 'confs') },
-      { label: '⚖ Decisions', go: goSec('sec-desks', 'desks') },
-      { label: '▤ This week', go: goSec('sec-week', null) },
-    ];
     const deckActions = nextActions.slice(0, 3).map(a2 => ({ label: a2.label, color: a2.color, branchTitle: a2.branchTitle, toggle: a2.toggle }));
 
     return {
       deck,
-      quickNav, deckActions, goActions: goSec('sec-actions', 'plan'),
+      deckActions, goActions: goSec('sec-actions', 'plan'),
       zO_rooms: zOpen.rooms, zT_rooms: zT('rooms'), zC_rooms: zOpen.rooms ? '▾' : '▸', zS_rooms: 'every page, one tap away',
       zO_plan: zOpen.plan, zT_plan: zT('plan'), zC_plan: zOpen.plan ? '▾' : '▸', zS_plan: nextActions.length + ' open actions · critical path · roadmap',
       zO_analytics: zOpen.analytics, zT_analytics: zT('analytics'), zC_analytics: zOpen.analytics ? '▾' : '▸', zS_analytics: 'curves · radar · skills · heatmap · dials · briefing',
@@ -2021,7 +1995,6 @@ class Component extends DCLogic {
       pctShow: Math.round(pct * f), pctBar: pct * f, done: doneCount, total, ringDash, branchCount: data.branches.length,
       streakText: streak > 0 ? streak + '-day streak' : 'no active streak',
       momentumText: (momentum >= 0 ? '+' : '') + momentum + ' vs prior week', momentumColor: momentum >= 0 ? '#0F6E56' : '#A32E27',
-      planViewChips,
       contactCount: contacts.length, owedCount: owed.length,
       nextConfDays: nextConf ? (nextConf.live ? 'now' : nextConf.daysAway) : '—', nextConfAcr: nextConf ? nextConf.acronym : '', upcomingCount: upcoming.length,
       spofRows, nextActions, branchRows, owedList, confRows, radarRows, trackRows,
