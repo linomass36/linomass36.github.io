@@ -965,14 +965,37 @@ class Component extends DCLogic {
   }
   // A shelf you have never touched is open on a desktop and closed on a
   // phone, where 31 open shelves is fifty-odd screens of scrolling.
-  shelfOpen(id, collapsed) {
-    return collapsed[id] === undefined ? !this.isPhone() : !collapsed[id];
+  /* A shelf you have never touched opens if there is something in it you are
+     part-way through, and stays shut otherwise — on a desktop as well as a
+     phone. Thirty-one shelves open at once was fifty-five screens on a phone
+     and thirty on a desktop; the same list with only your live shelves open
+     is the thing you actually came to see, and the rest is one tap away.
+     Once you open or close a shelf yourself, that choice wins for good. */
+  shelfOpen(id, collapsed, hasReading) {
+    if (collapsed[id] !== undefined) return !collapsed[id];
+    return !!hasReading;
   }
+  // Which shelves currently hold a book you are part-way through.
+  shelvesWithReading() {
+    const st = this.read();
+    const status = st.status || {};
+    const out = {};
+    ((window.READING_DATA || {}).shelves || []).forEach(sh => {
+      out[sh.id] = (sh.items || []).some(it => status[it.id] === 'reading');
+    });
+    const mine = this.readBooks();
+    if (mine.some(b => status[b.id] === 'reading')) out['mine'] = true;
+    return out;
+  }
+
   setView(v) { const ui = this.readUI(); ui.view = v; this.write({ ui }); this.bump(); }
   toggleCollapse(id, e) {
     if (e && e.stopPropagation) e.stopPropagation();
     const ui = this.readUI(); const c = Object.assign({}, ui.collapsed);
-    c[id] = this.shelfOpen(id, c);          // flip whatever it is showing now
+    // Flip whatever it is showing now. An untouched shelf's current state
+    // depends on whether it holds something in progress, so ask the shelf.
+    const live = (this.shelvesWithReading() || {})[id];
+    c[id] = this.shelfOpen(id, c, live);
     ui.collapsed = c; this.write({ ui }); this.bump();
   }
 
@@ -2003,11 +2026,15 @@ class Component extends DCLogic {
     const myBooks = this.readBooks();
     const myGroups = [];
     myBooks.forEach(b => {
-      const nm = (b.shelf || '').trim() || 'Added by you';
-      let g = myGroups.find(x => x.name === nm);
+      /* A shelf carries one kind, because the Books / Papers filter reads it.
+         Something you added as a paper has to be grouped as a paper, or the
+         filter that exists to find it is the one thing that hides it. */
+      const kind = b.kind === 'paper' ? 'paper' : 'book';
+      const nm = (b.shelf || '').trim() || (kind === 'paper' ? 'Papers you added' : 'Added by you');
+      let g = myGroups.find(x => x.name === nm && x.kind === kind);
       if (!g) {
-        g = { id: 'b-usr-' + nm.toLowerCase().replace(/[^a-z0-9]+/g, '-'), kind: 'book',
-              accent: b.accent || '#3B6D11', name: nm, items: [] };
+        g = { id: 'b-usr-' + kind + '-' + nm.toLowerCase().replace(/[^a-z0-9]+/g, '-'), kind,
+              accent: b.accent || (kind === 'paper' ? '#4A5B7A' : '#3B6D11'), name: nm, items: [] };
         myGroups.push(g);
       }
       g.items.push({ id: b.id, title: b.title, by: b.by, note: b.note, files: b.files, doi: b.doi });
@@ -2072,7 +2099,8 @@ class Component extends DCLogic {
       .map(({ s, matched }) => {
         matchN += matched.length;
         const done = matched.filter(it => statusOf(it.id) === 'read').length;
-        const open = this.shelfOpen(s.id, collapsed);
+        const hasReading = matched.some(it => statusOf(it.id) === 'reading');
+        const open = this.shelfOpen(s.id, collapsed, hasReading);
         return {
           id: s.id, accent: s.accent, name: s.name,
           kindLabel: s.kind === 'paper' ? 'Publications' : 'Books',
