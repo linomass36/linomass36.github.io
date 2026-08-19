@@ -413,13 +413,52 @@ class Component extends DCLogic {
     this.mut(d => { d.week = Math.max(1, Math.min(max, n)); });
   }
   setMode(m) { this.mut(d => { d.mode = m; }); }
+
+  /* ── one lift, one record ───────────────────────────────────────────────
+     A gym session had two homes that never met: this board, which knows
+     which lift it was, and the Life Log's gym tick, which the day's totals
+     and the Trends panel are counted from. Two stores, two truths, and no
+     way to tell which one was right.
+
+     The board is the one that knows what you actually did, so it is the one
+     that publishes. Marking a session done stamps it here *and* sets the
+     Life Log's gym tick for the day; clearing it clears both, but only if
+     this board was what set it — a swim ticked by hand on the Life Log is
+     none of the board's business.
+
+     `days[<iso>]` on this store records which session the day held, so
+     Today can say "✓ Lower B — from the grind board" rather than just
+     "gym". The Life Log keys days by the UTC date and this follows it, for
+     the same reason every other page does: its convention, not ours. */
+  LKEY = 'ct_lifelog_v1';
+  logDay() { return new Date().toISOString().slice(0, 10); }
+
+  mirrorLift(label, on) {
+    let ll = null;
+    try { ll = JSON.parse(localStorage.getItem(this.LKEY)); } catch (e) {}
+    if (!ll || typeof ll !== 'object') ll = {};
+    if (!ll.days || typeof ll.days !== 'object') ll.days = {};
+    const k = this.logDay();
+    if (!ll.days[k]) ll.days[k] = {};
+    if (!ll.days[k].gym) ll.days[k].gym = {};
+    if (on) { ll.days[k].gym.on = true; ll.days[k].gym.src = 'grind'; ll.days[k].gym.what = label; }
+    else if (ll.days[k].gym.src === 'grind') { ll.days[k].gym = {}; }
+    try { localStorage.setItem(this.LKEY, JSON.stringify(ll)); } catch (e) {}
+  }
+
   toggleSession(dayId) {
-    let on = false;
+    let on = false, label = '';
     this.mut(d => {
       const k = d.week + '|' + dayId;
       if (d.sessions[k]) delete d.sessions[k]; else d.sessions[k] = true;
       on = !!d.sessions[k];
+      const lift = (this.G && this.G.GYM && this.G.GYM[dayId]) || null;
+      label = (lift && lift.t) || ((this.G && this.G.DAYNAME) || {})[dayId] || 'session';
+      if (!d.days || typeof d.days !== 'object') d.days = {};
+      const today = this.logDay();
+      if (on) d.days[today] = label; else if (d.days[today] === label) delete d.days[today];
     });
+    this.mirrorLift(label, on);
     this.toast(on ? '✓ session logged' : 'session cleared');
   }
   toggleCheck(dayId, id) {

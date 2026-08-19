@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="./mobile.css">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="26" y="24" width="48" height="52" rx="5" fill="#6E4B8A"></rect><rect x="34" y="36" width="32" height="3" rx="1.5" fill="#FFFFFF"></rect><rect x="34" y="45" width="32" height="3" rx="1.5" fill="#FFFFFF"></rect><rect x="34" y="54" width="20" height="3" rx="1.5" fill="#FFFFFF"></rect></svg></template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<script src="./hub-data.js"></script>
+<script src="./systems.js"></script>
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     Reference — the door to the documents.
+
+     Five of the nineteen pages are things you read rather than
+     things you use: the master plan, the strategic read, the
+     summer sprint, the research portfolio and the timeline. Between
+     them they hold about 5,400 words, and every one of them was
+     sitting in the drawer at the same weight as a page you open
+     every morning.
+
+     None of them changed. None of them moved. This is one entry in
+     the drawer instead of five, and a page that says what each
+     document is and when it is worth opening — which the drawer,
+     being a list of names, never could.
+     ───────────────────────────────────────────────────────────── */
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F4F1EB; }
+  a { text-decoration: none; }
+  @keyframes rfIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .rf { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A;
+        max-width: 760px; margin: 0 auto;
+        padding: calc(20px + env(safe-area-inset-top, 0px)) 18px 120px; }
+
+  .rf-kick { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em;
+             text-transform: uppercase; color: #6E4B8A; }
+  .rf-h1 { font-family: 'Newsreader', serif; font-size: 34px; font-weight: 500; line-height: 1.1;
+           margin: 4px 0 10px; }
+  .rf-lede { font-size: 16px; line-height: 1.6; color: #55564F; max-width: 58ch; margin-bottom: 26px; }
+
+  .rf-card { display: block; background: #FFFDF8; border: 1px solid #E7E3DA; border-radius: 18px;
+             padding: 20px 20px 18px; margin-bottom: 14px; color: #1A1B1A;
+             animation: rfIn .3s ease both; box-shadow: 0 1px 2px rgba(40,30,15,.04);
+             border-left: 4px solid #E7E3DA; }
+  .rf-top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .rf-name { font-family: 'Newsreader', serif; font-size: 23px; font-weight: 500; line-height: 1.15; }
+  .rf-meta { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .1em;
+             text-transform: uppercase; color: #A6A79F; }
+  .rf-what { font-size: 15.5px; line-height: 1.6; color: #3f4038; max-width: 62ch; }
+  .rf-when { font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.55;
+             color: #7d4c09; background: #FBF6EA; border: 1px solid #EFE4CB; border-radius: 11px;
+             padding: 9px 12px; margin-top: 12px; max-width: 62ch; }
+  .rf-live { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #3B6D11; margin-top: 10px; }
+  .rf-go { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px;
+           font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #6E4B8A; }
+
+  .rf-note { font-size: 14.5px; line-height: 1.65; color: #77786F; max-width: 60ch;
+             border-top: 1px solid #E4E2DD; padding-top: 18px; margin-top: 28px; }
+</style>
+</helmet>
+<div class="rf" data-screen-label="Reference">
+
+  <div class="rf-kick">The documents</div>
+  <h1 class="rf-h1">Reference</h1>
+  <p class="rf-lede">The five pages you read rather than use. Nothing here changes day to day, which is exactly why none of it belongs in the part of the hub you open every morning — and exactly why it is worth coming back to.</p>
+
+  <sc-for list="{{ docs }}" as="d" hint-placeholder-count="5">
+    <a href="{{ d.href }}" class="rf-card" style="border-left-color: {{ d.color }};">
+      <div class="rf-top">
+        <span class="rf-name">{{ d.name }}</span>
+        <span class="rf-meta">{{ d.meta }}</span>
+      </div>
+      <div class="rf-what">{{ d.what }}</div>
+      <div class="rf-when">{{ d.when }}</div>
+      <sc-if value="{{ d.hasLive }}" hint-placeholder-val="{{ false }}">
+        <div class="rf-live">{{ d.live }}</div>
+      </sc-if>
+      <div class="rf-go" style="color: {{ d.color }};">open it →</div>
+    </a>
+  </sc-for>
+
+  <p class="rf-note">Every word of all five is still where it was — this page is a door, not a summary. If you are looking for something to <em>do</em> rather than something to read, that is Today.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:760,&quot;height&quot;:1200}}">
+class Component extends DCLogic {
+  /* Each document says what it is and when it earns being opened. The
+     "when" line is the part the drawer could never carry: a list of names
+     tells you a page exists, not whether today is a day to read it. */
+  DOCS = [
+    { id: 'plan', href: 'CT Master Plan.html', color: '#993C1D', name: 'CT Master Plan',
+      meta: '371 steps · 13 branches',
+      what: 'Every step of the whole arc, from this term to the twenty-five-year view, grouped into thirteen branches. It is the inventory: the place a commitment goes so it stops living in your head.',
+      when: 'When you want to add a step, or check what you actually committed to. The live ones surface on Today by themselves — you do not need to come here to know what to do next.' },
+
+    { id: 'analysis', href: 'Plan Analysis.dc.html', color: '#6E4B8A', name: 'Plan Analysis',
+      meta: 'the strategic read',
+      what: 'The plan examined rather than listed — summer into year into decade, with the gaps, the soft spots and the assumptions the whole thing is resting on written out.',
+      when: 'Quarterly, and any time something big changes. This is the one to read when the plan feels right but you cannot say why.' },
+
+    { id: 'sprint', href: 'Summer Sprint.dc.html', color: '#3B6D11', name: 'Summer Sprint',
+      meta: '52 days · Jul – Oct 2026',
+      what: 'The thirty-five moves of this summer, the habits underneath them, and the capital ladder — the term-length plan, at the resolution a term needs.',
+      when: 'Weekly while it runs. After it ends it becomes the record of what you meant to do, which is worth reading in November against what you did.' },
+
+    { id: 'research', href: 'Research Plan.dc.html', color: '#534AB7', name: 'Research Plan',
+      meta: '5 tracks · 8 quarters',
+      what: 'The research portfolio: five tracks, their milestones, what depends on what, and the phase-by-phase execution. Two parts of it are live — the next ninety days and the five decision gates.',
+      when: 'Monthly for the ninety days, and whenever a gate is actually in front of you. The prose in between is for when you are deciding, not doing.' },
+
+    { id: 'timeline', href: 'Timeline.dc.html', color: '#2E6A86', name: 'Collision Timeline',
+      meta: 'one axis',
+      what: 'Checkpoints, conferences and deadlines merged onto a single line, so the things that collide are visible before they collide.',
+      when: 'Before committing to anything with a date on it. It is the fastest way to see that two good ideas are the same fortnight.' },
+  ];
+
+  renderVals() {
+    /* A couple of the documents have a live number sitting behind them.
+       Showing it here is the difference between "there is a research plan"
+       and "the research plan has three of nine ninety-day items done" —
+       and it is read through systems.js, so it cannot disagree with what
+       Today says about the same thing. */
+    let live = {};
+    try {
+      const S = (window.Systems && window.Systems.all) ? window.Systems.all() : [];
+      S.forEach(s => { live[s.id] = s; });
+    } catch (e) {}
+
+    let planLine = '';
+    try {
+      const c = window.Systems && window.Systems.planCounts ? window.Systems.planCounts() : null;
+      if (c) planLine = c.liveDone + ' of ' + c.live + ' live steps done · ' + c.later + ' further out';
+    } catch (e) {}
+
+    const extra = {
+      plan: planLine,
+      research: live.research ? (live.research.big + ' of the ninety days · ' + live.research.line) : '',
+    };
+
+    return {
+      docs: this.DOCS.map(d => {
+        const l = extra[d.id] || '';
+        return Object.assign({}, d, { hasLive: !!l, live: l });
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

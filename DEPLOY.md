@@ -487,11 +487,122 @@ so rather than showing a shape drawn from three points. Correlation is not
 cause and the panel says that too; what it is for is noticing that the bad
 weeks and the four-hour phone days are the same weeks.
 
+## One glance, and the systems that were invisible
+
+The hub was measured page by page at both widths — screens, controls, words,
+and which store each page reads. Three findings came out of it, and they are
+what this round fixes.
+
+**The glance could not see the systems the day is built around.** Mission
+Control had a deck of seven tiles. `ct_anatomy_v1`, `ct_grind_v1` and
+`ct_research_v1` appeared in that page exactly once each: in the list of keys
+to back up. The front page backed up the closure log and the grind board and
+never looked at either.
+
+**The plan asked to be measured against 371 steps**, 256 of which are dated
+years out. A percentage counted against those cannot move, so it says nothing
+about the week you actually had.
+
+**A lift had two records that never met** — the Life Log's gym tick and the
+grind board's session — in two stores, with no way to tell which was right.
+
+### systems.js — every system, one line each
+
+`systems.js` is the fix and it is deliberately one file. A system publishes
+its state there, and every surface that wants a glance reads the same
+summary: Today, Mission Control and the Reference page all call
+`Systems.all()`. When the grind board changes what "a week is done" means,
+every number changes with it, because only one place decides.
+
+Ten systems publish: the plan, anatomy, the grind board, the study engine,
+the reading list, the research track, the record, the journal, the weekly
+review and the vault. Each returns a number, a line and a tone — `go` when
+something is owed today, `ok` when it is handled. Every builder is defensive
+and a throwing one is dropped rather than allowed to take the page down; a
+glance that crashes is worse than no glance, and this one is read by the page
+you open first.
+
+### Today is the glance
+
+Today opens on all ten systems — nine of them above the fold on a phone —
+then what to do next, then the day's logging. What went:
+
+- **The three summary stats**, replaced by the ten systems they summarised.
+- **The plan card**, folded into the deck and into `Do these next`.
+- **"Everywhere else"**, eleven tiles that were the navigation drawer for the
+  third time on one page.
+
+`Do these next` shows one live step from each of the first three branches, and
+ticking one writes exactly what the plan page writes — the check, the
+completion stamp, and the history entry the hub's streak and momentum are
+counted from. Anything less and a step ticked on the phone would show as done
+but never appear in a streak.
+
+### The plan is counted against what is live
+
+Each branch in `hub-data.js` now carries a `horizon`, read straight off the
+timeframe it already had:
+
+| horizon | branches | steps |
+|---|---|---|
+| `now` | the summer sprint, the research spine | 47 |
+| `standing` | people, reading, risk, finances, the operating rhythm | 68 |
+| `later` | horizons, the academic year, the year-2 stack, the wealth engine, the checkpoints, the decade | 256 |
+
+Today and Mission Control count **115 live steps** and say on the next line
+that 256 more sit further out. **Nothing is hidden and nothing is deleted** —
+the master plan page still holds every one of the 371, unchanged.
+
+### One lift, one record
+
+The grind board publishes. Marking a session done stamps the board *and* sets
+the Life Log's gym tick for the day, with `src: 'grind'` and the name of the
+lift; clearing it clears both — but only if the board was what set it, so a
+swim ticked by hand on the Life Log is none of the board's business. Today
+reads it back as "✓ Lower B — Hinge — from the grind board" rather than
+offering you a third place to log the same lift.
+
+### Reference — one door to the five documents
+
+The master plan, the strategic read, the summer sprint, the research
+portfolio and the timeline are things you read rather than things you use.
+Between them they hold about 5,400 words, and each was costing a drawer slot
+at the same weight as a page you open every morning.
+
+`Reference.dc.html` is one entry in the drawer instead of five. **Every one
+of those pages is untouched, still served, and one tap away** — the drawer
+lists the door, and standing on any of the documents highlights that door so
+you can see where you are. What Reference adds is the thing a list of names
+never could: what each document is, and when it is worth opening.
+
+### The radar reads the desk
+
+Conference Radar performed zero `localStorage` reads while its own help text
+promised that anything logged on the conference desk "flows into the deadline
+radar". It flowed into the hub, the timeline, the life log and the
+constellation — everywhere except the page named for the job. Conferences you
+log now appear at the top of the radar, soonest first, above the researched
+snapshot.
+
+### What it cost
+
+| | before | after |
+|---|---|---|
+| Systems visible on the glance | 7 | **10** |
+| Plan steps you are measured against | 371 | **115**, with 256 named |
+| Places to log one lift | 3 | **1** |
+| Drawer rows | 19 | **15** |
+| Pages still reachable | 19 | **20** |
+| Today, above the fold (phone) | 3 stats | **9 of 10 systems** |
+
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
 - `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
 - `Grind.dc.html` + `grind-data.js` — the nine-week board and its programme.
 - `Research Plan.dc.html` — the five-track portfolio, with a live ninety days and live gates.
+- `systems.js` — every system in one line each: the number, the sentence and whether something is owed today. Read by Today, Mission Control and Reference so the three cannot disagree. See **One glance** above.
+- `Reference.dc.html` — the door to the five documents: what each is and when it is worth opening. The documents themselves are unchanged.
+- `.github/tests/crash.js` — loads every page at both widths and fails on a `renderVals()` throw or a page with almost no text in it. Not deployed (`.github/` is skipped by the build).
 - `Hub.dc.html` — Mission Control: the deck of live numbers, what to do next, and five collapsed sections holding the detail. See **Twenty-two pages become nineteen** above.
 - `Life Log.dc.html` — the day's record, the close-the-day block, and the **Trends** panel that correlates screen time against sleep, study, training and diet. See **Close the day** above.
 - `Today.dc.html` — the phone's front door: the day at a glance, plus a note box, a ✓ and a journal box. See **On a phone** above.

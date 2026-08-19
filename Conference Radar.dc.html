@@ -49,6 +49,27 @@
     <button onClick="{{ toggleConcluded }}" style="{{ concludedToggleStyle }}">{{ concludedToggleLabel }}</button>
   </div>
 
+  <!-- YOUR OWN FINDS — the desk, read back on the page named for the job -->
+  <sc-if value="{{ hasLogged }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1160px;margin:0 auto 22px;padding:16px 18px;background:#fbf9f4;border:1px solid #e6e0d3;border-left:4px solid #15707e;border-radius:12px;">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#15707e;">Logged on the desk</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a09a8c;">{{ loggedCount }}</span>
+        <div style="flex:1;"></div>
+        <a href="Hub.dc.html" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#15707e;text-decoration:none;">the conference desk &rarr;</a>
+      </div>
+      <sc-for list="{{ loggedRows }}" as="r" hint-placeholder-count="3">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:9px 0;border-top:1px solid #ece6da;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#15707e;min-width:56px;">{{ r.acronym }}</span>
+          <span style="font-size:14.5px;color:#3b3a33;flex:1;min-width:180px;">{{ r.name }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8a8577;">{{ r.where }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ r.whenColor }};">{{ r.when }}</span>
+        </div>
+      </sc-for>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a09a8c;margin-top:11px;line-height:1.5;">Everything below this is the researched snapshot. These are the ones you found.</div>
+    </div>
+  </sc-if>
+
   <div style="max-width:1160px;margin:0 auto;display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;">
 
     <!-- MAIN VIEW -->
@@ -443,7 +464,44 @@ class Component extends DCLogic {
     const isMap = st.view === 'map';
     const tabBase = `font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;`;
 
+    /* ── your own finds ──────────────────────────────────────────────────
+       This page is a researched snapshot: until now it read nothing at all,
+       while its own help text told you that anything logged on the Hub's
+       conference desk "flows into the deadline radar". It flowed into the
+       hub, the timeline, the life log and the constellation — everywhere
+       except the page named for the job. It does now.
+
+       The desk's shape is its own: `start`/`end` are [year, monthIndex, day]
+       arrays, not ISO strings. Read defensively; a malformed row should cost
+       one line, not the page. */
+    const loggedRows = (() => {
+      let list = [];
+      try {
+        const raw = localStorage.getItem('hub_confs_v1');
+        if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) list = a; }
+      } catch (e) {}
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return list.map(c => {
+        if (!c || !Array.isArray(c.start)) return null;
+        const sd = new Date(c.start[0], c.start[1], c.start[2]);
+        if (isNaN(sd)) return null;
+        const ed = Array.isArray(c.end) ? new Date(c.end[0], c.end[1], c.end[2]) : sd;
+        const days = Math.round((sd - today) / 86400000);
+        const live = days <= 0 && !isNaN(ed) && ed >= today;
+        return {
+          sort: sd.getTime(), acronym: c.acronym || '\u2014', name: c.name || '(unnamed)',
+          where: c.city || '\u2014',
+          when: live ? 'happening now' : (days < 0 ? 'concluded'
+                : days + 'd \u00b7 ' + MONS[sd.getMonth()] + ' ' + sd.getDate()),
+          whenColor: live ? '#b23b2e' : (days < 0 ? '#a09a8c' : (days <= 30 ? '#b23b2e' : '#2f7a52')),
+        };
+      }).filter(Boolean).sort((a, b) => a.sort - b.sort);
+    })();
+
     return {
+      loggedRows, hasLogged: loggedRows.length > 0,
+      loggedCount: loggedRows.length + ' you found',
       homeCity, homeShort,
       upcomingCount: base.length - concludedTotal,
       concludedCount: concludedTotal,

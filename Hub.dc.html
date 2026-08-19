@@ -16,6 +16,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
 <script src="./hub-data.js"></script>
+<script src="./anatomy-data.js"></script>
+<script src="./anatomy-core.js"></script>
+<script src="./systems.js"></script>
 <script src="./quotes.js"></script>
 <script src="./reading-data.js"></script>
 <style>
@@ -1902,9 +1905,17 @@ class Component extends DCLogic {
       const tiles = [];
       const pctOf = (n, d) => d ? Math.round(n / d * 100) : 0;
       // 1 · Master plan
+      /* Counted against what is live this term. 256 of the 371 steps are
+         dated years out, and measuring a week's work against those produces
+         a percentage that cannot move. The whole number is on the line
+         underneath; nothing is hidden and nothing is deleted. */
+      const lc = (window.Systems && window.Systems.planCounts) ? window.Systems.planCounts() : null;
       tiles.push({ label: '01 · Master plan', href: 'CT Master Plan.html', color: '#993C1D',
-        big: Math.round(pct * f) + '%', badge: streak > 0 ? streak + 'd streak' : '', accentColor: '#0F6E56',
-        bar: pct * f, sub: doneCount + '/' + total + ' moves · ' + (momentum >= 0 ? '+' : '') + momentum + ' wk' });
+        big: (lc ? lc.pct : Math.round(pct * f)) + '%', badge: streak > 0 ? streak + 'd streak' : 'this term',
+        accentColor: '#0F6E56', bar: (lc ? lc.pct : pct * f) * f,
+        sub: lc ? (lc.liveDone + '/' + lc.live + ' live · ' + lc.later + ' further out · '
+                   + (momentum >= 0 ? '+' : '') + momentum + ' wk')
+                : (doneCount + '/' + total + ' moves · ' + (momentum >= 0 ? '+' : '') + momentum + ' wk') });
       // 2 · Summer sprint
       tiles.push({ label: 'Summer sprint', href: 'Summer Sprint.dc.html', color: '#3B6D11',
         big: 'D' + sprintDay, badge: 'of ' + sprintDays, accentColor: '#77786F',
@@ -1950,6 +1961,24 @@ class Component extends DCLogic {
       tiles.push({ label: 'Weekly review', href: 'Weekly Review.dc.html', color: '#A32E27',
         big: wkReviewed ? '✓' : 'DUE', badge: wkReviewed ? 'done' : 'this week', accentColor: wkReviewed ? '#0F6E56' : '#A32E27',
         bar: wkReviewed ? 100 : 8, sub: wkReviewed ? 'this week is reviewed' : 'the plan lives on this cadence' });
+
+      /* 9 · The systems this deck could not see.
+         The closure log, the grind board, the study engine, the research
+         track and the vault each ran their own store and appeared here only
+         in the list of keys to back up — the front page filed them away and
+         never looked at them. They publish through systems.js now, which is
+         also what Today reads, so the two front pages cannot drift into
+         disagreeing about the same number. */
+      try {
+        const S = (window.Systems && window.Systems.all) ? window.Systems.all() : [];
+        const COL = { anatomy: '#993C1D', grind: '#3B6D11', study: '#3B6D11',
+                      research: '#534AB7', vault: '#854F0B' };
+        S.filter(x => COL[x.id]).forEach(x => {
+          tiles.push({ label: x.name, href: x.href, color: COL[x.id],
+            big: x.big, badge: x.unit, accentColor: x.tone === 'go' ? '#A32E27' : '#0F6E56',
+            bar: x.tone === 'ok' ? 100 : 8, sub: x.line });
+        });
+      } catch (e) {}
       return tiles;
     })();
 
