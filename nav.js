@@ -36,14 +36,14 @@
       ['Grind.dc.html', 'Grind board'],
       ['Life Log.dc.html', 'Life Log'],
     ]],
+    /* The five documents are one entry, not five. They are things you read
+       rather than things you use, and they were each costing a drawer slot
+       at the same weight as a page you open every morning. Reference is the
+       door; every one of them is still its own page, one tap behind it. */
     ['The plan', [
-      ['CT Master Plan.html', 'CT Master Plan'],
-      ['Summer Sprint.dc.html', 'Summer Sprint'],
-      ['Plan Analysis.dc.html', 'Plan Analysis'],
-      ['Timeline.dc.html', 'Timeline'],
+      ['Reference.dc.html', 'Reference · the documents'],
     ]],
     ['Research', [
-      ['Research Plan.dc.html', 'Research Plan'],
       ['Conference Radar.dc.html', 'Conference Radar'],
     ]],
     ['People &amp; money', [
@@ -57,7 +57,21 @@
       ['Examiner.dc.html', 'Examiner'],
     ]],
   ];
-  var PAGES = GROUPS.reduce(function (a, g) { return a.concat(g[1]); }, []);
+  /* The documents behind Reference are still hub pages — they carry the
+     drawer, they get highlighted as current, and they are reachable by URL.
+     They are simply not listed twice. */
+  var BEHIND_REFERENCE = [
+    ['CT Master Plan.html', 'CT Master Plan'],
+    ['Summer Sprint.dc.html', 'Summer Sprint'],
+    ['Plan Analysis.dc.html', 'Plan Analysis'],
+    ['Research Plan.dc.html', 'Research Plan'],
+    ['Timeline.dc.html', 'Timeline'],
+  ];
+  var PAGES = GROUPS.reduce(function (a, g) { return a.concat(g[1]); }, []).concat(BEHIND_REFERENCE);
+  function behindReference(file) {
+    for (var i = 0; i < BEHIND_REFERENCE.length; i++) if (BEHIND_REFERENCE[i][0] === file) return true;
+    return false;
+  }
 
 
   var BM_KEY = 'hub_bookmarks_v1';
@@ -181,7 +195,10 @@
     function render() {
       var pageLinks = GROUPS.map(function (g) {
         var links = g[1].map(function (p) {
-          var on = p[0] === here ? ' on' : '';
+          /* Standing on one of the documents, the drawer highlights the door
+             you came through rather than nothing at all — you are inside
+             Reference, and the drawer should say so. */
+          var on = (p[0] === here || (p[0] === 'Reference.dc.html' && behindReference(here))) ? ' on' : '';
           return '<a class="hbnav-lnk' + on + '" href="' + esc(p[0]) + '">' + esc(p[1]) + '</a>';
         }).join('');
         return '<div class="hbnav-grp">' + g[0] + '</div>' + links;

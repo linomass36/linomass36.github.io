@@ -17,6 +17,7 @@
 <script src="./anatomy-core.js"></script>
 <script src="./reading-data.js"></script>
 <script src="./hub-data.js"></script>
+<script src="./systems.js"></script>
 <style>
   /* ─────────────────────────────────────────────────────────────
      Today — the phone's front door.
@@ -99,15 +100,45 @@
               border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F;
               resize: vertical; }
 
-  /* every page, as a tile — nothing behind a menu */
-  .td-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .td-tile { display: flex; flex-direction: column; justify-content: space-between; min-height: 78px;
-             padding: 12px 13px; border-radius: 16px; border: 1px solid #E7E3DA; background: #FFFDF8;
-             color: #26271F; }
-  .td-tile b { font-family: 'Newsreader', serif; font-size: 16.5px; font-weight: 500; line-height: 1.2; }
-  .td-tile span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8f9088; margin-top: 6px; }
+  /* every system, one line each — the glance this page exists to be */
+  .td-sys { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .td-sysrow { display: flex; align-items: center; gap: 13px; padding: 9px 4px;
+               border-top: 1px solid #F1EDE3; color: #26271F; }
+  .td-sysrow:first-of-type { border-top: none; }
+  .td-sysbig { flex: none; min-width: 60px; text-align: right;
+               font-family: 'Newsreader', serif; font-size: 22px; font-weight: 500; line-height: 1;
+               color: #26271F; }
+  .td-sysbig.go { color: #993C1D; }
+  .td-sysbig.ok { color: #3B6D11; }
+  .td-systxt { flex: 1; min-width: 0; }
+  .td-systxt b { display: block; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px;
+                 font-weight: 600; line-height: 1.2; }
+  .td-systxt span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+                    color: #8a8577; margin-top: 2px; line-height: 1.35;
+                    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (min-width: 480px) { .td-systxt span { white-space: normal; } }
+  /* The unit repeats what the line under the name already says, and on a
+     phone it is what squeezes that line into two rows. Ten systems wrapping
+     is a screen and a half; ten systems not wrapping is most of one. */
+  .td-sysunit { display: none; flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+                letter-spacing: .07em; text-transform: uppercase; color: #A6A79F; max-width: 78px;
+                text-align: right; line-height: 1.3; }
+  @media (min-width: 480px) { .td-sysunit { display: block; } }
 
-  @media (min-width: 560px) { .td-tiles { grid-template-columns: repeat(3, 1fr); } }
+  /* a plan step you can tick without leaving the page */
+  .td-act { display: flex; align-items: flex-start; gap: 11px; padding: 11px 0;
+            border-top: 1px solid #F1EDE3; width: 100%; text-align: left;
+            background: none; border-left: none; border-right: none; border-bottom: none;
+            cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .td-act:first-of-type { border-top: none; }
+  .td-actbox { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid #CFCABD;
+               background: #FFF; margin-top: 1px; }
+  .td-acttxt { flex: 1; min-width: 0; font-size: 15.5px; line-height: 1.45; color: #3f4038; }
+  .td-acttxt span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;
+                    letter-spacing: .06em; text-transform: uppercase; margin-top: 4px; }
+
+  @media (min-width: 560px) { .td-sys { grid-template-columns: repeat(2, 1fr); column-gap: 22px; }
+                              .td-sysrow:nth-of-type(2) { border-top: none; } }
 </style>
 </helmet>
 <div class="td" data-screen-label="Today">
@@ -119,11 +150,38 @@
     </div>
   </div>
 
-  <!-- ─── the three numbers ─── -->
-  <div class="td-stats" style="margin-bottom: 14px;">
-    <div class="td-stat"><b>{{ readPctLabel }}</b><span>read</span></div>
-    <div class="td-stat"><b>{{ readingN }}</b><span>on the go</span></div>
-    <div class="td-stat"><b>{{ planPctLabel }}</b><span>plan done</span></div>
+  <!-- ─── every system, one line each ─── -->
+  <div class="td-card">
+    <div class="td-kicker"><b>The state of it</b><span style="flex:1"></span><a href="Hub.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">the workshop →</a></div>
+    <div class="td-sys">
+      <sc-for list="{{ systems }}" as="s" hint-placeholder-count="10">
+        <a href="{{ s.href }}" class="td-sysrow">
+          <span class="td-sysbig {{ s.tone }}">{{ s.big }}</span>
+          <span class="td-systxt"><b>{{ s.name }}</b><span>{{ s.line }}</span></span>
+          <span class="td-sysunit">{{ s.unit }}</span>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ─── what to do next ─── -->
+  <div class="td-card">
+    <div class="td-kicker"><b>Do these next</b><span style="flex:1"></span><a href="CT Master Plan.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">the plan →</a></div>
+    <sc-if value="{{ hasPrios }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-bottom: 12px; padding: 11px 13px; border-radius: 12px; background: #FBF6EA; border: 1px solid #EFE4CB;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #7d4c09; margin-bottom: 6px;">You said, this week</div>
+        <sc-for list="{{ prios }}" as="p" hint-placeholder-count="2">
+          <div style="font-size: 15px; line-height: 1.5; color: #5c4413; padding: 2px 0;">· {{ p.text }}</div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-for list="{{ nextActions }}" as="a" hint-placeholder-count="3">
+      <button onClick="{{ a.toggle }}" class="td-act">
+        <span class="td-actbox"></span>
+        <span class="td-acttxt">{{ a.label }}<span style="color: {{ a.color }};">{{ a.branchTitle }}</span></span>
+      </button>
+    </sc-for>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 11px;">{{ planLine }}</div>
   </div>
 
   <!-- ─── what you are reading ─── -->
@@ -159,31 +217,15 @@
     </div>
   </sc-if>
 
-  <!-- ─── the plan, and the week ─── -->
-  <div class="td-card">
-    <div class="td-kicker"><b>The plan</b><span style="flex:1"></span><a href="Weekly Review.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">review →</a></div>
-    <div style="display: flex; align-items: baseline; gap: 10px;">
-      <span style="font-family: 'Newsreader', serif; font-size: 21px;">{{ planDone }} <span style="font-size: 14px; color: #A6A79F;">of {{ planTotal }} steps</span></span>
-    </div>
-    <div class="td-bar"><span style="width: {{ planPct }}%;"></span></div>
-    <sc-if value="{{ hasPrios }}" hint-placeholder-val="{{ false }}">
-      <div style="margin-top: 13px;">
-        <div class="td-kicker" style="margin-bottom: 7px;">This week</div>
-        <sc-for list="{{ prios }}" as="p" hint-placeholder-count="2">
-          <div style="font-size: 15.5px; line-height: 1.5; color: #3f4038; padding: 5px 0;">· {{ p.text }}</div>
-        </sc-for>
-      </div>
-    </sc-if>
-  </div>
-
   <!-- ─── today, from the log ─── -->
   <div class="td-card">
-    <div class="td-kicker"><b>Today</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">log →</a></div>
+    <div class="td-kicker"><b>Log the day</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">log →</a></div>
     <div style="display: flex; gap: 8px;">
       <sc-for list="{{ trainChips }}" as="c" hint-placeholder-count="3">
         <button onClick="{{ c.toggle }}" class="td-chip tap {{ c.cls }}">{{ c.label }}</button>
       </sc-for>
     </div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: {{ liftColor }}; margin-top: 8px;">{{ liftLine }}</div>
     <div class="td-study">
       <select value="{{ subject }}" onChange="{{ setSubject }}">
         <sc-for list="{{ subjects }}" as="s" hint-placeholder-count="5">
@@ -243,14 +285,6 @@
     <textarea value="{{ jotText }}" onInput="{{ setJot }}" rows="3" placeholder="A line for today's note…" class="td-field"></textarea>
     <button onClick="{{ saveJot }}" class="td-btn go wide" style="margin-top: 10px;">Add to the journal</button>
     <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 8px;">{{ jotHint }}</div>
-  </div>
-
-  <!-- ─── everything else, in the open ─── -->
-  <div class="td-kicker" style="margin: 20px 0 10px 4px;"><b>Everywhere else</b></div>
-  <div class="td-tiles">
-    <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="6">
-      <a href="{{ t.href }}" class="td-tile"><b>{{ t.name }}</b><span>{{ t.note }}</span></a>
-    </sc-for>
   </div>
 
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
@@ -411,6 +445,39 @@ class Component extends DCLogic {
     this.bump();
   }
 
+  /* Ticking a plan step from the phone writes exactly what the plan page
+     writes — the check, the completion stamp and the history entry the hub's
+     streak and momentum are counted from. Anything less and a step ticked
+     here would show up as done but never appear in a streak. */
+  tickStep(id) {
+    const p = this.readJSON(this.PKEY, {}) || {};
+    const checked = Object.assign({}, p.checked || {});
+    const meta = Object.assign({}, p.meta || {});
+    const m = Object.assign({}, meta[id] || {});
+    if (checked[id]) { delete checked[id]; delete m.completedAt; }
+    else { checked[id] = 1; m.completedAt = Date.now(); }
+    meta[id] = m;
+    const history = (p.history || []).concat([{ id, ts: Date.now(), a: checked[id] ? 1 : 0 }]).slice(-2000);
+    this.writeJSON(this.PKEY, Object.assign({}, p, { checked, meta, history }));
+    this.toast(checked[id] ? '✓ step done' : 'step reopened');
+    this.bump();
+  }
+
+  /* ── the lift, in one place ─────────────────────────────────────────────
+     A gym session used to have two records that never met: this chip, which
+     writes the Life Log, and the grind board's "mark the session done", which
+     writes its own store. The board is the one that knows which lift it was,
+     so it is the one that mirrors into the Life Log — see Grind.dc.html. All
+     this line does is say so, and stop you logging the same lift twice. */
+  liftVals() {
+    const d = this.readJSON('ct_grind_v1', null);
+    if (!d || typeof d !== 'object') return { liftLine: 'gym sessions logged on the grind board land here too', liftColor: '#A6A79F' };
+    const k = this.logDay();
+    const done = (d.days && d.days[k]) ? d.days[k] : null;
+    if (done) return { liftLine: '✓ ' + done + ' — from the grind board', liftColor: '#3B6D11' };
+    return { liftLine: 'no lift marked on the board today', liftColor: '#A6A79F' };
+  }
+
   anatomyVals() {
     const A = this.anatomy();
     if (!A) return { hasAnatomy: false, anTiers: [], anDeclared: false, anLine: '',
@@ -532,12 +599,48 @@ class Component extends DCLogic {
       if (s) next = { id: s.book, title: s.title || '', plan: p.title };
     });
 
-    // ── the master plan ──
-    const items = ((window.HUB_DATA || {}).items) || [];
+    /* ── the master plan ──────────────────────────────────────────────────
+       Counted against what is live this term, not against all 371 steps.
+       256 of them are dated years out; measuring today's work against those
+       produces a number that never moves and tells you nothing. The whole
+       count is still on the line underneath, and nothing is hidden — the
+       plan page itself still holds every step. */
+    const data = window.HUB_DATA || {};
+    const items = data.items || [];
     const plan = this.readJSON(this.PKEY, {}) || {};
     const checked = plan.checked || {};
-    const planTotal = items.length;
-    const planDone = items.filter(it => checked[it.id]).length;
+    const counts = (window.Systems && window.Systems.planCounts)
+      ? window.Systems.planCounts()
+      : { live: items.length, liveDone: 0, later: 0, total: items.length, pct: 0 };
+
+    /* The next few live steps, walked in the plan's own branch order and
+       tickable from here — the same write the plan page makes, history and
+       all, so a step ticked on the phone is indistinguishable from one
+       ticked at the desk. */
+    const branchById = {};
+    (data.branches || []).forEach(b => { branchById[b.id] = b; });
+    const liveBranch = id => {
+      const b = branchById[id];
+      return b && (b.horizon === 'now' || b.horizon === 'standing');
+    };
+    const order = (data.priority || []).filter(liveBranch)
+      .concat((data.branches || []).filter(b => liveBranch(b.id)).map(b => b.id));
+    const seenBranch = {};
+    const nextActions = [];
+    for (const bid of order) {
+      if (seenBranch[bid]) continue;
+      seenBranch[bid] = 1;
+      const b = branchById[bid];
+      for (const it of items.filter(x => x.branchId === bid)) {
+        if (checked[it.id]) continue;
+        nextActions.push({
+          label: it.label, branchTitle: b ? b.title : '', color: b ? b.color : '#993C1D',
+          toggle: () => this.tickStep(it.id),
+        });
+        break;                     // one per branch, so it reads as a spread
+      }
+      if (nextActions.length >= 3) break;
+    }
 
     // ── this week's priorities ──
     const w = this.readJSON(this.WKEY, {}) || {};
@@ -564,29 +667,17 @@ class Component extends DCLogic {
     const jots = this.readJSON(this.JKEY, []) || [];
     const todayJots = (Array.isArray(jots) ? jots : []).filter(j => j.date === this.isoDay(now)).length;
 
-    const tiles = [
-      ['Reading List.dc.html', 'Reading List', total + ' books'],
-      ['Journal.dc.html', 'Journal', (Array.isArray(jots) ? jots.length : 0) + ' entries'],
-      ['Life Log.dc.html', 'Life Log', 'days & sessions'],
-      ['Summer Sprint.dc.html', 'Summer Sprint', 'the run to term'],
-      ['Weekly Review.dc.html', 'Weekly Review', 'the ritual'],
-      ['Study Engine.dc.html', 'Study Engine', 'what to study'],
-      ['Hub.dc.html', 'Mission Control', 'everything'],
-      ['CT Master Plan.html', 'Master Plan', planTotal + ' steps'],
-      
-      ['Network Map.dc.html', 'Network Map', 'people'],
-      ['Conference Radar.dc.html', 'Conferences', 'deadlines'],
-      ['Timeline.dc.html', 'Timeline', 'the long view'],
-    ].map(t => ({ href: t[0], name: t[1], note: t[2] }));
+    // Every system, one line each — see systems.js.
+    const systems = (window.Systems && window.Systems.all) ? window.Systems.all() : [];
 
     return {
       dayName: DAYS[now.getDay()],
       dateLine: MON[now.getMonth()] + ' ' + now.getDate(),
-      readPctLabel: (total ? Math.round(readN / total * 100) : 0) + '%',
-      planPctLabel: (planTotal ? Math.round(planDone / planTotal * 100) : 0) + '%',
-      readingN: reading.length,
-      planPct: planTotal ? Math.round(planDone / planTotal * 100) : 0,
-      planDone, planTotal,
+
+      systems,
+      nextActions,
+      planLine: counts.liveDone + ' of ' + counts.live + ' live steps done · '
+              + counts.later + ' more sit further out, on the plan',
 
       reading, hasReading: reading.length > 0, noReading: reading.length === 0,
       hasNext: !!next, nextTitle: next ? next.title : '',
@@ -613,6 +704,7 @@ class Component extends DCLogic {
 
       ...this.anatomyVals(),
       ...this.closeDayVals(),
+      ...this.liftVals(),
 
       trainChips, subjects, studyBtns, studyLine,
       subject: this.state.subject,
@@ -623,7 +715,6 @@ class Component extends DCLogic {
       saveJot: () => this.saveJot(),
       jotHint: todayJots ? todayJots + (todayJots === 1 ? ' entry' : ' entries') + ' written today' : 'nothing written today yet',
 
-      tiles,
       hasToast: !!this.state.toast, toast: this.state.toast,
     };
   }

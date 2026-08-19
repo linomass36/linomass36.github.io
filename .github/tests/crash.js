@@ -17,7 +17,7 @@ const cdn = { 'react@18.3.1/umd/react.production.min.js': NM+'react/umd/react.pr
   'react-dom@18.3.1/umd/react-dom.production.min.js': NM+'react-dom/umd/react-dom.production.min.js',
   '@babel/standalone@7.29.0/babel.min.js': NM+'@babel/standalone/babel.min.js' };
 const PAGES = ['Today','Hub','Anatomy','Grind','Reading List','Journal','Life Log','Study Engine',
-  'Weekly Review','Summer Sprint','CT Master Plan','Plan Analysis','Research Plan',
+  'Weekly Review','Reference','Summer Sprint','CT Master Plan','Plan Analysis','Research Plan',
   'Network Map','Conference Radar','Timeline','Dossiers','Examiner','Vault'];
 const url = n => ORIGIN + '/' + encodeURIComponent(n + (n === 'CT Master Plan' ? '.html' : '.dc.html'));
 (async () => {
