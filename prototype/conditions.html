@@ -229,20 +229,32 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
       <div class="dial">
         <label for="r-due">Due / day</label>
         <div class="v"><span id="v-due">60</span></div>
-        <input id="r-due" type="range" min="10" max="120" value="60">
-        <small>what Anki asks — the load</small>
+        <input id="r-due" type="range" min="10" max="150" value="60">
+        <small>cards Anki asks for</small>
       </div>
       <div class="dial">
-        <label for="r-sus">You can actually do</label>
-        <div class="v"><span id="v-sus">40</span></div>
-        <input id="r-sus" type="range" min="10" max="150" value="40">
-        <small>on an ordinary day — the throughput</small>
+        <label for="r-sec">Seconds / card</label>
+        <div class="v"><span id="v-sec">20</span>s</div>
+        <input id="r-sec" type="range" min="4" max="45" value="20">
+        <small>60 cards in 20 min = 20s</small>
+      </div>
+      <div class="dial">
+        <label for="r-mins">Minutes you give it</label>
+        <div class="v"><span id="v-mins">20</span> min</div>
+        <input id="r-mins" type="range" min="2" max="90" value="20">
+        <small>on an ordinary day</small>
+      </div>
+      <div class="dial">
+        <label for="r-extra">Clearing minutes</label>
+        <div class="v">+<span id="v-extra">6</span> min</div>
+        <input id="r-extra" type="range" min="0" max="40" value="6">
+        <small>extra, once you are back</small>
       </div>
       <div class="dial">
         <label for="r-skim">A skim is</label>
         <div class="v"><span id="v-skim">25</span></div>
-        <input id="r-skim" type="range" min="5" max="80" value="25">
-        <small>what a rut day looks like</small>
+        <input id="r-skim" type="range" min="5" max="90" value="25">
+        <small>cards on a rut day</small>
       </div>
       <div class="dial">
         <label for="r-hold">Hold for</label>
@@ -256,23 +268,18 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
         <input id="r-back" type="range" min="0" max="1200" step="10" value="250">
         <small>cards in the backlog</small>
       </div>
-      <div class="dial">
-        <label for="r-decay">New cards off</label>
-        <div class="v">−<span id="v-decay">5</span>%<span style="font-size:13px">/day</span></div>
-        <input id="r-decay" type="range" min="0" max="12" value="5">
-        <small>how fast the load decays · an assumption</small>
-      </div>
     </div>
   </section>
 
   <!-- ── the feasibility gate ── -->
   <section>
-    <h2>Before any plan: can the day be paid at all?</h2>
+    <h2>Before any plan: what does the day actually cost?</h2>
     <div class="gate" id="gate"></div>
-    <p style="margin-top:14px">This is the check the first version of this page did not do, and it is
-    the one that matters most. A backlog is only a backlog if the daily load is payable. If it is not,
-    the backlog is not the illness — it is the symptom, and every clearing plan is a treadmill that
-    ends where it started.</p>
+    <p style="margin-top:14px">Two versions of this page got this wrong in opposite directions. The
+    first offered a clearing plan without checking whether the day was payable. The second checked, but
+    counted in <em>cards</em> — and cards are not comparable to anything. Minutes are. A card is only
+    heavy or light once you know what it costs, and the moment the load is priced in minutes the
+    argument usually settles itself.</p>
   </section>
 
   <!-- ── the fork ── -->
@@ -297,7 +304,7 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
             <th></th>
             <th class="a">A · nothing declared</th>
             <th class="b2">B · condition only</th>
-            <th class="b">C · condition + load cut</th>
+            <th class="b">C · condition + the extra minutes</th>
           </tr>
         </thead>
         <tbody id="fork"></tbody>
@@ -357,34 +364,43 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
   function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
   var DAYS = 14, STREAK0 = 250;
 
-  function dials() {
-    return {
-      due:   +$('#r-due').value,     // the load the collection asks for
-      sus:   +$('#r-sus').value,     // what an ordinary day can actually pay
-      skim:  +$('#r-skim').value,    // what a rut day pays
-      hold:  +$('#r-hold').value,
-      back:  +$('#r-back').value,
-      decay: +$('#r-decay').value / 100
-    };
+  function mm(min) {
+    min = Math.round(min);
+    if (min < 60) return min + ' min';
+    return Math.floor(min / 60) + ' h ' + (min % 60 ? (min % 60) + ' min' : '').trim();
   }
 
-  /* ── A · nothing declared ──────────────────────────────────────
-     The hub asks for everything, so the streak gets saved the only
-     cheap way there is, and the rest defers. */
+  function dials() {
+    var d = {
+      due:   +$('#r-due').value,
+      sec:   +$('#r-sec').value,
+      mins:  +$('#r-mins').value,
+      extra: +$('#r-extra').value,
+      skim:  +$('#r-skim').value,
+      hold:  +$('#r-hold').value,
+      back:  +$('#r-back').value
+    };
+    // Everything downstream is priced in minutes and converted back at the edge.
+    d.perMin  = 60 / d.sec;                 // cards a minute
+    d.cost    = d.due / d.perMin;           // what today's due costs, in minutes
+    d.sus     = Math.round(d.mins * d.perMin);          // cards an ordinary day buys
+    d.susPlus = Math.round((d.mins + d.extra) * d.perMin);
+    d.backMin = d.back / d.perMin;          // the backlog, in minutes
+    return d;
+  }
+
   function runA(d) {
     var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
     for (var i = 1; i <= DAYS; i++) {
-      b += Math.max(0, d.due - d.skim);
-      kinds.skim++;
-      rows.push({ n: Math.round(b), delta: d.due - d.skim, kind: 'skim', what: d.skim + ' of ' + d.due });
+      b += Math.max(0, d.due - d.skim); kinds.skim++;
+      rows.push({ n: Math.round(b), delta: d.due - d.skim, kind: 'skim',
+                  what: d.skim + ' cards · ' + mm(d.skim / d.perMin) });
     }
     return { rows: rows, end: Math.round(b), kinds: kinds };
   }
 
-  /* ── B · condition declared, load untouched ────────────────────
-     The hold stops the compounding while it stands. The moment it
-     lifts, the same load returns and the same gap reopens — which
-     is the honest result, and the one the first version hid. */
+  /* B · the condition, and nothing else. At break-even the backlog simply
+     freezes — which is the finding, not a rounding artefact. */
   function runB(d) {
     var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
     for (var i = 1; i <= DAYS; i++) {
@@ -395,39 +411,36 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
         var net = d.due - d.sus;
         b = Math.max(0, b + net);
         if (net > 0) kinds.skim++; else kinds.clear++;
-        rows.push({ n: Math.round(b), delta: net, kind: net > 0 ? 'skim' : 'clear',
-                    lift: i === d.hold + 1, what: d.sus + ' of ' + d.due });
+        rows.push({ n: Math.round(b), delta: net, kind: net > 0 ? 'skim' : (net < 0 ? 'clear' : 'held'),
+                    lift: i === d.hold + 1, what: d.sus + ' cards · ' + mm(d.mins) });
       }
     }
     return { rows: rows, end: Math.round(b), kinds: kinds };
   }
 
-  /* ── C · condition + the load cut ──────────────────────────────
-     New cards off, so the daily due decays as intervals stretch.
-     The decay rate is an assumption and is on a dial, because it
-     depends on how mature the collection already is. */
+  /* C · the condition plus the extra minutes. Not a load cut — the load is
+     fine. Six more minutes is the entire intervention. */
   function runC(d) {
-    var b = d.back, due = d.due, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
+    var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
     for (var i = 1; i <= DAYS; i++) {
-      due = due * (1 - d.decay);
       if (i <= d.hold) {
         kinds.held++;
-        rows.push({ n: Math.round(b), delta: 0, kind: 'held', what: 'postponed · due ' + Math.round(due) });
+        rows.push({ n: Math.round(b), delta: 0, kind: 'held', what: 'postponed' });
       } else {
-        var net = due - d.sus;
+        var net = d.due - d.susPlus;
         b = Math.max(0, b + net);
-        if (net > 0) kinds.skim++; else kinds.clear++;
-        rows.push({ n: Math.round(b), delta: net, kind: net > 0 ? 'skim' : 'clear',
-                    lift: i === d.hold + 1, what: d.sus + ' of ' + Math.round(due) });
+        if (net < 0) kinds.clear++; else kinds.skim++;
+        rows.push({ n: Math.round(b), delta: net, kind: net < 0 ? 'clear' : 'skim',
+                    lift: i === d.hold + 1,
+                    what: (b <= 0 ? 'clear' : d.susPlus + ' cards') + ' · ' + mm(d.mins + d.extra) });
       }
     }
-    return { rows: rows, end: Math.round(b), kinds: kinds, endDue: Math.round(due) };
+    return { rows: rows, end: Math.round(b), kinds: kinds };
   }
 
   function cell(r) {
     var c = el('div', 'cell');
-    var cls = r.delta > 0.5 ? 'up' : (r.delta < -0.5 ? 'dn' : 'flat');
-    c.appendChild(el('span', 'num ' + cls, String(r.n)));
+    c.appendChild(el('span', 'num ' + (r.delta > 0.5 ? 'up' : (r.delta < -0.5 ? 'dn' : 'flat')), String(r.n)));
     c.appendChild(el('span', 'tagx ' + r.kind, r.kind));
     c.appendChild(el('span', 'what', r.what));
     return c;
@@ -436,47 +449,61 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
   function paint() {
     var d = dials();
     $('#v-due').textContent   = d.due;
-    $('#v-sus').textContent   = d.sus;
+    $('#v-sec').textContent   = d.sec;
+    $('#v-mins').textContent  = d.mins;
+    $('#v-extra').textContent = d.extra;
     $('#v-skim').textContent  = d.skim;
     $('#v-hold').textContent  = d.hold;
     $('#v-back').textContent  = d.back;
-    $('#v-decay').textContent = Math.round(d.decay * 100);
 
-    var gap = d.due - d.sus, payable = gap <= 0;
+    var spare = d.mins - d.cost;            // minutes left after the day's due
+    var payable = spare >= -0.5;
+    var breakeven = Math.abs(spare) < 0.5;
 
-    /* ── the gate ── */
+    /* ── the gate, in minutes ── */
     var G = $('#gate');
     G.className = 'gate' + (payable ? ' ok' : '');
     G.innerHTML = '';
     var big = el('div', 'big');
-    big.innerHTML = payable
-      ? 'The day is <em>payable</em>. ' + d.sus + ' against ' + d.due +
-        ' due leaves ' + (-gap) + ' a day spare — so a backlog is genuinely just a backlog, and a clearing plan will hold.'
-      : 'The day <em>cannot be paid</em>. Your collection asks ' + d.due +
-        ' and you can pay ' + d.sus + ' — a shortfall of <em>' + gap + ' cards every day</em>, before the backlog is touched at all.';
+    if (breakeven) {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em>, and you give it ' + mm(d.mins) +
+        '. Exactly break-even — which means the backlog never grows and <em>never shrinks either</em>. ' +
+        'It just sits there at ' + d.back + '.';
+    } else if (payable) {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em> and you give it ' + mm(d.mins) +
+        ' — <em>' + mm(spare) + ' spare</em>. The whole backlog is ' + mm(d.backMin) + ' of work.';
+    } else {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em> and you give it ' + mm(d.mins) +
+        ' — short by <em>' + mm(-spare) + ' every day</em>, before the backlog is touched.';
+    }
     G.appendChild(big);
 
-    var sc = el('div', 'scales');
-    var mx = Math.max(d.due, d.sus, 1);
-    [['the load — due each day', d.due, 'var(--owed)'],
-     ['your throughput — an ordinary day', d.sus, payable ? 'var(--ok)' : 'var(--held)']].forEach(function (r) {
+    var sc = el('div', 'scales'), mx = Math.max(d.cost, d.mins, 1);
+    [['what the day costs', mm(d.cost), d.cost, 'var(--owed)'],
+     ['what you give it', mm(d.mins), d.mins, payable ? 'var(--ok)' : 'var(--held)'],
+     ['the whole backlog', mm(d.backMin), Math.min(d.backMin, mx), 'var(--held)']].forEach(function (r) {
       var w = el('div', 'sc');
       w.appendChild(el('div', 'lab', r[0]));
-      w.appendChild(el('div', 'n', String(r[1])));
+      w.appendChild(el('div', 'n', r[1]));
       var t = el('div', 'track'), f = el('i');
-      f.style.width = (r[1] / mx * 100) + '%'; f.style.background = r[2];
+      f.style.width = Math.min(100, r[2] / mx * 100) + '%'; f.style.background = r[3];
       t.appendChild(f); w.appendChild(t); sc.appendChild(w);
     });
     G.appendChild(sc);
 
     var v2 = el('div', 'verdict2');
-    v2.innerHTML = payable
-      ? 'Clearing works from here. ' + d.back + ' cards at ' + (-gap) + ' spare a day comes down in ' +
-        (gap < 0 ? Math.ceil(d.back / -gap) : '∞') + ' days, and stays down.'
-      : '<b>No clearing plan works while this gap is open.</b> Clear the ' + d.back + ' today and it rebuilds ' +
-        'to ' + (d.back) + ' again in ' + Math.ceil(d.back / gap) + ' days. The lever is not effort — it is the ' +
-        'load: fewer new cards, a smaller collection, or faster cards. That is the first move, and everything ' +
-        'else on this page is downstream of it.';
+    var days14 = d.backMin / 14;
+    if (!payable) {
+      v2.innerHTML = '<b>Cut the load first.</b> No clearing plan survives a daily shortfall: clear the ' +
+        d.back + ' today and the same gap rebuilds it. The lever is fewer new cards or faster cards — not effort.';
+    } else {
+      v2.innerHTML = '<b>' + d.back + ' cards is ' + mm(d.backMin) + ' of work. Total, ever.</b> ' +
+        'Spread across a fortnight that is <b>' + days14.toFixed(1) + ' extra minutes a day</b> — a ' +
+        mm(d.mins + days14) + ' day instead of a ' + mm(d.mins) + ' one. ' +
+        'Your ' + d.skim + '-card skim is ' + mm(d.skim / d.perMin) + ', so the gap between a rut day and ' +
+        'a clearing day is about ' + mm(d.cost + days14 - d.skim / d.perMin) + '. ' +
+        '<b>That is the whole size of this problem.</b>';
+    }
     G.appendChild(v2);
 
     /* ── the fork ── */
@@ -493,10 +520,10 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
     }
 
     var T = $('#totals'); T.innerHTML = '';
-    function tot(cls, head, big2, sub, kinds) {
+    function tot(cls, head, n2, sub, kinds) {
       var n = el('div', 'tot ' + cls);
       n.appendChild(el('div', 'h', head));
-      n.appendChild(el('div', 'n', big2));
+      n.appendChild(el('div', 'n', n2));
       n.appendChild(el('div', 's', sub));
       var bar = el('div', 'bar');
       ['skim', 'held', 'clear'].forEach(function (k) {
@@ -512,51 +539,48 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
       T.appendChild(n);
     }
     tot('a', 'A · nothing declared', A.end + ' behind',
-        'Grew by ' + (A.end - d.back) + '. The streak survived every one of those days.', A.kinds);
+        'Grew by ' + (A.end - d.back) + '. Every day an eight-minute visit that saved the number and moved nothing.', A.kinds);
     tot('b2', 'B · condition only', B.end + ' behind',
-        B.end > d.back
-          ? 'Flat while held, then the same gap reopens the day it lifts. The hold bought time, not a fix.'
-          : 'Flat while held, then falling — because your throughput already covers the load.', B.kinds);
-    tot('b', 'C · condition + load cut', C.end + ' behind',
-        'New cards off: the load falls to about ' + C.endDue + ' a day by day 14' +
-        (C.end < d.back ? ', and the backlog turns over and starts coming down.'
-                        : ', which is the only column where the gap is actually closing.'), C.kinds);
+        breakeven ? 'Frozen. ' + mm(d.mins) + ' a day exactly covers the day — so the ' + d.back +
+                    ' sits there untouched, forever. Holding is not enough on its own.'
+                  : (B.end > d.back ? 'The gap reopens the day it lifts.' : 'Falling, because the day already has room.'), B.kinds);
+    tot('b', 'C · condition + ' + d.extra + ' min', C.end + ' behind',
+        C.end <= 0 ? 'Clear. ' + mm(d.mins + d.extra) + ' a day, and the streak means what it says again.'
+                   : 'Coming down at ' + Math.abs(d.due - d.susPlus) + ' a day on ' + mm(d.mins + d.extra) + '.', C.kinds);
 
-    $('#punch').innerHTML = payable
-      ? 'With the day payable, the condition does what it says: <b>' + (A.end - C.end) + ' cards</b> of ' +
-        'difference across the fortnight, and a streak that means something in column C.'
-      : 'Same fortnight. Same back. Column A ends <b>' + A.end + '</b> behind, column B <b>' + B.end +
-        '</b>, column C <b>' + C.end + '</b>. <b>Only the column that cuts the load bends the curve — ' +
-        'and note that B, the condition on its own, is not a fix either.</b> It stops the bleeding for ' +
-        d.hold + ' days and then the same arithmetic resumes. That is worth having. It is not the answer.';
+    $('#punch').innerHTML =
+      'Same fortnight. Column A ends <b>' + A.end + '</b> behind, B <b>' + B.end + '</b>, C <b>' + C.end +
+      '</b>. The difference between B and C is <b>' + d.extra + ' minutes a day</b>. ' +
+      '<b>Not discipline, not a smaller collection, not a second job — six minutes.</b> ' +
+      'And B is the one worth staring at: a condition alone freezes the debt but never repays it. ' +
+      'Holding stops things getting worse. Only the extra minutes make them better.';
 
     var perDay = Math.max(0, d.due - d.skim);
     $('#honest').innerHTML =
-      '<b>Where the skim leads, if nothing changes:</b> at ' + d.skim + ' against ' + d.due +
-      ' due, the backlog grows ' + perDay + ' a day — ' + (perDay * 7) + ' a week, and about <b>' +
-      (d.back + perDay * 42) + ' cards</b> by the start of October. That is the number the streak is hiding.';
+      '<b>Where the skim leads:</b> ' + d.skim + ' cards is ' + mm(d.skim / d.perMin) + ' — you are not ' +
+      'running out of time, you are stopping at ' + mm(d.skim / d.perMin) + '. The backlog grows ' + perDay +
+      ' a day, about <b>' + (d.back + perDay * 42) + ' cards by October</b>, which is ' +
+      mm((d.back + perDay * 42) / d.perMin) + ' of work you are storing up to avoid ' +
+      Math.round(d.cost - d.skim / d.perMin) + ' minutes today.';
 
-    /* ── the options, re-ranked by the gate ── */
+    /* ── options, ordered by what the gate found ── */
     var O = $('#opts'); O.innerHTML = '';
-    var clearDays = gap < 0 ? Math.ceil(d.back / -gap) : null;
     [
-      { h: 'First, always', b: 'Cut the load', pick: !payable,
-        s: 'New cards to zero until the gap closes. The due count is downstream of what you have been ' +
-           'adding, so this is the only lever that changes the arithmetic rather than your effort. ' +
-           'At −' + Math.round(d.decay * 100) + '%/day the load reaches your throughput in about ' +
-           (d.decay > 0 && gap > 0 ? Math.ceil(Math.log(d.sus / d.due) / Math.log(1 - d.decay)) + ' days' : 'no time — it already fits') + '.',
-        cost: payable ? 'not needed yet' : 'the only move that works' },
-      { h: 'Then', b: 'Clear it down', pick: payable,
-        s: clearDays
-            ? 'With ' + (-gap) + ' spare a day, ' + d.back + ' cards clears in ' + clearDays +
-              ' days and stays cleared. Finite, visible, and the streak becomes true the day it hits zero.'
-            : 'Not available at these numbers. It would ask ' + (d.due + 15) + ' cards a day against a ' +
-              'throughput of ' + d.sus + ' — the plan I gave you last time, and it was fiction. Cut the load first.',
-        cost: clearDays ? 'done in ' + clearDays + ' days' : 'blocked by the gap' },
+      { h: 'The move', b: 'Add ' + d.extra + ' minutes', pick: payable,
+        s: 'Not a new system, not a reset — ' + mm(d.mins + d.extra) + ' instead of ' + mm(d.mins) +
+           '. The backlog is ' + mm(d.backMin) + ' and it clears in ' +
+           (d.susPlus > d.due ? Math.ceil(d.back / (d.susPlus - d.due)) + ' days' : 'no time at this pace') +
+           '. Then hold at ' + mm(d.cost) + ' a day, which you already know you can do.',
+        cost: payable ? 'the whole fix' : 'blocked — see below' },
+      { h: 'If the day were short', b: 'Cut the load', pick: !payable,
+        s: 'Only if the due count genuinely outruns the minutes: new cards to zero, or shorter cards. ' +
+           'At ' + d.sec + 's a card and ' + mm(d.mins) + ' a day, that is not your situation — which is ' +
+           'why I was wrong to lead with it last time.',
+        cost: payable ? 'not your problem' : 'do this first' },
       { h: 'Or', b: 'Reset, on the record', pick: false,
-        s: 'Declare the backlog bankrupt with a date and a reason — the Ledger move, applied to a habit. ' +
-           'The streak restarts at zero and the record says why. At a ' + gap + '-a-day shortfall this is ' +
-           'not defeat, it is the cheapest way to get back to a collection that fits the day you actually have.',
+        s: 'Bankrupt the backlog with a date and a reason — the Ledger move applied to a habit. ' +
+           'Hard to justify against ' + mm(d.backMin) + ' of work, but it stays on the table, and choosing ' +
+           'it deliberately still beats skimming past it for another month.',
         cost: 'streak → 0, honestly' }
     ].forEach(function (o) {
       var n = el('div', 'opt' + (o.pick ? ' pick' : ''));
@@ -568,7 +592,7 @@ footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule);
     });
   }
 
-  ['#r-due', '#r-sus', '#r-skim', '#r-hold', '#r-back', '#r-decay'].forEach(function (s2) {
+  ['#r-due', '#r-sec', '#r-mins', '#r-extra', '#r-skim', '#r-hold', '#r-back'].forEach(function (s2) {
     $(s2).addEventListener('input', paint);
   });
   $('#d-theme').addEventListener('click', function () {
