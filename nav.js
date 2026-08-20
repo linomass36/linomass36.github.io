@@ -24,6 +24,7 @@
      are building, then who and what it runs on, then the review. */
   var GROUPS = [
     ['Every day', [
+      ['Standing.html', 'The Standing'],
       ['Today.dc.html', 'Today'],
       ['Hub.dc.html', 'Mission Control'],
     ]],
@@ -42,6 +43,9 @@
        door; every one of them is still its own page, one tap behind it. */
     ['The plan', [
       ['Reference.dc.html', 'Reference · the documents'],
+      ['Ledger.html', 'The Ledger'],
+      ['Day Budget.html', 'The Day Budget'],
+      ['Conditions.html', 'Conditions'],
     ]],
     ['Research', [
       ['Conference Radar.dc.html', 'Conference Radar'],
@@ -291,10 +295,10 @@
      to day sit in a bar along the bottom instead, always visible, with
      the current one lit. The drawer stays for the other thirteen. */
   var TABS = [
-    ['Today.dc.html', 'Today', '◆'],
+    ['Standing.html', 'Standing', '◆'],
+    ['Today.dc.html', 'Today', '◷'],
     ['Reading List.dc.html', 'Reading', '▤'],
     ['Journal.dc.html', 'Journal', '✎'],
-    ['Life Log.dc.html', 'Log', '◷'],
     ['Weekly Review.dc.html', 'Review', '◈']
   ];
 

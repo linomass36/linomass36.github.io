@@ -59,19 +59,16 @@
 }
 
 * { box-sizing: border-box; }
+/* A display rule on a component beats the hidden attribute, which left the
+   drift panel showing as an empty box. Assert it once for the whole page. */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 a { color: inherit; }
 button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px; }
 
-.demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 20px; background: #17171A; color: #EDEBE5; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; }
-.demo b { font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .55; }
-.demo .sp { flex: 1; }
-.demo button { background: transparent; border: 1px solid rgba(255,255,255,.26); color: inherit; border-radius: 20px; padding: 4px 11px; cursor: pointer; font-family: var(--mono); font-size: 10.5px; }
-.demo button:hover { border-color: currentColor; }
-
-.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 20px; border-bottom: 1px solid var(--rule); }
+.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 68px 13px 20px; border-bottom: 1px solid var(--rule); }
 .mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
 .top a { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-decoration: none; margin-left: auto; }
 .top a:hover { color: var(--rust); }
@@ -162,17 +159,11 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--rule);
 </head>
 <body>
 
-<div class="demo">
-  <b>Prototype</b>
-  <span class="sp"></span>
-  <span style="opacity:.6">every figure below is editable — change one and the page re-reasons</span>
-  <button id="d-theme">◐ theme</button>
-</div>
 
 <header class="top">
   <span class="mark">CT Hub</span>
   <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">The Ledger</span>
-  <a href="home.html">← the standing</a>
+  <a href="Standing.html">← the standing</a>
 </header>
 
 <main>
@@ -430,12 +421,6 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--rule);
       'board red. It asks again in a fortnight whether that is still the plan.';
     this.parentNode.parentNode.appendChild(n);
     this.disabled = true;
-  });
-
-  $('#d-theme').addEventListener('click', function () {
-    var r = document.documentElement, now = r.getAttribute('data-theme');
-    if (!now) now = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    r.setAttribute('data-theme', now === 'dark' ? 'light' : 'dark');
   });
 
   paint();
