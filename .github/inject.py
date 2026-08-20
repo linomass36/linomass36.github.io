@@ -25,12 +25,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "_site")
 
 # Files/dirs that must never ship to the live site.
-# `prototype` holds design drafts, not hub pages. It must never ship: the shim
-# below is injected with relative paths, so from a subdirectory ./sync.js
-# resolves to prototype/sync.js and 404s — taking the owner-guard in sync.js
-# with it. A page that ships without that guard is world-readable on Pages.
-SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VERSION", ".gitignore",
-            "prototype"}
+SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VERSION", ".gitignore"}
 
 # The gate. It already loads config.js + firebase itself and runs the
 # sign-in / intruder flow, so it must NOT get the hub sync shim.
@@ -40,6 +35,7 @@ GATE_OUTPUT = "index.html"
 # The scripts every hub page needs, in order (sync + nav depend on APP_CONFIG).
 SHIM = (
     '<script src="./config.js"></script>\n'
+    '<script src="./conditions.js"></script>\n'
     '<script src="./archive.js"></script>\n'
     '<script src="./sync.js"></script>\n'
     '<script src="./nav.js"></script>\n'

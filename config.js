@@ -14,11 +14,14 @@ window.APP_CONFIG = {
   authorizedEmail: 'staniszewski.gabriel.k@gmail.com',
 
   // Where the owner lands after signing in, and where intruders are bounced back to.
-  hubUrl: 'Hub.dc.html',
+  // The Standing is the glance: what is owed today, what is held, and every
+  // page on one filterable list. Mission Control is still there — it is the
+  // workshop now rather than the front door.
+  hubUrl: 'Standing.html',
 
-  // Where a phone lands instead — a one-thumb summary rather than the
-  // full desktop hub. Set to '' to send phones to hubUrl as well.
-  mobileHubUrl: 'Today.dc.html',
+  // The Standing was built phone-first and gets shorter on a bad day, so a
+  // phone and a desktop want the same page. Set to '' to send phones to hubUrl.
+  mobileHubUrl: '',
   gateUrl: 'index.html',
 
   // Firebase → Project settings → General → "Your apps" → Web app → SDK config.

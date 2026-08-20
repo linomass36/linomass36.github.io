@@ -369,12 +369,72 @@
     BUILDERS.forEach(function (fn) {
       try { var v = fn(); if (v) out.push(v); } catch (e) {}
     });
-    return out.sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); });
+    out.sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); });
+    return applyConditions(out);
+  }
+
+  /* ── conditions ────────────────────────────────────────────────────────
+     A declared condition names what is constrained and which systems that
+     covers; those go HELD. This is applied HERE rather than on one page, so
+     every surface that reads this file — Today, Mission Control, the
+     Standing — agrees about what is owed. A held system rendered as red on
+     one page and quiet on another would be worse than not having the idea.
+
+     Held is deliberately neither 'go' nor 'ok'. It is not owed, so it can
+     never read as failure; and it is not handled either, because pretending
+     it was done would be the other kind of lie. conditions.js may not be
+     loaded on a given page, in which case nothing is held and this is a
+     no-op. */
+  function applyConditions(list) {
+    var C = w.Conditions;
+    if (!C || typeof C.heldIds !== 'function') return list;
+    var held;
+    try { held = C.heldIds(); } catch (e) { return list; }
+    return list.map(function (s) {
+      if (!held[s.id]) return s;
+      var o = {}; for (var k in s) o[k] = s[k];
+      o.tone = 'held';
+      o.unit = 'held';
+      o.line = 'held while the condition stands — nothing accrues';
+      return o;
+    });
   }
 
   // The ones with something owed today, which is what a glance is actually for.
   function owed() { return all().filter(function (s) { return s.tone === 'go'; }); }
 
-  w.Systems = { all: all, owed: owed, planCounts: planCounts, isoDay: isoDay, monday: monday,
+  // The ones a condition is currently covering.
+  function held() { return all().filter(function (s) { return s.tone === 'held'; }); }
+
+  /* Drift: days since anything was logged. A rut is data the hub already
+     holds, and naming it is most of the intervention — so it is computed
+     rather than felt. Reads the Life Log, which is the one store that gets
+     written on any kind of day. */
+  function drift() {
+    var d = readJSON('ct_lifelog_v1', null);
+    var days = (d && d.days && typeof d.days === 'object') ? d.days : null;
+    if (!days) return 0;
+    var keys = Object.keys(days).filter(function (k) { return days[k]; }).sort();
+    if (!keys.length) return 0;
+    /* The Life Log keys its days by the UTC date, so the comparison has to
+       use its convention rather than the local one, or a late evening lands
+       on tomorrow and reports a day of drift that has not happened. */
+    var last = keys[keys.length - 1];
+    var gap = Math.round((new Date(logDay() + 'T12:00:00') - new Date(last + 'T12:00:00')) / 86400000);
+    return Math.max(0, gap);
+  }
+
+  /* A floor day is any day the hub has reason to lower the bar: a condition
+     stands, or the log says you have drifted. On one the page asks for a
+     single thing and does not render the red column at all. */
+  function floorDay() {
+    var C = w.Conditions;
+    var any = false;
+    try { any = !!(C && C.active().length); } catch (e) {}
+    return any || drift() >= 3;
+  }
+
+  w.Systems = { all: all, owed: owed, held: held, drift: drift, floorDay: floorDay,
+                planCounts: planCounts, isoDay: isoDay, monday: monday,
                 trends: trends, pearson: pearson, CORR_MIN: CORR_MIN };
 })(window);

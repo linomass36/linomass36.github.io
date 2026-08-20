@@ -2,11 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Standing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<script src="./anatomy-data.js"></script>
+<script src="./anatomy-core.js"></script>
+<script src="./reading-data.js"></script>
+<script src="./hub-data.js"></script>
+<script src="./conditions.js"></script>
+<script src="./systems.js"></script>
 <style>
 /* ─────────────────────────────────────────────────────────────
    The Standing — the home menu for the CT Hub.
@@ -84,6 +90,9 @@
 }
 
 * { box-sizing: border-box; }
+/* A display rule on a component beats the hidden attribute, which left the
+   drift panel showing as an empty box. Assert it once for the whole page. */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--ground); color: var(--ink);
@@ -94,27 +103,12 @@ a { color: inherit; text-decoration: none; }
 button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px; }
 
-/* ── the prototype's own banner, not part of the design ── */
-.demo {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  padding: 9px 20px; background: #17171A; color: #EDEBE5;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em;
-}
-.demo b { font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .55; }
-.demo .sp { flex: 1; }
-.demo button {
-  background: transparent; border: 1px solid rgba(255,255,255,.26);
-  color: inherit; border-radius: 20px; padding: 4px 11px; cursor: pointer;
-  font-family: var(--mono); font-size: 10.5px;
-}
-.demo button:hover { border-color: currentColor; }
-.demo button[aria-pressed="true"] { background: #EDEBE5; color: #17171A; border-color: #EDEBE5; }
-
 /* ── top bar ── */
 .top {
   position: sticky; top: 0; z-index: 40;
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  padding: 13px 20px;
+  /* nav.js floats a 44px button at the top-right of every hub page. */
+  padding: 13px 68px 13px 20px;
   background: color-mix(in srgb, var(--ground) 88%, transparent);
   backdrop-filter: saturate(1.4) blur(10px);
   -webkit-backdrop-filter: saturate(1.4) blur(10px);
@@ -336,7 +330,7 @@ footer {
 
 @media (max-width: 560px) {
   main { padding: 0 16px 80px; }
-  .top { padding: 11px 16px; }
+  .top { padding: 11px 64px 11px 16px; }
   .kicker .note { display: none; }
   .finder { margin-left: 0; width: 100%; }
   .finder input { width: 100%; }
@@ -350,48 +344,32 @@ footer {
 </head>
 <body>
 
-<div class="demo">
-  <b>Prototype</b>
-  <span class="sp"></span>
-  <span style="opacity:.6">show me</span>
-  <button id="s-busy"    aria-pressed="false">a busy day</button>
-  <button id="s-quiet"   aria-pressed="false">a quiet day</button>
-  <button id="s-injured" aria-pressed="true">injured, day 5 of a rut</button>
-  <button id="s-back"    aria-pressed="false">day one back</button>
-  <button id="d-theme">◐ theme</button>
-</div>
-
 <header class="top">
   <span class="mark">CT Hub</span>
   <span class="dateline" id="dateline"></span>
   <span class="sp"></span>
-  <button class="chip" id="btn-find">⌕ find anything <kbd>/</kbd></button>
+  <button class="chip" id="btn-find">&#8981; find anything <kbd>/</kbd></button>
 </header>
 
 <main>
 
-  <!-- 0 · conditions — what is true about you, before what is owed -->
   <div class="cond-bar" id="cond-bar">
     <span class="pip"></span>
-    <span id="cond-text">—</span>
-    <a class="edit" href="conditions.html" style="margin-left:0">what does this do? →</a>
+    <span id="cond-text">&mdash;</span>
     <button class="edit" id="cond-edit">change</button>
   </div>
   <div class="cond-pick" id="cond-pick"></div>
 
-  <!-- 1 · the verdict -->
   <section class="standing">
     <div class="strip" id="strip" aria-hidden="true"></div>
-    <h1 id="verdict">—</h1>
-    <p id="verdict-sub">—</p>
+    <h1 id="verdict">&mdash;</h1>
+    <p id="verdict-sub">&mdash;</p>
     <div class="drift" id="drift" hidden>
       <span class="lab">Drift</span>
       <span class="txt" id="drift-txt"></span>
-      <span class="spark" id="spark" title="the last fourteen days"></span>
     </div>
   </section>
 
-  <!-- 2 · the one thing (floor days only) -->
   <section id="one-sec" hidden>
     <div class="onething">
       <div class="lab">The one thing</div>
@@ -399,54 +377,50 @@ footer {
       <div class="why" id="one-why"></div>
       <div class="around" id="one-around" hidden></div>
       <div class="row2">
-        <button class="did" id="one-did" aria-pressed="false"><span id="one-did-t">that's the day</span></button>
+        <button class="did" id="one-did" aria-pressed="false"><span id="one-did-t">that&#39;s the day</span></button>
         <span class="alt" id="one-alt"></span>
       </div>
     </div>
   </section>
 
-  <!-- 3 · what is owed -->
   <section id="owed-sec">
     <div class="kicker">Wants you today <span class="note" id="owed-note"></span></div>
     <div class="owed-grid" id="owed-grid"></div>
   </section>
 
-  <!-- 4 · held, and current -->
   <section id="fold-sec">
     <div class="fold" id="held-fold" hidden>
       <button class="folded is-held" id="held-btn" aria-expanded="false">
-        <span class="pip"></span><span id="held-label"></span><span class="chev">▼</span>
+        <span class="pip"></span><span id="held-label"></span><span class="chev">&#9660;</span>
       </button>
       <div class="folded-list" id="held-list"></div>
     </div>
     <div class="fold">
       <button class="folded" id="cur-btn" aria-expanded="false">
-        <span class="pip"></span><span id="cur-label"></span><span class="chev">▼</span>
+        <span class="pip"></span><span id="cur-label"></span><span class="chev">&#9660;</span>
       </button>
       <div class="folded-list" id="cur-list"></div>
     </div>
   </section>
 
-  <!-- 5 · next actions -->
   <section id="acts-sec">
-    <div class="kicker">Do these next <span class="note" id="acts-note"></span></div>
+    <div class="kicker">Do these next <span class="note">from the master plan &middot; tap to close one</span></div>
     <ul class="acts" id="acts"></ul>
   </section>
   <section id="acts-folded" hidden>
     <button class="folded" id="acts-btn" aria-expanded="false">
       <span class="pip" style="background:var(--faint)"></span>
-      <span id="acts-fold-label"></span><span class="chev">▼</span>
+      <span id="acts-fold-label"></span><span class="chev">&#9660;</span>
     </button>
     <ul class="acts folded-list" id="acts2" style="margin-top:8px"></ul>
   </section>
 
-  <!-- 6 · the directory -->
   <section>
     <div class="dir-head">
       <div class="kicker" style="margin-bottom:0">Everything</div>
       <div class="finder">
-        <span class="mag">⌕</span>
-        <input id="filter" type="search" placeholder="Type to find a page…" aria-label="Find a page">
+        <span class="mag">&#8981;</span>
+        <input id="filter" type="search" placeholder="Type to find a page&hellip;" aria-label="Find a page">
       </div>
     </div>
     <div class="dir-grid" id="dir-grid"></div>
@@ -454,275 +428,175 @@ footer {
   </section>
 
   <footer>
-    <span>The Standing · home-menu prototype</span>
+    <span>The Standing</span>
     <span>a condition is a fact, not a failure</span>
   </footer>
 
 </main>
-
 <script>
+/* ─────────────────────────────────────────────────────────────
+   The Standing — the hub's front door.
+
+   Everything here is read from the real stores. systems.js supplies
+   the ten summaries and already applies conditions, so this page and
+   Today and Mission Control cannot disagree about what is owed.
+
+   Two ideas carry the page:
+
+   1 · Hierarchy. tone drives size, colour and order, so an overdue
+       system cannot render like a finished one. What is handled
+       folds into a line and the directory sits on the page instead
+       of behind the hamburger.
+
+   2 · Conditions. On a floor day the red column is not rendered at
+       all: one ask, and the day counts. The worst day produces the
+       shortest page rather than the longest and reddest one.
+   ───────────────────────────────────────────────────────────── */
 (function () {
   'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
+  var COUNT = ['no','one','two','three','four','five','six','seven','eight','nine','ten',
+               'eleven','twelve','thirteen','fourteen'];
+  var WORDS = ['Nothing','One thing','Two things','Three things','Four things','Five things',
+               'Six things','Seven things','Eight things','Nine things','Ten things'];
+  function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
 
-  /* ══════════════════════════════════════════════════════════
-     THE MODEL
+  var PKEY = 'ct-master-plan-v2';   // the master plan's own store, shared with Mission Control
+  var FKEY = 'ct_floor_v1';         // which floor days have been met
 
-     A system is the hub's own shape, from systems.js:
-       { id, name, href, big, unit, line, tone }
-     tone is 'go' when something is owed, 'ok' when handled.
-
-     A CONDITION is the piece the hub is missing. It names what
-     is actually constrained and which systems that covers. While
-     a condition holds, its systems are HELD: they do not go red,
-     they do not accrue, and streaks pause rather than break.
-
-     Scoping matters and is the whole point. A knee is a fact
-     about the body — it stops the grind board and has no opinion
-     whatsoever about the reading list. A global "having a bad
-     time" switch would be a lie in both directions.
-     ══════════════════════════════════════════════════════════ */
-
-  var SCOPES = {
-    body:   ['grind', 'record'],
-    mind:   ['anatomy', 'study', 'reading', 'anki'],
-    output: ['plan', 'research'],
-    people: ['network']
-  };
-
-  var CONDITIONS = [
-    { id: 'injured',  label: 'Injured', scope: ['body'], review: 7, hint: 'body',
-      blocks: ['lifting', 'running', 'long sitting'],
-      allows: ['standing', 'walking', 'lying down', 'short bouts', 'audio'] },
-    { id: 'ill',      label: 'Ill', scope: ['body', 'mind'], review: 5, hint: 'body + mind',
-      blocks: ['lifting', 'running', 'sustained focus'],
-      allows: ['lying down', 'audio', 'very short bouts'] },
-    { id: 'overtime', label: 'Work spike', scope: ['output', 'mind'], review: 14, hint: 'output + mind',
-      blocks: ['long blocks', 'deep work'], allows: ['short bouts', 'audio', 'anything under 15 min'] },
-    { id: 'exams',    label: 'Exam block', scope: ['output', 'people'], review: 21, hint: 'output + people',
-      blocks: ['new projects', 'correspondence'], allows: ['review', 'recall', 'the queue'] },
-    { id: 'flat',     label: 'Flat', scope: ['body', 'mind', 'output', 'people'], review: 3,
-      hint: 'everything, for three days',
-      blocks: ['anything requiring momentum'], allows: ['one line', 'one card', 'one loop'] }
-  ];
-
-  var BASE = [
-    { id:'plan',     name:'Master plan',   href:'CT Master Plan.html',   big:'34%',   unit:'this term', tone:'ok', line:'48/141 live · 230 further out · +6 this week' },
-    { id:'anatomy',  name:'Anatomy',       href:'Anatomy.dc.html',       big:'4',     unit:'open loops', tone:'go', line:'Phase 0 still open · 2 retests due' },
-    { id:'grind',    name:'Grind board',   href:'Grind.dc.html',         big:'W3',    unit:'2/6 done',  tone:'go', line:'2 of 5 lifts · no runs yet' },
-    { id:'study',    name:'Study Engine',  href:'Study Engine.dc.html',  big:'11',    unit:'due',       tone:'go', line:'errors re-asked on schedule' },
-    { id:'anki',     name:'Anki',          href:'conditions.html',       big:'250d',  unit:'250 behind', tone:'go', line:'20 min a day · 250 behind is 83 min of work' },
-    { id:'reading',  name:'Reading list',  href:'Reading List.dc.html',  big:'23/61', unit:'3 open',    tone:'ok', line:'three in progress right now' },
-    { id:'research', name:'Research plan', href:'Research Plan.dc.html', big:'2',     unit:'blocked',   tone:'go', line:'IRB packet waiting on a co-signature' },
-    { id:'record',   name:'Life Log',      href:'Life Log.dc.html',      big:'6.5h',  unit:'logged',    tone:'ok', line:'sleep 7h · study 4.5h · lifted' },
-    { id:'journal',  name:'Journal',       href:'Journal.dc.html',       big:'41',    unit:'entries',   tone:'',   line:'last entry 2 days ago' },
-    { id:'weekly',   name:'Weekly review', href:'Weekly Review.dc.html', big:'DUE',   unit:'this week', tone:'go', line:'the plan lives on this cadence' },
-    { id:'vault',    name:'The Vault',     href:'Vault.dc.html',         big:'£14.2k',unit:'net worth', tone:'',   line:'updated 9 days ago' }
-  ];
-
-  function clone(list) { return list.map(function (s) { var o = {}; for (var k in s) o[k] = s[k]; return o; }); }
-
-  /* The four scenarios. Each is { systems, conditions, drift }. */
-  var SCEN = {
-    busy: { conditions: [], drift: 0, systems: clone(BASE) },
-
-    quiet: { conditions: [], drift: 0, systems: (function () {
-      var s = clone(BASE), fix = {
-        anatomy:  { big:'0',  unit:'open loops', tone:'ok', line:'Phase 0 done · nothing due back today' },
-        grind:    { big:'W3', unit:'6/6 done',   tone:'ok', line:'week 3 is complete — it moves when you say so' },
-        study:    { big:'0',  unit:'due',        tone:'ok', line:'the queue is empty until tomorrow' },
-        anki:     { big:'250d', unit:'0 behind',  tone:'ok', line:'cleared, not skimmed — the streak means what it says' },
-        research: { big:'0',  unit:'blocked',    tone:'ok', line:'IRB packet signed and filed' },
-        weekly:   { big:'✓',  unit:'done',       tone:'ok', line:'this week is reviewed' }
-      };
-      s.forEach(function (x) { if (fix[x.id]) for (var k in fix[x.id]) x[k] = fix[x.id][k]; });
-      return s;
-    })() },
-
-    /* The state you described: five days down, and a knee on top. */
-    injured: { conditions: [{ id: 'injured', detail: 'lower back', since: 5 }], drift: 5, systems: (function () {
-      var s = clone(BASE), fix = {
-        anatomy:  { big:'7',  unit:'open loops', tone:'go', line:'5 days since a tier was declared' },
-        grind:    { big:'W3', unit:'0/6 done',   tone:'go', line:'nothing logged this week' },
-        study:    { big:'34', unit:'due',        tone:'go', line:'the queue has been building since Saturday' },
-        anki:     { big:'250d', unit:'250 behind', tone:'go', line:'five days of eight-minute visits · +35/day' },
-        record:   { big:'—',  unit:'not logged', tone:'go', line:'no entry for five days' },
-        journal:  { big:'41', unit:'entries',    tone:'go', line:'last entry 6 days ago' },
-        reading:  { big:'23/61', unit:'3 open',  tone:'go', line:'nothing moved in a week' }
-      };
-      s.forEach(function (x) { if (fix[x.id]) for (var k in fix[x.id]) x[k] = fix[x.id][k]; });
-      return s;
-    })() },
-
-    /* The morning after the floor day was met. */
-    back: { conditions: [{ id: 'injured', detail: 'lower back', since: 6 }], drift: 0, reentry: 1, systems: (function () {
-      var s = clone(BASE), fix = {
-        anatomy:  { big:'6',  unit:'open loops', tone:'ok', line:'Core run yesterday — the streak held' },
-        grind:    { big:'W3', unit:'0/6 done',   tone:'go', line:'nothing logged this week' },
-        study:    { big:'34', unit:'due',        tone:'go', line:'the queue has been building since Saturday' },
-        anki:     { big:'251d', unit:'250 behind', tone:'ok', line:'held yesterday · 26 min clears it in a fortnight' },
-        record:   { big:'1d', unit:'logged',     tone:'ok', line:'yesterday counted' },
-        journal:  { big:'42', unit:'entries',    tone:'ok', line:'wrote yesterday' },
-        reading:  { big:'23/61', unit:'3 open',  tone:'go', line:'nothing moved in a week' }
-      };
-      s.forEach(function (x) { if (fix[x.id]) for (var k in fix[x.id]) x[k] = fix[x.id][k]; });
-      return s;
-    })() }
-  };
-
+  /* The directory. nav.js's own groups, plus the three pages this
+     redesign added. The five plan documents are listed by name rather
+     than hidden a door deeper behind Reference — with a filter, more
+     named things beat fewer and a folder. */
   var GROUPS = [
-    ['Every day',      [['Today.dc.html','Today'], ['Hub.dc.html','The workshop']]],
+    ['Every day',      [['Standing.html','The Standing'], ['Today.dc.html','Today'], ['Hub.dc.html','The workshop']]],
     ['Study',          [['Anatomy.dc.html','Anatomy'], ['Study Engine.dc.html','Study Engine'], ['Reading List.dc.html','Reading List']]],
     ['Body',           [['Grind.dc.html','Grind board'], ['Life Log.dc.html','Life Log']]],
-    ['The plan',       [['CT Master Plan.html','CT Master Plan'], ['ledger.html','The Ledger'], ['conditions.html','Conditions'], ['budget.html','The Day Budget'], ['Summer Sprint.dc.html','Summer Sprint'], ['Research Plan.dc.html','Research Plan'], ['Plan Analysis.dc.html','Plan Analysis'], ['Timeline.dc.html','Timeline']]],
+    ['The plan',       [['CT Master Plan.html','CT Master Plan'], ['Ledger.html','The Ledger'],
+                        ['Day Budget.html','The Day Budget'], ['Conditions.html','Conditions'],
+                        ['Summer Sprint.dc.html','Summer Sprint'], ['Research Plan.dc.html','Research Plan'],
+                        ['Plan Analysis.dc.html','Plan Analysis'], ['Timeline.dc.html','Timeline']]],
     ['Research',       [['Conference Radar.dc.html','Conference Radar']]],
     ['People & money', [['Network Map.dc.html','Network Map'], ['Dossiers.dc.html','Dossiers'], ['Vault.dc.html','Vault']]],
     ['Looking back',   [['Weekly Review.dc.html','Weekly Review'], ['Journal.dc.html','Journal'], ['Examiner.dc.html','Examiner']]]
   ];
 
-  var ACTIONS = [
-    { label: 'Draft the ACGME application timeline',        tag: 'master plan' },
-    { label: 'Email Dr. Whitfield about the IRB signature', tag: 'research' },
-    { label: 'Retest chapter 4 — mediastinum',              tag: 'anatomy' },
-    { label: 'Book the STS abstract deadline reminder',     tag: 'conferences' }
-  ];
-
-  /* The re-entry ask, per condition. Deliberately small, and
-     deliberately phrased as sufficient — the hub's own words from
-     anatomy-core: "that is a full day today." */
-  var RAMPS = {
-    injured: { ask: 'Twenty Anki cards, standing or lying — whichever the back allows.',
-               why: 'The back rules out lifting, running and a long sit. It does not rule out recall, and recall is the only thing here that compounds if you leave it. Break it into two bouts if one is too long — the hub is counting the cards, not the posture.',
-               alt: 'still too much? → declare rest. The streak holds either way; that is what held means.' },
-    ill:     { ask: 'Log the day and close the laptop.',
-               why: 'One line in the Life Log is the whole ask. Everything else is held.',
-               alt: 'the log takes about forty seconds' },
-    overtime:{ ask: 'Move one card on the research plan.',
-               why: 'A shift that eats the week still leaves ten minutes. One card keeps the thread alive.',
-               alt: 'or declare rest — the week is already full' },
-    exams:   { ask: 'Run the Study Engine queue, nothing else.',
-               why: 'The queue is the only thing that compounds. The rest of the board is held until the block ends.',
-               alt: 'twenty cards is a full day this week' },
-    flat:    { ask: 'Write one line in the Journal.',
-               why: 'Not a plan, not a review. One line about today. That is the entire requirement and it resets the clock.',
-               alt: 'this condition expires by itself in three days' },
-    reentry: { ask: 'Two loops today, and log it.',
-               why: 'Yesterday you did the one thing, so the ramp goes up by one — not back to the full board. The backlog stays folded until a normal day, and a normal day is the hub\'s call, not a mood.',
-               alt: 'still too much? → back to one. The ramp only goes up when you clear it.' },
-    drift:   { ask: 'Pick the smallest open loop and shut it.',
-               why: 'Five days is a rut, not a verdict. The ramp back is one closed loop — the hub will not show you the backlog until you ask for it.',
-               alt: 'the backlog will keep' }
-  };
-
-  // ── helpers ──────────────────────────────────────────────
-  var $ = function (s) { return document.querySelector(s); };
-  function el(t, cls, txt) { var n = document.createElement(t); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; }
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
-  var COUNT = ['no','one','two','three','four','five','six','seven','eight','nine','ten',
-               'eleven','twelve','thirteen','fourteen'];
-  function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
-  var WORDS = ['Nothing','One thing','Two things','Three things','Four things','Five things','Six things','Seven things','Eight things','Nine things','Ten things'];
-
-  var scenario = 'injured';
-  var active = [];   // the conditions currently declared
-  function scen() { return SCEN[scenario]; }
-
-  function condDef(id) {
-    for (var i = 0; i < CONDITIONS.length; i++) if (CONDITIONS[i].id === id) return CONDITIONS[i];
-    return null;
+  function lsJson(k, f) {
+    try { var r = localStorage.getItem(k); if (r) { var v = JSON.parse(r); if (v) return v; } } catch (e) {}
+    return f;
   }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
-  // Which system ids are covered by the active conditions.
-  function heldIds() {
-    var out = {};
-    active.forEach(function (a) {
-      var d = condDef(a.id);
-      if (!d) return;
-      d.scope.forEach(function (sc) {
-        (SCOPES[sc] || []).forEach(function (sysId) { out[sysId] = true; });
+  function systems() {
+    try {
+      if (window.Systems && typeof window.Systems.all === 'function') return window.Systems.all();
+    } catch (e) {}
+    return [];
+  }
+  function C() { return window.Conditions; }
+
+  /* ── the master plan's next open moves ───────────────────────
+     Same store and same priority order Mission Control uses, so
+     closing one here closes it there. */
+  function nextActions(limit) {
+    var D = window.HUB_DATA;
+    if (!D || !D.items) return [];
+    var plan = lsJson(PKEY, null) || {};
+    var checked = plan.checked || {};
+    if (!plan.checked && D.defaultChecked) {
+      D.defaultChecked.forEach(function (id) { checked[id] = 1; });
+    }
+    var bMap = {}; (D.branches || []).forEach(function (b) { bMap[b.id] = b; });
+    var byBranch = {};
+    D.items.forEach(function (it) { (byBranch[it.branchId] = byBranch[it.branchId] || []).push(it); });
+    var out = [];
+    (D.priority || []).forEach(function (bid) {
+      (byBranch[bid] || []).forEach(function (it) {
+        if (out.length >= limit || checked[it.id]) return;
+        var b = bMap[bid];
+        out.push({ id: it.id, label: it.label, tag: b ? b.title : '' });
       });
     });
     return out;
   }
 
-  /* Applying conditions is the mechanical anti-guilt device: a
-     covered system's tone becomes 'held' and its line says so.
-     It is not owed, so it cannot appear in the red column, and it
-     is not "current" either — pretending it was done would be the
-     other kind of lie. */
-  function resolved() {
-    var held = heldIds();
-    return scen().systems.map(function (s) {
-      if (!held[s.id]) return s;
-      var o = {}; for (var k in s) o[k] = s[k];
-      o.tone = 'held';
-      o.unit = 'held';
-      o.line = 'held while the condition stands — nothing accrues';
-      return o;
-    });
+  function closeAction(id) {
+    var plan = lsJson(PKEY, null) || {};
+    plan.checked = plan.checked || {};
+    plan.history = plan.history || [];
+    plan.checked[id] = 1;
+    plan.history.push({ id: id, a: 1, ts: Date.now() });   // the shape Mission Control writes
+    lsSet(PKEY, plan);
   }
 
-  // ── conditions ribbon ────────────────────────────────────
+  // Whether today's floor ask has been met.
+  function floorMet() { return lsJson(FKEY, {})[C().today()] === 1; }
+  function setFloorMet(v) {
+    var f = lsJson(FKEY, {});
+    if (v) f[C().today()] = 1; else delete f[C().today()];
+    lsSet(FKEY, f);
+  }
+
+  /* ── conditions ribbon ─────────────────────────────────────── */
   function paintConditions() {
-    var bar = $('#cond-bar'), txt = $('#cond-text');
-    if (!active.length) {
+    var cs = C().active(), bar = $('#cond-bar'), txt = $('#cond-text');
+    if (!cs.length) {
       bar.className = 'cond-bar none';
       txt.textContent = 'No conditions declared — the hub is asking for everything.';
     } else {
       bar.className = 'cond-bar';
-      var parts = active.map(function (a) {
-        var d = condDef(a.id);
-        var name = d ? d.label : a.id;
-        var det = a.detail ? ' (' + a.detail + ')' : '';
-        var since = a.since ? ' · day ' + a.since : '';
-        var due = (d && a.since >= d.review) ? ' · review due' : '';
-        return name + det + since + due;
+      var parts = cs.map(function (c) {
+        return c.label + (c.detail ? ' (' + c.detail + ')' : '') +
+               ' · day ' + c.days + (c.dueReview ? ' · review due' : '');
       });
-      txt.innerHTML = '<b>' + esc(parts.join('  ·  ')) + '</b> ' +
-        '<span class="since">— ' + Object.keys(heldIds()).length + ' systems held</span>';
+      var n = Object.keys(C().heldIds()).length;
+      txt.innerHTML = '<b>' + esc(parts.join('  ·  ')) + '</b> <span class="since">— ' +
+        n + ' system' + (n === 1 ? '' : 's') + ' held</span>';
     }
 
     var pick = $('#cond-pick');
     if (!pick.childNodes.length) {
-      CONDITIONS.forEach(function (c) {
-        var b = el('button'); b.type = 'button';
-        b.appendChild(el('span', null, c.label));
-        b.appendChild(el('small', null, c.hint));
+      C().DEFS.forEach(function (d) {
+        var b = el('button'); b.type = 'button'; b.setAttribute('data-cond', d.id);
+        b.appendChild(el('span', null, d.label));
+        b.appendChild(el('small', null, d.hint));
         b.addEventListener('click', function () {
-          var i = -1;
-          active.forEach(function (a, k) { if (a.id === c.id) i = k; });
-          if (i >= 0) active.splice(i, 1);
-          else active.push({ id: c.id, since: 1 });
+          var on = C().active().some(function (c) { return c.id === d.id; });
+          if (on) { C().lift(d.id); }
+          else {
+            var detail = '';
+            if (d.id === 'injured' || d.id === 'ill') {
+              detail = (window.prompt('What, specifically? (e.g. lower back)') || '').trim();
+            }
+            C().declare(d.id, detail);
+          }
           paint();
         });
-        b.setAttribute('data-cond', c.id);
         pick.appendChild(b);
       });
     }
     Array.prototype.forEach.call(pick.children, function (b) {
-      var on = active.some(function (a) { return a.id === b.getAttribute('data-cond'); });
-      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-pressed', String(C().active().some(function (c) {
+        return c.id === b.getAttribute('data-cond');
+      })));
     });
   }
-
   $('#cond-edit').addEventListener('click', function () { $('#cond-pick').classList.toggle('open'); });
 
-  // ── the page ─────────────────────────────────────────────
+  /* ── the page ──────────────────────────────────────────────── */
   function paint() {
     paintConditions();
-
-    var all  = resolved();
+    var all  = systems();
     var owed = all.filter(function (s) { return s.tone === 'go'; });
     var held = all.filter(function (s) { return s.tone === 'held'; });
     var rest = all.filter(function (s) { return s.tone !== 'go' && s.tone !== 'held'; });
+    var drift = window.Systems.drift();
+    var cs = C().active();
+    var floorDay = cs.length > 0 || drift >= 3;
+    var met = floorMet();
 
-    var drift   = scen().drift || 0;
-    var reentry = scen().reentry || 0;
-    /* A floor day is any day the hub has reason to lower the bar:
-       a condition is standing, or the log says you have drifted.
-       On a floor day it asks for one thing and nothing else. */
-    var floorDay = active.length > 0 || drift >= 3;
-
-    // the strip
     var strip = $('#strip'); strip.innerHTML = '';
     all.forEach(function (s) {
       var i = el('i', s.tone === 'go' ? 'go' : (s.tone === 'held' ? 'held' : (s.tone === 'ok' ? 'ok' : '')));
@@ -730,27 +604,18 @@ footer {
       strip.appendChild(i);
     });
 
-    // the verdict
     var h1 = $('#verdict'), sub = $('#verdict-sub');
     h1.className = '';
-    if (reentry) {
-      h1.className = 'floor';
-      h1.innerHTML = 'Day <em>one</em> back.';
-      sub.textContent = 'Yesterday counted, so the streak held rather than broke. ' +
-        Object.keys(heldIds()).length + ' systems are still held. The hub is not showing you the ' +
-        'backlog yet — one ordinary day and it will.';
-    } else if (floorDay) {
+    if (floorDay) {
       h1.className = 'floor';
       h1.innerHTML = 'Today is a <em>floor day</em>.';
       var bits = [];
       if (drift >= 3) bits.push((COUNT[drift] || drift) + ' days down');
-      active.forEach(function (a) {
-        var d = condDef(a.id);
-        bits.push('the ' + (a.detail || (d ? d.label.toLowerCase() : a.id)) + ' is out');
-      });
+      cs.forEach(function (c) { bits.push('the ' + (c.detail || c.label.toLowerCase()) + ' is out'); });
       sub.textContent = (bits.length ? cap(bits.join(', ')) + '. ' : '') +
-        Object.keys(heldIds()).length + ' systems are held — nothing is accruing against you while they are. ' +
-        'Do the one thing below and the day counts as a day.';
+        Object.keys(C().heldIds()).length + ' systems are held — nothing is accruing against you while they are. ' +
+        (met ? 'You did the one thing. The day counted.'
+             : 'Do the one thing below and the day counts as a day.');
     } else if (owed.length === 0) {
       h1.className = 'clear';
       h1.innerHTML = 'Everything is <em>current</em>.';
@@ -760,43 +625,33 @@ footer {
       sub.textContent = 'The rest of the hub is current. Everything below is detail — you have already read the important part.';
     }
 
-    // drift, named and evidenced
     var dr = $('#drift');
     dr.hidden = drift < 3;
     if (drift >= 3) {
-      $('#drift-txt').textContent =
-        drift + ' days with little logged. The hub is naming it rather than colouring it red — ' +
-        'a rut is a fact about the last week, not a verdict on the plan.';
-      var sp = $('#spark'); sp.innerHTML = '';
-      for (var d = 13; d >= 0; d--) {
-        var i2 = el('i');
-        if (d >= drift) i2.className = 'on';
-        else if (d === 0 && reentry) i2.className = 'on';
-        else i2.className = 'thin';
-        sp.appendChild(i2);
-      }
+      $('#drift-txt').textContent = drift + ' days since the log was fed. The hub is naming it rather than ' +
+        'colouring it red — a rut is a fact about the last week, not a verdict on the plan.';
     }
 
-    // the one thing
-    $('#one-sec').hidden = !floorDay && !reentry;
-    if (floorDay || reentry) {
-      var ramp = reentry ? RAMPS.reentry : ((active.length && RAMPS[active[0].id]) || RAMPS.drift);
+    $('#one-sec').hidden = !floorDay;
+    if (floorDay) {
+      var ramp = C().ramp({ reentry: false });
       $('#one-ask').textContent = ramp.ask;
       $('#one-why').textContent = ramp.why;
       $('#one-alt').textContent = ramp.alt;
-      var d0 = active.length ? condDef(active[0].id) : null;
-      var wa = document.getElementById('one-around');
-      if (d0 && d0.blocks) {
+      var env = C().envelope(), wa = $('#one-around');
+      if (env.blocks.length) {
         wa.hidden = false;
-        wa.innerHTML = '<b>out:</b> ' + d0.blocks.join(' · ') + '　　<b>still on:</b> ' + d0.allows.join(' · ');
+        wa.innerHTML = '<b>out:</b> ' + esc(env.blocks.join(' · ')) +
+                       '&#12288;&#12288;<b>still on:</b> ' + esc(env.allows.join(' · '));
       } else { wa.hidden = true; }
+      $('#one-did').setAttribute('aria-pressed', String(met));
+      $('#one-did-t').textContent = met ? 'logged — the day counted' : "that's the day";
     }
 
-    /* On a floor day the red column is not shown at all. This is
-       the inversion that matters: the worst day produces the
-       shortest page, not the longest and reddest one. */
-    $('#owed-sec').hidden = floorDay || reentry || owed.length === 0;
-    $('#owed-note').textContent = owed.length ? 'sorted by what has been waiting longest' : '';
+    /* The inversion that matters: on a floor day the red column is not
+       rendered at all. */
+    $('#owed-sec').hidden = floorDay || owed.length === 0;
+    $('#owed-note').textContent = owed.length ? 'the ones with something owed' : '';
     var grid = $('#owed-grid'); grid.innerHTML = '';
     if (!floorDay) owed.forEach(function (s) {
       var a = el('a', 'tile'); a.href = s.href;
@@ -810,7 +665,6 @@ footer {
       grid.appendChild(a);
     });
 
-    // held
     $('#held-fold').hidden = held.length === 0;
     if (held.length) {
       $('#held-label').innerHTML = '<b>' + (COUNT[held.length] || held.length) + ' system' +
@@ -818,25 +672,24 @@ footer {
       fill($('#held-list'), held, 'is-held');
     }
 
-    // current
-    var waiting = rest.length + owed.length;
-    var label = (floorDay || reentry)
+    var waiting = rest.length + (floorDay ? owed.length : 0);
+    $('#cur-label').innerHTML = floorDay
       ? '<b>' + (COUNT[waiting] || waiting) + ' waiting</b> — the hub will show them when you ask'
       : '<b>' + (COUNT[rest.length] || rest.length) + ' system' + (rest.length === 1 ? '' : 's') +
         ' current</b>' + (owed.length ? ', nothing owed' : ' — the whole board');
-    $('#cur-label').innerHTML = label;
-    fill($('#cur-list'), (floorDay || reentry) ? rest.concat(owed) : rest, '');
+    fill($('#cur-list'), floorDay ? rest.concat(owed) : rest, '');
 
-    /* The action list is not deleted on a floor day, it is folded.
-       "They'll keep" is the message; hiding them entirely would
-       just move the dread somewhere you cannot see it. */
-    $('#acts-sec').hidden = floorDay || reentry;
-    $('#acts-folded').hidden = !(floorDay || reentry);
-    $('#acts-fold-label').innerHTML = '<b>' + (COUNT[ACTIONS.length] || ACTIONS.length) +
-      ' actions waiting</b> — they will keep';
-    $('#acts-note').textContent = 'from the master plan · tap to close one';
+    /* Folded, not deleted. "They will keep" is the message; hiding them
+       outright would move the dread somewhere you cannot see it. */
+    var acts = nextActions(6);
+    $('#acts-sec').hidden = floorDay;
+    $('#acts-folded').hidden = !floorDay;
+    $('#acts-fold-label').innerHTML = '<b>' + (COUNT[acts.length] || acts.length) +
+      ' action' + (acts.length === 1 ? '' : 's') + ' waiting</b> — they will keep';
+    buildActs($('#acts'), acts);
+    buildActs($('#acts2'), acts);
 
-    paintDirectory($('#filter').value, floorDay || reentry);
+    paintDirectory($('#filter').value, floorDay);
   }
 
   function fill(node, list, extra) {
@@ -855,6 +708,30 @@ footer {
     });
   }
 
+  function buildActs(node, list) {
+    node.innerHTML = '';
+    if (!list.length) {
+      var li0 = el('li');
+      li0.appendChild(el('div', null, 'Nothing open on the plan.'));
+      li0.firstChild.style.cssText = 'padding:14px 16px;color:var(--muted);font-style:italic';
+      node.appendChild(li0);
+      return;
+    }
+    list.forEach(function (a) {
+      var li = el('li'), b = el('button');
+      b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.appendChild(el('span', 'box'));
+      b.appendChild(el('span', 'label', a.label));
+      b.appendChild(el('span', 'tag', a.tag));
+      b.addEventListener('click', function () {
+        b.setAttribute('aria-pressed', 'true');
+        closeAction(a.id);
+        setTimeout(paint, 220);   // let the tick land before the list re-sorts
+      });
+      li.appendChild(b); node.appendChild(li);
+    });
+  }
+
   function foldToggle(btnSel, listSel) {
     $(btnSel).addEventListener('click', function () {
       var open = this.getAttribute('aria-expanded') === 'true';
@@ -866,36 +743,16 @@ footer {
   foldToggle('#cur-btn', '#cur-list');
   foldToggle('#acts-btn', '#acts2');
 
-  // the floor day's single button
   $('#one-did').addEventListener('click', function () {
-    var on = this.getAttribute('aria-pressed') === 'true';
-    this.setAttribute('aria-pressed', String(!on));
-    $('#one-did-t').textContent = on ? "that's the day" : 'logged — the day counted';
+    setFloorMet(this.getAttribute('aria-pressed') !== 'true');
+    paint();
   });
 
-  // ── actions ──────────────────────────────────────────────
-  function buildActs(node) {
-    node.innerHTML = '';
-    ACTIONS.forEach(function (a) {
-      var li = el('li'), b = el('button');
-      b.type = 'button'; b.setAttribute('aria-pressed', 'false');
-      b.appendChild(el('span', 'box'));
-      b.appendChild(el('span', 'label', a.label));
-      b.appendChild(el('span', 'tag', a.tag));
-      b.addEventListener('click', function () {
-        b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
-      });
-      li.appendChild(b); node.appendChild(li);
-    });
-  }
-  buildActs($('#acts')); buildActs($('#acts2'));
-
-  // ── the directory ────────────────────────────────────────
   function paintDirectory(q, soften) {
     q = (q || '').trim().toLowerCase();
     var byHref = {};
-    resolved().forEach(function (s) { byHref[s.href] = s.tone; });
-
+    systems().forEach(function (s) { byHref[s.href] = s.tone; });
+    var here = decodeURIComponent((location.pathname.split('/').pop() || ''));
     var grid = $('#dir-grid'); grid.innerHTML = '';
     var shown = 0;
 
@@ -912,6 +769,7 @@ footer {
         if (soften && tone === 'go') tone = 'wait';
         var a = el('a', tone === 'go' ? 'go' : (tone === 'held' || tone === 'wait' ? 'held' : (tone === 'ok' ? 'ok' : '')));
         a.href = p[0];
+        if (p[0] === here) a.setAttribute('aria-current', 'page');
         a.appendChild(el('span', 'dot'));
         var lbl = el('span'); lbl.innerHTML = highlight(p[1], q);
         a.appendChild(lbl);
@@ -933,7 +791,7 @@ footer {
   }
 
   $('#filter').addEventListener('input', function () {
-    paintDirectory(this.value, (scen().reentry || 0) > 0 || active.length > 0 || (scen().drift || 0) >= 3);
+    paintDirectory(this.value, window.Systems.floorDay());
   });
   function focusFilter() { var f = $('#filter'); f.scrollIntoView({ block: 'center', behavior: 'smooth' }); f.focus(); }
   $('#btn-find').addEventListener('click', focusFilter);
@@ -944,31 +802,15 @@ footer {
     if (e.key === 'Escape' && typing) document.activeElement.blur();
   });
 
-  (function () {
-    var d = new Date();
-    $('#dateline').textContent = d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
-  })();
+  $('#dateline').textContent = new Date().toLocaleDateString(undefined,
+    { weekday: 'long', day: 'numeric', month: 'long' });
 
-  // ── prototype controls ───────────────────────────────────
-  var BTN = { busy: '#s-busy', quiet: '#s-quiet', injured: '#s-injured', back: '#s-back' };
-  function setScenario(k) {
-    scenario = k;
-    active = (scen().conditions || []).map(function (c) { var o = {}; for (var q in c) o[q] = c[q]; return o; });
-    Object.keys(BTN).forEach(function (n) { $(BTN[n]).setAttribute('aria-pressed', String(n === k)); });
-    $('#cond-pick').classList.remove('open');
-    $('#one-did').setAttribute('aria-pressed', 'false');
-    $('#one-did-t').textContent = "that's the day";
-    paint();
-  }
-  Object.keys(BTN).forEach(function (n) { $(BTN[n]).addEventListener('click', function () { setScenario(n); }); });
-
-  $('#d-theme').addEventListener('click', function () {
-    var r = document.documentElement, now = r.getAttribute('data-theme');
-    if (!now) now = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    r.setAttribute('data-theme', now === 'dark' ? 'light' : 'dark');
-  });
-
-  setScenario('injured');
+  /* anatomy-core and the data files are plain scripts, but sync.js may
+     still be pulling the cloud copy into localStorage when this runs.
+     A first paint now, and one more once the page has settled, so the
+     glance is never a frame behind the store. */
+  paint();
+  window.addEventListener('load', paint);
 })();
 </script>
 </body>
