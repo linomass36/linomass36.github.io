@@ -226,6 +226,12 @@ h1.floor em { color: var(--held); }
   line-height: 1.25; font-weight: 500; text-wrap: balance;
 }
 .onething .why { margin-top: 8px; font-size: 13.5px; color: var(--mid); max-width: 52ch; }
+.onething .around {
+  margin-top: 12px; padding: 9px 12px; border-radius: 9px;
+  background: var(--held-bg); border: 1px solid var(--held-ln);
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.7; color: var(--held);
+}
+.onething .around b { font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 9.5px; }
 .onething .row2 { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
 .onething .did {
   display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 18px;
@@ -368,6 +374,7 @@ footer {
   <div class="cond-bar" id="cond-bar">
     <span class="pip"></span>
     <span id="cond-text">—</span>
+    <a class="edit" href="conditions.html" style="margin-left:0">what does this do? →</a>
     <button class="edit" id="cond-edit">change</button>
   </div>
   <div class="cond-pick" id="cond-pick"></div>
@@ -390,6 +397,7 @@ footer {
       <div class="lab">The one thing</div>
       <div class="ask" id="one-ask"></div>
       <div class="why" id="one-why"></div>
+      <div class="around" id="one-around" hidden></div>
       <div class="row2">
         <button class="did" id="one-did" aria-pressed="false"><span id="one-did-t">that's the day</span></button>
         <span class="alt" id="one-alt"></span>
@@ -476,17 +484,25 @@ footer {
 
   var SCOPES = {
     body:   ['grind', 'record'],
-    mind:   ['anatomy', 'study', 'reading'],
+    mind:   ['anatomy', 'study', 'reading', 'anki'],
     output: ['plan', 'research'],
     people: ['network']
   };
 
   var CONDITIONS = [
-    { id: 'injured',  label: 'Injured',    scope: ['body'],           review: 7,  hint: 'body' },
-    { id: 'ill',      label: 'Ill',        scope: ['body', 'mind'],   review: 5,  hint: 'body + mind' },
-    { id: 'overtime', label: 'Work spike', scope: ['output', 'mind'], review: 14, hint: 'output + mind' },
-    { id: 'exams',    label: 'Exam block', scope: ['output', 'people'], review: 21, hint: 'output + people' },
-    { id: 'flat',     label: 'Flat',       scope: ['body', 'mind', 'output', 'people'], review: 3, hint: 'everything, for three days' }
+    { id: 'injured',  label: 'Injured', scope: ['body'], review: 7, hint: 'body',
+      blocks: ['lifting', 'running', 'long sitting'],
+      allows: ['standing', 'walking', 'lying down', 'short bouts', 'audio'] },
+    { id: 'ill',      label: 'Ill', scope: ['body', 'mind'], review: 5, hint: 'body + mind',
+      blocks: ['lifting', 'running', 'sustained focus'],
+      allows: ['lying down', 'audio', 'very short bouts'] },
+    { id: 'overtime', label: 'Work spike', scope: ['output', 'mind'], review: 14, hint: 'output + mind',
+      blocks: ['long blocks', 'deep work'], allows: ['short bouts', 'audio', 'anything under 15 min'] },
+    { id: 'exams',    label: 'Exam block', scope: ['output', 'people'], review: 21, hint: 'output + people',
+      blocks: ['new projects', 'correspondence'], allows: ['review', 'recall', 'the queue'] },
+    { id: 'flat',     label: 'Flat', scope: ['body', 'mind', 'output', 'people'], review: 3,
+      hint: 'everything, for three days',
+      blocks: ['anything requiring momentum'], allows: ['one line', 'one card', 'one loop'] }
   ];
 
   var BASE = [
@@ -494,6 +510,7 @@ footer {
     { id:'anatomy',  name:'Anatomy',       href:'Anatomy.dc.html',       big:'4',     unit:'open loops', tone:'go', line:'Phase 0 still open · 2 retests due' },
     { id:'grind',    name:'Grind board',   href:'Grind.dc.html',         big:'W3',    unit:'2/6 done',  tone:'go', line:'2 of 5 lifts · no runs yet' },
     { id:'study',    name:'Study Engine',  href:'Study Engine.dc.html',  big:'11',    unit:'due',       tone:'go', line:'errors re-asked on schedule' },
+    { id:'anki',     name:'Anki',          href:'conditions.html',       big:'250d',  unit:'250 behind', tone:'go', line:'streak alive · 25/day is a skim, not a clear' },
     { id:'reading',  name:'Reading list',  href:'Reading List.dc.html',  big:'23/61', unit:'3 open',    tone:'ok', line:'three in progress right now' },
     { id:'research', name:'Research plan', href:'Research Plan.dc.html', big:'2',     unit:'blocked',   tone:'go', line:'IRB packet waiting on a co-signature' },
     { id:'record',   name:'Life Log',      href:'Life Log.dc.html',      big:'6.5h',  unit:'logged',    tone:'ok', line:'sleep 7h · study 4.5h · lifted' },
@@ -513,6 +530,7 @@ footer {
         anatomy:  { big:'0',  unit:'open loops', tone:'ok', line:'Phase 0 done · nothing due back today' },
         grind:    { big:'W3', unit:'6/6 done',   tone:'ok', line:'week 3 is complete — it moves when you say so' },
         study:    { big:'0',  unit:'due',        tone:'ok', line:'the queue is empty until tomorrow' },
+        anki:     { big:'250d', unit:'0 behind',  tone:'ok', line:'cleared, not skimmed — the streak means what it says' },
         research: { big:'0',  unit:'blocked',    tone:'ok', line:'IRB packet signed and filed' },
         weekly:   { big:'✓',  unit:'done',       tone:'ok', line:'this week is reviewed' }
       };
@@ -521,11 +539,12 @@ footer {
     })() },
 
     /* The state you described: five days down, and a knee on top. */
-    injured: { conditions: [{ id: 'injured', detail: 'left knee', since: 5 }], drift: 5, systems: (function () {
+    injured: { conditions: [{ id: 'injured', detail: 'lower back', since: 5 }], drift: 5, systems: (function () {
       var s = clone(BASE), fix = {
         anatomy:  { big:'7',  unit:'open loops', tone:'go', line:'5 days since a tier was declared' },
         grind:    { big:'W3', unit:'0/6 done',   tone:'go', line:'nothing logged this week' },
         study:    { big:'34', unit:'due',        tone:'go', line:'the queue has been building since Saturday' },
+        anki:     { big:'250d', unit:'250 behind', tone:'go', line:'five days of skims — the backlog grew, the streak did not' },
         record:   { big:'—',  unit:'not logged', tone:'go', line:'no entry for five days' },
         journal:  { big:'41', unit:'entries',    tone:'go', line:'last entry 6 days ago' },
         reading:  { big:'23/61', unit:'3 open',  tone:'go', line:'nothing moved in a week' }
@@ -535,11 +554,12 @@ footer {
     })() },
 
     /* The morning after the floor day was met. */
-    back: { conditions: [{ id: 'injured', detail: 'left knee', since: 6 }], drift: 0, reentry: 1, systems: (function () {
+    back: { conditions: [{ id: 'injured', detail: 'lower back', since: 6 }], drift: 0, reentry: 1, systems: (function () {
       var s = clone(BASE), fix = {
         anatomy:  { big:'6',  unit:'open loops', tone:'ok', line:'Core run yesterday — the streak held' },
         grind:    { big:'W3', unit:'0/6 done',   tone:'go', line:'nothing logged this week' },
         study:    { big:'34', unit:'due',        tone:'go', line:'the queue has been building since Saturday' },
+        anki:     { big:'251d', unit:'250 behind', tone:'ok', line:'held yesterday — the streak stood without a skim' },
         record:   { big:'1d', unit:'logged',     tone:'ok', line:'yesterday counted' },
         journal:  { big:'42', unit:'entries',    tone:'ok', line:'wrote yesterday' },
         reading:  { big:'23/61', unit:'3 open',  tone:'go', line:'nothing moved in a week' }
@@ -553,7 +573,7 @@ footer {
     ['Every day',      [['Today.dc.html','Today'], ['Hub.dc.html','The workshop']]],
     ['Study',          [['Anatomy.dc.html','Anatomy'], ['Study Engine.dc.html','Study Engine'], ['Reading List.dc.html','Reading List']]],
     ['Body',           [['Grind.dc.html','Grind board'], ['Life Log.dc.html','Life Log']]],
-    ['The plan',       [['CT Master Plan.html','CT Master Plan'], ['ledger.html','The Ledger'], ['Summer Sprint.dc.html','Summer Sprint'], ['Research Plan.dc.html','Research Plan'], ['Plan Analysis.dc.html','Plan Analysis'], ['Timeline.dc.html','Timeline']]],
+    ['The plan',       [['CT Master Plan.html','CT Master Plan'], ['ledger.html','The Ledger'], ['conditions.html','Conditions'], ['Summer Sprint.dc.html','Summer Sprint'], ['Research Plan.dc.html','Research Plan'], ['Plan Analysis.dc.html','Plan Analysis'], ['Timeline.dc.html','Timeline']]],
     ['Research',       [['Conference Radar.dc.html','Conference Radar']]],
     ['People & money', [['Network Map.dc.html','Network Map'], ['Dossiers.dc.html','Dossiers'], ['Vault.dc.html','Vault']]],
     ['Looking back',   [['Weekly Review.dc.html','Weekly Review'], ['Journal.dc.html','Journal'], ['Examiner.dc.html','Examiner']]]
@@ -570,9 +590,9 @@ footer {
      deliberately phrased as sufficient — the hub's own words from
      anatomy-core: "that is a full day today." */
   var RAMPS = {
-    injured: { ask: 'Open Anatomy and run Core.',
-               why: 'The knee has no opinion about the mediastinum. Core is twenty minutes sitting down, and it is the one thing that keeps the closure log from compounding while the body mends.',
-               alt: 'too much? → declare rest instead. Nothing accrues either way.' },
+    injured: { ask: 'Twenty Anki cards, standing or lying — whichever the back allows.',
+               why: 'The back rules out lifting, running and a long sit. It does not rule out recall, and recall is the only thing here that compounds if you leave it. Break it into two bouts if one is too long — the hub is counting the cards, not the posture.',
+               alt: 'still too much? → declare rest. The streak holds either way; that is what held means.' },
     ill:     { ask: 'Log the day and close the laptop.',
                why: 'One line in the Life Log is the whole ask. Everything else is held.',
                alt: 'the log takes about forty seconds' },
@@ -764,6 +784,12 @@ footer {
       $('#one-ask').textContent = ramp.ask;
       $('#one-why').textContent = ramp.why;
       $('#one-alt').textContent = ramp.alt;
+      var d0 = active.length ? condDef(active[0].id) : null;
+      var wa = document.getElementById('one-around');
+      if (d0 && d0.blocks) {
+        wa.hidden = false;
+        wa.innerHTML = '<b>out:</b> ' + d0.blocks.join(' · ') + '　　<b>still on:</b> ' + d0.allows.join(' · ');
+      } else { wa.hidden = true; }
     }
 
     /* On a floor day the red column is not shown at all. This is

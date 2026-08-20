@@ -267,12 +267,12 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--rule);
   /* The original target's stated assumptions, from 1 June. These are
      what makes the diagnosis possible: without them the only story
      available is "you underperformed". */
-  var ORIGINAL = { low: 25000, high: 50000, rate: 50, hours: 40, weeks: 16 };
+  var ORIGINAL = { low: 25000, high: 50000, rate: 30, hours: 65, weeks: 16 };
   ORIGINAL.plan = ORIGINAL.weeks * ORIGINAL.hours * ORIGINAL.rate;   // 32 000 zł
 
   var CHAIN = [
     { date: '1 June',   n: '25 000 – 50 000 zł', why: 'Opening assumption, before a rate was known or a contract signed.', cls: 'was' },
-    { date: '20 August', n: '20 000 zł', why: 'First correction. Still built on the June rate, so it inherited the error rather than fixing it.', cls: 'was' }
+    { date: '20 August', n: '20 000 zł', why: 'First correction. Still assumed the hours would somehow arrive, so it inherited the error rather than fixing it.', cls: 'was' }
   ];
 
   function readInputs() {
@@ -356,19 +356,21 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--rule);
       return broke ? (was / (now || 1)) : 1;
     }
     var mRate  = asmRow('The rate', 'what an hour actually pays', ORIGINAL.rate, v.rate, 'zł/h');
-    var mHours = asmRow('The hours', 'what the week actually has room for', ORIGINAL.hours, v.hours, 'h/wk');
+    var mHours = asmRow('The hours', '13 h days in the USA — the whole plan rested here', ORIGINAL.hours, v.hours, 'h/wk');
     asmRow('The window', 'weeks of summer to work with', ORIGINAL.weeks, v.weeks + Math.round(v.earned / (c.perWeek || 1)), 'wks');
 
     var total = mRate * mHours;
     var pRate  = Math.round((1 - v.rate / ORIGINAL.rate) * 100);
     var pHours = Math.round((1 - v.hours / ORIGINAL.hours) * 100);
     $('#punch').innerHTML =
-      'The rate came in ' + pRate + '% under what June assumed, and the hours ' + pHours + '% under. ' +
-      'Together that is <b>' + (Math.round(total * 100) / 100) + '×</b> — very close to the ' +
-      (Math.round(ORIGINAL.plan / c.projected * 100) / 100) + '× between the June plan (' +
-      pln(ORIGINAL.plan) + ') and where the summer now lands (' + pln(c.projected) + '). ' +
-      '<b>The target was not missed by effort. It was missed by two assumptions, each made in June, neither re-checked since.</b> ' +
-      'That is a thing a hub can watch for you; it is not a thing you can be expected to feel.';
+      'The rate came in within ' + Math.abs(pRate) + '% of what June assumed — <b>that assumption held</b>. ' +
+      'The hours came in <b>' + pHours + '% under</b>: 65 a week expected, ' + v.hours + ' actual. ' +
+      'That one number is ' + (Math.round(ORIGINAL.hours / (v.hours || 1) * 100) / 100) + '×, which is ' +
+      'essentially the whole ' + (Math.round(ORIGINAL.plan / c.projected * 100) / 100) + '× gap between the ' +
+      'June plan (' + pln(ORIGINAL.plan) + ') and where the summer now lands (' + pln(c.projected) + '). ' +
+      '<b>Nothing here was missed by effort. One assumption broke — the 13-hour days — and every ' +
+      'number downstream of it was wrong from the day it broke.</b> ' +
+      'A hub can watch an assumption for you. You cannot be expected to feel one.';
 
     // ── what is reachable ──
     var R = $('#reach'); R.innerHTML = '';
