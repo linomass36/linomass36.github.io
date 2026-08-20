@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Day Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   The Day Budget — every system priced, and two currencies.
+
+   Anki turned out to cost twenty minutes, which settled that
+   argument by pricing it. This does the same for the other nine,
+   and then does the thing the pricing makes possible: sums them
+   against the day that actually exists.
+
+   The answer is not the one I expected, and it is the reason this
+   page has two budgets instead of one. Minutes are not scarce
+   here. STARTS are.
+
+   Every cost carries a provenance — measured, estimate, guess —
+   because a budget built on my guesses would be exactly the
+   failure the Ledger exists to catch.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --ground: #F7F5F1; --card: #FFFDF8; --raise: #FFFFFF;
+  --ink: #1A1B1A; --mid: #55564F; --muted: #8A8B82; --faint: #B4B2A9;
+  --rule: #E4E2DD; --rust: #993C1D; --rust-dim: #FBF2EE;
+  --owed: #A32E27; --owed-bg: #FBEDE8; --owed-ln: #E8C4B6;
+  --ok: #0F6E56; --ok-bg: #EEF5F1; --ok-ln: #C4DED2;
+  --held: #7A6A4E; --held-bg: #F4F0E6; --held-ln: #DED4BE;
+  --sleep: #4A5B7A; --job: #854F0B; --fixed: #8A8B82;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --serif: "Newsreader", Georgia, serif;
+  --shadow: 0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131315; --card: #1B1B1D; --raise: #212124;
+    --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+    --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+    --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+    --ok: #5FBF9B; --ok-bg: #14231E; --ok-ln: #24463A;
+    --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+    --sleep: #7E92B8; --job: #C79341; --fixed: #7A7972;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131315; --card: #1B1B1D; --raise: #212124;
+  --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+  --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+  --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+  --ok: #5FBF9B; --ok-bg: #14231E; --ok-ln: #24463A;
+  --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+  --sleep: #7E92B8; --job: #C79341; --fixed: #7A7972;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px; }
+
+.demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 20px; background: #17171A; color: #EDEBE5; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; }
+.demo b { font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .55; }
+.demo .sp { flex: 1; }
+.demo button { background: transparent; border: 1px solid rgba(255,255,255,.26); color: inherit; border-radius: 20px; padding: 4px 11px; cursor: pointer; font-family: var(--mono); font-size: 10.5px; }
+.demo button:hover { border-color: currentColor; }
+
+.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 20px; border-bottom: 1px solid var(--rule); }
+.mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
+.top a { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-decoration: none; margin-left: auto; }
+.top a:hover { color: var(--rust); }
+
+main { max-width: 900px; margin: 0 auto; padding: 30px 20px 90px; }
+.kicker { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); }
+h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 6vw, 44px); line-height: 1.06; letter-spacing: -.018em; margin: 10px 0 0; text-wrap: balance; }
+.lede { margin: 14px 0 0; max-width: 62ch; font-family: var(--serif); font-style: italic; font-size: 16.5px; line-height: 1.55; color: var(--mid); }
+section { margin-top: 40px; }
+h2 { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); margin: 0 0 14px; }
+h2 .aside { text-transform: none; letter-spacing: .03em; color: var(--faint); font-weight: 400; }
+p { max-width: 64ch; }
+
+/* ── the day, as one bar ── */
+.daybar { display: flex; height: 42px; border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); }
+.daybar i { display: block; height: 100%; position: relative; }
+.daybar i.s { background: var(--sleep); }
+.daybar i.j { background: var(--job); }
+.daybar i.f { background: var(--fixed); }
+.daybar i.free { background: repeating-linear-gradient(135deg, var(--ok-bg), var(--ok-bg) 6px, transparent 6px, transparent 12px); }
+.daykey { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.daykey span { display: inline-flex; align-items: center; gap: 6px; }
+.daykey i { width: 9px; height: 9px; border-radius: 2px; display: block; }
+
+.dials { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(146px, 1fr)); margin-top: 16px; }
+.dial { padding: 11px 13px; background: var(--card); border: 1px solid var(--rule); border-radius: 11px; }
+.dial label { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.dial .v { margin-top: 4px; font-family: var(--serif); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.dial input[type=range] { width: 100%; margin-top: 3px; accent-color: var(--rust); }
+
+/* ── the bill ── */
+.bill { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--card); }
+.brow { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.brow:last-child { border-bottom: 0; }
+.brow.off { opacity: .45; }
+.brow .tog { flex: none; width: 34px; height: 20px; border-radius: 20px; background: var(--ok); border: 0; cursor: pointer; position: relative; padding: 0; }
+.brow .tog::after { content: ""; position: absolute; top: 2px; left: 16px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .16s; }
+.brow.off .tog { background: var(--held); }
+.brow.off .tog::after { left: 2px; }
+.brow .nm { flex: 1; min-width: 130px; font-size: 14.5px; }
+.brow .nm small { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--faint); margin-top: 2px; }
+.brow .prov { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; white-space: nowrap; }
+.prov.measured { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-ln); }
+.prov.estimate { background: var(--held-bg); color: var(--held); border: 1px solid var(--held-ln); }
+.prov.guess    { background: var(--owed-bg); color: var(--owed); border: 1px solid var(--owed-ln); }
+.brow .blk { font-family: var(--mono); font-size: 9.5px; color: var(--faint); width: 58px; }
+.brow .mins { width: 62px; text-align: right; font-family: var(--serif); font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; background: none; border: 0; border-bottom: 1px solid var(--rule); padding: 2px 0; }
+.brow .mins:focus { outline: none; border-bottom-color: var(--rust); }
+.brow .unit { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+
+/* ── the two verdicts ── */
+.verdicts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.vd { padding: 20px 22px; border-radius: 12px; border: 1px solid var(--rule); border-left: 3px solid var(--faint); background: var(--card); }
+.vd.good { border-color: var(--ok-ln); border-left-color: var(--ok); }
+.vd.bad  { border-color: var(--owed-ln); border-left-color: var(--owed); }
+.vd .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.vd .n { margin-top: 9px; font-family: var(--serif); font-size: clamp(26px, 5vw, 34px); font-weight: 500; line-height: 1.05; }
+.vd.good .n { color: var(--ok); }
+.vd.bad .n { color: var(--owed); }
+.vd .s { margin-top: 10px; font-size: 13.5px; color: var(--mid); line-height: 1.5; }
+.vd .meter { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--rule); margin-top: 13px; }
+.vd .meter i { display: block; height: 100%; }
+
+.punch { margin-top: 16px; padding: 18px 20px; background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 12px; font-family: var(--serif); font-size: 17.5px; line-height: 1.5; }
+.punch b { color: var(--held); font-weight: 600; }
+
+/* ── blocks ── */
+.blocks { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.blk-card { padding: 15px 17px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; }
+.blk-card .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--rust); }
+.blk-card .t { margin-top: 7px; font-family: var(--serif); font-size: 23px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.blk-card ul { margin: 9px 0 0; padding-left: 16px; font-size: 13px; color: var(--mid); line-height: 1.65; }
+.blk-card .when { margin-top: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--faint); }
+.blk-card.empty { opacity: .5; }
+
+/* ── the measurement queue ── */
+.mq { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--card); }
+.mq-row { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.mq-row:last-child { border-bottom: 0; }
+.mq-row .rank { font-family: var(--mono); font-size: 10px; color: var(--faint); width: 20px; }
+.mq-row .nm { flex: 1; min-width: 120px; font-size: 14px; }
+.mq-row .sw { font-family: var(--mono); font-size: 11px; color: var(--owed); white-space: nowrap; }
+.mq-row .sw.lo { color: var(--faint); }
+
+.note { margin-top: 16px; padding: 15px 17px; border: 1px dashed var(--rule); border-radius: 11px; font-size: 13.5px; color: var(--mid); max-width: none; line-height: 1.6; }
+.note b { color: var(--ink); }
+
+footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--faint); }
+
+@media (max-width: 560px) {
+  main { padding: 24px 16px 80px; }
+  .brow .blk { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="demo">
+  <b>Prototype</b>
+  <span class="sp"></span>
+  <span style="opacity:.6">every minute below is editable — the verdicts recompute</span>
+  <button id="d-theme">◐ theme</button>
+</div>
+
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">The Day Budget</span>
+  <a href="home.html">← the standing</a>
+</header>
+
+<main>
+
+  <div class="kicker">The Day Budget</div>
+  <h1>What the whole hub costs, and which currency you are short of.</h1>
+  <p class="lede">Anki settled its own argument the moment it was priced: sixty cards is twenty
+  minutes. This prices the other nine and sums them against the day that actually exists — and
+  the answer turned out not to be the one I expected.</p>
+
+  <!-- ── the day ── -->
+  <section>
+    <h2>The day you actually have</h2>
+    <div class="daybar" id="daybar"></div>
+    <div class="daykey">
+      <span><i style="background:var(--sleep)"></i> sleep</span>
+      <span><i style="background:var(--job)"></i> the job</span>
+      <span><i style="background:var(--fixed)"></i> meals, transit, admin</span>
+      <span><i style="background:var(--ok);opacity:.5"></i> free</span>
+    </div>
+    <div class="dials">
+      <div class="dial">
+        <label for="r-sleep">Sleep</label>
+        <div class="v"><span id="v-sleep">7.5</span> h</div>
+        <input id="r-sleep" type="range" min="4" max="11" step="0.5" value="7.5">
+      </div>
+      <div class="dial">
+        <label for="r-job">The job</label>
+        <div class="v"><span id="v-job">25</span> h/wk</div>
+        <input id="r-job" type="range" min="0" max="70" value="25">
+      </div>
+      <div class="dial">
+        <label for="r-fixed">Meals, transit, admin</label>
+        <div class="v"><span id="v-fixed">2</span> h</div>
+        <input id="r-fixed" type="range" min="0" max="6" step="0.5" value="2">
+      </div>
+      <div class="dial">
+        <label for="r-starts">Starts you have in you</label>
+        <div class="v"><span id="v-starts">3</span></div>
+        <input id="r-starts" type="range" min="1" max="12" value="3">
+      </div>
+    </div>
+  </section>
+
+  <!-- ── the bill ── -->
+  <section>
+    <h2>The bill <span class="aside">— toggle a system off to hold it, as a condition would</span></h2>
+    <div class="bill" id="bill"></div>
+  </section>
+
+  <!-- ── the two verdicts ── -->
+  <section>
+    <h2>Two budgets, two answers</h2>
+    <div class="verdicts" id="verdicts"></div>
+    <div class="punch" id="punch"></div>
+  </section>
+
+  <!-- ── batching ── -->
+  <section>
+    <h2>The same bill, in blocks</h2>
+    <p>If starts are the scarce thing, then the fix is not doing less — it is beginning fewer
+    times. Systems that share a posture and a place can share one start. These four blocks hold
+    every system above.</p>
+    <div class="blocks" id="blocks"></div>
+  </section>
+
+  <!-- ── measurement queue ── -->
+  <section>
+    <h2>Which stopwatch to run first</h2>
+    <p>Only one figure on this page was measured — the twenty minutes you gave me. Everything
+    else is my estimate or my guess, and a budget built on guesses is exactly the failure the
+    Ledger exists to catch. So the page ranks its own uncertainty: these are the systems whose
+    real cost would move the verdict most.</p>
+    <div class="mq" id="mq"></div>
+    <div class="note" id="conf"></div>
+  </section>
+
+  <footer>The Day Budget · minutes and starts · only one number here has been measured</footer>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function hm(min) {
+    min = Math.round(min);
+    if (min < 60) return min + ' min';
+    var h = Math.floor(min / 60), m = min % 60;
+    return h + ' h' + (m ? ' ' + m + ' min' : '');
+  }
+
+  /* Every cost carries where it came from. `measured` is a figure that came
+     from a stopwatch or from you; `estimate` is reasoned from something known;
+     `guess` is exactly that, and is flagged so it can never quietly become a
+     fact the way the 13-hour days did. */
+  var SYSTEMS = [
+    { id:'anki',    name:'Anki',                 min:20, prov:'measured', block:'recall',
+      note:'60 cards at 20 s — the one number you gave me' },
+    { id:'anatomy', name:'Anatomy · closure log', min:20, prov:'estimate', block:'recall',
+      note:'a Core run, from the hub’s own description' },
+    { id:'study',   name:'Study Engine',          min:15, prov:'estimate', block:'recall',
+      note:'errors re-asked on a schedule' },
+    { id:'reading', name:'Reading list',          min:30, prov:'guess',    block:'deep',
+      note:'a paper is 30–90 min; this assumes the short end' },
+    { id:'research',name:'Research plan',         min:30, prov:'guess',    block:'deep',
+      note:'one card moved, not a whole session' },
+    { id:'network', name:'Network touches',       min:10, prov:'guess',    block:'deep',
+      note:'one message, most days' },
+    { id:'grind',   name:'Grind board',           min:45, prov:'estimate', block:'body',
+      note:'5 lifts + runs a week, averaged across seven days' },
+    { id:'record',  name:'Life Log',              min:3,  prov:'estimate', block:'close',
+      note:'one line' },
+    { id:'journal', name:'Journal',               min:10, prov:'estimate', block:'close',
+      note:'one entry' },
+    { id:'weekly',  name:'Weekly review',         min:6,  prov:'estimate', block:'close',
+      note:'45 min once a week, amortised over seven' }
+  ];
+  var BLOCKS = {
+    recall: { name: 'Recall',  when: 'sitting or standing, phone or desk' },
+    deep:   { name: 'Deep',    when: 'one uninterrupted stretch' },
+    body:   { name: 'Body',    when: 'gym or road' },
+    close:  { name: 'Closing', when: 'last thing, five minutes' }
+  };
+  var off = {};
+
+  function budget() {
+    var sleep = +$('#r-sleep').value * 60;
+    var job   = +$('#r-job').value * 60 / 7;      // a weekly figure, spread over seven days
+    var fixed = +$('#r-fixed').value * 60;
+    return { sleep: sleep, job: job, fixed: fixed,
+             free: Math.max(0, 1440 - sleep - job - fixed),
+             starts: +$('#r-starts').value };
+  }
+
+  function live() { return SYSTEMS.filter(function (s) { return !off[s.id]; }); }
+
+  function paint() {
+    var b = budget();
+    $('#v-sleep').textContent = (+$('#r-sleep').value).toFixed(1).replace('.0', '');
+    $('#v-job').textContent   = $('#r-job').value;
+    $('#v-fixed').textContent = (+$('#r-fixed').value).toFixed(1).replace('.0', '');
+    $('#v-starts').textContent = b.starts;
+
+    // ── the day as one bar ──
+    var bar = $('#daybar'); bar.innerHTML = '';
+    [['s', b.sleep, 'sleep'], ['j', b.job, 'the job'], ['f', b.fixed, 'fixed'], ['free', b.free, 'free']]
+      .forEach(function (p) {
+        var i = el('i', p[0]); i.style.width = (p[1] / 1440 * 100) + '%';
+        i.title = p[2] + ' — ' + hm(p[1]); bar.appendChild(i);
+      });
+
+    // ── the bill ──
+    var billNode = $('#bill'); billNode.innerHTML = '';
+    SYSTEMS.forEach(function (s) {
+      var r = el('div', 'brow' + (off[s.id] ? ' off' : ''));
+      var t = el('button', 'tog'); t.type = 'button';
+      t.setAttribute('aria-pressed', String(!off[s.id]));
+      t.setAttribute('aria-label', (off[s.id] ? 'Resume ' : 'Hold ') + s.name);
+      t.addEventListener('click', function () { off[s.id] = !off[s.id]; paint(); });
+      r.appendChild(t);
+
+      var nm = el('div', 'nm'); nm.appendChild(document.createTextNode(s.name));
+      nm.appendChild(el('small', null, s.note));
+      r.appendChild(nm);
+      r.appendChild(el('span', 'blk', BLOCKS[s.block].name.toLowerCase()));
+      r.appendChild(el('span', 'prov ' + s.prov, s.prov));
+
+      var inp = document.createElement('input');
+      inp.className = 'mins'; inp.type = 'number'; inp.min = 0; inp.max = 600;
+      inp.value = s.min; inp.setAttribute('aria-label', s.name + ' minutes per day');
+      inp.addEventListener('input', function () {
+        s.min = Math.max(0, +inp.value || 0);
+        if (s.prov !== 'measured') s.prov = 'measured';   // you typed it, so now it is measured
+        paint();
+      });
+      r.appendChild(inp);
+      r.appendChild(el('span', 'unit', 'min/day'));
+      billNode.appendChild(r);
+    });
+
+    // ── the two verdicts ──
+    var L = live();
+    var mins   = L.reduce(function (a, s) { return a + s.min; }, 0);
+    var starts = L.length;
+    var V = $('#verdicts'); V.innerHTML = '';
+
+    function verdict(cls, head, n, sub, used, cap, colour) {
+      var v = el('div', 'vd ' + cls);
+      v.appendChild(el('div', 'h', head));
+      v.appendChild(el('div', 'n', n));
+      var s2 = el('div', 's'); s2.innerHTML = sub; v.appendChild(s2);
+      var m = el('div', 'meter'), f = el('i');
+      f.style.width = Math.min(100, used / (cap || 1) * 100) + '%';
+      f.style.background = colour;
+      m.appendChild(f); v.appendChild(m);
+      V.appendChild(v);
+    }
+
+    var minsOk = mins <= b.free;
+    verdict(minsOk ? 'good' : 'bad', 'Budget one · minutes',
+      hm(mins) + ' of ' + hm(b.free),
+      minsOk
+        ? 'The whole hub fits <b>' + (mins ? (b.free / mins).toFixed(1) : '∞') +
+          '×</b> over in the time you have. Minutes are not what you are short of, ' +
+          'and no amount of trimming this column will fix a rut.'
+        : 'Over by <b>' + hm(mins - b.free) + '</b>. Here trimming genuinely is the answer.',
+      mins, b.free, minsOk ? 'var(--ok)' : 'var(--owed)');
+
+    var startsOk = starts <= b.starts;
+    verdict(startsOk ? 'good' : 'bad', 'Budget two · starts',
+      starts + ' of ' + b.starts,
+      startsOk
+        ? 'Every system gets its own beginning and you have beginnings to spare.'
+        : '<b>' + (starts - b.starts) + ' more separate beginnings</b> than you have in you today. ' +
+          'This is the budget that is actually blown, and it does not appear anywhere in the hub.',
+      starts, b.starts, startsOk ? 'var(--ok)' : 'var(--owed)');
+
+    $('#punch').innerHTML = minsOk && !startsOk
+      ? 'The hub asks for <b>' + hm(mins) + '</b> out of <b>' + hm(b.free) + '</b> free — it fits ' +
+        (b.free / mins).toFixed(1) + ' times over. And you have still been doing eight minutes of it. ' +
+        '<b>Time was never the constraint. Ten systems is ten separate decisions to begin, and on a ' +
+        'flat day you have about ' + b.starts + '.</b> That is the whole mechanism of a rut, and it is ' +
+        'invisible to every dashboard that counts hours.'
+      : minsOk && startsOk
+        ? 'Both budgets clear: <b>' + hm(mins) + '</b> of <b>' + hm(b.free) + '</b>, in ' + starts +
+          ' starts against ' + b.starts + '. On a day like this the hub can ask for everything.'
+        : 'The minutes are over budget by <b>' + hm(mins - b.free) + '</b>. Hold something, or ' +
+          'accept that the day does not contain the plan.';
+
+    // ── blocks ──
+    var K = $('#blocks'); K.innerHTML = '';
+    Object.keys(BLOCKS).forEach(function (k) {
+      var mem = L.filter(function (s) { return s.block === k; });
+      var c = el('div', 'blk-card' + (mem.length ? '' : ' empty'));
+      c.appendChild(el('div', 'h', BLOCKS[k].name + ' · 1 start'));
+      c.appendChild(el('div', 't', mem.length ? hm(mem.reduce(function (a, s) { return a + s.min; }, 0)) : '—'));
+      var ul = el('ul');
+      (mem.length ? mem : [{ name: 'nothing here today' }]).forEach(function (s) {
+        ul.appendChild(el('li', null, s.name));
+      });
+      c.appendChild(ul);
+      c.appendChild(el('div', 'when', BLOCKS[k].when));
+      K.appendChild(c);
+    });
+    var usedBlocks = Object.keys(BLOCKS).filter(function (k) {
+      return L.some(function (s) { return s.block === k; });
+    }).length;
+    var bnote = document.getElementById('blocknote') || el('div', 'note');
+    bnote.id = 'blocknote';
+    bnote.innerHTML = '<b>' + starts + ' starts become ' + usedBlocks + '.</b> Same minutes, same systems — ' +
+      'the only thing that changed is how many times you have to overcome beginning. ' +
+      (usedBlocks <= b.starts
+        ? 'At ' + usedBlocks + ' blocks this now fits inside the ' + b.starts + ' starts you said you have, ' +
+          'which is the difference between a plan and a wish.'
+        : 'Still ' + (usedBlocks - b.starts) + ' over — hold a block, and the floor day picks the one that survives.');
+    $('#blocks').parentNode.appendChild(bnote);
+
+    // ── measurement queue ──
+    var Q = $('#mq'); Q.innerHTML = '';
+    var unsure = SYSTEMS.filter(function (s) { return s.prov !== 'measured'; })
+      .map(function (s) { return { s: s, swing: s.min * (s.prov === 'guess' ? 1.0 : 0.4) }; })
+      .sort(function (a, b2) { return b2.swing - a.swing; });
+    if (!unsure.length) {
+      Q.appendChild(el('div', 'mq-row', 'Everything on this page has been measured. The verdict is yours now, not mine.'));
+    } else {
+      unsure.forEach(function (u, i) {
+        var r = el('div', 'mq-row');
+        r.appendChild(el('span', 'rank', String(i + 1)));
+        var nm = el('div', 'nm'); nm.appendChild(document.createTextNode(u.s.name));
+        nm.appendChild(el('small', null, ''));
+        r.appendChild(nm);
+        r.appendChild(el('span', 'prov ' + u.s.prov, u.s.prov));
+        r.appendChild(el('span', 'sw' + (u.swing < 8 ? ' lo' : ''), '±' + Math.round(u.swing) + ' min at stake'));
+        Q.appendChild(r);
+      });
+    }
+
+    var guessMin = SYSTEMS.filter(function (s) { return s.prov === 'guess'; })
+      .reduce(function (a, s) { return a + s.min; }, 0);
+    var measured = SYSTEMS.filter(function (s) { return s.prov === 'measured'; })
+      .reduce(function (a, s) { return a + s.min; }, 0);
+    var total = SYSTEMS.reduce(function (a, s) { return a + s.min; }, 0);
+    $('#conf').innerHTML =
+      '<b>How much of this to trust:</b> ' + Math.round(measured / (total || 1) * 100) + '% of the bill is measured, ' +
+      Math.round(guessMin / (total || 1) * 100) + '% is outright guesswork. ' +
+      'Type a real number into any row and it reclassifies itself as measured — which is the only ' +
+      'way this page stops being mine and starts being yours. ' +
+      '<b>The starts verdict, though, does not depend on any of it:</b> ten systems is ten beginnings ' +
+      'whether each takes three minutes or thirty.';
+  }
+
+  ['#r-sleep', '#r-job', '#r-fixed', '#r-starts'].forEach(function (s) {
+    $(s).addEventListener('input', paint);
+  });
+  $('#d-theme').addEventListener('click', function () {
+    var r = document.documentElement, now = r.getAttribute('data-theme');
+    if (!now) now = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    r.setAttribute('data-theme', now === 'dark' ? 'light' : 'dark');
+  });
+  paint();
+})();
+</script>
+</body>
+</html>

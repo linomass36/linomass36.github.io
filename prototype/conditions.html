@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What a Condition Does</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   What a condition does — the forward view.
+
+   The mechanism was built before this page existed and it did not
+   land, for a fair reason: it was only ever shown acting on today.
+   A thing whose entire purpose is to change what happens over the
+   next fortnight has to be shown over a fortnight.
+
+   So this runs the same two weeks twice, side by side, on the one
+   number that makes the argument by itself: a 250-day streak with
+   250 cards behind it.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --ground: #F7F5F1; --card: #FFFDF8; --raise: #FFFFFF;
+  --ink: #1A1B1A; --mid: #55564F; --muted: #8A8B82; --faint: #B4B2A9;
+  --rule: #E4E2DD; --rust: #993C1D; --rust-dim: #FBF2EE;
+  --owed: #A32E27; --owed-bg: #FBEDE8; --owed-ln: #E8C4B6;
+  --ok: #0F6E56; --ok-bg: #EEF5F1; --ok-ln: #C4DED2;
+  --held: #7A6A4E; --held-bg: #F4F0E6; --held-ln: #DED4BE;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --serif: "Newsreader", Georgia, serif;
+  --shadow: 0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131315; --card: #1B1B1D; --raise: #212124;
+    --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+    --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+    --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+    --ok: #5FBF9B; --ok-bg: #14231E; --ok-ln: #24463A;
+    --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131315; --card: #1B1B1D; --raise: #212124;
+  --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+  --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+  --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+  --ok: #5FBF9B; --ok-bg: #14231E; --ok-ln: #24463A;
+  --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px; }
+
+.demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 20px; background: #17171A; color: #EDEBE5; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; }
+.demo b { font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .55; }
+.demo .sp { flex: 1; }
+.demo button { background: transparent; border: 1px solid rgba(255,255,255,.26); color: inherit; border-radius: 20px; padding: 4px 11px; cursor: pointer; font-family: var(--mono); font-size: 10.5px; }
+.demo button:hover { border-color: currentColor; }
+
+.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 20px; border-bottom: 1px solid var(--rule); }
+.mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
+.top a { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-decoration: none; margin-left: auto; }
+.top a:hover { color: var(--rust); }
+
+main { max-width: 900px; margin: 0 auto; padding: 30px 20px 90px; }
+.kicker { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); }
+h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 6vw, 44px); line-height: 1.06; letter-spacing: -.018em; margin: 10px 0 0; text-wrap: balance; }
+.lede { margin: 14px 0 0; max-width: 62ch; font-family: var(--serif); font-style: italic; font-size: 16.5px; line-height: 1.55; color: var(--mid); }
+section { margin-top: 40px; }
+h2 { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); margin: 0 0 14px; }
+p { max-width: 64ch; }
+
+/* ── the mechanism: three steps, and they are genuinely a sequence ── */
+.steps { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.step { padding: 16px 18px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; }
+.step .n { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--rust); }
+.step b { display: block; margin-top: 8px; font-size: 15px; font-weight: 600; }
+.step span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--mid); line-height: 1.5; }
+
+/* ── the dials ── */
+.dials { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); }
+.dial { padding: 12px 14px; background: var(--card); border: 1px solid var(--rule); border-radius: 11px; }
+.dial label { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.dial .v { margin-top: 5px; font-family: var(--serif); font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.dial input[type=range] { width: 100%; margin-top: 4px; accent-color: var(--rust); }
+.dial small { display: block; margin-top: 3px; font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+
+/* ── the fork ── */
+.forkwrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--card); }
+table { border-collapse: collapse; width: 100%; min-width: 740px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th { position: sticky; top: 0; background: var(--card); font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+thead th.a { color: var(--owed); }
+thead th.b { color: var(--ok); }
+tbody tr:last-child td { border-bottom: 0; }
+td.day { font-family: var(--mono); font-size: 10.5px; color: var(--faint); width: 58px; white-space: nowrap; }
+td.a, td.b { width: 28%; }
+.cell { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.cell .num { font-family: var(--serif); font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; min-width: 46px; }
+.cell .num.up { color: var(--owed); }
+.cell .num.dn { color: var(--ok); }
+.cell .num.flat { color: var(--held); }
+.cell .what { font-size: 12.5px; color: var(--mid); }
+.tagx { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+.tagx.skim { background: var(--owed-bg); color: var(--owed); }
+.tagx.held { background: var(--held-bg); color: var(--held); }
+.tagx.clear { background: var(--ok-bg); color: var(--ok); }
+tr.lift td { background: var(--held-bg); }
+
+.gate { padding: 20px 22px; border-radius: 12px; border: 1px solid var(--owed-ln); border-left: 3px solid var(--owed); background: var(--card); }
+.gate.ok { border-color: var(--ok-ln); border-left-color: var(--ok); }
+.gate .big { font-family: var(--serif); font-size: clamp(21px, 4vw, 27px); font-weight: 500; line-height: 1.25; text-wrap: balance; }
+.gate .big em { font-style: normal; color: var(--owed); }
+.gate.ok .big em { color: var(--ok); }
+.gate .scales { display: flex; gap: 10px; align-items: flex-end; margin-top: 16px; flex-wrap: wrap; }
+.gate .sc { flex: 1; min-width: 120px; }
+.gate .sc .lab { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.gate .sc .n { font-family: var(--serif); font-size: 25px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.gate .sc .track { height: 9px; border-radius: 5px; background: var(--rule); margin-top: 6px; overflow: hidden; }
+.gate .sc .track i { display: block; height: 100%; border-radius: 5px; }
+.gate .verdict2 { margin-top: 15px; font-size: 14px; color: var(--mid); line-height: 1.55; }
+thead th.b2 { color: var(--held); }
+td.b2 { width: 28%; }
+.totals { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-top: 14px; }
+.tot.b2 { border-left: 3px solid var(--held); }
+.tot.b2 .n { color: var(--held); }
+.tot { padding: 16px 18px; border-radius: 12px; border: 1px solid var(--rule); background: var(--card); }
+.tot.a { border-left: 3px solid var(--owed); }
+.tot.b { border-left: 3px solid var(--ok); }
+.tot .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.tot .n { margin-top: 8px; font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+.tot.a .n { color: var(--owed); }
+.tot.b .n { color: var(--ok); }
+.tot .s { margin-top: 8px; font-size: 13px; color: var(--mid); line-height: 1.45; }
+.bar { display: flex; height: 7px; border-radius: 4px; overflow: hidden; margin-top: 11px; background: var(--rule); }
+.bar i { display: block; height: 100%; }
+.bar i.skim { background: var(--owed); }
+.bar i.held { background: var(--held); }
+.bar i.clear { background: var(--ok); }
+.legend { margin-top: 7px; font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+
+.punch { margin-top: 16px; padding: 18px 20px; background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 12px; font-family: var(--serif); font-size: 17.5px; line-height: 1.5; }
+.punch b { color: var(--held); font-weight: 600; }
+
+/* ── the three honest options ── */
+.opts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); }
+.opt { padding: 16px 18px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; display: flex; flex-direction: column; }
+.opt.pick { border-color: var(--ok); border-left: 3px solid var(--ok); }
+.opt .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.opt.pick .h { color: var(--ok); }
+.opt b { display: block; margin-top: 8px; font-family: var(--serif); font-size: 20px; font-weight: 500; }
+.opt span { display: block; margin-top: 7px; font-size: 13px; color: var(--mid); line-height: 1.5; }
+.opt .cost { margin-top: auto; padding-top: 11px; font-family: var(--mono); font-size: 10px; color: var(--faint); }
+
+.note { margin-top: 14px; padding: 14px 16px; border: 1px dashed var(--rule); border-radius: 11px; font-size: 13.5px; color: var(--mid); max-width: none; }
+.note b { color: var(--ink); }
+
+footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--faint); }
+
+@media (max-width: 620px) {
+  main { padding: 24px 16px 80px; }
+  .totals { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="demo">
+  <b>Prototype</b>
+  <span class="sp"></span>
+  <span style="opacity:.6">drag the dials — both columns recompute</span>
+  <button id="d-theme">◐ theme</button>
+</div>
+
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Conditions</span>
+  <a href="home.html">← the standing</a>
+</header>
+
+<main>
+
+  <div class="kicker">Conditions</div>
+  <h1>What declaring one actually does to the next two weeks.</h1>
+  <p class="lede">Fair question, and the last version had no answer — it only ever showed
+  the effect on today. Here is the same fortnight run twice, on the one number that makes the
+  case by itself: a 250-day streak with 250 cards behind it.</p>
+
+  <!-- ── the mechanism ── -->
+  <section>
+    <h2>The mechanism, in three moves</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <b>You name what is blocked</b>
+        <span>Not a mood — a constraint. A lower back rules out lifting, running and a long sit.
+        It has no opinion about recall. So the hub holds two systems and leaves the rest alone.</span>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <b>Held systems stop accruing</b>
+        <span>They go a quiet colour, not red. Nothing counts against you, and the streak holds
+        instead of breaking — which is what removes the reason to fake it.</span>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <b>The ask shrinks to fit</b>
+        <span>One thing, drawn from what the condition still allows. Do it and the day counts
+        as a day. The backlog stays visible but folded — it will keep.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── the dials ── -->
+  <section>
+    <h2>Your numbers <span style="text-transform:none;letter-spacing:.04em;color:var(--faint);font-weight:400">— change any of them</span></h2>
+    <div class="dials">
+      <div class="dial">
+        <label for="r-due">Due / day</label>
+        <div class="v"><span id="v-due">60</span></div>
+        <input id="r-due" type="range" min="10" max="150" value="60">
+        <small>cards Anki asks for</small>
+      </div>
+      <div class="dial">
+        <label for="r-sec">Seconds / card</label>
+        <div class="v"><span id="v-sec">20</span>s</div>
+        <input id="r-sec" type="range" min="4" max="45" value="20">
+        <small>60 cards in 20 min = 20s</small>
+      </div>
+      <div class="dial">
+        <label for="r-mins">Minutes you give it</label>
+        <div class="v"><span id="v-mins">20</span> min</div>
+        <input id="r-mins" type="range" min="2" max="90" value="20">
+        <small>on an ordinary day</small>
+      </div>
+      <div class="dial">
+        <label for="r-extra">Clearing minutes</label>
+        <div class="v">+<span id="v-extra">6</span> min</div>
+        <input id="r-extra" type="range" min="0" max="40" value="6">
+        <small>extra, once you are back</small>
+      </div>
+      <div class="dial">
+        <label for="r-skim">A skim is</label>
+        <div class="v"><span id="v-skim">25</span></div>
+        <input id="r-skim" type="range" min="5" max="90" value="25">
+        <small>cards on a rut day</small>
+      </div>
+      <div class="dial">
+        <label for="r-hold">Hold for</label>
+        <div class="v"><span id="v-hold">10</span> days</div>
+        <input id="r-hold" type="range" min="0" max="14" value="10">
+        <small>how long you are down</small>
+      </div>
+      <div class="dial">
+        <label for="r-back">Behind now</label>
+        <div class="v"><span id="v-back">250</span></div>
+        <input id="r-back" type="range" min="0" max="1200" step="10" value="250">
+        <small>cards in the backlog</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── the feasibility gate ── -->
+  <section>
+    <h2>Before any plan: what does the day actually cost?</h2>
+    <div class="gate" id="gate"></div>
+    <p style="margin-top:14px">Two versions of this page got this wrong in opposite directions. The
+    first offered a clearing plan without checking whether the day was payable. The second checked, but
+    counted in <em>cards</em> — and cards are not comparable to anything. Minutes are. A card is only
+    heavy or light once you know what it costs, and the moment the load is priced in minutes the
+    argument usually settles itself.</p>
+  </section>
+
+  <!-- ── the fork ── -->
+  <section>
+    <h2>The same fortnight, three ways</h2>
+    <div class="note" style="margin-bottom:14px">
+      <b>First, a thing the model says that you should hear:</b> your back does not hold Anki.
+      A lumbar injury rules out lifting, running and a long sit — it has no opinion whatsoever
+      about recall, so the scoping leaves the queue owed. That is the model being right rather
+      than lenient, and it is the whole reason scoping exists. Column B below therefore assumes a
+      condition that <em>does</em> cover recall — <b>Flat</b>, the one for a five-day rut.
+      Declaring the injury alone would hold the grind board and change nothing here.
+      <br><br>
+      <b>Which points at something bigger:</b> the 250-card backlog is not a conditions problem
+      at all. Conditions stop it compounding while you are down. They do not fix what built it.
+      That is the section below the table, and it is the one that actually matters.
+    </div>
+    <div class="forkwrap">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th class="a">A · nothing declared</th>
+            <th class="b2">B · condition only</th>
+            <th class="b">C · condition + the extra minutes</th>
+          </tr>
+        </thead>
+        <tbody id="fork"></tbody>
+      </table>
+    </div>
+    <div class="totals" id="totals"></div>
+    <div class="punch" id="punch"></div>
+  </section>
+
+  <!-- ── the streak itself ── -->
+  <section>
+    <h2>The part that is doing the damage</h2>
+    <p>The streak counts 250 days and says nothing about what happened on any of them.
+    That is not a neutral omission. The cheapest way to keep the number alive is to skim
+    25 cards, and skimming defers the rest — so <b>the streak is what is producing the
+    backlog.</b> The instrument is eating the thing it was built to protect, and it will
+    keep doing that no matter how the fortnight above goes.</p>
+    <p>The repair is small: the hub records <em>what kind of day</em> each one was, and
+    shows the two numbers together — never the streak on its own. A day can be a clear,
+    a skim, or a held day. All three keep the streak. Only one of them is a lie, and
+    once it is labelled it stops being an invisible one.</p>
+
+    <div class="note" id="honest"></div>
+  </section>
+
+  <!-- ── the three options ── -->
+  <section>
+    <h2>What to do with the 250</h2>
+    <div class="opts" id="opts"></div>
+    <div class="note">
+      <b>On holding and Anki, honestly:</b> the hub cannot reach into your collection, and
+      cards do not evaporate because a page went quiet. Holding means one concrete action —
+      postpone the due queue by the length of the hold — which the hub tells you to take and
+      records. Postponing costs a little retention on those cards. Skimming 25 a day costs
+      retention <em>and</em> grows the debt, which is the trade you are currently making by default.
+    </div>
+  </section>
+
+  <!-- ── the lift ── -->
+  <section>
+    <h2>When it lifts</h2>
+    <p>The condition carries a review date — seven days for an injury — so it cannot quietly
+    become permanent. On the day it expires the hub asks one question: still true? Yes extends
+    it and says so on the record. No starts the ramp, which goes up one rung at a time and only
+    when the previous rung was met. The full board comes back when you have had an ordinary day,
+    and what counts as ordinary is the hub's arithmetic, not your mood on the morning.</p>
+  </section>
+
+  <footer>Conditions · forward-view prototype · a condition is a fact, not a failure</footer>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  var DAYS = 14, STREAK0 = 250;
+
+  function mm(min) {
+    min = Math.round(min);
+    if (min < 60) return min + ' min';
+    return Math.floor(min / 60) + ' h ' + (min % 60 ? (min % 60) + ' min' : '').trim();
+  }
+
+  function dials() {
+    var d = {
+      due:   +$('#r-due').value,
+      sec:   +$('#r-sec').value,
+      mins:  +$('#r-mins').value,
+      extra: +$('#r-extra').value,
+      skim:  +$('#r-skim').value,
+      hold:  +$('#r-hold').value,
+      back:  +$('#r-back').value
+    };
+    // Everything downstream is priced in minutes and converted back at the edge.
+    d.perMin  = 60 / d.sec;                 // cards a minute
+    d.cost    = d.due / d.perMin;           // what today's due costs, in minutes
+    d.sus     = Math.round(d.mins * d.perMin);          // cards an ordinary day buys
+    d.susPlus = Math.round((d.mins + d.extra) * d.perMin);
+    d.backMin = d.back / d.perMin;          // the backlog, in minutes
+    return d;
+  }
+
+  function runA(d) {
+    var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
+    for (var i = 1; i <= DAYS; i++) {
+      b += Math.max(0, d.due - d.skim); kinds.skim++;
+      rows.push({ n: Math.round(b), delta: d.due - d.skim, kind: 'skim',
+                  what: d.skim + ' cards · ' + mm(d.skim / d.perMin) });
+    }
+    return { rows: rows, end: Math.round(b), kinds: kinds };
+  }
+
+  /* B · the condition, and nothing else. At break-even the backlog simply
+     freezes — which is the finding, not a rounding artefact. */
+  function runB(d) {
+    var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
+    for (var i = 1; i <= DAYS; i++) {
+      if (i <= d.hold) {
+        kinds.held++;
+        rows.push({ n: Math.round(b), delta: 0, kind: 'held', what: 'postponed' });
+      } else {
+        var net = d.due - d.sus;
+        b = Math.max(0, b + net);
+        if (net > 0) kinds.skim++; else kinds.clear++;
+        rows.push({ n: Math.round(b), delta: net, kind: net > 0 ? 'skim' : (net < 0 ? 'clear' : 'held'),
+                    lift: i === d.hold + 1, what: d.sus + ' cards · ' + mm(d.mins) });
+      }
+    }
+    return { rows: rows, end: Math.round(b), kinds: kinds };
+  }
+
+  /* C · the condition plus the extra minutes. Not a load cut — the load is
+     fine. Six more minutes is the entire intervention. */
+  function runC(d) {
+    var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
+    for (var i = 1; i <= DAYS; i++) {
+      if (i <= d.hold) {
+        kinds.held++;
+        rows.push({ n: Math.round(b), delta: 0, kind: 'held', what: 'postponed' });
+      } else {
+        var net = d.due - d.susPlus;
+        b = Math.max(0, b + net);
+        if (net < 0) kinds.clear++; else kinds.skim++;
+        rows.push({ n: Math.round(b), delta: net, kind: net < 0 ? 'clear' : 'skim',
+                    lift: i === d.hold + 1,
+                    what: (b <= 0 ? 'clear' : d.susPlus + ' cards') + ' · ' + mm(d.mins + d.extra) });
+      }
+    }
+    return { rows: rows, end: Math.round(b), kinds: kinds };
+  }
+
+  function cell(r) {
+    var c = el('div', 'cell');
+    c.appendChild(el('span', 'num ' + (r.delta > 0.5 ? 'up' : (r.delta < -0.5 ? 'dn' : 'flat')), String(r.n)));
+    c.appendChild(el('span', 'tagx ' + r.kind, r.kind));
+    c.appendChild(el('span', 'what', r.what));
+    return c;
+  }
+
+  function paint() {
+    var d = dials();
+    $('#v-due').textContent   = d.due;
+    $('#v-sec').textContent   = d.sec;
+    $('#v-mins').textContent  = d.mins;
+    $('#v-extra').textContent = d.extra;
+    $('#v-skim').textContent  = d.skim;
+    $('#v-hold').textContent  = d.hold;
+    $('#v-back').textContent  = d.back;
+
+    var spare = d.mins - d.cost;            // minutes left after the day's due
+    var payable = spare >= -0.5;
+    var breakeven = Math.abs(spare) < 0.5;
+
+    /* ── the gate, in minutes ── */
+    var G = $('#gate');
+    G.className = 'gate' + (payable ? ' ok' : '');
+    G.innerHTML = '';
+    var big = el('div', 'big');
+    if (breakeven) {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em>, and you give it ' + mm(d.mins) +
+        '. Exactly break-even — which means the backlog never grows and <em>never shrinks either</em>. ' +
+        'It just sits there at ' + d.back + '.';
+    } else if (payable) {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em> and you give it ' + mm(d.mins) +
+        ' — <em>' + mm(spare) + ' spare</em>. The whole backlog is ' + mm(d.backMin) + ' of work.';
+    } else {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em> and you give it ' + mm(d.mins) +
+        ' — short by <em>' + mm(-spare) + ' every day</em>, before the backlog is touched.';
+    }
+    G.appendChild(big);
+
+    var sc = el('div', 'scales'), mx = Math.max(d.cost, d.mins, 1);
+    [['what the day costs', mm(d.cost), d.cost, 'var(--owed)'],
+     ['what you give it', mm(d.mins), d.mins, payable ? 'var(--ok)' : 'var(--held)'],
+     ['the whole backlog', mm(d.backMin), Math.min(d.backMin, mx), 'var(--held)']].forEach(function (r) {
+      var w = el('div', 'sc');
+      w.appendChild(el('div', 'lab', r[0]));
+      w.appendChild(el('div', 'n', r[1]));
+      var t = el('div', 'track'), f = el('i');
+      f.style.width = Math.min(100, r[2] / mx * 100) + '%'; f.style.background = r[3];
+      t.appendChild(f); w.appendChild(t); sc.appendChild(w);
+    });
+    G.appendChild(sc);
+
+    var v2 = el('div', 'verdict2');
+    var days14 = d.backMin / 14;
+    if (!payable) {
+      v2.innerHTML = '<b>Cut the load first.</b> No clearing plan survives a daily shortfall: clear the ' +
+        d.back + ' today and the same gap rebuilds it. The lever is fewer new cards or faster cards — not effort.';
+    } else {
+      v2.innerHTML = '<b>' + d.back + ' cards is ' + mm(d.backMin) + ' of work. Total, ever.</b> ' +
+        'Spread across a fortnight that is <b>' + days14.toFixed(1) + ' extra minutes a day</b> — a ' +
+        mm(d.mins + days14) + ' day instead of a ' + mm(d.mins) + ' one. ' +
+        'Your ' + d.skim + '-card skim is ' + mm(d.skim / d.perMin) + ', so the gap between a rut day and ' +
+        'a clearing day is about ' + mm(d.cost + days14 - d.skim / d.perMin) + '. ' +
+        '<b>That is the whole size of this problem.</b>';
+    }
+    G.appendChild(v2);
+
+    /* ── the fork ── */
+    var A = runA(d), B = runB(d), C = runC(d);
+    var tb = $('#fork'); tb.innerHTML = '';
+    for (var i = 0; i < DAYS; i++) {
+      var tr = el('tr');
+      if (C.rows[i].lift) tr.className = 'lift';
+      tr.appendChild(el('td', 'day', 'day ' + (i + 1) + (C.rows[i].lift ? ' ·lifts' : '')));
+      [['a', A], ['b2', B], ['b', C]].forEach(function (col) {
+        var td = el('td', col[0]); td.appendChild(cell(col[1].rows[i])); tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    }
+
+    var T = $('#totals'); T.innerHTML = '';
+    function tot(cls, head, n2, sub, kinds) {
+      var n = el('div', 'tot ' + cls);
+      n.appendChild(el('div', 'h', head));
+      n.appendChild(el('div', 'n', n2));
+      n.appendChild(el('div', 's', sub));
+      var bar = el('div', 'bar');
+      ['skim', 'held', 'clear'].forEach(function (k) {
+        if (!kinds[k]) return;
+        var i2 = el('i', k); i2.style.width = (kinds[k] / DAYS * 100) + '%'; bar.appendChild(i2);
+      });
+      n.appendChild(bar);
+      var bits = [];
+      if (kinds.clear) bits.push(kinds.clear + ' cleared');
+      if (kinds.held)  bits.push(kinds.held + ' held');
+      if (kinds.skim)  bits.push(kinds.skim + ' behind');
+      n.appendChild(el('div', 'legend', 'streak ' + (STREAK0 + DAYS) + ' — ' + bits.join(' · ')));
+      T.appendChild(n);
+    }
+    tot('a', 'A · nothing declared', A.end + ' behind',
+        'Grew by ' + (A.end - d.back) + '. Every day an eight-minute visit that saved the number and moved nothing.', A.kinds);
+    tot('b2', 'B · condition only', B.end + ' behind',
+        breakeven ? 'Frozen. ' + mm(d.mins) + ' a day exactly covers the day — so the ' + d.back +
+                    ' sits there untouched, forever. Holding is not enough on its own.'
+                  : (B.end > d.back ? 'The gap reopens the day it lifts.' : 'Falling, because the day already has room.'), B.kinds);
+    tot('b', 'C · condition + ' + d.extra + ' min', C.end + ' behind',
+        C.end <= 0 ? 'Clear. ' + mm(d.mins + d.extra) + ' a day, and the streak means what it says again.'
+                   : 'Coming down at ' + Math.abs(d.due - d.susPlus) + ' a day on ' + mm(d.mins + d.extra) + '.', C.kinds);
+
+    $('#punch').innerHTML =
+      'Same fortnight. Column A ends <b>' + A.end + '</b> behind, B <b>' + B.end + '</b>, C <b>' + C.end +
+      '</b>. The difference between B and C is <b>' + d.extra + ' minutes a day</b>. ' +
+      '<b>Not discipline, not a smaller collection, not a second job — six minutes.</b> ' +
+      'And B is the one worth staring at: a condition alone freezes the debt but never repays it. ' +
+      'Holding stops things getting worse. Only the extra minutes make them better.';
+
+    var perDay = Math.max(0, d.due - d.skim);
+    $('#honest').innerHTML =
+      '<b>Where the skim leads:</b> ' + d.skim + ' cards is ' + mm(d.skim / d.perMin) + ' — you are not ' +
+      'running out of time, you are stopping at ' + mm(d.skim / d.perMin) + '. The backlog grows ' + perDay +
+      ' a day, about <b>' + (d.back + perDay * 42) + ' cards by October</b>, which is ' +
+      mm((d.back + perDay * 42) / d.perMin) + ' of work you are storing up to avoid ' +
+      Math.round(d.cost - d.skim / d.perMin) + ' minutes today.';
+
+    /* ── options, ordered by what the gate found ── */
+    var O = $('#opts'); O.innerHTML = '';
+    [
+      { h: 'The move', b: 'Add ' + d.extra + ' minutes', pick: payable,
+        s: 'Not a new system, not a reset — ' + mm(d.mins + d.extra) + ' instead of ' + mm(d.mins) +
+           '. The backlog is ' + mm(d.backMin) + ' and it clears in ' +
+           (d.susPlus > d.due ? Math.ceil(d.back / (d.susPlus - d.due)) + ' days' : 'no time at this pace') +
+           '. Then hold at ' + mm(d.cost) + ' a day, which you already know you can do.',
+        cost: payable ? 'the whole fix' : 'blocked — see below' },
+      { h: 'If the day were short', b: 'Cut the load', pick: !payable,
+        s: 'Only if the due count genuinely outruns the minutes: new cards to zero, or shorter cards. ' +
+           'At ' + d.sec + 's a card and ' + mm(d.mins) + ' a day, that is not your situation — which is ' +
+           'why I was wrong to lead with it last time.',
+        cost: payable ? 'not your problem' : 'do this first' },
+      { h: 'Or', b: 'Reset, on the record', pick: false,
+        s: 'Bankrupt the backlog with a date and a reason — the Ledger move applied to a habit. ' +
+           'Hard to justify against ' + mm(d.backMin) + ' of work, but it stays on the table, and choosing ' +
+           'it deliberately still beats skimming past it for another month.',
+        cost: 'streak → 0, honestly' }
+    ].forEach(function (o) {
+      var n = el('div', 'opt' + (o.pick ? ' pick' : ''));
+      n.appendChild(el('div', 'h', o.h));
+      n.appendChild(el('b', null, o.b));
+      n.appendChild(el('span', null, o.s));
+      n.appendChild(el('div', 'cost', o.cost));
+      O.appendChild(n);
+    });
+  }
+
+  ['#r-due', '#r-sec', '#r-mins', '#r-extra', '#r-skim', '#r-hold', '#r-back'].forEach(function (s2) {
+    $(s2).addEventListener('input', paint);
+  });
+  $('#d-theme').addEventListener('click', function () {
+    var r = document.documentElement, now = r.getAttribute('data-theme');
+    if (!now) now = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    r.setAttribute('data-theme', now === 'dark' ? 'light' : 'dark');
+  });
+  paint();
+})();
+</script>
+</body>
+</html>

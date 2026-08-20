@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   The Ledger — targets, the assumptions under them, and the
+   record of every time one was changed.
+
+   The hub can express "you are behind." It cannot express "the
+   number was wrong." So a target built on a bad assumption keeps
+   generating failure until you quietly stop opening the page.
+
+   Three moves fix that:
+     · a target carries its assumptions, and the hub re-checks
+       THOSE, not just your progress against the total;
+     · the arithmetic is shown, so "out of reach" is a computed
+       fact with working, not a mood;
+     · revising is a first-class, dated, reasoned act that leaves
+       a record — so a decision can be told apart from a drift.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --ground: #F7F5F1; --card: #FFFDF8; --raise: #FFFFFF;
+  --ink: #1A1B1A; --mid: #55564F; --muted: #8A8B82; --faint: #B4B2A9;
+  --rule: #E4E2DD; --rust: #993C1D; --rust-dim: #FBF2EE;
+  --owed: #A32E27; --owed-bg: #FBEDE8; --owed-ln: #E8C4B6;
+  --ok: #0F6E56; --ok-bg: #EEF5F1;
+  --held: #7A6A4E; --held-bg: #F4F0E6; --held-ln: #DED4BE;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --serif: "Newsreader", Georgia, serif;
+  --shadow: 0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131315; --card: #1B1B1D; --raise: #212124;
+    --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+    --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+    --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+    --ok: #5FBF9B; --ok-bg: #14231E;
+    --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131315; --card: #1B1B1D; --raise: #212124;
+  --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+  --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+  --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+  --ok: #5FBF9B; --ok-bg: #14231E;
+  --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px; }
+
+.demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 20px; background: #17171A; color: #EDEBE5; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; }
+.demo b { font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .55; }
+.demo .sp { flex: 1; }
+.demo button { background: transparent; border: 1px solid rgba(255,255,255,.26); color: inherit; border-radius: 20px; padding: 4px 11px; cursor: pointer; font-family: var(--mono); font-size: 10.5px; }
+.demo button:hover { border-color: currentColor; }
+
+.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 20px; border-bottom: 1px solid var(--rule); }
+.mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
+.top a { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-decoration: none; margin-left: auto; }
+.top a:hover { color: var(--rust); }
+
+main { max-width: 880px; margin: 0 auto; padding: 30px 20px 90px; }
+.kicker { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); }
+h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 6vw, 44px); line-height: 1.06; letter-spacing: -.018em; margin: 10px 0 0; text-wrap: balance; }
+.lede { margin: 12px 0 0; max-width: 60ch; font-family: var(--serif); font-style: italic; font-size: 16.5px; line-height: 1.55; color: var(--mid); }
+
+section { margin-top: 36px; }
+h2 { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); margin: 0 0 12px; }
+
+/* ── the verdict card ── */
+.target { padding: 22px 24px; background: var(--card); border: 1px solid var(--owed-ln); border-left: 3px solid var(--owed); border-radius: 14px; box-shadow: var(--shadow); }
+.target .name { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--owed); }
+.target .verdict { margin-top: 10px; font-family: var(--serif); font-size: clamp(23px, 4.4vw, 30px); font-weight: 500; line-height: 1.2; text-wrap: balance; }
+.target .verdict em { font-style: normal; color: var(--owed); }
+
+/* ── the working: numbers with their arithmetic beside them ── */
+.working { margin-top: 18px; border-top: 1px solid var(--rule); }
+.wrow { display: flex; align-items: baseline; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.wrow .k { font-size: 14px; color: var(--mid); min-width: 190px; flex: 1; }
+.wrow .v { font-family: var(--serif); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.wrow .m { font-family: var(--mono); font-size: 10.5px; color: var(--faint); width: 100%; }
+.wrow:last-child { border-bottom: 0; padding-bottom: 2px; }
+.wrow.hot .v { color: var(--owed); }
+.wrow.good .v { color: var(--ok); }
+
+/* ── inputs: every assumption is editable, because it is an assumption ── */
+.inputs { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.fld { padding: 12px 14px; background: var(--card); border: 1px solid var(--rule); border-radius: 11px; }
+.fld label { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.fld input { width: 100%; margin-top: 6px; padding: 4px 0; background: none; border: 0; border-bottom: 1px solid var(--rule); font-family: var(--serif); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.fld input:focus { outline: none; border-bottom-color: var(--rust); }
+.fld small { display: block; margin-top: 5px; font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+
+/* ── assumptions: what the target stood on, and whether it held ── */
+.asm { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--card); }
+.asm-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.asm-row:last-child { border-bottom: 0; }
+.asm-row .what { flex: 1; min-width: 150px; }
+.asm-row .what b { display: block; font-size: 14.5px; font-weight: 500; }
+.asm-row .what span { font-size: 12.5px; color: var(--muted); }
+.asm-row .pair { font-family: var(--mono); font-size: 12px; color: var(--mid); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.asm-row .pair s { color: var(--faint); }
+.asm-row .flag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.asm-row .flag.broke { background: var(--owed-bg); color: var(--owed); border: 1px solid var(--owed-ln); }
+.asm-row .flag.held  { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--rule); }
+
+.punch { margin-top: 14px; padding: 16px 18px; background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 12px; font-family: var(--serif); font-size: 17px; line-height: 1.5; color: var(--ink); }
+.punch b { color: var(--held); font-weight: 600; font-style: normal; }
+
+/* ── what is actually reachable ── */
+.reach { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.opt { padding: 15px 16px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; }
+.opt.pick { border-color: var(--ok); border-left: 3px solid var(--ok); }
+.opt .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.opt.pick .h { color: var(--ok); }
+.opt .n { margin-top: 8px; font-family: var(--serif); font-size: 27px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+.opt .s { margin-top: 7px; font-size: 12.5px; color: var(--mid); }
+
+/* ── the revision chain ── */
+.chain { position: relative; padding-left: 22px; }
+.chain::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px; background: var(--rule); }
+.ent { position: relative; padding: 0 0 20px; }
+.ent::before { content: ""; position: absolute; left: -21px; top: 6px; width: 11px; height: 11px; border-radius: 50%; background: var(--ground); border: 2px solid var(--faint); }
+.ent.now::before { border-color: var(--rust); background: var(--rust); }
+.ent.next::before { border-style: dashed; }
+.ent .d { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; color: var(--faint); }
+.ent .n { margin-top: 3px; font-family: var(--serif); font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.ent.was .n { color: var(--faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+.ent .why { margin-top: 4px; font-size: 13.5px; color: var(--mid); max-width: 58ch; }
+
+.act { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 11px 20px; margin-top: 4px; background: var(--ink); color: var(--ground); border: 0; border-radius: 22px; cursor: pointer; font-size: 14.5px; font-weight: 500; }
+.act:hover { filter: brightness(1.15); }
+.act.ghost { background: none; color: var(--mid); border: 1px solid var(--rule); }
+.act.ghost:hover { border-color: var(--rust); color: var(--rust); filter: none; }
+.acts-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--faint); }
+
+@media (max-width: 560px) {
+  main { padding: 24px 16px 80px; }
+  .wrow .k { min-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="demo">
+  <b>Prototype</b>
+  <span class="sp"></span>
+  <span style="opacity:.6">every figure below is editable — change one and the page re-reasons</span>
+  <button id="d-theme">◐ theme</button>
+</div>
+
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">The Ledger</span>
+  <a href="home.html">← the standing</a>
+</header>
+
+<main>
+
+  <div class="kicker">The Ledger</div>
+  <h1>What you are aiming at, and whether it is still true.</h1>
+  <p class="lede">A target you revised on purpose is a decision. A target you stopped
+  looking at is a rut. This page exists so that the first one is easier than the second.</p>
+
+  <!-- ── the target, judged ── -->
+  <section>
+    <h2>Open target</h2>
+    <div class="target">
+      <div class="name">Summer earnings · set 1 June · closes 30 September</div>
+      <div class="verdict" id="verdict">—</div>
+      <div class="working" id="working"></div>
+    </div>
+  </section>
+
+  <!-- ── the inputs ── -->
+  <section>
+    <h2>What the arithmetic is standing on <span style="text-transform:none;letter-spacing:.04em;color:var(--faint);font-weight:400">— edit any of these</span></h2>
+    <div class="inputs">
+      <div class="fld">
+        <label for="i-target">Target</label>
+        <input id="i-target" type="number" value="20000" step="500" inputmode="numeric">
+        <small>PLN, by 30 Sept</small>
+      </div>
+      <div class="fld">
+        <label for="i-earned">Earned so far</label>
+        <input id="i-earned" type="number" value="8300" step="100" inputmode="numeric">
+        <small>PLN, 1 Jun – today</small>
+      </div>
+      <div class="fld">
+        <label for="i-weeks">Weeks left</label>
+        <input id="i-weeks" type="number" value="6" step="1" inputmode="numeric">
+        <small>to 30 September</small>
+      </div>
+      <div class="fld">
+        <label for="i-hours">Hours / week</label>
+        <input id="i-hours" type="number" value="25" step="1" inputmode="numeric">
+        <small>what you actually work</small>
+      </div>
+      <div class="fld">
+        <label for="i-rate">Rate</label>
+        <input id="i-rate" type="number" value="30" step="1" inputmode="numeric">
+        <small>PLN per hour, net</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── the assumptions that failed ── -->
+  <section>
+    <h2>What the original target stood on</h2>
+    <div class="asm" id="asm"></div>
+    <div class="punch" id="punch"></div>
+  </section>
+
+  <!-- ── what is actually reachable ── -->
+  <section>
+    <h2>What is reachable from here</h2>
+    <div class="reach" id="reach"></div>
+    <div class="acts-row">
+      <button class="act" id="do-revise">Revise the target to the honest number</button>
+      <button class="act ghost" id="do-hold">Keep it and accept the hours</button>
+    </div>
+  </section>
+
+  <!-- ── the record ── -->
+  <section>
+    <h2>The record</h2>
+    <div class="chain" id="chain"></div>
+    <p style="font-size:13.5px;color:var(--mid);max-width:60ch;margin:0">
+      Nothing is deleted here. The chain is the point: it is how you tell a target
+      you corrected once, with a reason, from one you have quietly walked down
+      four times in a summer.
+    </p>
+  </section>
+
+  <footer>The Ledger · goal-revision prototype · assumptions are re-checked, not just progress</footer>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function pln(n) { return Math.round(n).toLocaleString('en-US').replace(/,/g, ' ') + ' zł'; }
+  function h1dp(n) { return (Math.round(n * 10) / 10).toString(); }
+
+  /* The original target's stated assumptions, from 1 June. These are
+     what makes the diagnosis possible: without them the only story
+     available is "you underperformed". */
+  var ORIGINAL = { low: 25000, high: 50000, rate: 30, hours: 65, weeks: 16 };
+  ORIGINAL.plan = ORIGINAL.weeks * ORIGINAL.hours * ORIGINAL.rate;   // 32 000 zł
+
+  var CHAIN = [
+    { date: '1 June',   n: '25 000 – 50 000 zł', why: 'Opening assumption, before a rate was known or a contract signed.', cls: 'was' },
+    { date: '20 August', n: '20 000 zł', why: 'First correction. Still assumed the hours would somehow arrive, so it inherited the error rather than fixing it.', cls: 'was' }
+  ];
+
+  function readInputs() {
+    return {
+      target: +$('#i-target').value || 0,
+      earned: +$('#i-earned').value || 0,
+      weeks:  Math.max(0, +$('#i-weeks').value || 0),
+      hours:  Math.max(0, +$('#i-hours').value || 0),
+      rate:   Math.max(0, +$('#i-rate').value || 0)
+    };
+  }
+
+  function compute() {
+    var v = readInputs();
+    var perWeek   = v.hours * v.rate;
+    var projected = v.earned + v.weeks * perWeek;
+    var shortfall = v.target - projected;
+    var capacity  = v.weeks * v.rate;                       // PLN per weekly-hour remaining
+    var needHours = capacity > 0 ? (v.target - v.earned) / capacity : Infinity;
+    var extra     = needHours - v.hours;
+    return { v: v, perWeek: perWeek, projected: projected, shortfall: shortfall, needHours: needHours, extra: extra };
+  }
+
+  function paint() {
+    var c = compute(), v = c.v;
+
+    // ── the verdict ──
+    var reach;
+    if (c.needHours <= v.hours + 2)        reach = 'on track';
+    else if (c.needHours <= 45)            reach = 'a stretch';
+    else                                   reach = 'out of reach';
+
+    var vd = $('#verdict');
+    if (reach === 'out of reach') {
+      vd.innerHTML = pln(v.target) + ' by 30 September is <em>out of reach</em> — it needs ' +
+        h1dp(c.needHours) + ' h a week, and you work ' + v.hours + '.';
+    } else if (reach === 'a stretch') {
+      vd.innerHTML = pln(v.target) + ' is <em>a stretch</em> — ' + h1dp(c.needHours) +
+        ' h a week, up from ' + v.hours + '.';
+    } else {
+      vd.innerHTML = pln(v.target) + ' is <em style="color:var(--ok)">on track</em> at ' + v.hours + ' h a week.';
+    }
+
+    // ── the working ──
+    var W = $('#working'); W.innerHTML = '';
+    function row(k, val, note, cls) {
+      var r = el('div', 'wrow' + (cls ? ' ' + cls : ''));
+      r.appendChild(el('span', 'k', k));
+      r.appendChild(el('span', 'v', val));
+      if (note) r.appendChild(el('span', 'm', note));
+      W.appendChild(r);
+    }
+    row('You earn, per week', pln(c.perWeek), v.hours + ' h × ' + v.rate + ' zł');
+    row('So the summer lands at', pln(c.projected),
+        pln(v.earned) + ' earned + ' + v.weeks + ' weeks × ' + pln(c.perWeek),
+        c.shortfall > 0 ? '' : 'good');
+    if (c.shortfall > 0) {
+      row('Short of the target by', pln(c.shortfall), 'which is ' + Math.round(c.shortfall / v.rate) + ' more hours of work', 'hot');
+      row('So the target needs', h1dp(c.needHours) + ' h / week',
+          pln(v.target - v.earned) + ' ÷ (' + v.weeks + ' weeks × ' + v.rate + ' zł) — that is ' +
+          h1dp(c.extra) + ' h a week on top of what you do now', 'hot');
+    }
+
+    // ── assumptions ──
+    var A = $('#asm'); A.innerHTML = '';
+    function asmRow(what, sub, was, now, unit) {
+      var broke = Math.abs(now - was) / (was || 1) > 0.15;
+      var r = el('div', 'asm-row');
+      var w = el('div', 'what');
+      w.appendChild(el('b', null, what));
+      w.appendChild(el('span', null, sub));
+      r.appendChild(w);
+      var p = el('span', 'pair');
+      p.innerHTML = '<s>' + was + ' ' + unit + '</s> &nbsp;→&nbsp; <b>' + now + ' ' + unit + '</b>';
+      r.appendChild(p);
+      var f = el('span', 'flag ' + (broke ? 'broke' : 'held'), broke
+        ? (now < was ? 'off by ' + Math.round((1 - now / was) * 100) + '%' : 'better than assumed')
+        : 'held');
+      r.appendChild(f);
+      A.appendChild(r);
+      return broke ? (was / (now || 1)) : 1;
+    }
+    var mRate  = asmRow('The rate', 'what an hour actually pays', ORIGINAL.rate, v.rate, 'zł/h');
+    var mHours = asmRow('The hours', '13 h days in the USA — the whole plan rested here', ORIGINAL.hours, v.hours, 'h/wk');
+    asmRow('The window', 'weeks of summer to work with', ORIGINAL.weeks, v.weeks + Math.round(v.earned / (c.perWeek || 1)), 'wks');
+
+    var total = mRate * mHours;
+    var pRate  = Math.round((1 - v.rate / ORIGINAL.rate) * 100);
+    var pHours = Math.round((1 - v.hours / ORIGINAL.hours) * 100);
+    $('#punch').innerHTML =
+      'The rate came in within ' + Math.abs(pRate) + '% of what June assumed — <b>that assumption held</b>. ' +
+      'The hours came in <b>' + pHours + '% under</b>: 65 a week expected, ' + v.hours + ' actual. ' +
+      'That one number is ' + (Math.round(ORIGINAL.hours / (v.hours || 1) * 100) / 100) + '×, which is ' +
+      'essentially the whole ' + (Math.round(ORIGINAL.plan / c.projected * 100) / 100) + '× gap between the ' +
+      'June plan (' + pln(ORIGINAL.plan) + ') and where the summer now lands (' + pln(c.projected) + '). ' +
+      '<b>Nothing here was missed by effort. One assumption broke — the 13-hour days — and every ' +
+      'number downstream of it was wrong from the day it broke.</b> ' +
+      'A hub can watch an assumption for you. You cannot be expected to feel one.';
+
+    // ── what is reachable ──
+    var R = $('#reach'); R.innerHTML = '';
+    [[v.hours, 'at what you work now'], [v.hours + 8, 'one extra day a week'], [v.hours + 15, 'a hard push']].forEach(function (o, i) {
+      var got = v.earned + v.weeks * o[0] * v.rate;
+      var d = el('div', 'opt' + (i === 1 ? ' pick' : ''));
+      d.appendChild(el('div', 'h', o[0] + ' h / week'));
+      d.appendChild(el('div', 'n', pln(got)));
+      d.appendChild(el('div', 's', o[1] + (i === 1 ? ' — the honest number' : '')));
+      R.appendChild(d);
+    });
+
+    paintChain();
+  }
+
+  function paintChain() {
+    var c = compute(), v = c.v;
+    var honest = v.earned + v.weeks * (v.hours + 8) * v.rate;
+    var C = $('#chain'); C.innerHTML = '';
+    CHAIN.forEach(function (e) {
+      var d = el('div', 'ent ' + (e.cls || ''));
+      d.appendChild(el('div', 'd', e.date));
+      d.appendChild(el('div', 'n', e.n));
+      d.appendChild(el('div', 'why', e.why));
+      C.appendChild(d);
+    });
+    var now = el('div', 'ent next');
+    now.appendChild(el('div', 'd', 'today · proposed'));
+    now.appendChild(el('div', 'n', pln(Math.round(honest / 500) * 500)));
+    now.appendChild(el('div', 'why',
+      'Second correction, and the first one that fixes the assumption rather than the number: rate re-measured at ' +
+      v.rate + ' zł/h, hours set to ' + (v.hours + 8) + ' — one extra day a week, not a second job. ' +
+      'Re-checks itself every fortnight.'));
+    C.appendChild(now);
+  }
+
+  ['#i-target', '#i-earned', '#i-weeks', '#i-hours', '#i-rate'].forEach(function (s) {
+    $(s).addEventListener('input', paint);
+  });
+
+  $('#do-revise').addEventListener('click', function () {
+    var c = compute(), v = c.v;
+    var honest = Math.round((v.earned + v.weeks * (v.hours + 8) * v.rate) / 500) * 500;
+    CHAIN.push({ date: 'today', n: pln(honest), why: 'Rate re-measured, hours set to one extra day a week. Re-checks itself every fortnight.', cls: 'now' });
+    $('#i-target').value = honest;
+    this.disabled = true;
+    this.textContent = 'Revised — and the reason is on the record';
+    paint();
+  });
+
+  $('#do-hold').addEventListener('click', function () {
+    var c = compute();
+    var n = document.getElementById('hold-note') || el('div', 'punch');
+    n.id = 'hold-note';
+    n.innerHTML = 'Target kept at <b>' + pln(c.v.target) + '</b>. The hub will hold you to ' +
+      h1dp(c.needHours) + ' h a week and say so every morning — plainly, without turning the ' +
+      'board red. It asks again in a fortnight whether that is still the plan.';
+    this.parentNode.parentNode.appendChild(n);
+    this.disabled = true;
+  });
+
+  $('#d-theme').addEventListener('click', function () {
+    var r = document.documentElement, now = r.getAttribute('data-theme');
+    if (!now) now = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    r.setAttribute('data-theme', now === 'dark' ? 'light' : 'dark');
+  });
+
+  paint();
+})();
+</script>
+</body>
+</html>
