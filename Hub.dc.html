@@ -1183,7 +1183,7 @@ class Component extends DCLogic {
     this.setState(s => ({ tick: s.tick + 1 }));
   }
 
-  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_examiner_v1', 'ct_reading_v1', 'ct_reading_books_v1', 'ct_obsidian_cfg_v1', 'ct_anatomy_v1', 'ct_grind_v1', 'ct_research_v1'];
+  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_examiner_v1', 'ct_reading_v1', 'ct_reading_books_v1', 'ct_obsidian_cfg_v1', 'ct_anatomy_v1', 'ct_grind_v1', 'ct_research_v1', 'ct_resurface_v1'];
   doBackupAction = () => {
     const out = { __ct_hub_backup: 1, ts: Date.now(), data: {} };
     this.BKEYS.forEach(k => { try { const v = localStorage.getItem(k); if (v != null) out.data[k] = v; } catch (e) {} });

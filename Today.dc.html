@@ -18,6 +18,7 @@
 <script src="./reading-data.js"></script>
 <script src="./hub-data.js"></script>
 <script src="./systems.js"></script>
+<script src="./resurface.js"></script>
 <style>
   /* ─────────────────────────────────────────────────────────────
      Today — the phone's front door.
@@ -99,6 +100,15 @@
   .td-field { width: 100%; font-size: 16px; line-height: 1.5; padding: 12px 13px;
               border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F;
               resize: vertical; }
+
+  /* One thing you wrote, coming back. The response row is what makes this a
+     loop rather than a feed — see resurface.js. */
+  .td-back { border-color: #DCD6C6; background: #FCFAF3; }
+  .td-backhead { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .1em;
+                 text-transform: uppercase; margin-bottom: 8px; }
+  .td-backtext { display: block; font-family: 'Newsreader', serif; font-size: 18px; line-height: 1.5;
+                 color: #26271F; }
+  .td-backtext:hover { color: #993C1D; }
 
   /* every system, one line each — the glance this page exists to be */
   .td-sys { display: grid; grid-template-columns: 1fr; gap: 0; }
@@ -183,6 +193,19 @@
     </sc-for>
     <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 11px;">{{ planLine }}</div>
   </div>
+
+  <!-- ─── one thing, coming back ─── -->
+  <sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}">
+    <div class="td-card td-back">
+      <div class="td-kicker"><b>Coming back</b><span style="flex:1"></span><span style="font-size: 11px; color: #A6A79F;">{{ backSeen }}</span></div>
+      <div class="td-backhead" style="color: {{ backColor }};">{{ backHead }}</div>
+      <a href="{{ backHref }}" class="td-backtext">{{ backText }}</a>
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <button onClick="{{ backAgain }}" class="td-chip tap">↻ again sooner</button>
+        <button onClick="{{ backRetire }}" class="td-chip tap">✕ retire this</button>
+      </div>
+    </div>
+  </sc-if>
 
   <!-- ─── what you are reading ─── -->
   <div class="td-card">
@@ -670,11 +693,26 @@ class Component extends DCLogic {
     // Every system, one line each — see systems.js.
     const systems = (window.Systems && window.Systems.all) ? window.Systems.all() : [];
 
+    /* One thing a day out of everything you have written. The pick is fixed
+       for the calendar day, so this does not reshuffle when you come back to
+       the page — that is the difference between a loop and a feed. */
+    let back = null;
+    try { back = (window.Resurface && window.Resurface.pick) ? window.Resurface.pick() : null; }
+    catch (e) { back = null; }
+
     return {
       dayName: DAYS[now.getDay()],
       dateLine: MON[now.getMonth()] + ' ' + now.getDate(),
 
       systems,
+      hasBack: !!back,
+      backHead: back ? back.head : '',
+      backText: back ? back.text : '',
+      backHref: back ? back.href : '#',
+      backColor: back ? back.kindColor : '#A6A79F',
+      backSeen: back ? back.seenText : '',
+      backAgain: () => { if (back) { window.Resurface.again(back.id); this.toast('↻ it will come round sooner'); this.bump(); } },
+      backRetire: () => { if (back) { window.Resurface.retire(back.id); this.toast('✕ retired'); this.bump(); } },
       nextActions,
       planLine: counts.liveDone + ' of ' + counts.live + ' live steps done · '
               + counts.later + ' more sit further out, on the plan',

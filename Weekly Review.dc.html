@@ -16,6 +16,7 @@
 <script src="./anatomy-data.js"></script>
 <script src="./anatomy-core.js"></script>
 <script src="./hub-data.js"></script>
+<script src="./systems.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; background: #F7F5F1; }
@@ -33,6 +34,41 @@
            width: 20px; padding-top: 3px; }
   .wr-qt { font-size: 14.5px; font-weight: 600; color: #26271F; line-height: 1.35; }
   .wr-qh { font-size: 12px; color: #8a8577; line-height: 1.5; margin-top: 2px; }
+  .wr-trend { font-size: 14.5px; line-height: 1.6; color: #2b3f46; background: #EAF4F6;
+              border: 1px solid #BEDCE2; border-left: 3px solid #2E6A86; border-radius: 0 10px 10px 0;
+              padding: 11px 14px; margin: 12px 0 4px; }
+  .wr-trend-k { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .13em;
+                text-transform: uppercase; color: #2E6A86; display: block; margin-bottom: 4px; }
+  .wr-trend.thin { color: #77786F; background: #F7F5F0; border-color: #E4E2DD;
+                   border-left-color: #CFCABD; font-size: 13px; }
+
+  /* Last week's answer, sitting above this week's empty box. This is the
+     whole of fix 02: the store had no reader, and a ritual whose output you
+     never see again is journalling, not review. */
+  .wr-prev { font-size: 13px; line-height: 1.55; color: #6b6c63; background: #F7F5F0;
+             border-left: 2px solid #CFCABD; border-radius: 0 8px 8px 0;
+             padding: 7px 11px; margin: 7px 0 8px; }
+  .wr-prev-k { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .12em;
+               text-transform: uppercase; color: #A6A79F; display: block; margin-bottom: 3px; }
+  .wr-echo { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #7d4c09;
+             background: #FBF6EA; border: 1px solid #EFE4CB; border-radius: 8px;
+             padding: 6px 10px; margin-top: 7px; line-height: 1.5; }
+
+  .wr-histbtn { display: block; width: 100%; margin-top: 14px; min-height: 44px;
+                font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #534AB7;
+                background: #F4F3FA; border: 1px dashed #C9C5E4; border-radius: 10px;
+                cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .wr-histbtn:hover { background: #ECEAF6; }
+  .wr-hist { margin-top: 12px; border-top: 1px solid #E4E2DD; padding-top: 12px;
+             max-height: 460px; overflow-y: auto; }
+  .wr-histweek { padding: 10px 0; border-bottom: 1px solid #F1EDE3; }
+  .wr-histweek:last-child { border-bottom: none; }
+  .wr-histdate { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em;
+                 text-transform: uppercase; color: #534AB7; margin-bottom: 7px; }
+  .wr-histrow { margin-top: 8px; }
+  .wr-histq { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F; }
+  .wr-hista { font-size: 14.5px; line-height: 1.55; color: #3f4038; margin-top: 2px; }
+
   .wr-qa { width: 100%; margin-top: 8px; min-height: 58px; resize: vertical; font-family: inherit;
            font-size: 14px; line-height: 1.55; padding: 10px 12px; border: 1px solid #DAD7D0;
            border-radius: 10px; background: #FCFBF8; color: #26271F; }
@@ -207,6 +243,16 @@
         </div>
         <a href="Journal.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2E6A86;">the logbook →</a>
       </div>
+      <sc-if value="{{ hasTrend }}" hint-placeholder-val="{{ false }}">
+        <div class="wr-trend">
+          <span class="wr-trend-k">From your own record</span>
+          {{ trendText }}
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasTrendWait }}" hint-placeholder-val="{{ false }}">
+        <div class="wr-trend thin">{{ trendWait }}</div>
+      </sc-if>
+
       <div class="wr-q5">
         <sc-for list="{{ questions }}" as="q" hint-placeholder-count="5">
           <div class="wr-q">
@@ -214,11 +260,39 @@
             <div style="flex: 1; min-width: 0;">
               <div class="wr-qt">{{ q.title }}</div>
               <div class="wr-qh">{{ q.hint }}</div>
+              <sc-if value="{{ q.hasPrev }}" hint-placeholder-val="{{ false }}">
+                <div class="wr-prev">
+                  <span class="wr-prev-k">{{ q.prevLabel }}</span>
+                  {{ q.prevText }}
+                </div>
+              </sc-if>
               <textarea class="wr-qa" value="{{ q.text }}" onChange="{{ q.set }}" placeholder="{{ q.placeholder }}" rows="2"></textarea>
+              <sc-if value="{{ q.repeats }}" hint-placeholder-val="{{ false }}">
+                <div class="wr-echo">{{ q.repeatText }}</div>
+              </sc-if>
             </div>
           </div>
         </sc-for>
       </div>
+
+      <sc-if value="{{ hasHistory }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleHist }}" class="wr-histbtn">{{ histLabel }}</button>
+        <sc-if value="{{ histOpen }}" hint-placeholder-val="{{ false }}">
+          <div class="wr-hist">
+            <sc-for list="{{ history5 }}" as="h" hint-placeholder-count="3">
+              <div class="wr-histweek">
+                <div class="wr-histdate">{{ h.week }}</div>
+                <sc-for list="{{ h.rows }}" as="r" hint-placeholder-count="3">
+                  <div class="wr-histrow">
+                    <div class="wr-histq">{{ r.title }}</div>
+                    <div class="wr-hista">{{ r.text }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </sc-if>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 8px;">
         <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #0F6E56; min-height: 14px;">{{ reflectMsg }}</span>
         <button onClick="{{ saveReflect }}" style="font-size: 13px; font-weight: 600; min-height: 44px; padding: 0 18px; border-radius: 9px; border: none; background: #534AB7; color: #FFF; cursor: pointer;">Save the week to the logbook</button>
@@ -306,7 +380,7 @@ class Component extends DCLogic {
     ['one',     'The one thing that must happen next week',  'if only this happens, the week still counted', ''],
   ];
   BMETA = 'ct_backup_meta_v1';
-  state = { tick: 0, reflectText: '', reflectMsg: '', prio0: '', prio1: '', prio2: '', editingPrio: false };
+  state = { tick: 0, reflectText: '', reflectMsg: '', prio0: '', prio1: '', prio2: '', editingPrio: false, histOpen: false };
 
   readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   readPlan() { return Object.assign({ checked: {}, meta: {}, history: [] }, this.readJSON(this.PKEY, {}) || {}); }
@@ -405,7 +479,9 @@ class Component extends DCLogic {
     const now = new Date(); const nowMs = now.getTime();
     const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
     const dowLabel = DAYS[now.getDay()];
-    if (!data) return { todayLabel, dowLabel, ritualDone: 0, todayItems: [], wins: [], loops: [], people: [], prioRows: [], staleRows: [], questions: [], answeredN: 0, saveReflect: () => {}, reflectMsg: '' };
+    if (!data) return { todayLabel, dowLabel, ritualDone: 0, todayItems: [], wins: [], loops: [], people: [], prioRows: [], staleRows: [], questions: [], answeredN: 0, saveReflect: () => {}, reflectMsg: '',
+      hasTrend: false, trendText: '', hasTrendWait: false, trendWait: '',
+      histOpen: false, hasHistory: false, history5: [], histLabel: '', toggleHist: () => {} };
 
     const plan = this.readPlan();
     const w = this.readW();
@@ -463,12 +539,88 @@ class Component extends DCLogic {
       this.writeW({ answers: all });
       this.setState(st => ({ tick: st.tick + 1 }));
     };
-    const questions = this.QUESTIONS.map(([id, title, hint, placeholder], i) => ({
-      n: String(i + 1).padStart(2, '0'), title, hint, placeholder,
-      text: answers[id] || '',
-      set: (e) => setAnswer(id, e.target.value),
-    }));
+    /* ── the number, in the room ────────────────────────────────────────
+       The Trends panel knows whether your worst weeks and your longest phone
+       days are the same weeks. It knew it on a page you open when you are
+       curious, which is not the moment the knowledge is worth anything. Here
+       it is, on Sunday, above the questions — before you answer, not after.
+
+       It asks. It does not decide, propose a step or change the plan: the
+       moment this starts writing on your behalf is the moment you stop
+       trusting the number. */
+    const tr = (window.Systems && window.Systems.trends) ? window.Systems.trends() : null;
+    const trendText = tr && tr.sentence ? tr.sentence : '';
+    const trendWait = tr && !trendText
+      ? (tr.days === 0
+          ? 'Close a day on Today with your screen time in it. After ' + tr.min + ' days this line starts reading your own record back to you.'
+          : tr.days >= tr.min
+            ? 'Nothing in your record moves with your screen time yet. That is a real finding too.'
+            : tr.days + ' of ' + tr.min + ' days logged — ' + (tr.min - tr.days) + ' more and this says something.')
+      : '';
+
+    /* ── the answers, read back ─────────────────────────────────────────
+       These were written every Sunday and read by nothing — not another
+       page, and not this one. Roughly 250 sets over five years, into a store
+       with no reader. The whole point of asking "what stalled, and why
+       really?" is to notice the third time you write the same answer, and
+       that only works if the last time is on the screen. */
+    const weekKeys = Object.keys(w.answers).filter(k => k < wk).sort();
+    const prevKey = weekKeys[weekKeys.length - 1] || '';
+    const prev = prevKey ? (w.answers[prevKey] || {}) : {};
+    const weeksAgo = prevKey
+      ? Math.max(1, Math.round((new Date(wk) - new Date(prevKey)) / 604800000))
+      : 0;
+    const prevLabel = prevKey
+      ? (weeksAgo === 1 ? 'last week' : weeksAgo + ' weeks ago')
+      : '';
+
+    /* A theme repeats when the same significant words come back. Not clever,
+       deliberately: a stemmer would find more and be trusted less. Three
+       shared words of five letters or more, and it says so — it never
+       decides what the repetition means. */
+    const STOP = /^(that|this|with|from|have|been|will|about|there|their|which|would|could|should|because|really|thing|things|still|again|more|much|into|when|what|were|they|them|than|then|only|just|over|some|make|made|take|took|week|weeks|going|getting)$/;
+    const words = t => {
+      const out = {};
+      String(t || '').toLowerCase().split(/[^a-z]+/).forEach(x => {
+        if (x.length >= 5 && !STOP.test(x)) out[x] = 1;
+      });
+      return out;
+    };
+    const echo = (a, b) => {
+      const A = words(a), B = words(b);
+      const shared = Object.keys(A).filter(x => B[x]);
+      return shared.length >= 3 ? shared.slice(0, 4) : null;
+    };
+
+    const questions = this.QUESTIONS.map(([id, title, hint, placeholder], i) => {
+      const was = (prev[id] || '').trim();
+      const rep = was ? echo(answers[id], was) : null;
+      return {
+        n: String(i + 1).padStart(2, '0'), title, hint, placeholder,
+        text: answers[id] || '',
+        set: (e) => setAnswer(id, e.target.value),
+        hasPrev: !!was,
+        prevLabel,
+        prevText: was,
+        repeats: !!rep,
+        repeatText: rep ? 'You have written this before — ' + rep.join(', ') : '',
+      };
+    });
     const answeredN = this.QUESTIONS.filter(([id]) => (answers[id] || '').trim()).length;
+
+    /* The history: every week you have answered, newest first, collapsed
+       until you ask for it. It is the reason the store exists. */
+    const histOpen = !!this.state.histOpen;
+    const history5 = weekKeys.slice().reverse().map(k => {
+      const a = w.answers[k] || {};
+      const d = new Date(k + 'T12:00:00');
+      return {
+        week: isNaN(d) ? k : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        rows: this.QUESTIONS
+          .filter(([id]) => (a[id] || '').trim())
+          .map(([id, title]) => ({ title, text: a[id].trim() })),
+      };
+    }).filter(x => x.rows.length);
 
     const saveReflect = () => {
       const filled = this.QUESTIONS.filter(([id]) => (answers[id] || '').trim());
@@ -567,6 +719,10 @@ class Component extends DCLogic {
       loops, toggleLoops: () => this.setStep('loops'), loopsBtn: lb.btn, loopsBorder: lb.border, loopsColor: lb.color, loopsBg: lb.bg,
       people, peopleEmpty, togglePeople: () => this.setStep('people'), peopleBtn: pb.btn, peopleBorder: pb.border, peopleColor: pb.color, peopleBg: pb.bg,
       questions, answeredN, saveReflect, reflectMsg: this.state.reflectMsg,
+      hasTrend: !!trendText, trendText, hasTrendWait: !!trendWait, trendWait,
+      histOpen, hasHistory: history5.length > 0, history5,
+      histLabel: (histOpen ? 'hide' : 'show') + ' the ' + history5.length + ' week' + (history5.length === 1 ? '' : 's') + ' behind you',
+      toggleHist: () => this.setState(st => ({ histOpen: !st.histOpen })),
       prioEditing, prioSet, prioWeekLabel, prio0: this.state.prio0, prio1: this.state.prio1, prio2: this.state.prio2,
       setPrio0, setPrio1, setPrio2, savePrio, editPrio, prioRows,
       staleRows, staleEmpty, backupText, backupColor,
