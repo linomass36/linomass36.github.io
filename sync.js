@@ -148,7 +148,18 @@
           var mine = localSnapshot();
           var extra = row('cloud rev', d.updatedAt ? new Date(+d.updatedAt).toLocaleString() : '?');
           extra += row('cloud keys', Object.keys(store).length);
-          extra += row('this device', Object.keys(mine).length + ' keys, ' + Math.round(sizeOf(mine) / 1024) + ' KB of 950');
+          extra += row('this device', Object.keys(mine).length + ' keys, ' + Math.round(sizeOf(mine) / 1024) + ' KB held');
+          /* The number that used to matter was how close the whole store was
+             to 950 KB. Now only the hot half is ever pushed, so the line
+             worth reading is how the two halves compare — and how far back
+             the archive reaches. */
+          if (window.Archive) {
+            var hotKb = Math.round(sizeOf(hotHalf(mine)) / 1024);
+            var allKb = Math.round(sizeOf(mine) / 1024);
+            extra += row('synced', hotKb + ' KB of 950 — the last ' + window.Archive.HOT_DAYS + ' days');
+            extra += row('archived', Math.max(allKb - hotKb, 0) + ' KB before ' + window.Archive.cutoff() +
+                         (archiveBlocked ? ' — BLOCKED, publish the archive rule' : ''));
+          }
           extra += row('biggest', biggestKeys(mine).map(function (x) { return x.key + ' ' + x.kb + 'KB'; }).join(', '));
           // the keys that differ are exactly the ones that have not made it across
           var behind = Object.keys(mine).filter(function (k) { return store[k] !== mine[k]; });
@@ -276,6 +287,28 @@
   }
 
   function docRef() { return db.collection('hubData').doc(uid); }
+  /* An older compat build — or anything standing in for Firestore — may not
+     offer subcollections at all. Nothing in the archive path is allowed to
+     throw synchronously into the hydrate chain: a missing archive must cost
+     the archive, never the sync. */
+  function archCol() {
+    var d = docRef();
+    if (!d || typeof d.collection !== 'function') return null;
+    var c = d.collection('archive');
+    return (c && typeof c.doc === 'function') ? c : null;
+  }
+  function archRef(name) { var c = archCol(); return c ? c.doc(name) : null; }
+
+  /* What this device has already sent to the archive, so an unchanged
+     quarter is not rewritten on every push. Kept under a __sync key, which
+     means the cloud never sees it and an incoming sync cannot clear it. */
+  var ARCH_SENT = '__sync_arch', ARCH_PULLED = '__sync_arch_pulled';
+  function archSent() {
+    try { var o = JSON.parse(localStorage.getItem(ARCH_SENT)); return (o && typeof o === 'object') ? o : {}; }
+    catch (e) { return {}; }
+  }
+  function setArchSent(o) { try { localStorage.setItem(ARCH_SENT, JSON.stringify(o)); } catch (e) {} }
+  var archiveBlocked = false;   // rules not published yet — fall back to one document
 
   function localSnapshot() {
     var o = {};
@@ -293,10 +326,17 @@
       .slice(0, 4);
   }
 
+  /* The cloud's copy of a splittable key is only the last 120 days. Writing
+     it here verbatim would delete every older day this device holds — the
+     whole archive, silently, on one sync. Archive.rejoin keeps ours and
+     takes theirs. See archive.js. */
   function applyToLocal(store) {
     var changed = false;
+    var A = window.Archive;
     Object.keys(store).forEach(function (k) {
-      if (localStorage.getItem(k) !== store[k]) { localStorage.setItem(k, store[k]); changed = true; }
+      var incoming = store[k];
+      if (A && A.splittable(k)) incoming = A.rejoin(k, incoming, localStorage.getItem(k));
+      if (localStorage.getItem(k) !== incoming) { localStorage.setItem(k, incoming); changed = true; }
     });
     return changed;
   }
@@ -321,10 +361,11 @@
      enough to be worth keeping. */
   function keepUndo(store) {
     try {
-      var prev = {}, n = 0;
+      var prev = {}, n = 0, A = window.Archive;
       Object.keys(store).forEach(function (k) {
         var was = localStorage.getItem(k);
-        if (was !== null && was !== store[k]) { prev[k] = was; n += was.length; }
+        var incoming = (A && A.splittable(k)) ? A.rejoin(k, store[k], was) : store[k];
+        if (was !== null && was !== incoming) { prev[k] = was; n += was.length; }
       });
       if (!n || n > 400000) return;
       localStorage.setItem('__sync_undo', JSON.stringify({ at: Date.now(), keys: prev }));
@@ -358,8 +399,10 @@
       }
       watch();
       patch();
-      dailyBackup();      // once we know we are in step, keep today's copy
-      syncedLabel();
+      hydrateArchive().then(function () {
+        dailyBackup();    // once we know we are in step, keep today's copy
+        syncedLabel();
+      });
     }).catch(function (e) {
       // We could not read the cloud, so we must not write over it: this
       // device's copy may be months behind. Listen and retry instead.
@@ -420,21 +463,114 @@
       // additive only: anything the cloud has never held goes up as well
       Object.keys(local).forEach(function (key) { if (!(key in merged)) merged[key] = local[key]; });
 
-      var bytes = sizeOf(merged);
+      /* Split the growing stores before measuring: the main document carries
+         the last 120 days, and each older quarter goes to its own document
+         where the 1 MiB limit applies per quarter instead of per lifetime.
+         If the archive cannot be written — the rule for the subcollection
+         has not been published yet — we fall back to the single document
+         exactly as before, so nothing is ever lost by trying. */
+      var chunks = [], hotStore = merged;
+      if (window.Archive && !archiveBlocked) {
+        hotStore = {};
+        Object.keys(merged).forEach(function (key) {
+          var r = window.Archive.split(key, merged[key]);
+          if (!r) { hotStore[key] = merged[key]; return; }
+          hotStore[key] = r.hot;
+          Object.keys(r.cold).forEach(function (period) {
+            chunks.push({ name: window.Archive.docName(key, period), body: r.cold[period] });
+          });
+        });
+      }
+
+      var bytes = sizeOf(hotStore);
       if (bytes > LIMIT) {
         lastErr = 'payload ' + Math.round(bytes / 1024) + ' KB — over the 1 MB document limit';
-        console.error('[sync] ' + lastErr, biggestKeys(merged));
+        console.error('[sync] ' + lastErr, biggestKeys(hotStore));
         UI.set('offline', 'Too big: ' + (bytes / 1048576).toFixed(2) + ' MB');
         return;
       }
 
       var rev = Date.now();
       localStorage.setItem('__sync_rev', String(rev)); // our own write — don't echo-reload
-      return docRef().set({ store: merged, updatedAt: rev }).then(function () {
-        touched = {};
-        syncedLabel();
+      return writeArchive(chunks).then(function (ok) {
+        // The archive write failed, so the cold half must not be dropped from
+        // the payload. Push everything in one document, as before.
+        var payload = ok ? hotStore : merged;
+        if (!ok && sizeOf(payload) > LIMIT) {
+          lastErr = 'archive unavailable and the whole store is over the 1 MB limit';
+          console.error('[sync] ' + lastErr);
+          UI.set('offline', 'Archive blocked — publish the rule');
+          return;
+        }
+        return docRef().set({ store: payload, updatedAt: rev }).then(function () {
+          touched = {};
+          if (ok && chunks.length) archived = true;
+          syncedLabel();
+        });
       });
     }).catch(function (e) { fail('push' + (reason ? ' (' + reason + ')' : ''), e); });
+  }
+
+  var archived = false;
+
+  /* Write the quarters that changed, and only those: a quarter that has
+     already gone up is byte-for-byte fixed, so re-sending it every push
+     would be pure cost. Resolves true when the archive is usable and false
+     when it is not — the caller falls back to one document on false. */
+  function writeArchive(chunks) {
+    if (!chunks.length) return Promise.resolve(true);
+    if (!archCol()) { archiveBlocked = true; return Promise.resolve(false); }
+    var sent = archSent(), pending = chunks.filter(function (c) { return sent[c.name] !== c.body.length; });
+    if (!pending.length) return Promise.resolve(true);
+    var writes;
+    try {
+      writes = pending.map(function (c) {
+        return archRef(c.name).set({ body: c.body, updatedAt: Date.now() }).then(function () {
+          sent[c.name] = c.body.length;
+        });
+      });
+    } catch (e) { archiveBlocked = true; return Promise.resolve(false); }
+    return Promise.all(writes).then(function () {
+      setArchSent(sent);
+      archiveBlocked = false;
+      console.log('[sync] archived ' + pending.length + ' quarter' + (pending.length === 1 ? '' : 's'));
+      return true;
+    }).catch(function (e) {
+      archiveBlocked = true;
+      lastErr = 'archive write refused — ' + (e && e.message ? e.message : e);
+      console.warn('[sync] ' + lastErr + ' — keeping everything in one document for now');
+      return false;
+    });
+  }
+
+  /* Pull every archived quarter down once, and fold it into what this device
+     holds. Additive: a day already here always wins, so this can run on any
+     device at any time and never overwrite anything newer. */
+  function hydrateArchive() {
+    if (!window.Archive) return Promise.resolve();
+    var col = archCol();
+    if (!col || typeof col.get !== 'function') return Promise.resolve();
+    var q;
+    try { q = col.get(); } catch (e) { return Promise.resolve(); }
+    if (!q || typeof q.then !== 'function') return Promise.resolve();
+    return q.then(function (qs) {
+      if (!qs || typeof qs.forEach !== 'function') return;
+      var A = window.Archive, applied = 0;
+      applyingRemote = true;
+      qs.forEach(function (d) {
+        var meta = A.parseDocName(d.id); if (!meta) return;
+        var body = (d.data() || {}).body; if (typeof body !== 'string') return;
+        var before = localStorage.getItem(meta.key);
+        var after = A.join(meta.key, before, body);
+        if (after !== before) { try { localStorage.setItem(meta.key, after); applied++; } catch (e) {} }
+      });
+      applyingRemote = false;
+      if (applied) console.log('[sync] folded ' + applied + ' archived quarter' + (applied === 1 ? '' : 's') + ' back in');
+      try { localStorage.setItem(ARCH_PULLED, String(Date.now())); } catch (e) {}
+    }).catch(function (e) {
+      applyingRemote = false;
+      console.warn('[sync] could not read the archive —', e && e.message ? e.message : e);
+    });
   }
 
   /* ─────────── A copy a day ───────────
@@ -458,15 +594,34 @@
     }
   }
 
+  /* The copy kept here is the hot half — the last 120 days plus everything
+     live. That is what a bad arrival can damage and what you would want back
+     in a hurry; the older quarters are immutable and already in the cloud's
+     archive. Keeping the whole store instead is what used to push this over
+     DAILY_MAX at around month 13, after which no backup was taken at all and
+     the only sign was a console warning nobody had open. */
+  function hotHalf(store) {
+    var A = window.Archive;
+    if (!A) return store;
+    var out = {};
+    Object.keys(store).forEach(function (k) {
+      var r = A.split(k, store[k]);
+      out[k] = r ? r.hot : store[k];
+    });
+    return out;
+  }
+
   function dailyBackup() {
     var day = new Date().toISOString().slice(0, 10);
     var all = readDaily();
     if (all.length && all[all.length - 1].day === day) return;   // today is already kept
-    var store = localSnapshot();
+    var store = hotHalf(localSnapshot());
     var bytes = sizeOf(store);
     if (!Object.keys(store).length) return;
     if (bytes > DAILY_MAX) {
-      console.warn('[sync] daily backup skipped — ' + Math.round(bytes / 1024) + ' KB is too much to keep locally');
+      lastErr = 'daily backup skipped — ' + Math.round(bytes / 1024) + ' KB is too much to keep on the device';
+      console.warn('[sync] ' + lastErr);
+      UI.set('offline', 'No daily backup — too big');
       return;
     }
     all.push({ day: day, at: Date.now(), store: store });

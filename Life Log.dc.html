@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
 <script src="./hub-data.js"></script>
+<script src="./systems.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; background: #F7F5F1; }
@@ -948,55 +949,27 @@ class Component extends DCLogic {
        correlation, and say in words what it reads like — with a floor on how
        few days we will speak from, because eight noisy days will happily
        produce a beautiful-looking number that means nothing. */
-    const pearson = (xs, ys) => {
-      const n = xs.length;
-      if (n < 2) return null;
-      const mx = xs.reduce((a, b) => a + b, 0) / n;
-      const my = ys.reduce((a, b) => a + b, 0) / n;
-      let num = 0, dx = 0, dy2 = 0;
-      for (let i = 0; i < n; i++) {
-        const a = xs[i] - mx, b = ys[i] - my;
-        num += a * b; dx += a * a; dy2 += b * b;
-      }
-      const den = Math.sqrt(dx * dy2);
-      return den ? num / den : null;
-    };
-
-    const CORR_MIN = 8;                       // days before we say anything
+    /* The maths moved to systems.js so the Weekly Review can put the
+       strongest reading in front of you on Sunday without a second, slightly
+       different definition of what the number means. This panel still owns
+       how it is *said*; systems.js owns what it *is*. */
+    const TR = (window.Systems && window.Systems.trends) ? window.Systems.trends() : null;
+    const CORR_MIN = TR ? TR.min : 8;
     const cDays = Object.keys(d.days).sort();
     const social = k2 => this.num(((d.days[k2] || {}).screen || {}).social);
-    const dietScore = k2 => ({ clean: 3, ok: 2, loose: 1, bad: 0 })[((d.days[k2] || {}).diet || {}).q];
-    const trainedOn = k2 => {
-      const dd = d.days[k2] || {};
-      return (dd.gym && dd.gym.on) || (dd.swim && dd.swim.on) || (dd.climb && dd.climb.on) ? 1 : 0;
-    };
-    const METRICS = [
-      ['Sleep',    k2 => this.num(((d.days[k2] || {}).sleep || {}).asleep), 'hours asleep'],
-      ['Study',    k2 => { const h = this.studyHoursDay(k2); return h > 0 ? h : null; }, 'hours studied'],
-      ['Training', k2 => { const dd = d.days[k2] || {}; const any = dd.gym || dd.swim || dd.climb || dd.note || dd.screen;
-                           return any ? trainedOn(k2) : null; }, 'trained or not'],
-      ['Diet',     k2 => { const v = dietScore(k2); return v === undefined ? null : v; }, 'how the eating went'],
-    ];
-
     const pairedDays = cDays.filter(k2 => social(k2) != null);
     const corrRows = [];
-    METRICS.forEach(([label, get, unit]) => {
-      const xs = [], ys = [];
-      pairedDays.forEach(k2 => {
-        const y = get(k2);
-        if (y == null) return;
-        xs.push(social(k2)); ys.push(y);
-      });
-      if (xs.length < CORR_MIN) {
-        corrRows.push({ label, reading: xs.length + ' of ' + CORR_MIN + ' days — keep logging',
+    ((TR && TR.rows) || []).forEach(({ label, unit, n, r, ready }) => {
+      if (!ready) {
+        corrRows.push({ label, reading: n + ' of ' + CORR_MIN + ' days — keep logging',
                         rLabel: '—', color: '#C4C2BA', barLeft: '50%', barWidth: '0%' });
         return;
       }
-      const r = pearson(xs, ys);
       if (r == null) {
         corrRows.push({ label, reading: 'no variation to read', rLabel: '—', color: '#C4C2BA', barLeft: '50%', barWidth: '0%' });
         return;
       }
+      const xs = { length: n };
       const mag = Math.abs(r);
       const strength = mag < 0.2 ? 'nothing worth reading'
                      : mag < 0.4 ? 'a faint pull'
@@ -1016,8 +989,24 @@ class Component extends DCLogic {
       });
     });
 
-    // The same thing said without a coefficient: your heaviest days against
-    // your lightest, split at the middle.
+    /* The same thing said without a coefficient: your heaviest days against
+       your lightest, split at the middle. This is a different statistic from
+       the correlation above — it needs each day's value, not a summary — so
+       the getters live here. The rule for what counts as a study hour is the
+       Life Log's own, and systems.js mirrors it deliberately. */
+    const dietScore = k2 => ({ clean: 3, ok: 2, loose: 1, bad: 0 })[((d.days[k2] || {}).diet || {}).q];
+    const trainedOn = k2 => {
+      const dd = d.days[k2] || {};
+      return (dd.gym && dd.gym.on) || (dd.swim && dd.swim.on) || (dd.climb && dd.climb.on) ? 1 : 0;
+    };
+    const METRICS = [
+      ['Sleep',    k2 => this.num(((d.days[k2] || {}).sleep || {}).asleep)],
+      ['Study',    k2 => { const h = this.studyHoursDay(k2); return h > 0 ? h : null; }],
+      ['Training', k2 => { const dd = d.days[k2] || {}; const any = dd.gym || dd.swim || dd.climb || dd.note || dd.screen;
+                           return any ? trainedOn(k2) : null; }],
+      ['Diet',     k2 => { const v = dietScore(k2); return v === undefined ? null : v; }],
+    ];
+
     let splitText = 'Log a fortnight of screen time and this line will compare your heaviest days with your lightest.';
     if (pairedDays.length >= CORR_MIN) {
       const sorted = pairedDays.slice().sort((a, b) => social(a) - social(b));

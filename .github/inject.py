@@ -6,7 +6,7 @@ Copies the repository into ./_site and, on the way, does three things so the
 raw exported files never have to be hand-edited:
 
   1. Turns the gate into the front door:  index.dc.html -> index.html
-  2. Injects config.js + sync.js into every HUB page (everything except the
+  2. Injects config.js + archive.js + sync.js into every HUB page (everything except the
      gate), giving them cross-device sync + the owner-only guard.
   3. Stamps the current version (read from the VERSION file, or the
      APP_VERSION env var if set by the workflow) into every page by replacing
@@ -35,8 +35,10 @@ GATE_OUTPUT = "index.html"
 # The scripts every hub page needs, in order (sync + nav depend on APP_CONFIG).
 SHIM = (
     '<script src="./config.js"></script>\n'
+    '<script src="./archive.js"></script>\n'
     '<script src="./sync.js"></script>\n'
     '<script src="./nav.js"></script>\n'
+    '<script src="./capture.js"></script>\n'
 )
 
 # Written to the site root at build time; the freshest version number, fetched
@@ -159,8 +161,10 @@ BUNDLER_HEAD = (
     '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
     '<link rel="stylesheet" href="./mobile.css?v=__APP_VERSION__">\n'
     '<script src="./config.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./archive.js?v=__APP_VERSION__"></script>\n'
     '<script src="./sync.js?v=__APP_VERSION__"></script>\n'
     '<script src="./nav.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./capture.js?v=__APP_VERSION__"></script>\n'
 )
 
 

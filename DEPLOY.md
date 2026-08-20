@@ -18,11 +18,22 @@ The sync layer lives in the repo, separate from the export, and re-applies itsel
      match /databases/{database}/documents {
        match /hubData/{userId} {
          allow read, write: if request.auth != null && request.auth.uid == userId;
+         match /archive/{doc} {
+           allow read, write: if request.auth != null && request.auth.uid == userId;
+         }
        }
      }
    }
    ```
    *(Your data, only you — enforced server-side. This is why the public config key is safe.)*
+
+   **The `archive` line matters.** A Firestore document tops out at 1 MiB, and
+   the store grows about 444 KB a year — without somewhere to put the older
+   quarters, syncing stops at around month 20. That subcollection is where they
+   go. If the rule is missing, nothing breaks and nothing is lost: the hub
+   detects the refusal, falls back to pushing everything in the one document
+   exactly as before, and the sync panel says **archive blocked — publish the
+   rule**. See **The ceiling, removed** below.
 5. **Project settings ⚙ → General → Your apps → Web (`</>`)** → register an app → copy the `firebaseConfig` values.
 
 ### 2. Fill in `config.js`
@@ -595,11 +606,124 @@ snapshot.
 | Pages still reachable | 19 | **20** |
 | Today, above the fold (phone) | 3 stats | **9 of 10 systems** |
 
+## The ceiling, removed
+
+Everything the hub keeps went into one Firestore document, and a Firestore
+document tops out at 1 MiB. Measured against the shapes the pages actually
+write — a full Life Log day with three study sessions is 751 bytes, a journal
+entry about 220 — the store grows about **444 KB a year** on 218 KB of bounded
+data. It passes the 700 KB local-backup limit at roughly **month 13** and the
+950 KB sync guard at roughly **month 20**, at which point syncing stops. On a
+system meant to run until thirty.
+
+The backup ceiling was the worse of the two, because it failed quietly: the
+skip was a `console.warn` and nothing else, so backups would have stopped
+seven months before sync did with no sign anywhere you would look.
+
+### Hot and cold
+
+`archive.js` splits the growing stores in two:
+
+- **hot** — the last 120 days, plus everything genuinely live: the timer's
+  running session, the syllabus, the budget, the anatomy block state, the
+  grind board's ticked sessions. This goes in the main document as before.
+- **cold** — everything older, split by quarter, each quarter in its own
+  document under `hubData/{uid}/archive`. The 1 MiB limit now applies per
+  quarter rather than per lifetime, so a decade is forty small documents.
+
+Measured: **three years of daily logging is 216 KB whole and 24 KB hot**, in
+twelve archived quarters. End to end against a Firestore stub, three years
+leaves a 29 KB main document.
+
+**localStorage still holds all of it.** This is only about which document
+carries what, which is why no page had to change — every page reads the same
+key and sees the same complete store.
+
+**The one place that has to care is an incoming sync.** The cloud's copy of a
+split key is only the hot half, so writing it to localStorage verbatim would
+delete every older day this device holds — the whole archive, silently, on one
+sync. `Archive.rejoin()` is what prevents that: keep everything of ours older
+than the cutoff, take all of the cloud's. There are tests for exactly this.
+
+**If the archive rule is not published**, the write is refused, the hub notices,
+and it falls back to pushing everything in the single document exactly as
+before — nothing is lost by trying, and the sync panel says so.
+
+**The daily backup keeps the hot half.** That is what a bad arrival can damage
+and what you would want back in a hurry; the older quarters are immutable and
+already in the cloud. Keeping the whole store is what used to push it past
+`DAILY_MAX`, and a skipped backup now says so in the panel rather than only in
+the console.
+
+## Four more things the hub now does
+
+### The Sunday ritual reads itself back
+
+The five questions were answered every week into `ct_weekly_v1.answers`, and
+**nothing read them** — not another page, and not the Weekly Review itself.
+Roughly 250 sets of answers over five years, into a store with no reader.
+
+Now last week's answer sits above this week's empty box, there is a history
+view of every week behind you, and when an answer repeats a theme it says so:
+three shared significant words and the review notes *you have written this
+before*, with the words. Deliberately simple — a stemmer would find more and
+be trusted less — and it never says what the repetition means.
+
+### One thing a day, coming back
+
+`resurface.js`. The Study Engine already did spaced repetition, pointed at one
+narrow input. Every takeaway you were required to write before a paper counted
+as read, every weekly answer, every conversation logged against a person, every
+decision gate and every journal entry sat in a store that only opened if you
+went looking.
+
+One item a day now appears on Today, drawn from all five, weighted by how old
+it is and how long since you last saw it — so something written a year ago and
+never shown outranks something from last week. Two responses: **again sooner**
+undoes one showing's worth of damping, **retire this** means never again.
+
+The pick is fixed for the calendar day. Opening Today five times shows the same
+item five times, because a strip that reshuffles on every reload is a feed, and
+the responses are what make this a loop instead.
+
+### One input, five destinations
+
+`capture.js`, injected on every page beside the drawer, opened with ⌘K or the
+✎ button. It routes on a prefix:
+
+| you type | it goes to |
+|---|---|
+| `@Anna Kowalska: said yes` | that person's dossier — matched against your existing contacts |
+| `#Ex vivo lung perfusion, Cypel` | the reading list, as a paper |
+| `14 Oct ACC Scientific Session` | the conference desk |
+| `+Send the abstract` | this week's priorities |
+| anything else | the journal |
+
+The date parser reads the five ways you would actually write a date and
+declines everything else, because a parser that guesses is worse than one that
+hands the line to the journal — a wrong guess files something where you will
+never look for it. A bare `@name` with no note falls through rather than
+opening an empty file.
+
+### The number, in the room
+
+The correlation maths moved out of the Life Log's Trends panel into
+`systems.js`, so there is one definition of what it means. The Weekly Review
+now opens with the strongest reading from your own record, **above** the five
+questions — before you answer, not after — with the same eight-day floor, and
+says how far off it is when there is not enough yet.
+
+It asks. It does not decide, propose a step or change the plan: the moment it
+starts writing on your behalf is the moment you stop trusting the number.
+
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
 - `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
 - `Grind.dc.html` + `grind-data.js` — the nine-week board and its programme.
 - `Research Plan.dc.html` — the five-track portfolio, with a live ninety days and live gates.
+- `archive.js` — the hot/cold split: which quarters go in the main document and which go to `hubData/{uid}/archive`, and the rejoin that stops an incoming sync deleting your archive. See **The ceiling, removed** above.
+- `capture.js` — one input on every page that routes a line to a person, a paper, a conference, this week or the journal. Injected beside the drawer.
+- `resurface.js` — one thing a day out of everything you have written, weighted by age and by how long since you last saw it.
 - `systems.js` — every system in one line each: the number, the sentence and whether something is owed today. Read by Today, Mission Control and Reference so the three cannot disagree. See **One glance** above.
 - `Reference.dc.html` — the door to the five documents: what each is and when it is worth opening. The documents themselves are unchanged.
 - `.github/tests/crash.js` — loads every page at both widths and fails on a `renderVals()` throw or a page with almost no text in it. Not deployed (`.github/` is skipped by the build).

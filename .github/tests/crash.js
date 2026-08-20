@@ -28,7 +28,11 @@ const url = n => ORIGIN + '/' + encodeURIComponent(n + (n === 'CT Master Plan' ?
     const p = await ctx.newPage();
     let bad = [];
     p.on('pageerror', e => bad.push('pageerror: ' + e.message));
-    p.on('console', m => { if (m.type()==='error' && /renderVals|Cannot read propert|is not a function|is not defined/.test(m.text())
+    /* "logic class eval FAILED" is the loudest of these and was the one this
+       guard missed: the DC runtime catches a syntax error in the logic class,
+       falls back to rendering the template with props only, and the page
+       comes up looking like a page with every binding empty. */
+    p.on('console', m => { if (m.type()==='error' && /renderVals|logic class eval FAILED|Cannot read propert|is not a function|is not defined|has already been declared/.test(m.text())
                               && !/net::|Failed to load resource|gstatic|firebase/.test(m.text())) bad.push('console: ' + m.text()); });
     await p.route('https://unpkg.com/**', r => { const k=Object.keys(cdn).find(k=>r.request().url().endsWith(k));
       return k ? r.fulfill({status:200,contentType:'application/javascript',body:fs.readFileSync(cdn[k])}) : r.abort(); });

@@ -262,6 +262,103 @@
     });
   }
 
+  /* ── what screen time moves with ────────────────────────────────────────
+     This lived inside the Life Log's Trends panel, where the only page that
+     could act on it was the page you open when you are curious — which is
+     not the moment the knowledge is worth anything. It lives here now so the
+     Weekly Review can put the strongest reading in front of you on Sunday,
+     before you answer anything, and so there is exactly one definition of
+     what the number means.
+
+     CORR_MIN is the floor and it is the point: eight noisy days will happily
+     produce a beautiful-looking coefficient that means nothing, so under
+     eight we say how far off we are instead of drawing a shape. */
+  var CORR_MIN = 8;
+
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
+
+  function pearson(xs, ys) {
+    var n = xs.length;
+    if (n < 2) return null;
+    var mx = 0, my = 0, i;
+    for (i = 0; i < n; i++) { mx += xs[i]; my += ys[i]; }
+    mx /= n; my /= n;
+    var acc = 0, dx = 0, dy = 0;
+    for (i = 0; i < n; i++) {
+      var a = xs[i] - mx, b = ys[i] - my;
+      acc += a * b; dx += a * a; dy += b * b;
+    }
+    var den = Math.sqrt(dx * dy);
+    return den ? acc / den : null;
+  }
+
+  // The Life Log's rule, unchanged: a typed hours override for a subject
+  // wins, otherwise that subject's sessions for the day are summed.
+  var SUBJECTS = ['anatomy', 'math', 'python', 'research', 'other'];
+  function studyHoursDay(d, day) {
+    var st = ((d.days[day] || {}).study) || {}, h = 0;
+    SUBJECTS.forEach(function (sub) {
+      var ov = st[sub] && st[sub].h;
+      if (ov !== undefined && ov !== null && ov !== '') { h += num(ov) || 0; return; }
+      (d.sessions || []).forEach(function (x) {
+        if (x && x.type === 'study' && x.subject === sub &&
+            new Date(x.start).toISOString().slice(0, 10) === day) h += (x.end - x.start) / 3600000;
+      });
+    });
+    return h;
+  }
+
+  function trends() {
+    var d = readJSON('ct_lifelog_v1', {}) || {};
+    if (!d.days || typeof d.days !== 'object') d.days = {};
+    if (!Array.isArray(d.sessions)) d.sessions = [];
+
+    var social = function (k) { return num((((d.days[k] || {}).screen) || {}).social); };
+    var dietScore = function (k) { return ({ clean: 3, ok: 2, loose: 1, bad: 0 })[(((d.days[k] || {}).diet) || {}).q]; };
+    var trainedOn = function (k) {
+      var dd = d.days[k] || {};
+      return ((dd.gym && dd.gym.on) || (dd.swim && dd.swim.on) || (dd.climb && dd.climb.on)) ? 1 : 0;
+    };
+
+    var METRICS = [
+      ['sleep',    'Sleep',    'hours asleep',        function (k) { return num((((d.days[k] || {}).sleep) || {}).asleep); }],
+      ['study',    'Study',    'hours studied',       function (k) { var h = studyHoursDay(d, k); return h > 0 ? h : null; }],
+      ['training', 'Training', 'trained or not',      function (k) {
+        var dd = d.days[k] || {};
+        return (dd.gym || dd.swim || dd.climb || dd.note || dd.screen) ? trainedOn(k) : null; }],
+      ['diet',     'Diet',     'how the eating went', function (k) { var v = dietScore(k); return v === undefined ? null : v; }],
+    ];
+
+    var days = Object.keys(d.days).sort();
+    var paired = days.filter(function (k) { return social(k) != null; });
+
+    var rows = METRICS.map(function (m) {
+      var xs = [], ys = [];
+      paired.forEach(function (k) {
+        var y = m[3](k);
+        if (y == null) return;
+        xs.push(social(k)); ys.push(y);
+      });
+      var r = xs.length >= CORR_MIN ? pearson(xs, ys) : null;
+      return { key: m[0], label: m[1], unit: m[2], n: xs.length, r: r,
+               ready: xs.length >= CORR_MIN, mag: r == null ? 0 : Math.abs(r) };
+    });
+
+    // The strongest thing worth saying, or nothing at all.
+    var best = rows.filter(function (x) { return x.ready && x.r != null && x.mag >= 0.2; })
+                   .sort(function (a, b) { return b.mag - a.mag; })[0] || null;
+
+    var sentence = '';
+    if (best) {
+      sentence = 'Your heavier social-screen days run with ' + (best.r < 0 ? 'less ' : 'more ') +
+                 best.unit + ' (r ' + (best.r > 0 ? '+' : '') + best.r.toFixed(2) + ', over ' +
+                 best.n + ' days). Does anything change?';
+    }
+
+    return { min: CORR_MIN, days: paired.length, rows: rows, best: best, sentence: sentence,
+             ready: paired.length >= CORR_MIN };
+  }
+
   var BUILDERS = [plan, anatomy, grind, study, reading, research, record, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
@@ -278,5 +375,6 @@
   // The ones with something owed today, which is what a glance is actually for.
   function owed() { return all().filter(function (s) { return s.tone === 'go'; }); }
 
-  w.Systems = { all: all, owed: owed, planCounts: planCounts, isoDay: isoDay, monday: monday };
+  w.Systems = { all: all, owed: owed, planCounts: planCounts, isoDay: isoDay, monday: monday,
+                trends: trends, pearson: pearson, CORR_MIN: CORR_MIN };
 })(window);
