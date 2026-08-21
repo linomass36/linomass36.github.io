@@ -140,31 +140,41 @@ button, input { font: inherit; color: inherit; }
 .ankiform button:hover { filter: brightness(1.15); }
 .ankihint { margin-top: 11px; font-size: 12.5px; color: var(--muted); line-height: 1.5; max-width: 62ch; }
 /* ── the board ─────────────────────────────────────────────────
-   The strip this replaces drew ten unlabelled rectangles: no legend,
-   no stated order, no way to tell which bar was which system. A mark
-   has to say what it is. Each chip carries its system's short name
-   and current figure, holds a fixed position so the layout becomes
-   memory, and is a link — so the row is both the whole board at a
-   glance and the fastest way into any one of them. */
-.board { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
-.bchip {
-  display: flex; align-items: baseline; gap: 6px;
-  padding: 6px 10px; min-height: 38px; border-radius: 9px;
-  border: 1px solid var(--rule); border-bottom: 3px solid var(--rule);
-  background: var(--card); text-decoration: none; line-height: 1.15;
+   The first version of this was a row of coloured bars, and it looked
+   right — it just never said which bar was which system, so there was
+   nothing to read. The second version fixed that by turning them into
+   chips, and lost the look entirely.
+
+   So: the bars are back exactly as they were — one rounded block per
+   system, height and colour carrying state — with a caption underneath
+   naming it. A bar chart with an axis, which is all it ever needed.
+   Position is fixed, so after a week the layout itself is legible and
+   the captions are only there for the days it is not. */
+.board { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+.bar {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  flex: 1 1 54px; min-width: 54px; text-decoration: none;
+  padding-bottom: 2px; border-radius: 8px;
 }
-.bchip:hover { border-color: var(--rust); }
-.bchip .k { font-family: var(--mono); font-size: 9px; font-weight: 600;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.bchip .v { font-family: var(--serif); font-size: 15px; font-weight: 500;
-  font-variant-numeric: tabular-nums; color: var(--ink); }
-.bchip.go   { border-bottom-color: var(--owed); background: var(--owed-bg); }
-.bchip.go .k { color: var(--owed); }
-.bchip.ok   { border-bottom-color: var(--ok); }
-.bchip.ok .k { color: var(--ok); }
-.bchip.held { border-bottom-color: var(--held); background: var(--held-bg); }
-.bchip.held .k { color: var(--held); }
-@media (max-width: 560px) { .bchip { flex: 1 1 auto; justify-content: space-between; } }
+.bar .slot { display: flex; align-items: flex-end; width: 100%; height: 34px; }
+.bar i {
+  display: block; width: 100%; height: 13px; border-radius: 7px;
+  background: var(--rule); transition: height .2s ease;
+}
+.bar b {
+  font-family: var(--mono); font-size: 8.5px; font-weight: 600; line-height: 1;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--faint);
+  white-space: nowrap;
+}
+.bar.go i    { height: 34px; background: var(--owed); }
+.bar.go b    { color: var(--owed); }
+.bar.ok i    { height: 21px; background: var(--ok); }
+.bar.ok b    { color: var(--ok); }
+.bar.held i  { height: 26px; background: var(--held); }
+.bar.held b  { color: var(--held); }
+.bar:hover i { filter: brightness(1.08); }
+.bar:hover b { color: var(--rust); }
+@media (max-width: 560px) { .bar { flex: 1 1 40px; min-width: 40px; } .bar b { font-size: 7.5px; letter-spacing: .05em; } }
 main { max-width: 940px; margin: 0 auto; padding: 0 20px 88px; }
 section { margin-top: 32px; }
 
@@ -871,14 +881,15 @@ footer {
     b.innerHTML = '';
     list.forEach(function (x) {
       var a = document.createElement('a');
-      a.className = ('bchip ' + (x.tone || '')).trim();
+      a.className = ('bar ' + (x.tone || '')).trim();
       a.href = x.href;
-      a.title = x.name + ' \u2014 ' + x.line;
-      var k = document.createElement('span');
-      k.className = 'k'; k.textContent = CODE[x.id] || x.name.slice(0, 5).toUpperCase();
-      var v = document.createElement('span');
-      v.className = 'v'; v.textContent = x.big;
-      a.appendChild(k); a.appendChild(v);
+      a.title = x.name + ' \u2014 ' + x.big + ' ' + x.unit + ' \u00b7 ' + x.line;
+      var slot = document.createElement('span');
+      slot.className = 'slot';
+      slot.appendChild(document.createElement('i'));
+      var lab = document.createElement('b');
+      lab.textContent = CODE[x.id] || x.name.slice(0, 5).toUpperCase();
+      a.appendChild(slot); a.appendChild(lab);
       b.appendChild(a);
     });
   }
