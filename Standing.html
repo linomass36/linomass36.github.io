@@ -125,6 +125,56 @@ button, input { font: inherit; color: inherit; }
 .chip:hover { border-color: var(--rust); color: var(--rust); }
 .chip kbd { font-family: var(--mono); font-size: 9.5px; color: var(--faint); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 4px; }
 
+.ankibox { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); padding: 15px 17px; }
+.ankirow { font-size: 14.5px; color: var(--mid); }
+.ankirow b { font-family: var(--serif); font-size: 24px; font-weight: 500; color: var(--ink); }
+.ankiform { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-top: 13px; }
+.ankiform label { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono);
+  font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.ankiform input { width: 78px; min-height: 40px; padding: 6px 9px; background: var(--raise);
+  border: 1px solid var(--rule); border-radius: 9px; font-family: var(--serif); font-size: 18px;
+  font-variant-numeric: tabular-nums; color: var(--ink); }
+.ankiform input:focus { outline: none; border-color: var(--rust); }
+.ankiform button { min-height: 40px; padding: 9px 18px; border-radius: 20px; border: 0;
+  background: var(--ink); color: var(--ground); cursor: pointer; font-size: 14px; }
+.ankiform button:hover { filter: brightness(1.15); }
+.ankihint { margin-top: 11px; font-size: 12.5px; color: var(--muted); line-height: 1.5; max-width: 62ch; }
+/* ── the board ─────────────────────────────────────────────────
+   The first version of this was a row of coloured bars, and it looked
+   right — it just never said which bar was which system, so there was
+   nothing to read. The second version fixed that by turning them into
+   chips, and lost the look entirely.
+
+   So: the bars are back exactly as they were — one rounded block per
+   system, height and colour carrying state — with a caption underneath
+   naming it. A bar chart with an axis, which is all it ever needed.
+   Position is fixed, so after a week the layout itself is legible and
+   the captions are only there for the days it is not. */
+.board { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+.bar {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  flex: 1 1 54px; min-width: 54px; text-decoration: none;
+  padding-bottom: 2px; border-radius: 8px;
+}
+.bar .slot { display: flex; align-items: flex-end; width: 100%; height: 34px; }
+.bar i {
+  display: block; width: 100%; height: 13px; border-radius: 7px;
+  background: var(--rule); transition: height .2s ease;
+}
+.bar b {
+  font-family: var(--mono); font-size: 8.5px; font-weight: 600; line-height: 1;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--faint);
+  white-space: nowrap;
+}
+.bar.go i    { height: 34px; background: var(--owed); }
+.bar.go b    { color: var(--owed); }
+.bar.ok i    { height: 21px; background: var(--ok); }
+.bar.ok b    { color: var(--ok); }
+.bar.held i  { height: 26px; background: var(--held); }
+.bar.held b  { color: var(--held); }
+.bar:hover i { filter: brightness(1.08); }
+.bar:hover b { color: var(--rust); }
+@media (max-width: 560px) { .bar { flex: 1 1 40px; min-width: 40px; } .bar b { font-size: 7.5px; letter-spacing: .05em; } }
 main { max-width: 940px; margin: 0 auto; padding: 0 20px 88px; }
 section { margin-top: 32px; }
 
@@ -168,14 +218,6 @@ section { margin-top: 32px; }
 
 /* ── 1 · the verdict ── */
 .standing { margin-top: 26px; }
-.strip { display: flex; gap: 4px; margin-bottom: 18px; }
-.strip i {
-  display: block; width: 26px; border-radius: 2px; background: var(--rule);
-  height: 6px; transition: height .25s ease, background .25s ease;
-}
-.strip i.go   { height: 20px; background: var(--owed); }
-.strip i.ok   { height: 10px; background: var(--ok); }
-.strip i.held { height: 14px; background: var(--held); opacity: .5; }
 
 h1 {
   font-family: var(--serif); font-weight: 500;
@@ -334,7 +376,6 @@ footer {
   .kicker .note { display: none; }
   .finder { margin-left: 0; width: 100%; }
   .finder input { width: 100%; }
-  .strip i { width: auto; flex: 1; }
   .spark { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -361,9 +402,9 @@ footer {
   <div class="cond-pick" id="cond-pick"></div>
 
   <section class="standing">
-    <div class="strip" id="strip" aria-hidden="true"></div>
     <h1 id="verdict">&mdash;</h1>
     <p id="verdict-sub">&mdash;</p>
+    <nav class="board" id="board" aria-label="Every system"></nav>
     <div class="drift" id="drift" hidden>
       <span class="lab">Drift</span>
       <span class="txt" id="drift-txt"></span>
@@ -413,6 +454,24 @@ footer {
       <span id="acts-fold-label"></span><span class="chev">&#9660;</span>
     </button>
     <ul class="acts folded-list" id="acts2" style="margin-top:8px"></ul>
+  </section>
+
+  <!-- Anki · the two numbers, never one -->
+  <section id="anki">
+    <div class="kicker">Anki <span class="note" id="anki-note"></span></div>
+    <div class="ankibox">
+      <div class="ankirow" id="anki-read"></div>
+      <div class="ankiform">
+        <label>due<input id="a-due" type="number" min="0" inputmode="numeric"></label>
+        <label>done<input id="a-done" type="number" min="0" inputmode="numeric"></label>
+        <label>behind<input id="a-back" type="number" min="0" inputmode="numeric"></label>
+        <label>streak<input id="a-streak" type="number" min="0" inputmode="numeric"></label>
+        <button id="a-save" type="button">save</button>
+      </div>
+      <div class="ankihint">Typed by hand for now, but the Mac sync writes these same four
+      fields — so nothing entered here is throwaway. A reading older than a day labels
+      itself rather than passing as this morning&rsquo;s.</div>
+    </div>
   </section>
 
   <section>
@@ -589,6 +648,7 @@ footer {
   function paint() {
     paintConditions();
     var all  = systems();
+    paintBoard(all);
     var owed = all.filter(function (s) { return s.tone === 'go'; });
     var held = all.filter(function (s) { return s.tone === 'held'; });
     var rest = all.filter(function (s) { return s.tone !== 'go' && s.tone !== 'held'; });
@@ -597,12 +657,6 @@ footer {
     var floorDay = cs.length > 0 || drift >= 3;
     var met = floorMet();
 
-    var strip = $('#strip'); strip.innerHTML = '';
-    all.forEach(function (s) {
-      var i = el('i', s.tone === 'go' ? 'go' : (s.tone === 'held' ? 'held' : (s.tone === 'ok' ? 'ok' : '')));
-      i.title = s.name + ' — ' + s.line;
-      strip.appendChild(i);
-    });
 
     var h1 = $('#verdict'), sub = $('#verdict-sub');
     h1.className = '';
@@ -809,6 +863,118 @@ footer {
      still be pulling the cloud copy into localStorage when this runs.
      A first paint now, and one more once the page has settled, so the
      glance is never a frame behind the store. */
+  // ── Anki ────────────────────────────────────────────────────────────
+  function ankiRead() {
+    try { var d = JSON.parse(localStorage.getItem('ct_anki_v1')); return (d && typeof d === 'object') ? d : null; }
+    catch (e) { return null; }
+  }
+  /* Short codes are declared rather than sliced off the name, so two
+     systems can never collide into the same label. */
+  var CODE = {
+    plan: 'PLAN', anatomy: 'ANAT', grind: 'GRIND', study: 'ENGINE', anki: 'ANKI',
+    reading: 'READ', research: 'RSRCH', record: 'LOG', journal: 'JRNL',
+    weekly: 'REVIEW', vault: 'VAULT'
+  };
+  function paintBoard(list) {
+    var b = $('#board');
+    if (!b) return;
+    b.innerHTML = '';
+    list.forEach(function (x) {
+      var a = document.createElement('a');
+      a.className = ('bar ' + (x.tone || '')).trim();
+      a.href = x.href;
+      a.title = x.name + ' \u2014 ' + x.big + ' ' + x.unit + ' \u00b7 ' + x.line;
+      var slot = document.createElement('span');
+      slot.className = 'slot';
+      slot.appendChild(document.createElement('i'));
+      var lab = document.createElement('b');
+      lab.textContent = CODE[x.id] || x.name.slice(0, 5).toUpperCase();
+      a.appendChild(slot); a.appendChild(lab);
+      b.appendChild(a);
+    });
+  }
+
+  function paintAnki() {
+    var d = ankiRead();
+    var row = $('#anki-read'), note = $('#anki-note');
+    if (!d) {
+      row.innerHTML = '<b>&mdash;</b> nothing recorded yet.';
+      note.textContent = 'not linked';
+      return;
+    }
+    [['due', d.due], ['done', d.doneToday], ['back', d.backlog], ['streak', d.streak]]
+      .forEach(function (pair) {
+        var f = $('#a-' + pair[0]);
+        if (f && document.activeElement !== f) f.value = (pair[1] == null ? '' : pair[1]);
+      });
+    /* What is waiting is the live queue, not the queue minus today's reps —
+       a rep is not a card, and a card answered Again is still due. Same
+       reading the tile uses, so the two cannot disagree. */
+    var waiting = (d.dueTotal != null) ? (+d.dueTotal || 0) : ((+d.due || 0) + (+d.backlog || 0));
+    var reps = +(d.repsToday != null ? d.repsToday : d.doneToday) || 0;
+    row.innerHTML = '<b>' + (+d.streak || 0) + 'd</b> streak &middot; <b>' + waiting +
+      '</b> waiting &middot; ' + (reps ? reps + ' reps done today' : 'nothing done today') +
+      (d.minsRemaining ? ' &middot; ~' + d.minsRemaining + ' min to clear' : '');
+    /* The age of the reading belongs next to the reading, not only inside
+       the system row — this panel is where you would come to fix a sync that
+       had stopped. */
+    var age = null;
+    if (d.at) {
+      var t = Date.parse(d.at);
+      if (!isNaN(t)) age = Math.floor((Date.now() - t) / 86400000);
+    }
+    note.textContent = d.at
+      ? (age === 0 ? 'read today' : age === 1 ? 'last reading yesterday'
+         : 'last reading ' + age + ' days ago — the sync is not running')
+        + (d.source ? ' · ' + d.source : '')
+      : '';
+  }
+  $('#a-save').addEventListener('click', function () {
+    var d = ankiRead() || {};
+    d.due = +$('#a-due').value || 0;
+    d.doneToday = +$('#a-done').value || 0;
+    d.backlog = +$('#a-back').value || 0;
+    d.streak = +$('#a-streak').value || 0;
+    if (!d.secPerCard) d.secPerCard = 20;
+    d.at = new Date().toISOString();
+    d.source = 'manual';
+    try { localStorage.setItem('ct_anki_v1', JSON.stringify(d)); } catch (e) {}
+    paintAnki();
+    paint();
+  });
+  paintAnki();
+
+  /* A reading published by the Mac lands here. Repaint rather than reload:
+     you may be mid-sentence in the capture box. */
+  if (window.Feeds) window.Feeds.start(function () { paintAnki(); paint(); });
+
+  /* A reading handed over in the URL fragment, by `anki_sync.py --open`.
+     A fragment never reaches the server — browsers strip everything after
+     the # before the request — so this carries the numbers across without a
+     credential and without them appearing in any log. It is applied through
+     Feeds so the newer-wins rule holds here too, then wiped from the address
+     bar so a stale reading cannot be replayed out of history. */
+  (function () {
+    var m = /[#&]anki=([A-Za-z0-9_-]+)/.exec(location.hash || '');
+    if (!m) return;
+    try {
+      var b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var payload = JSON.parse(decodeURIComponent(escape(atob(b))));
+      var took = window.Feeds
+        ? window.Feeds.apply({ anki: payload })
+        : (localStorage.setItem('ct_anki_v1', JSON.stringify(payload)), ['anki']);
+      history.replaceState(null, '', location.pathname + location.search);
+      paintAnki(); paint();
+      var n = $('#anki-note');
+      if (n) n.textContent = took.length
+        ? 'updated from the Mac just now'
+        : 'the reading here is already newer';
+    } catch (e) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  })();
+
   paint();
   window.addEventListener('load', paint);
 })();

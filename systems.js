@@ -135,6 +135,71 @@
   }
 
   // ── the reading list ───────────────────────────────────────────────────
+  /* ── Anki ───────────────────────────────────────────────────────────────
+     This was in the prototype's mock data and never had a builder, so the
+     Standing could not show it. It does now.
+
+     The store is shaped for the sync that is coming rather than for the
+     hand-entry that fills it today: whatever writes it — a script on the
+     Mac reading collection.anki2, or you typing — writes the same fields,
+     and `source` says which. A stale reading is labelled rather than
+     presented as this morning's.
+
+     The two numbers are shown together, always. A streak displayed without
+     its debt is the number that produced the debt: the cheapest way to keep
+     it alive is to skim, and skimming defers the rest.  */
+  function anki() {
+    var base = { id: 'anki', name: 'Anki', href: 'Standing.html#anki', sort: 3.5 };
+    var d = readJSON('ct_anki_v1', null);
+    if (!d || typeof d !== 'object') {
+      return Object.assign(base, { big: '—', unit: 'not linked', tone: '',
+        line: 'no reading yet — run the Mac sync, or type one in' });
+    }
+    var due = Math.max(0, parseInt(d.due, 10) || 0);
+    var back = Math.max(0, parseInt(d.backlog, 10) || 0);
+    var streak = Math.max(0, parseInt(d.streak, 10) || 0);
+    var reps = Math.max(0, parseInt(d.repsToday != null ? d.repsToday : d.doneToday, 10) || 0);
+    var cards = parseInt(d.cardsToday, 10);
+    /* Totals take the mean: total time is n x mean, and costing a pile at
+       the median understates it by the whole long tail. */
+    var sec = parseFloat(d.secMean) || parseFloat(d.secPerCard) || 0;
+
+    /* What is LEFT is the queue itself, not the queue minus today's reps.
+       Subtracting was wrong twice over: a rep is not a card, and a card
+       answered Again is still due. The reading already carries the live
+       queue, so it is simply read rather than derived. */
+    var waiting = (d.dueTotal != null) ? Math.max(0, parseInt(d.dueTotal, 10) || 0) : (due + back);
+    var mins = sec ? Math.round(waiting * sec / 60) : null;
+
+    var age = d.at ? Math.max(0, Math.round(
+      (new Date(isoDay() + 'T12:00:00') - new Date(String(d.at).slice(0, 10) + 'T12:00:00')) / 86400000)) : null;
+    /* Staleness is stated, never hidden. A reading two days old is not shown
+       as though it were this morning's — that is the failure mode a sync has,
+       and the one moment the page must not sound confident. */
+    if (age !== null && age > 1) {
+      return Object.assign(base, { big: streak ? streak + 'd' : '—', unit: 'stale',
+        tone: '', line: 'last reading ' + age + ' days ago — the sync is not running' });
+    }
+    /* One day old is still useful, but the reps in it happened yesterday, and
+       calling them today's would be a small lie told every morning. */
+    var when = age === 1 ? ' yesterday' : ' today';
+
+    var didLine = reps
+      ? reps + ' rep' + (reps === 1 ? '' : 's') +
+        (cards ? ' on ' + cards + ' card' + (cards === 1 ? '' : 's') : '') + when
+      : 'nothing done' + when;
+    var line = waiting === 0
+      ? didLine + ' · queue empty'
+      : didLine + ' · ' + waiting + ' waiting' + (mins ? ' (' + mins + ' min)' : '');
+
+    return Object.assign(base, {
+      big: streak ? streak + 'd' : String(waiting),
+      unit: waiting ? waiting + ' waiting' : 'clear',
+      tone: waiting === 0 ? 'ok' : 'go',
+      line: line
+    });
+  }
+
   function reading() {
     var base = { id: 'reading', name: 'Reading list', href: 'Reading List.dc.html', sort: 4 };
     var st = readJSON('ct_reading_v1', {}) || {};
@@ -255,24 +320,37 @@
     if (!snaps.length) return Object.assign(base, { big: '—', unit: 'net worth', tone: '',
       line: 'no snapshot yet — one a month is plenty' });
     var last = snaps[snaps.length - 1] || {};
-    var net = (parseFloat(last.cash) || 0) + (parseFloat(last.inv) || 0) - (parseFloat(last.debt) || 0);
+
+    /* This used to hardcode a dollar sign while the Vault page had its own
+       currency setting, so a PLN balance was read back here as dollars.
+       money.js owns the conversion now, and when a rate is missing the line
+       says which currency is uncounted rather than reporting a total that
+       is quietly short a holding. */
+    var M = w.Money;
+    if (!M) {
+      var net0 = (parseFloat(last.cash) || 0) + (parseFloat(last.inv) || 0) - (parseFloat(last.debt) || 0);
+      return Object.assign(base, { big: String(Math.round(net0)), unit: 'net worth', tone: '',
+        line: snaps.length + (snaps.length === 1 ? ' snapshot' : ' snapshots') + ' on the ledger' });
+    }
+    var display = (d.display && M.CODES.indexOf(d.display) >= 0) ? d.display : M.read().base;
+    var r = M.netOf(last, display, d.assume || display);
+    var parts = r.parts.map(function (p) { return M.fmt(p.net, p.ccy); });
+    var line;
+    if (!r.complete) {
+      line = 'missing a rate for ' + r.missing.join(', ') + ' — that holding is not counted';
+    } else if (r.parts.length > 1) {
+      line = parts.join('  +  ') + ' — converted for reading only';
+    } else {
+      line = snaps.length + (snaps.length === 1 ? ' snapshot' : ' snapshots') + ' on the ledger';
+    }
+    var st = M.stale();
+    if (r.parts.length > 1 && st.isStale) line += ' · rate ' + st.days + 'd old';
     return Object.assign(base, {
-      big: '$' + Math.round(net).toLocaleString('en-US'), unit: 'net worth', tone: '',
-      line: snaps.length + (snaps.length === 1 ? ' snapshot' : ' snapshots') + ' on the ledger',
+      big: M.fmt(r.total, display), unit: 'net worth',
+      tone: r.complete ? '' : 'go', line: line
     });
   }
 
-  /* ── what screen time moves with ────────────────────────────────────────
-     This lived inside the Life Log's Trends panel, where the only page that
-     could act on it was the page you open when you are curious — which is
-     not the moment the knowledge is worth anything. It lives here now so the
-     Weekly Review can put the strongest reading in front of you on Sunday,
-     before you answer anything, and so there is exactly one definition of
-     what the number means.
-
-     CORR_MIN is the floor and it is the point: eight noisy days will happily
-     produce a beautiful-looking coefficient that means nothing, so under
-     eight we say how far off we are instead of drawing a shape. */
   var CORR_MIN = 8;
 
   function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
@@ -359,7 +437,7 @@
              ready: paired.length >= CORR_MIN };
   }
 
-  var BUILDERS = [plan, anatomy, grind, study, reading, research, record, journal, weekly, vault];
+  var BUILDERS = [plan, anatomy, grind, study, anki, reading, research, record, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
      is dropped rather than allowed to take the page with it — one broken
