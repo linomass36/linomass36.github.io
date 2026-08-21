@@ -26,8 +26,11 @@ WHAT IT COMPUTES
                 (disjoint from `due`, so the two can be shown side by side)
     doneToday   reviews answered since today's rollover
     streak      consecutive days with at least one review
-    secPerCard  median seconds per review over the last 30 days
-    minsToday   how long today's due queue should take, at that median
+    secPerCard  median seconds per review over 30 days — a typical card
+    secMean     mean seconds per review — what a PILE of cards costs, since
+                total time is n x mean and the long tail is real work
+    minsToday   how long today's queue should take, at the mean
+    minsBacklog how long the whole backlog should take, at the mean
 
 The rollover matters: Anki's day does not start at midnight but at the "next
 day starts at" hour (4am by default), and a review at 1am belongs to the
@@ -155,13 +158,32 @@ def collect(con):
     ).fetchone()
     done_today = int(row["n"])
 
-    # Median seconds per review over 30 days. Median, not mean: a card left
-    # open while you made coffee is a 900-second review and would drag a mean
-    # badly. revlog.time is milliseconds and is already capped by Anki.
+    # Seconds per review over 30 days, as BOTH statistics, because they
+    # answer different questions and using one for the other is an error.
+    #
+    #   median — what a typical card costs. Robust to a card left open while
+    #            you made coffee, which arrives as a 60-second review.
+    #   mean   — what a PILE of cards costs, because total time is n x mean.
+    #            A long tail makes the mean larger, and for "how long will
+    #            the backlog take" that tail is real work you will do.
+    #
+    # Estimating a backlog from the median silently assumes every card is
+    # typical, which understates it by exactly the tail.
+    #
+    # Anki caps a single review at `maxTaken` (60s default) before it is
+    # written, so both figures are already truncated at the top — the mean
+    # here is a floor, not a guess.
     since = end_ms - 30 * 86400 * 1000
     times = [r["time"] for r in con.execute(
         "SELECT time FROM revlog WHERE id >= ? AND time > 0 ORDER BY time", (since,))]
-    sec_per_card = round(times[len(times) // 2] / 1000.0, 1) if times else None
+    if times:
+        sec_median = round(times[len(times) // 2] / 1000.0, 1)
+        sec_mean = round(sum(times) / len(times) / 1000.0, 1)
+        n_reviews = len(times)
+    else:
+        sec_median = sec_mean = None
+        n_reviews = 0
+    sec_per_card = sec_median          # kept: "a typical card"
 
     # Streak: consecutive Anki days, walking back from today, with any
     # review in them. Index 0 is today, 1 is yesterday. `end_ms - 1` so a
@@ -185,10 +207,13 @@ def collect(con):
         "backlog": backlog,
         "doneToday": done_today,
         "streak": streak,
-        "secPerCard": sec_per_card,
-        "minsToday": round((due_total + learning) * sec_per_card / 60.0)
-        if sec_per_card else None,
-        "minsBacklog": round(backlog * sec_per_card / 60.0) if sec_per_card else None,
+        "secPerCard": sec_per_card,        # median — a typical card
+        "secMean": sec_mean,               # mean — what a pile actually costs
+        "reviews30d": n_reviews,
+        # Totals use the mean, per the note above.
+        "minsToday": round((due_total + learning) * sec_mean / 60.0)
+        if sec_mean else None,
+        "minsBacklog": round(backlog * sec_mean / 60.0) if sec_mean else None,
         "rollover": rollover,
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": "mac",
@@ -238,6 +263,10 @@ def main():
         print(f"\n  {payload['streak']}d streak · {payload['backlog']} behind · "
               f"{payload['doneToday']} done · {left} still due"
               + (f" · ~{payload['minsToday']} min" if payload["minsToday"] else ""))
+        if payload["secPerCard"]:
+            print(f"  typical card {payload['secPerCard']}s, mean {payload['secMean']}s "
+                  f"over {payload['reviews30d']} reviews")
+            print(f"  the backlog is ~{payload['minsBacklog']} min of work at the mean")
         print(f"  collection: {path}")
         print(f"  Anki day rolls over at {payload['rollover']}:00")
 

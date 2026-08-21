@@ -159,7 +159,11 @@
     var back = Math.max(0, parseInt(d.backlog, 10) || 0);
     var streak = Math.max(0, parseInt(d.streak, 10) || 0);
     var done = Math.max(0, parseInt(d.doneToday, 10) || 0);
-    var sec = parseFloat(d.secPerCard) || 0;
+    /* Totals take the MEAN, not the median. Total time is n x mean, and a
+       backlog estimated from the median assumes every card is typical —
+       understating it by exactly the long tail. secPerCard (median) is kept
+       for "what does one card cost"; secMean is what a pile costs. */
+    var sec = parseFloat(d.secMean) || parseFloat(d.secPerCard) || 0;
     var age = d.at ? Math.max(0, Math.round(
       (new Date(isoDay() + 'T12:00:00') - new Date(String(d.at).slice(0, 10) + 'T12:00:00')) / 86400000)) : null;
 
