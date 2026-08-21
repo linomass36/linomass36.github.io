@@ -46,17 +46,24 @@ doneToday for anyone who studies late — which is the case this is for.
 USAGE
 -----
     python3 anki_sync.py --print                 # look at the numbers, write nothing
+    python3 anki_sync.py --open                  # open the hub with them attached (no key)
     python3 anki_sync.py --out ~/anki.json       # write a JSON file
-    python3 anki_sync.py --firestore creds.json  # publish for the hub to read
+    python3 anki_sync.py --firestore creds.json  # publish unattended (needs a key)
+
+--open is the one to use. It needs no credential at all, and a credential for
+this job would necessarily be far more powerful than the job — see
+README-anki-sync.md.
 
 Install as a launchd job to run every 30 minutes; see tools/README-anki-sync.md.
 """
 
 import argparse
+import base64
 import json
 import os
 import shutil
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import time
@@ -263,6 +270,26 @@ def collect(con):
     }
 
 
+def hub_url(payload, base):
+    """Pack the reading into a URL fragment the hub can ingest.
+
+    This is the no-credential path, and it is the better default. The
+    Firestore route needs a service-account key, and a service-account key
+    bypasses security rules entirely — it can rewrite every document in the
+    project, while this job only ever needs to publish one field. That
+    asymmetry is the actual risk, not the chance of the file leaking.
+
+    A fragment is never sent to the server: browsers strip everything after
+    the # before making the request, so this does not appear in any access
+    log or proxy, and the payload only ever exists on this machine. The page
+    applies it, then clears it from the address bar so it does not survive in
+    history.
+    """
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    packed = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+    return base.rstrip("/") + "#anki=" + packed
+
+
 def to_firestore(payload, creds_path, project=None, uid=None):
     """Publish where the hub can read it. Kept in its own document rather than
     merged into the doc sync.js owns — sync.js rewrites that one wholesale from
@@ -289,6 +316,12 @@ def main():
                     help="print the numbers and write nothing")
     ap.add_argument("--out", help="write JSON to this path")
     ap.add_argument("--firestore", help="service-account JSON, to publish for the hub")
+    ap.add_argument("--open", action="store_true", dest="open_hub",
+                    help="open the hub with the reading attached — no credential needed")
+    ap.add_argument("--url", action="store_true",
+                    help="print that URL instead of opening it")
+    ap.add_argument("--hub", default="https://linomass36.github.io/Standing.html",
+                    help="hub page to open")
     ap.add_argument("--uid", help="Firebase uid to publish under")
     args = ap.parse_args()
 
@@ -324,6 +357,14 @@ def main():
         with open(os.path.expanduser(args.out), "w") as f:
             json.dump(payload, f, indent=2)
         print(f"wrote {args.out}")
+
+    if args.open_hub or args.url:
+        u = hub_url(payload, args.hub)
+        if args.url:
+            print(u)
+        else:
+            subprocess.run(["open", u], check=False)
+            print("opened the hub with today's reading attached")
 
     if args.firestore:
         where = to_firestore(payload, os.path.expanduser(args.firestore), uid=args.uid)

@@ -907,9 +907,14 @@ footer {
         var f = $('#a-' + pair[0]);
         if (f && document.activeElement !== f) f.value = (pair[1] == null ? '' : pair[1]);
       });
-    var left = Math.max(0, (+d.due || 0) - (+d.doneToday || 0));
-    row.innerHTML = '<b>' + (+d.streak || 0) + 'd</b> streak &middot; <b>' + (+d.backlog || 0) +
-      '</b> behind &middot; ' + (left === 0 ? 'today is clear' : left + ' still due today');
+    /* What is waiting is the live queue, not the queue minus today's reps —
+       a rep is not a card, and a card answered Again is still due. Same
+       reading the tile uses, so the two cannot disagree. */
+    var waiting = (d.dueTotal != null) ? (+d.dueTotal || 0) : ((+d.due || 0) + (+d.backlog || 0));
+    var reps = +(d.repsToday != null ? d.repsToday : d.doneToday) || 0;
+    row.innerHTML = '<b>' + (+d.streak || 0) + 'd</b> streak &middot; <b>' + waiting +
+      '</b> waiting &middot; ' + (reps ? reps + ' reps done today' : 'nothing done today') +
+      (d.minsRemaining ? ' &middot; ~' + d.minsRemaining + ' min to clear' : '');
     note.textContent = d.at ? 'read ' + String(d.at).slice(0, 10) + (d.source ? ' \u00b7 ' + d.source : '') : '';
   }
   $('#a-save').addEventListener('click', function () {
@@ -930,6 +935,33 @@ footer {
   /* A reading published by the Mac lands here. Repaint rather than reload:
      you may be mid-sentence in the capture box. */
   if (window.Feeds) window.Feeds.start(function () { paintAnki(); paint(); });
+
+  /* A reading handed over in the URL fragment, by `anki_sync.py --open`.
+     A fragment never reaches the server — browsers strip everything after
+     the # before the request — so this carries the numbers across without a
+     credential and without them appearing in any log. It is applied through
+     Feeds so the newer-wins rule holds here too, then wiped from the address
+     bar so a stale reading cannot be replayed out of history. */
+  (function () {
+    var m = /[#&]anki=([A-Za-z0-9_-]+)/.exec(location.hash || '');
+    if (!m) return;
+    try {
+      var b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var payload = JSON.parse(decodeURIComponent(escape(atob(b))));
+      var took = window.Feeds
+        ? window.Feeds.apply({ anki: payload })
+        : (localStorage.setItem('ct_anki_v1', JSON.stringify(payload)), ['anki']);
+      history.replaceState(null, '', location.pathname + location.search);
+      paintAnki(); paint();
+      var n = $('#anki-note');
+      if (n) n.textContent = took.length
+        ? 'updated from the Mac just now'
+        : 'the reading here is already newer';
+    } catch (e) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  })();
 
   paint();
   window.addEventListener('load', paint);
