@@ -125,6 +125,20 @@ button, input { font: inherit; color: inherit; }
 .chip:hover { border-color: var(--rust); color: var(--rust); }
 .chip kbd { font-family: var(--mono); font-size: 9.5px; color: var(--faint); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 4px; }
 
+.ankibox { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); padding: 15px 17px; }
+.ankirow { font-size: 14.5px; color: var(--mid); }
+.ankirow b { font-family: var(--serif); font-size: 24px; font-weight: 500; color: var(--ink); }
+.ankiform { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-top: 13px; }
+.ankiform label { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono);
+  font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.ankiform input { width: 78px; min-height: 40px; padding: 6px 9px; background: var(--raise);
+  border: 1px solid var(--rule); border-radius: 9px; font-family: var(--serif); font-size: 18px;
+  font-variant-numeric: tabular-nums; color: var(--ink); }
+.ankiform input:focus { outline: none; border-color: var(--rust); }
+.ankiform button { min-height: 40px; padding: 9px 18px; border-radius: 20px; border: 0;
+  background: var(--ink); color: var(--ground); cursor: pointer; font-size: 14px; }
+.ankiform button:hover { filter: brightness(1.15); }
+.ankihint { margin-top: 11px; font-size: 12.5px; color: var(--muted); line-height: 1.5; max-width: 62ch; }
 main { max-width: 940px; margin: 0 auto; padding: 0 20px 88px; }
 section { margin-top: 32px; }
 
@@ -168,14 +182,6 @@ section { margin-top: 32px; }
 
 /* ── 1 · the verdict ── */
 .standing { margin-top: 26px; }
-.strip { display: flex; gap: 4px; margin-bottom: 18px; }
-.strip i {
-  display: block; width: 26px; border-radius: 2px; background: var(--rule);
-  height: 6px; transition: height .25s ease, background .25s ease;
-}
-.strip i.go   { height: 20px; background: var(--owed); }
-.strip i.ok   { height: 10px; background: var(--ok); }
-.strip i.held { height: 14px; background: var(--held); opacity: .5; }
 
 h1 {
   font-family: var(--serif); font-weight: 500;
@@ -334,7 +340,6 @@ footer {
   .kicker .note { display: none; }
   .finder { margin-left: 0; width: 100%; }
   .finder input { width: 100%; }
-  .strip i { width: auto; flex: 1; }
   .spark { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -361,7 +366,6 @@ footer {
   <div class="cond-pick" id="cond-pick"></div>
 
   <section class="standing">
-    <div class="strip" id="strip" aria-hidden="true"></div>
     <h1 id="verdict">&mdash;</h1>
     <p id="verdict-sub">&mdash;</p>
     <div class="drift" id="drift" hidden>
@@ -413,6 +417,24 @@ footer {
       <span id="acts-fold-label"></span><span class="chev">&#9660;</span>
     </button>
     <ul class="acts folded-list" id="acts2" style="margin-top:8px"></ul>
+  </section>
+
+  <!-- Anki · the two numbers, never one -->
+  <section id="anki">
+    <div class="kicker">Anki <span class="note" id="anki-note"></span></div>
+    <div class="ankibox">
+      <div class="ankirow" id="anki-read"></div>
+      <div class="ankiform">
+        <label>due<input id="a-due" type="number" min="0" inputmode="numeric"></label>
+        <label>done<input id="a-done" type="number" min="0" inputmode="numeric"></label>
+        <label>behind<input id="a-back" type="number" min="0" inputmode="numeric"></label>
+        <label>streak<input id="a-streak" type="number" min="0" inputmode="numeric"></label>
+        <button id="a-save" type="button">save</button>
+      </div>
+      <div class="ankihint">Typed by hand for now, but the Mac sync writes these same four
+      fields — so nothing entered here is throwaway. A reading older than a day labels
+      itself rather than passing as this morning&rsquo;s.</div>
+    </div>
   </section>
 
   <section>
@@ -597,12 +619,6 @@ footer {
     var floorDay = cs.length > 0 || drift >= 3;
     var met = floorMet();
 
-    var strip = $('#strip'); strip.innerHTML = '';
-    all.forEach(function (s) {
-      var i = el('i', s.tone === 'go' ? 'go' : (s.tone === 'held' ? 'held' : (s.tone === 'ok' ? 'ok' : '')));
-      i.title = s.name + ' — ' + s.line;
-      strip.appendChild(i);
-    });
 
     var h1 = $('#verdict'), sub = $('#verdict-sub');
     h1.className = '';
@@ -809,6 +825,44 @@ footer {
      still be pulling the cloud copy into localStorage when this runs.
      A first paint now, and one more once the page has settled, so the
      glance is never a frame behind the store. */
+  // ── Anki ────────────────────────────────────────────────────────────
+  function ankiRead() {
+    try { var d = JSON.parse(localStorage.getItem('ct_anki_v1')); return (d && typeof d === 'object') ? d : null; }
+    catch (e) { return null; }
+  }
+  function paintAnki() {
+    var d = ankiRead();
+    var row = $('#anki-read'), note = $('#anki-note');
+    if (!d) {
+      row.innerHTML = '<b>&mdash;</b> nothing recorded yet.';
+      note.textContent = 'not linked';
+      return;
+    }
+    [['due', d.due], ['done', d.doneToday], ['back', d.backlog], ['streak', d.streak]]
+      .forEach(function (pair) {
+        var f = $('#a-' + pair[0]);
+        if (f && document.activeElement !== f) f.value = (pair[1] == null ? '' : pair[1]);
+      });
+    var left = Math.max(0, (+d.due || 0) - (+d.doneToday || 0));
+    row.innerHTML = '<b>' + (+d.streak || 0) + 'd</b> streak &middot; <b>' + (+d.backlog || 0) +
+      '</b> behind &middot; ' + (left === 0 ? 'today is clear' : left + ' still due today');
+    note.textContent = d.at ? 'read ' + String(d.at).slice(0, 10) + (d.source ? ' \u00b7 ' + d.source : '') : '';
+  }
+  $('#a-save').addEventListener('click', function () {
+    var d = ankiRead() || {};
+    d.due = +$('#a-due').value || 0;
+    d.doneToday = +$('#a-done').value || 0;
+    d.backlog = +$('#a-back').value || 0;
+    d.streak = +$('#a-streak').value || 0;
+    if (!d.secPerCard) d.secPerCard = 20;
+    d.at = new Date().toISOString();
+    d.source = 'manual';
+    try { localStorage.setItem('ct_anki_v1', JSON.stringify(d)); } catch (e) {}
+    paintAnki();
+    paint();
+  });
+  paintAnki();
+
   paint();
   window.addEventListener('load', paint);
 })();

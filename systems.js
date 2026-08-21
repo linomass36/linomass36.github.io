@@ -135,6 +135,61 @@
   }
 
   // ── the reading list ───────────────────────────────────────────────────
+  /* ── Anki ───────────────────────────────────────────────────────────────
+     This was in the prototype's mock data and never had a builder, so the
+     Standing could not show it. It does now.
+
+     The store is shaped for the sync that is coming rather than for the
+     hand-entry that fills it today: whatever writes it — a script on the
+     Mac reading collection.anki2, or you typing — writes the same fields,
+     and `source` says which. A stale reading is labelled rather than
+     presented as this morning's.
+
+     The two numbers are shown together, always. A streak displayed without
+     its debt is the number that produced the debt: the cheapest way to keep
+     it alive is to skim, and skimming defers the rest.  */
+  function anki() {
+    var base = { id: 'anki', name: 'Anki', href: 'Standing.html#anki', sort: 3.5 };
+    var d = readJSON('ct_anki_v1', null);
+    if (!d || typeof d !== 'object') {
+      return Object.assign(base, { big: '—', unit: 'not linked', tone: '',
+        line: 'no reading yet — add one, or wire the Mac sync' });
+    }
+    var due = Math.max(0, parseInt(d.due, 10) || 0);
+    var back = Math.max(0, parseInt(d.backlog, 10) || 0);
+    var streak = Math.max(0, parseInt(d.streak, 10) || 0);
+    var done = Math.max(0, parseInt(d.doneToday, 10) || 0);
+    var sec = parseFloat(d.secPerCard) || 0;
+    var age = d.at ? Math.max(0, Math.round(
+      (new Date(isoDay() + 'T12:00:00') - new Date(String(d.at).slice(0, 10) + 'T12:00:00')) / 86400000)) : null;
+
+    var left = Math.max(0, due - done);
+    var mins = sec ? Math.round((left + back) * sec / 60) : null;
+
+    /* Cleared means done: the queue is empty and the debt is not growing.
+       Anything else is owed, including a day where the streak was saved by
+       a skim — especially that. */
+    var tone = (left === 0) ? 'ok' : 'go';
+    var line;
+    if (age !== null && age > 1) {
+      line = 'last reading ' + age + ' days ago — the sync is not running';
+      tone = '';
+    } else if (left === 0 && back === 0) {
+      line = 'cleared, not skimmed — the streak means what it says';
+    } else if (left === 0) {
+      line = 'today is clear · ' + back + ' still behind' + (mins ? ' (' + mins + ' min)' : '');
+    } else {
+      line = done + ' of ' + due + ' done' + (back ? ' · ' + back + ' behind' : '') +
+             (mins ? ' · ' + mins + ' min to level' : '');
+    }
+
+    return Object.assign(base, {
+      big: streak ? streak + 'd' : String(left),
+      unit: back ? back + ' behind' : (streak ? 'streak' : 'due'),
+      tone: tone, line: line
+    });
+  }
+
   function reading() {
     var base = { id: 'reading', name: 'Reading list', href: 'Reading List.dc.html', sort: 4 };
     var st = readJSON('ct_reading_v1', {}) || {};
@@ -255,24 +310,37 @@
     if (!snaps.length) return Object.assign(base, { big: '—', unit: 'net worth', tone: '',
       line: 'no snapshot yet — one a month is plenty' });
     var last = snaps[snaps.length - 1] || {};
-    var net = (parseFloat(last.cash) || 0) + (parseFloat(last.inv) || 0) - (parseFloat(last.debt) || 0);
+
+    /* This used to hardcode a dollar sign while the Vault page had its own
+       currency setting, so a PLN balance was read back here as dollars.
+       money.js owns the conversion now, and when a rate is missing the line
+       says which currency is uncounted rather than reporting a total that
+       is quietly short a holding. */
+    var M = w.Money;
+    if (!M) {
+      var net0 = (parseFloat(last.cash) || 0) + (parseFloat(last.inv) || 0) - (parseFloat(last.debt) || 0);
+      return Object.assign(base, { big: String(Math.round(net0)), unit: 'net worth', tone: '',
+        line: snaps.length + (snaps.length === 1 ? ' snapshot' : ' snapshots') + ' on the ledger' });
+    }
+    var display = (d.display && M.CODES.indexOf(d.display) >= 0) ? d.display : M.read().base;
+    var r = M.netOf(last, display, d.assume || display);
+    var parts = r.parts.map(function (p) { return M.fmt(p.net, p.ccy); });
+    var line;
+    if (!r.complete) {
+      line = 'missing a rate for ' + r.missing.join(', ') + ' — that holding is not counted';
+    } else if (r.parts.length > 1) {
+      line = parts.join('  +  ') + ' — converted for reading only';
+    } else {
+      line = snaps.length + (snaps.length === 1 ? ' snapshot' : ' snapshots') + ' on the ledger';
+    }
+    var st = M.stale();
+    if (r.parts.length > 1 && st.isStale) line += ' · rate ' + st.days + 'd old';
     return Object.assign(base, {
-      big: '$' + Math.round(net).toLocaleString('en-US'), unit: 'net worth', tone: '',
-      line: snaps.length + (snaps.length === 1 ? ' snapshot' : ' snapshots') + ' on the ledger',
+      big: M.fmt(r.total, display), unit: 'net worth',
+      tone: r.complete ? '' : 'go', line: line
     });
   }
 
-  /* ── what screen time moves with ────────────────────────────────────────
-     This lived inside the Life Log's Trends panel, where the only page that
-     could act on it was the page you open when you are curious — which is
-     not the moment the knowledge is worth anything. It lives here now so the
-     Weekly Review can put the strongest reading in front of you on Sunday,
-     before you answer anything, and so there is exactly one definition of
-     what the number means.
-
-     CORR_MIN is the floor and it is the point: eight noisy days will happily
-     produce a beautiful-looking coefficient that means nothing, so under
-     eight we say how far off we are instead of drawing a shape. */
   var CORR_MIN = 8;
 
   function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
@@ -359,7 +427,7 @@
              ready: paired.length >= CORR_MIN };
   }
 
-  var BUILDERS = [plan, anatomy, grind, study, reading, research, record, journal, weekly, vault];
+  var BUILDERS = [plan, anatomy, grind, study, anki, reading, research, record, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
      is dropped rather than allowed to take the page with it — one broken

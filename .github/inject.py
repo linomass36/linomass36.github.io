@@ -36,6 +36,7 @@ GATE_OUTPUT = "index.html"
 SHIM = (
     '<script src="./config.js"></script>\n'
     '<script src="./conditions.js"></script>\n'
+    '<script src="./money.js"></script>\n'
     '<script src="./archive.js"></script>\n'
     '<script src="./sync.js"></script>\n'
     '<script src="./nav.js"></script>\n'
