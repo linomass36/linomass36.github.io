@@ -74,18 +74,54 @@ A fragment is never sent to a server — browsers strip everything after the `#`
 before making the request — so the reading exists only on your machine and
 appears in no access log.
 
-Make it one word:
+### Make it fire when you close Anki
+
+`open -W` blocks until an application quits, which is the whole trick — no
+daemon watching for a process to vanish, no launchd job polling a file Anki
+rewrites constantly while it is open.
 
 ```bash
-echo "alias anki='python3 ~/tools/anki_sync.py --open'" >> ~/.zshrc
+curl -o ~/tools/anki-wrap.sh \
+  https://raw.githubusercontent.com/linomass36/linomass36.github.io/main/tools/anki-wrap.sh
+chmod +x ~/tools/anki-wrap.sh
+echo 'alias anki="$HOME/tools/anki-wrap.sh"' >> ~/.zshrc && . ~/.zshrc
 ```
 
-Then `anki` after a session. If you want it to feel automatic without being
-unattended, bind it to a Raycast/Alfred keyword or a Shortcut on the Dock.
+Now the whole thing is one word:
 
-**The trade:** it runs when you run it. If you study and never type `anki`, the
-hub shows a reading that is a day old — and says so, rather than passing it off
-as current.
+```
+$ anki
+opening Anki — the hub updates when you quit it
+        … you study …
+Anki closed, reading the collection…
+hub opened · 76 reps, 309 waiting
+```
+
+Anki already running? The alias brings it forward and still waits, so it
+behaves the same either way. Studied nothing? It stays quiet rather than
+throwing a browser window at you — that is `--if-studied`.
+
+If you'd rather not launch from a terminal at all, point a Raycast or Alfred
+keyword at `~/tools/anki-wrap.sh`, or drag it into the Dock. Same behaviour, no
+terminal.
+
+**The one thing this cannot do** is fire when you quit Anki having launched it
+from the Dock instead of the alias — nothing is watching in that case. Which is
+why the hub says how old its reading is rather than assuming.
+
+### When a reading goes stale
+
+The page never shows an old number as though it were this morning's:
+
+| age | what the Anki row says |
+| --- | --- |
+| today | `76 reps on 56 cards today · 309 waiting (51 min)` |
+| yesterday | `76 reps on 56 cards **yesterday** · 309 waiting` |
+| 2+ days | `last reading 4 days ago — the sync is not running` |
+
+At two days the row stops claiming a state at all: not owed, not handled, just
+unknown, and the bar goes neutral to match. The panel repeats the age, because
+that panel is where you would come to fix a sync that had stopped.
 
 ### `--firestore` — unattended, and it costs you a key
 

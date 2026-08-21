@@ -915,7 +915,19 @@ footer {
     row.innerHTML = '<b>' + (+d.streak || 0) + 'd</b> streak &middot; <b>' + waiting +
       '</b> waiting &middot; ' + (reps ? reps + ' reps done today' : 'nothing done today') +
       (d.minsRemaining ? ' &middot; ~' + d.minsRemaining + ' min to clear' : '');
-    note.textContent = d.at ? 'read ' + String(d.at).slice(0, 10) + (d.source ? ' \u00b7 ' + d.source : '') : '';
+    /* The age of the reading belongs next to the reading, not only inside
+       the system row — this panel is where you would come to fix a sync that
+       had stopped. */
+    var age = null;
+    if (d.at) {
+      var t = Date.parse(d.at);
+      if (!isNaN(t)) age = Math.floor((Date.now() - t) / 86400000);
+    }
+    note.textContent = d.at
+      ? (age === 0 ? 'read today' : age === 1 ? 'last reading yesterday'
+         : 'last reading ' + age + ' days ago — the sync is not running')
+        + (d.source ? ' · ' + d.source : '')
+      : '';
   }
   $('#a-save').addEventListener('click', function () {
     var d = ankiRead() || {};

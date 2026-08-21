@@ -173,15 +173,21 @@
 
     var age = d.at ? Math.max(0, Math.round(
       (new Date(isoDay() + 'T12:00:00') - new Date(String(d.at).slice(0, 10) + 'T12:00:00')) / 86400000)) : null;
+    /* Staleness is stated, never hidden. A reading two days old is not shown
+       as though it were this morning's — that is the failure mode a sync has,
+       and the one moment the page must not sound confident. */
     if (age !== null && age > 1) {
       return Object.assign(base, { big: streak ? streak + 'd' : '—', unit: 'stale',
         tone: '', line: 'last reading ' + age + ' days ago — the sync is not running' });
     }
+    /* One day old is still useful, but the reps in it happened yesterday, and
+       calling them today's would be a small lie told every morning. */
+    var when = age === 1 ? ' yesterday' : ' today';
 
     var didLine = reps
       ? reps + ' rep' + (reps === 1 ? '' : 's') +
-        (cards ? ' on ' + cards + ' card' + (cards === 1 ? '' : 's') : '') + ' today'
-      : 'nothing done today';
+        (cards ? ' on ' + cards + ' card' + (cards === 1 ? '' : 's') : '') + when
+      : 'nothing done' + when;
     var line = waiting === 0
       ? didLine + ' · queue empty'
       : didLine + ' · ' + waiting + ' waiting' + (mins ? ' (' + mins + ' min)' : '');

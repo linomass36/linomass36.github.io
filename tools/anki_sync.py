@@ -320,6 +320,8 @@ def main():
                     help="open the hub with the reading attached — no credential needed")
     ap.add_argument("--url", action="store_true",
                     help="print that URL instead of opening it")
+    ap.add_argument("--if-studied", action="store_true", dest="if_studied",
+                    help="with --open, do nothing unless something was answered today")
     ap.add_argument("--hub", default="https://linomass36.github.io/Standing.html",
                     help="hub page to open")
     ap.add_argument("--uid", help="Firebase uid to publish under")
@@ -359,12 +361,19 @@ def main():
         print(f"wrote {args.out}")
 
     if args.open_hub or args.url:
-        u = hub_url(payload, args.hub)
-        if args.url:
-            print(u)
+        # A browser window arriving unbidden is worse than a missing update,
+        # so the wrapper that fires on Anki quitting passes --if-studied and
+        # a day with no reviews stays quiet.
+        if args.if_studied and not payload["repsToday"]:
+            print("nothing studied today — leaving the hub alone")
         else:
-            subprocess.run(["open", u], check=False)
-            print("opened the hub with today's reading attached")
+            u = hub_url(payload, args.hub)
+            if args.url:
+                print(u)
+            else:
+                subprocess.run(["open", u], check=False)
+                print(f"hub opened · {payload['repsToday']} reps, "
+                      f"{payload['dueTotal']} waiting")
 
     if args.firestore:
         where = to_firestore(payload, os.path.expanduser(args.firestore), uid=args.uid)
