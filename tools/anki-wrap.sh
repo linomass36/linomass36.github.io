@@ -26,6 +26,19 @@ if [ ! -f "$SYNC" ]; then
   exit 1
 fi
 
+# The two pieces are downloaded separately and can drift apart. An older
+# anki_sync.py has no --open, and argparse would answer with a raw
+# "unrecognized arguments" after you had already studied and quit — the worst
+# possible moment to find out. Check before launching, and say what to do.
+if ! python3 "$SYNC" --help 2>/dev/null | grep -q -- "--if-studied"; then
+  echo "anki: $SYNC is out of date — it has no --if-studied" >&2
+  echo "      re-download it, then try again:" >&2
+  echo "" >&2
+  echo "      curl -o $SYNC \\" >&2
+  echo "        https://raw.githubusercontent.com/linomass36/linomass36.github.io/main/tools/anki_sync.py" >&2
+  exit 1
+fi
+
 # -R resolves the app without launching it, so a missing Anki fails here
 # rather than half-way through.
 if ! open -Ra Anki >/dev/null 2>&1; then
