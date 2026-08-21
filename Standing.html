@@ -139,6 +139,32 @@ button, input { font: inherit; color: inherit; }
   background: var(--ink); color: var(--ground); cursor: pointer; font-size: 14px; }
 .ankiform button:hover { filter: brightness(1.15); }
 .ankihint { margin-top: 11px; font-size: 12.5px; color: var(--muted); line-height: 1.5; max-width: 62ch; }
+/* ── the board ─────────────────────────────────────────────────
+   The strip this replaces drew ten unlabelled rectangles: no legend,
+   no stated order, no way to tell which bar was which system. A mark
+   has to say what it is. Each chip carries its system's short name
+   and current figure, holds a fixed position so the layout becomes
+   memory, and is a link — so the row is both the whole board at a
+   glance and the fastest way into any one of them. */
+.board { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+.bchip {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 6px 10px; min-height: 38px; border-radius: 9px;
+  border: 1px solid var(--rule); border-bottom: 3px solid var(--rule);
+  background: var(--card); text-decoration: none; line-height: 1.15;
+}
+.bchip:hover { border-color: var(--rust); }
+.bchip .k { font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.bchip .v { font-family: var(--serif); font-size: 15px; font-weight: 500;
+  font-variant-numeric: tabular-nums; color: var(--ink); }
+.bchip.go   { border-bottom-color: var(--owed); background: var(--owed-bg); }
+.bchip.go .k { color: var(--owed); }
+.bchip.ok   { border-bottom-color: var(--ok); }
+.bchip.ok .k { color: var(--ok); }
+.bchip.held { border-bottom-color: var(--held); background: var(--held-bg); }
+.bchip.held .k { color: var(--held); }
+@media (max-width: 560px) { .bchip { flex: 1 1 auto; justify-content: space-between; } }
 main { max-width: 940px; margin: 0 auto; padding: 0 20px 88px; }
 section { margin-top: 32px; }
 
@@ -368,6 +394,7 @@ footer {
   <section class="standing">
     <h1 id="verdict">&mdash;</h1>
     <p id="verdict-sub">&mdash;</p>
+    <nav class="board" id="board" aria-label="Every system"></nav>
     <div class="drift" id="drift" hidden>
       <span class="lab">Drift</span>
       <span class="txt" id="drift-txt"></span>
@@ -611,6 +638,7 @@ footer {
   function paint() {
     paintConditions();
     var all  = systems();
+    paintBoard(all);
     var owed = all.filter(function (s) { return s.tone === 'go'; });
     var held = all.filter(function (s) { return s.tone === 'held'; });
     var rest = all.filter(function (s) { return s.tone !== 'go' && s.tone !== 'held'; });
@@ -830,6 +858,31 @@ footer {
     try { var d = JSON.parse(localStorage.getItem('ct_anki_v1')); return (d && typeof d === 'object') ? d : null; }
     catch (e) { return null; }
   }
+  /* Short codes are declared rather than sliced off the name, so two
+     systems can never collide into the same label. */
+  var CODE = {
+    plan: 'PLAN', anatomy: 'ANAT', grind: 'GRIND', study: 'ENGINE', anki: 'ANKI',
+    reading: 'READ', research: 'RSRCH', record: 'LOG', journal: 'JRNL',
+    weekly: 'REVIEW', vault: 'VAULT'
+  };
+  function paintBoard(list) {
+    var b = $('#board');
+    if (!b) return;
+    b.innerHTML = '';
+    list.forEach(function (x) {
+      var a = document.createElement('a');
+      a.className = ('bchip ' + (x.tone || '')).trim();
+      a.href = x.href;
+      a.title = x.name + ' \u2014 ' + x.line;
+      var k = document.createElement('span');
+      k.className = 'k'; k.textContent = CODE[x.id] || x.name.slice(0, 5).toUpperCase();
+      var v = document.createElement('span');
+      v.className = 'v'; v.textContent = x.big;
+      a.appendChild(k); a.appendChild(v);
+      b.appendChild(a);
+    });
+  }
+
   function paintAnki() {
     var d = ankiRead();
     var row = $('#anki-read'), note = $('#anki-note');
