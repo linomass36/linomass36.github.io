@@ -927,6 +927,10 @@ footer {
   });
   paintAnki();
 
+  /* A reading published by the Mac lands here. Repaint rather than reload:
+     you may be mid-sentence in the capture box. */
+  if (window.Feeds) window.Feeds.start(function () { paintAnki(); paint(); });
+
   paint();
   window.addEventListener('load', paint);
 })();

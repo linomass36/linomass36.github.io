@@ -205,6 +205,18 @@ def collect(con):
         n_reviews = 0
     sec_per_card = sec_median          # kept: "a typical card"
 
+    # Today's own mean, separately. Anki's header ("15.67 minutes today,
+    # 12.37s/card") is today only, so without this the two numbers appear to
+    # disagree when they are simply measuring different windows.
+    #
+    # The 30-day mean is the better one to plan from: a single session swings
+    # with its lapse rate, and lapses are the slow reps. A day with 22 Agains
+    # out of 76 is not the day to extrapolate a backlog from.
+    row = con.execute(
+        "SELECT COUNT(*) n, SUM(time) t FROM revlog WHERE id >= ? AND id < ? AND time > 0",
+        (start_ms, end_ms)).fetchone()
+    sec_mean_today = round(row["t"] / row["n"] / 1000.0, 1) if row["n"] else None
+
     # Streak: consecutive Anki days, walking back from today, with any
     # review in them. Index 0 is today, 1 is yesterday. `end_ms - 1` so a
     # review landing exactly on the boundary counts to the day it closes.
@@ -238,6 +250,8 @@ def collect(con):
         "secPerCard": sec_median,          # median — a typical card
         "secMean": sec_mean,               # mean — what a pile costs
         "reviews30d": n_reviews,
+        "secMeanToday": sec_mean_today,    # compare against Anki's own header
+        "againRate": round(again_today / reps_today, 2) if reps_today else None,
         # Totals take the mean. Anki's own "N minutes more" is computed the
         # same way, so minsRemaining should equal what Anki displays.
         "minsToday": round(due_now * sec_mean / 60.0) if sec_mean else None,
@@ -297,6 +311,10 @@ def main():
         if p["secMean"]:
             print(f"  {p['secMean']}s a card on average, {p['secPerCard']}s typical, "
                   f"over {p['reviews30d']} reviews")
+            if p["secMeanToday"]:
+                print(f"  today ran at {p['secMeanToday']}s a card"
+                      + (f" ({int(p['againRate']*100)}% Again)" if p["againRate"] else "")
+                      + " — this is the figure Anki's header shows")
             print(f"  ~{p['minsRemaining']} min to clear everything "
                   f"(Anki's \"N minutes more\"); the backlog alone is ~{p['minsBacklog']} min")
         print(f"  collection: {path}")
