@@ -22,6 +22,12 @@ afterwards. Nothing here ever writes to your collection.
 WHAT IT COMPUTES
 ----------------
     due         cards scheduled for today, learning cards included
+    dueTotal    due + backlog — equals Anki's own Due column, so the two can
+                be compared without doing arithmetic
+    repsToday   revlog rows since rollover. A rep is not a card: press Again
+                and the same card logs another row
+    cardsToday  distinct cards actually seen today
+    againToday  presses that sent a card back
     backlog     cards overdue from previous days — the number the streak hides
                 (disjoint from `due`, so the two can be shown side by side)
     doneToday   reviews answered since today's rollover
@@ -151,12 +157,26 @@ def collect(con):
     ).fetchone()
     learning = int(row["n"])
 
-    # Reviews answered today, by Anki's day rather than the calendar's.
+    # Today's work, in the two units that are not the same thing.
+    #
+    # A revlog row is a REP, not a card. Press Again and the card comes back
+    # and logs a second row, so 76 rows can be about 50 cards seen. Anki's own
+    # "Studied 76 cards in 15.67 minutes" says cards and means reps, which is
+    # where the confusion starts.
+    #
+    # Both matter, for different questions. Reps are what the time was spent
+    # on. Unique cards are what you actually got through — and the gap between
+    # them is the lapse rate, which is worth seeing on its own.
     start_ms = end_ms - 86400 * 1000
     row = con.execute(
-        "SELECT COUNT(*) n FROM revlog WHERE id >= ? AND id < ?", (start_ms, end_ms)
-    ).fetchone()
-    done_today = int(row["n"])
+        "SELECT COUNT(*) n, COUNT(DISTINCT cid) c FROM revlog WHERE id >= ? AND id < ?",
+        (start_ms, end_ms)).fetchone()
+    reps_today = int(row["n"])
+    cards_today = int(row["c"])
+    row = con.execute(
+        "SELECT COUNT(*) n FROM revlog WHERE id >= ? AND id < ? AND ease = 1",
+        (start_ms, end_ms)).fetchone()
+    again_today = int(row["n"])
 
     # Seconds per review over 30 days, as BOTH statistics, because they
     # answer different questions and using one for the other is an error.
@@ -202,18 +222,27 @@ def collect(con):
         streak += 1
         i += 1
 
+    due_now = due_total + learning
     return {
-        "due": due_total + learning,
-        "backlog": backlog,
-        "doneToday": done_today,
+        "due": due_now,                    # scheduled for today
+        "backlog": backlog,                # overdue from before
+        # Anki's deck list merges these two into one Due column. Publishing
+        # the sum as well gives a figure that can be read straight off the
+        # Anki window to check this script has not drifted.
+        "dueTotal": due_now + backlog,
+        "repsToday": reps_today,           # revlog rows — what the time went on
+        "cardsToday": cards_today,         # distinct cards actually seen
+        "againToday": again_today,         # presses that sent a card back
+        "doneToday": reps_today,           # kept: older readings used this name
         "streak": streak,
-        "secPerCard": sec_per_card,        # median — a typical card
-        "secMean": sec_mean,               # mean — what a pile actually costs
+        "secPerCard": sec_median,          # median — a typical card
+        "secMean": sec_mean,               # mean — what a pile costs
         "reviews30d": n_reviews,
-        # Totals use the mean, per the note above.
-        "minsToday": round((due_total + learning) * sec_mean / 60.0)
-        if sec_mean else None,
+        # Totals take the mean. Anki's own "N minutes more" is computed the
+        # same way, so minsRemaining should equal what Anki displays.
+        "minsToday": round(due_now * sec_mean / 60.0) if sec_mean else None,
         "minsBacklog": round(backlog * sec_mean / 60.0) if sec_mean else None,
+        "minsRemaining": round((due_now + backlog) * sec_mean / 60.0) if sec_mean else None,
         "rollover": rollover,
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": "mac",
@@ -258,17 +287,20 @@ def main():
         shutil.rmtree(tmpdir, ignore_errors=True)
 
     if args.show or not (args.out or args.firestore):
-        left = max(0, payload["due"] - payload["doneToday"])
         print(json.dumps(payload, indent=2))
-        print(f"\n  {payload['streak']}d streak · {payload['backlog']} behind · "
-              f"{payload['doneToday']} done · {left} still due"
-              + (f" · ~{payload['minsToday']} min" if payload["minsToday"] else ""))
-        if payload["secPerCard"]:
-            print(f"  typical card {payload['secPerCard']}s, mean {payload['secMean']}s "
-                  f"over {payload['reviews30d']} reviews")
-            print(f"  the backlog is ~{payload['minsBacklog']} min of work at the mean")
+        p = payload
+        print(f"\n  {p['streak']}d streak")
+        print(f"  {p['repsToday']} reps on {p['cardsToday']} cards"
+              + (f", {p['againToday']} of them Again" if p['againToday'] else ""))
+        print(f"  {p['due']} due today + {p['backlog']} behind = {p['dueTotal']} "
+              f"(this should equal Anki's Due column)")
+        if p["secMean"]:
+            print(f"  {p['secMean']}s a card on average, {p['secPerCard']}s typical, "
+                  f"over {p['reviews30d']} reviews")
+            print(f"  ~{p['minsRemaining']} min to clear everything "
+                  f"(Anki's \"N minutes more\"); the backlog alone is ~{p['minsBacklog']} min")
         print(f"  collection: {path}")
-        print(f"  Anki day rolls over at {payload['rollover']}:00")
+        print(f"  Anki day rolls over at {p['rollover']}:00")
 
     if args.out:
         with open(os.path.expanduser(args.out), "w") as f:

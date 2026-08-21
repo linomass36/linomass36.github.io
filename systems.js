@@ -153,44 +153,44 @@
     var d = readJSON('ct_anki_v1', null);
     if (!d || typeof d !== 'object') {
       return Object.assign(base, { big: '—', unit: 'not linked', tone: '',
-        line: 'no reading yet — add one, or wire the Mac sync' });
+        line: 'no reading yet — run the Mac sync, or type one in' });
     }
     var due = Math.max(0, parseInt(d.due, 10) || 0);
     var back = Math.max(0, parseInt(d.backlog, 10) || 0);
     var streak = Math.max(0, parseInt(d.streak, 10) || 0);
-    var done = Math.max(0, parseInt(d.doneToday, 10) || 0);
-    /* Totals take the MEAN, not the median. Total time is n x mean, and a
-       backlog estimated from the median assumes every card is typical —
-       understating it by exactly the long tail. secPerCard (median) is kept
-       for "what does one card cost"; secMean is what a pile costs. */
+    var reps = Math.max(0, parseInt(d.repsToday != null ? d.repsToday : d.doneToday, 10) || 0);
+    var cards = parseInt(d.cardsToday, 10);
+    /* Totals take the mean: total time is n x mean, and costing a pile at
+       the median understates it by the whole long tail. */
     var sec = parseFloat(d.secMean) || parseFloat(d.secPerCard) || 0;
+
+    /* What is LEFT is the queue itself, not the queue minus today's reps.
+       Subtracting was wrong twice over: a rep is not a card, and a card
+       answered Again is still due. The reading already carries the live
+       queue, so it is simply read rather than derived. */
+    var waiting = (d.dueTotal != null) ? Math.max(0, parseInt(d.dueTotal, 10) || 0) : (due + back);
+    var mins = sec ? Math.round(waiting * sec / 60) : null;
+
     var age = d.at ? Math.max(0, Math.round(
       (new Date(isoDay() + 'T12:00:00') - new Date(String(d.at).slice(0, 10) + 'T12:00:00')) / 86400000)) : null;
-
-    var left = Math.max(0, due - done);
-    var mins = sec ? Math.round((left + back) * sec / 60) : null;
-
-    /* Cleared means done: the queue is empty and the debt is not growing.
-       Anything else is owed, including a day where the streak was saved by
-       a skim — especially that. */
-    var tone = (left === 0) ? 'ok' : 'go';
-    var line;
     if (age !== null && age > 1) {
-      line = 'last reading ' + age + ' days ago — the sync is not running';
-      tone = '';
-    } else if (left === 0 && back === 0) {
-      line = 'cleared, not skimmed — the streak means what it says';
-    } else if (left === 0) {
-      line = 'today is clear · ' + back + ' still behind' + (mins ? ' (' + mins + ' min)' : '');
-    } else {
-      line = done + ' of ' + due + ' done' + (back ? ' · ' + back + ' behind' : '') +
-             (mins ? ' · ' + mins + ' min to level' : '');
+      return Object.assign(base, { big: streak ? streak + 'd' : '—', unit: 'stale',
+        tone: '', line: 'last reading ' + age + ' days ago — the sync is not running' });
     }
 
+    var didLine = reps
+      ? reps + ' rep' + (reps === 1 ? '' : 's') +
+        (cards ? ' on ' + cards + ' card' + (cards === 1 ? '' : 's') : '') + ' today'
+      : 'nothing done today';
+    var line = waiting === 0
+      ? didLine + ' · queue empty'
+      : didLine + ' · ' + waiting + ' waiting' + (mins ? ' (' + mins + ' min)' : '');
+
     return Object.assign(base, {
-      big: streak ? streak + 'd' : String(left),
-      unit: back ? back + ' behind' : (streak ? 'streak' : 'due'),
-      tone: tone, line: line
+      big: streak ? streak + 'd' : String(waiting),
+      unit: waiting ? waiting + ' waiting' : 'clear',
+      tone: waiting === 0 ? 'ok' : 'go',
+      line: line
     });
   }
 
