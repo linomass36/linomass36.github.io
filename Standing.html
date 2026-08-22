@@ -856,8 +856,60 @@ footer {
     if (e.key === 'Escape' && typing) document.activeElement.blur();
   });
 
-  $('#dateline').textContent = new Date().toLocaleDateString(undefined,
-    { weekday: 'long', day: 'numeric', month: 'long' });
+  /* ── the day has to be able to turn over ──────────────────────────────
+     Everything here was computed once, at load, and never again: the
+     dateline, the verdict, the drift count, what is owed. A tab left open
+     overnight — or a PWA resumed rather than relaunched, which is how a
+     phone normally works — went on showing yesterday indefinitely. At
+     eleven in the morning it would still say the day before.
+
+     So the day the page was painted for is remembered, and anything that
+     means "you are looking at this again" re-checks it: returning to the
+     tab, restoring from bfcache, refocusing the window. A timer to the next
+     local midnight covers being on screen when it turns.
+
+     Local midnight, not UTC — the dateline is the day you are living in.
+     systems.js keeps the Life Log's UTC convention for reading that store,
+     because that is how those keys were written. Different questions;
+     conflating them is what would corrupt the log. */
+  var paintedFor = null;
+
+  function dayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  function paintDateline() {
+    $('#dateline').textContent = new Date().toLocaleDateString(undefined,
+      { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  function refreshForDay(force) {
+    var k = dayKey();
+    if (!force && k === paintedFor) return;
+    paintedFor = k;
+    paintDateline();
+    try { paintAnki(); } catch (e) {}
+    paint();
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshForDay();
+  });
+  window.addEventListener('pageshow', function () { refreshForDay(); });
+  window.addEventListener('focus', function () { refreshForDay(); });
+
+  /* Timers do not survive a suspended phone, which is why the listeners
+     above exist too — this only covers being on screen at the turn. Five
+     seconds past, so a clock a shade fast cannot fire while it is still
+     yesterday. */
+  function armMidnight() {
+    var now = new Date(), next = new Date(now);
+    next.setHours(24, 0, 0, 5);
+    setTimeout(function () { refreshForDay(); armMidnight(); }, next - now);
+  }
+  armMidnight();
+  paintDateline();
 
   /* anatomy-core and the data files are plain scripts, but sync.js may
      still be pulling the cloud copy into localStorage when this runs.
@@ -943,6 +995,7 @@ footer {
     paint();
   });
   paintAnki();
+  paintedFor = dayKey();
 
   /* A reading published by the Mac lands here. Repaint rather than reload:
      you may be mid-sentence in the capture box. */
