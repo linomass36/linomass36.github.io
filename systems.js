@@ -453,27 +453,51 @@
 
   /* ── conditions ────────────────────────────────────────────────────────
      A declared condition names what is constrained and which systems that
-     covers; those go HELD. This is applied HERE rather than on one page, so
-     every surface that reads this file — Today, Mission Control, the
-     Standing — agrees about what is owed. A held system rendered as red on
-     one page and quiet on another would be worse than not having the idea.
+     covers. This is applied HERE rather than on one page, so every surface
+     that reads this file — Today, Mission Control, the Standing — agrees
+     about what is owed. A held system rendered as red on one page and quiet
+     on another would be worse than not having the idea.
 
-     Held is deliberately neither 'go' nor 'ok'. It is not owed, so it can
-     never read as failure; and it is not handled either, because pretending
-     it was done would be the other kind of lie. conditions.js may not be
-     loaded on a given page, in which case nothing is held and this is a
-     no-op. */
+     A condition now arrives at one of three strengths, and only the
+     strongest holds:
+
+       held  — not owed, nothing accrues, streak intact. Deliberately
+               neither 'go' nor 'ok': it cannot read as failure, and it must
+               not read as handled either, because pretending it was done
+               would be the other kind of lie.
+       eased — owed exactly as it would be on any other day, and rendered in
+               full. Only the size of a finished day has moved, which the
+               line says out loud. The tone is untouched on purpose: an
+               eased system that is behind is still behind, and you are
+               entitled to know by how much.
+
+     The numbers survive both. The first version overwrote `unit` and `line`
+     with the word "held", which answered a question nobody had asked and
+     took away the one thing you actually wanted on a bad day — where you
+     stand, independent of what is being asked of you. So the real line is
+     kept and the state is appended to it.
+
+     conditions.js may not be loaded on a given page, in which case nothing
+     is held and this is a no-op. */
   function applyConditions(list) {
     var C = w.Conditions;
     if (!C || typeof C.heldIds !== 'function') return list;
-    var held;
+    var held, eased = {};
     try { held = C.heldIds(); } catch (e) { return list; }
+    try { if (typeof C.easedIds === 'function') eased = C.easedIds() || {}; } catch (e) { eased = {}; }
     return list.map(function (s) {
-      if (!held[s.id]) return s;
+      if (!held[s.id] && !eased[s.id]) return s;
       var o = {}; for (var k in s) o[k] = s[k];
-      o.tone = 'held';
-      o.unit = 'held';
-      o.line = 'held while the condition stands — nothing accrues';
+      if (held[s.id]) {
+        o.tone = 'held';
+        o.held = true;
+        o.state = 'held';
+        o.line = (s.line ? s.line + ' · ' : '') + 'held while the condition stands — nothing accrues';
+      } else {
+        o.eased = true;
+        o.state = 'eased';
+        o.line = (s.line ? s.line + ' · ' : '') + 'eased today — the small version clears it';
+      }
       return o;
     });
   }
@@ -481,8 +505,11 @@
   // The ones with something owed today, which is what a glance is actually for.
   function owed() { return all().filter(function (s) { return s.tone === 'go'; }); }
 
-  // The ones a condition is currently covering.
+  // The ones a condition is currently holding outright.
   function held() { return all().filter(function (s) { return s.tone === 'held'; }); }
+
+  // The ones a slower-day condition has resized rather than held.
+  function eased() { return all().filter(function (s) { return !!s.eased; }); }
 
   /* Drift: days since anything was logged. A rut is data the hub already
      holds, and naming it is most of the intervention — so it is computed
@@ -502,17 +529,26 @@
     return Math.max(0, gap);
   }
 
-  /* A floor day is any day the hub has reason to lower the bar: a condition
-     stands, or the log says you have drifted. On one the page asks for a
-     single thing and does not render the red column at all. */
+  /* A floor day is any day the hub has reason to lower the bar to one thing:
+     a condition that STOPS you stands, or the log says you have drifted. On
+     one the page asks for a single thing and does not render the red column
+     by default.
+
+     A slower-day condition is deliberately not a floor day. That was the
+     whole complaint about the first version — declaring a sore shoulder
+     collapsed the entire page — and the grade is the user's answer to it, so
+     honouring it here is the point. Falls back to the old any-condition test
+     for a conditions.js older than the grades. */
   function floorDay() {
     var C = w.Conditions;
     var any = false;
-    try { any = !!(C && C.active().length); } catch (e) {}
+    try {
+      any = C ? (typeof C.stopping === 'function' ? !!C.stopping().length : !!C.active().length) : false;
+    } catch (e) {}
     return any || drift() >= 3;
   }
 
-  w.Systems = { all: all, owed: owed, held: held, drift: drift, floorDay: floorDay,
+  w.Systems = { all: all, owed: owed, held: held, eased: eased, drift: drift, floorDay: floorDay,
                 planCounts: planCounts, isoDay: isoDay, monday: monday,
                 trends: trends, pearson: pearson, CORR_MIN: CORR_MIN };
 })(window);
