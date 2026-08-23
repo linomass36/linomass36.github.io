@@ -204,17 +204,102 @@ section { margin-top: 32px; }
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em;
   color: inherit; text-decoration: underline; text-underline-offset: 3px; min-height: 34px;
 }
-.cond-pick { display: none; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.cond-pick.open { display: flex; }
-.cond-pick button {
+/* The picker. Declaring used to be one switch, which is why it was wrong:
+   a switch can only say "injured", never "injured, but I can still cycle".
+   So it is a panel and it asks three things — which condition, how much of
+   one, and what it actually stops. The middle question is the one the first
+   version never asked, and the whole complaint about that version lives
+   there. */
+.cond-pick { display: none; margin-top: 8px; }
+.cond-pick.open { display: block; }
+.cond-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.cond-row button {
   display: inline-flex; align-items: baseline; gap: 7px;
   padding: 7px 13px; min-height: 38px; cursor: pointer;
   background: var(--raise); border: 1px solid var(--rule); border-radius: 20px; font-size: 13.5px;
 }
-.cond-pick button small { font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
-.cond-pick button:hover { border-color: var(--held); }
-.cond-pick button[aria-pressed="true"] { background: var(--held-bg); border-color: var(--held); color: var(--held); }
-.cond-pick button[aria-pressed="true"] small { color: var(--held); }
+.cond-row button small { font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+.cond-row button:hover { border-color: var(--held); }
+.cond-row button[aria-pressed="true"] { background: var(--held-bg); border-color: var(--held); color: var(--held); }
+.cond-row button[aria-pressed="true"] small { color: var(--held); }
+.cond-row button.editing { border-color: var(--rust); box-shadow: inset 0 0 0 1px var(--rust); }
+
+.cond-panel {
+  margin-top: 10px; padding: 16px 17px 15px;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 13px; box-shadow: var(--shadow);
+}
+.cond-panel .q {
+  display: block; margin: 0 0 7px;
+  font-family: var(--mono); font-size: 9.5px; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--rust);
+}
+.cond-panel .q .sub { letter-spacing: .03em; text-transform: none; color: var(--faint); font-weight: 400; }
+.cond-panel .fld + .fld { margin-top: 17px; }
+.cond-panel input[type="text"] {
+  width: 100%; min-height: 40px; padding: 8px 13px;
+  background: var(--raise); border: 1px solid var(--rule); border-radius: 9px; font-size: 14px;
+}
+.cond-panel input[type="text"]:focus { border-color: var(--rust); outline: none; }
+.cond-panel input::placeholder { color: var(--faint); }
+
+/* Grades stack rather than sit in a row: each one has to carry what it does
+   to the page, and that is a sentence, not a word. */
+.grades { display: grid; gap: 8px; }
+.grades label {
+  display: block; padding: 11px 13px; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 10px; background: var(--raise);
+}
+.grades label:hover { border-color: var(--held); }
+.grades label.on { border-color: var(--held); background: var(--held-bg); }
+.grades .hd { display: flex; align-items: baseline; gap: 9px; }
+.grades .gl { font-size: 14.5px; font-weight: 500; }
+.grades .gone { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: var(--faint); white-space: nowrap; }
+.grades label.on .gone { color: var(--held); }
+.grades .gb { margin-top: 5px; font-size: 12.5px; line-height: 1.5; color: var(--mid); max-width: 62ch; }
+.grades input { position: absolute; opacity: 0; pointer-events: none; }
+
+.areas { display: flex; flex-wrap: wrap; gap: 8px; }
+.areas label {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 13px; min-height: 38px; cursor: pointer; font-size: 13.5px;
+  background: var(--raise); border: 1px solid var(--rule); border-radius: 20px;
+}
+.areas label:hover { border-color: var(--owed); }
+.areas label.on { background: var(--owed-bg); border-color: var(--owed-ln); color: var(--owed); }
+.areas .box { flex: none; width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--faint); }
+.areas label.on .box { background: var(--owed); border-color: var(--owed); }
+.areas input { position: absolute; opacity: 0; pointer-events: none; }
+
+/* What you did not tick, said back to you. The answer to "so what can I
+   still do" should never require reading the negative space. */
+.cond-still {
+  margin-top: 10px; padding: 9px 12px; border-radius: 9px;
+  background: var(--ok-bg); border: 1px solid var(--rule);
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.7; color: var(--mid);
+}
+.cond-still b { font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 9.5px; color: var(--ok); }
+.cond-still.none { background: var(--owed-bg); border-color: var(--owed-ln); }
+.cond-still.none b { color: var(--owed); }
+
+.cond-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 17px; }
+.cond-acts button {
+  min-height: 40px; padding: 9px 17px; border-radius: 20px; cursor: pointer;
+  font-size: 14px; background: var(--raise); border: 1px solid var(--rule);
+}
+ /* --ground rather than white, following .onething .did: the accent is a
+    lighter rust in dark mode and white on it does not carry. */
+.cond-acts button.go { background: var(--rust); border-color: var(--rust); color: var(--ground); font-weight: 500; }
+.cond-acts button.go:hover { filter: brightness(1.08); }
+.cond-acts button.drop { margin-left: auto; color: var(--owed); border-color: var(--owed-ln); }
+.cond-acts button:hover { border-color: var(--held); }
+
+/* The grade, on the ribbon. A condition that is only noted must not look
+   like one that is holding half the board. */
+.cond-bar .grade {
+  padding: 2px 8px; border-radius: 10px; font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: .08em; text-transform: uppercase;
+  background: color-mix(in srgb, currentColor 13%, transparent);
+}
 
 /* ── 1 · the verdict ── */
 .standing { margin-top: 26px; }
@@ -295,6 +380,28 @@ h1.floor em { color: var(--held); }
 .tile .go-to { margin-top: 12px; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--owed); opacity: 0; transition: opacity .16s ease; }
 .tile:hover .go-to, .tile:focus-visible .go-to { opacity: 1; }
 
+/* An eased system is owed, so it keeps the owed tile. The band along the
+   top is the only difference: the ask is smaller today, the number is not
+   a smaller number. */
+.tile.is-eased { border-left-color: var(--held); }
+.tile.is-eased .name { color: var(--held); }
+.tile .mark {
+  align-self: flex-start; margin-top: 10px; padding: 2px 8px; border-radius: 9px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--held-bg); border: 1px solid var(--held-ln); color: var(--held);
+}
+
+/* On a floor day the red column is folded away by default — but folded is
+   not the same as gone, and the first version offered no way back to the
+   numbers. This is that way back, and it remembers your answer. */
+.reveal {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 38px;
+  margin-top: 14px; padding: 8px 15px; cursor: pointer;
+  background: none; border: 1px dashed var(--held-ln); border-radius: 20px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; color: var(--held);
+}
+.reveal:hover { border-style: solid; }
+
 /* ── folded lines: held, and current ── */
 .fold { margin-top: 10px; }
 .folded {
@@ -325,6 +432,8 @@ h1.floor em { color: var(--held); }
 .row .txt span { display: block; font-size: 12.5px; color: var(--muted); }
 .row .unit { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--faint); white-space: nowrap; }
 .row.is-held .unit { color: var(--held); }
+.row.is-eased .big { color: var(--held); }
+.row.is-eased .unit { color: var(--held); }
 
 /* ── 4 · next actions ── */
 .acts { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); border-radius: 12px; background: var(--card); overflow: hidden; }
@@ -372,6 +481,10 @@ footer {
 
 @media (max-width: 560px) {
   main { padding: 0 16px 80px; }
+  /* The one-line summary of a grade only earns its place beside the label
+     when there is room for it; the blurb underneath already says it. */
+  .grades .gone { display: none; }
+  .cond-panel { padding: 14px 14px 13px; }
   .top { padding: 11px 64px 11px 16px; }
   .kicker .note { display: none; }
   .finder { margin-left: 0; width: 100%; }
@@ -399,7 +512,10 @@ footer {
     <span id="cond-text">&mdash;</span>
     <button class="edit" id="cond-edit">change</button>
   </div>
-  <div class="cond-pick" id="cond-pick"></div>
+  <div class="cond-pick" id="cond-pick">
+    <div class="cond-row" id="cond-row"></div>
+    <div class="cond-panel" id="cond-panel" hidden></div>
+  </div>
 
   <section class="standing">
     <h1 id="verdict">&mdash;</h1>
@@ -413,7 +529,7 @@ footer {
 
   <section id="one-sec" hidden>
     <div class="onething">
-      <div class="lab">The one thing</div>
+      <div class="lab" id="one-lab">The one thing</div>
       <div class="ask" id="one-ask"></div>
       <div class="why" id="one-why"></div>
       <div class="around" id="one-around" hidden></div>
@@ -430,6 +546,7 @@ footer {
   </section>
 
   <section id="fold-sec">
+    <button class="reveal" id="reveal" type="button" hidden></button>
     <div class="fold" id="held-fold" hidden>
       <button class="folded is-held" id="held-btn" aria-expanded="false">
         <span class="pip"></span><span id="held-label"></span><span class="chev">&#9660;</span>
@@ -524,6 +641,10 @@ footer {
 
   var PKEY = 'ct-master-plan-v2';   // the master plan's own store, shared with Mission Control
   var FKEY = 'ct_floor_v1';         // which floor days have been met
+  /* Which floor days you asked to see the numbers on. Per-day rather than
+     sticky: the fold is the right default every morning, and wanting the
+     board once should not mean wanting it for the rest of the injury. */
+  var RKEY = 'ct_standing_reveal_v1';
 
   /* The directory. nav.js's own groups, plus the three pages this
      redesign added. The five plan documents are listed by name rather
@@ -592,14 +713,164 @@ footer {
 
   // Whether today's floor ask has been met.
   function floorMet() { return lsJson(FKEY, {})[C().today()] === 1; }
+  function setRevealed(v) {
+    var r = lsJson(RKEY, {});
+    if (v) r[C().today()] = 1; else delete r[C().today()];
+    lsSet(RKEY, r);
+  }
   function setFloorMet(v) {
     var f = lsJson(FKEY, {});
     if (v) f[C().today()] = 1; else delete f[C().today()];
     lsSet(FKEY, f);
   }
 
-  /* ── conditions ribbon ─────────────────────────────────────── */
-  function paintConditions() {
+  /* ── conditions ribbon and picker ─────────────────────────────
+     The ribbon says what stands. The picker asks the three questions
+     that make a condition true rather than merely declared: which one
+     it is, how much of one, and what it actually stops.
+
+     The middle question is new, and it is the whole repair. A switch
+     can only say "injured"; it can never say "injured, but cycling is
+     fine", so the only honest move on a middling day was to declare
+     nothing — which left the board asking for everything and reading
+     as nine failures. Three grades, and the numbers stay on screen for
+     two of them.
+
+     Draft state lives here rather than in the store, so nothing is
+     written until you say so. Opening the panel on a standing condition
+     to read what it is doing must not change what it does. */
+  var draft = null;   // { id, detail, grade, areas: {id:true}, standing }
+
+  function pickedAreas() {
+    return Object.keys(draft.areas).filter(function (k) { return draft.areas[k]; });
+  }
+
+  function openDraft(id) {
+    var d = C().def(id), had = C().get(id);
+    draft = { id: id, standing: !!had,
+              detail: had ? had.detail : '',
+              grade: had ? had.grade.id : d.defaultGrade,
+              areas: {} };
+    if (had) had.areas.forEach(function (a) { draft.areas[a] = true; });
+  }
+
+  /* Rebuilt on open and on any repaint; the live parts (which grade is
+     chosen, what is still on) are updated in place by syncPanel so that
+     typing in the detail field cannot be interrupted by a re-render. */
+  function buildPanel() {
+    var panel = $('#cond-panel');
+    panel.innerHTML = '';
+    if (!draft) { panel.hidden = true; return; }
+    panel.hidden = false;
+    var d = C().def(draft.id);
+
+    var f1 = el('div', 'fld');
+    f1.appendChild(el('span', 'q', 'What, specifically'));
+    var inp = el('input'); inp.type = 'text'; inp.value = draft.detail;
+    inp.placeholder = d.detailHint || 'optional';
+    inp.addEventListener('input', function () { draft.detail = inp.value; });
+    f1.appendChild(inp);
+    panel.appendChild(f1);
+
+    var f2 = el('div', 'fld');
+    var q2 = el('span', 'q');
+    q2.innerHTML = 'How much of one? <span class="sub">&mdash; this decides what the page does with it</span>';
+    f2.appendChild(q2);
+    var box = el('div', 'grades');
+    C().grades(draft.id).forEach(function (g) {
+      var lab = el('label'); lab.setAttribute('data-grade', g.id);
+      var r = document.createElement('input');
+      r.type = 'radio'; r.name = 'cond-grade'; r.value = g.id; r.checked = g.id === draft.grade;
+      r.addEventListener('change', function () { draft.grade = g.id; syncPanel(); });
+      lab.appendChild(r);
+      var hd = el('div', 'hd');
+      hd.appendChild(el('span', 'gl', g.label));
+      hd.appendChild(el('span', 'gone', g.one));
+      lab.appendChild(hd);
+      lab.appendChild(el('div', 'gb', g.blurb));
+      box.appendChild(lab);
+    });
+    f2.appendChild(box);
+    panel.appendChild(f2);
+
+    if ((d.areas || []).length) {
+      var f3 = el('div', 'fld');
+      var q3 = el('span', 'q');
+      q3.innerHTML = esc(d.areaLabel || 'What does it stop?') +
+        (d.areaNote ? ' <span class="sub">&mdash; ' + esc(d.areaNote) + '</span>' : '');
+      f3.appendChild(q3);
+      var ab = el('div', 'areas');
+      d.areas.forEach(function (a) {
+        var lab = el('label'); lab.setAttribute('data-area', a.id);
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = !!draft.areas[a.id];
+        cb.addEventListener('change', function () { draft.areas[a.id] = cb.checked; syncPanel(); });
+        lab.appendChild(cb);
+        lab.appendChild(el('span', 'box'));
+        lab.appendChild(el('span', null, a.label));
+        ab.appendChild(lab);
+      });
+      f3.appendChild(ab);
+      f3.appendChild(el('div', 'cond-still'));
+      panel.appendChild(f3);
+    }
+
+    var acts = el('div', 'cond-acts');
+    var go = el('button', 'go', draft.standing ? 'update it' : 'declare it'); go.type = 'button';
+    go.addEventListener('click', function () {
+      C().declare(draft.id, { detail: draft.detail, grade: draft.grade, areas: pickedAreas() });
+      draft = null; paint();
+    });
+    acts.appendChild(go);
+    var cancel = el('button', null, 'cancel'); cancel.type = 'button';
+    cancel.addEventListener('click', function () { draft = null; paint(); });
+    acts.appendChild(cancel);
+    if (draft.standing) {
+      var drop = el('button', 'drop', 'lift it'); drop.type = 'button';
+      drop.addEventListener('click', function () { C().lift(draft.id); draft = null; paint(); });
+      acts.appendChild(drop);
+    }
+    panel.appendChild(acts);
+    syncPanel();
+  }
+
+  /* What you did not tick, said back to you. "So what can I still do"
+     should never require reading the negative space of a checklist. */
+  function syncPanel() {
+    if (!draft) return;
+    var panel = $('#cond-panel'), d = C().def(draft.id);
+    Array.prototype.forEach.call(panel.querySelectorAll('.grades label'), function (l) {
+      l.classList.toggle('on', l.getAttribute('data-grade') === draft.grade);
+    });
+    Array.prototype.forEach.call(panel.querySelectorAll('.areas label'), function (l) {
+      l.classList.toggle('on', !!draft.areas[l.getAttribute('data-area')]);
+    });
+    var still = panel.querySelector('.cond-still');
+    if (!still) return;
+    var areas = d.areas || [];
+    var out  = areas.filter(function (a) { return draft.areas[a.id]; });
+    var open = areas.filter(function (a) { return !draft.areas[a.id]; });
+    if (!out.length) {
+      still.className = 'cond-still';
+      still.innerHTML = '<b>nothing ticked</b> &mdash; then this covers ' + esc((d.scope || []).join(' + ')) +
+        ' wholesale, which is the blunt version. Tick what is genuinely out and it gets specific.';
+      return;
+    }
+    var swaps = out.map(function (a) { return a.alt; }).filter(Boolean);
+    var html = '<b>still on</b> ' + (open.length
+      ? esc(open.map(function (a) { return a.label.toLowerCase(); }).join(' · '))
+      : '&mdash; nothing on this list, so this is the whole of it');
+    if (swaps.length) html += '<br><b>instead</b> ' + esc(swaps.join(' · '));
+    still.className = 'cond-still' + (open.length ? '' : ' none');
+    still.innerHTML = html;
+  }
+
+  /* Counts come from the board rather than from the scope map: a scope may
+     name a system this hub has no builder for, and a ribbon saying eight
+     held above a fold listing seven is the kind of small lie that costs a
+     page its credibility. */
+  function paintConditions(board) {
+    var all = board || systems();
     var cs = C().active(), bar = $('#cond-bar'), txt = $('#cond-text');
     if (!cs.length) {
       bar.className = 'cond-bar none';
@@ -607,56 +878,74 @@ footer {
     } else {
       bar.className = 'cond-bar';
       var parts = cs.map(function (c) {
-        return c.label + (c.detail ? ' (' + c.detail + ')' : '') +
-               ' · day ' + c.days + (c.dueReview ? ' · review due' : '');
+        return '<b>' + esc(c.label + (c.detail ? ' (' + c.detail + ')' : '')) + '</b> ' +
+               '<span class="grade">' + esc(c.grade.label) + '</span> ' +
+               '<span class="since">day ' + c.days + (c.dueReview ? ' · review due' : '') + '</span>';
       });
-      var n = Object.keys(C().heldIds()).length;
-      txt.innerHTML = '<b>' + esc(parts.join('  ·  ')) + '</b> <span class="since">— ' +
-        n + ' system' + (n === 1 ? '' : 's') + ' held</span>';
+      var nHeld = all.filter(function (s) { return s.tone === 'held'; }).length;
+      var nEase = all.filter(function (s) { return !!s.eased; }).length;
+      var tail = [];
+      if (nHeld) tail.push(nHeld + ' held');
+      if (nEase) tail.push(nEase + ' eased');
+      /* A condition that holds nothing has to say so, or the ribbon reads
+         like an alarm for something you explicitly said was minor. */
+      if (!tail.length) {
+        tail.push(cs.some(function (c) { return c.effect !== 'none'; })
+          ? 'nothing on the board is affected — on the record only'
+          : 'nothing held — on the record only');
+      }
+      txt.innerHTML = parts.join('&nbsp; · &nbsp;') +
+        ' <span class="since">— ' + tail.join(', ') + '</span>';
     }
 
-    var pick = $('#cond-pick');
-    if (!pick.childNodes.length) {
-      C().DEFS.forEach(function (d) {
-        var b = el('button'); b.type = 'button'; b.setAttribute('data-cond', d.id);
-        b.appendChild(el('span', null, d.label));
-        b.appendChild(el('small', null, d.hint));
-        b.addEventListener('click', function () {
-          var on = C().active().some(function (c) { return c.id === d.id; });
-          if (on) { C().lift(d.id); }
-          else {
-            var detail = '';
-            if (d.id === 'injured' || d.id === 'ill') {
-              detail = (window.prompt('What, specifically? (e.g. lower back)') || '').trim();
-            }
-            C().declare(d.id, detail);
-          }
-          paint();
-        });
-        pick.appendChild(b);
+    var row = $('#cond-row'); row.innerHTML = '';
+    C().DEFS.forEach(function (d) {
+      var on = C().get(d.id);
+      var b = el('button'); b.type = 'button'; b.setAttribute('data-cond', d.id);
+      b.setAttribute('aria-pressed', String(!!on));
+      if (draft && draft.id === d.id) b.className = 'editing';
+      b.appendChild(el('span', null, d.label));
+      b.appendChild(el('small', null, on ? on.grade.short + ' · day ' + on.days : d.hint));
+      b.addEventListener('click', function () {
+        /* Clicking a chip opens it rather than toggling it. Toggling was
+           what made every condition maximal: one tap and the hub assumed
+           the worst reading of it. Lifting still takes one click, from
+           inside the panel, where it says what it is doing. */
+        if (draft && draft.id === d.id) draft = null; else openDraft(d.id);
+        paintConditions();
       });
-    }
-    Array.prototype.forEach.call(pick.children, function (b) {
-      b.setAttribute('aria-pressed', String(C().active().some(function (c) {
-        return c.id === b.getAttribute('data-cond');
-      })));
+      row.appendChild(b);
     });
+    buildPanel();
   }
-  $('#cond-edit').addEventListener('click', function () { $('#cond-pick').classList.toggle('open'); });
+  $('#cond-edit').addEventListener('click', function () {
+    var pick = $('#cond-pick');
+    pick.classList.toggle('open');
+    if (!pick.classList.contains('open')) { draft = null; buildPanel(); }
+  });
 
   /* ── the page ──────────────────────────────────────────────── */
   function paint() {
-    paintConditions();
     var all  = systems();
+    paintConditions(all);
     paintBoard(all);
     var owed = all.filter(function (s) { return s.tone === 'go'; });
     var held = all.filter(function (s) { return s.tone === 'held'; });
     var rest = all.filter(function (s) { return s.tone !== 'go' && s.tone !== 'held'; });
+    var eased = all.filter(function (s) { return !!s.eased; });
     var drift = window.Systems.drift();
-    var cs = C().active();
-    var floorDay = cs.length > 0 || drift >= 3;
-    var met = floorMet();
 
+    /* Only a condition graded as stopping you produces a floor day. One
+       graded slower produces an easier day, which is a different page: the
+       whole board, the real numbers, a smaller ask. And one merely noted
+       produces an ordinary day with a line on the ribbon, which is the
+       point of having it. */
+    var holding = C().stopping(), easing = C().easing();
+    var floorDay = holding.length > 0 || drift >= 3;
+    var easeDay  = !floorDay && easing.length > 0;
+    var met = floorMet();
+    var revealed = lsJson(RKEY, {})[C().today()] === 1;
+    var showOwed = !floorDay || revealed;
 
     var h1 = $('#verdict'), sub = $('#verdict-sub');
     h1.className = '';
@@ -665,11 +954,34 @@ footer {
       h1.innerHTML = 'Today is a <em>floor day</em>.';
       var bits = [];
       if (drift >= 3) bits.push((COUNT[drift] || drift) + ' days down');
-      cs.forEach(function (c) { bits.push('the ' + (c.detail || c.label.toLowerCase()) + ' is out'); });
+      holding.forEach(function (c) { bits.push(C().phrase(c)); });
+      var nh = held.length;
       sub.textContent = (bits.length ? cap(bits.join(', ')) + '. ' : '') +
-        Object.keys(C().heldIds()).length + ' systems are held — nothing is accruing against you while they are. ' +
+        (nh === 1 ? 'One system is held' : (COUNT[nh] ? cap(COUNT[nh]) : nh) + ' systems are held') +
+        ' — nothing is accruing against you while ' + (nh === 1 ? 'it is' : 'they are') + '. ' +
         (met ? 'You did the one thing. The day counted.'
-             : 'Do the one thing below and the day counts as a day.');
+             : 'Do the one thing below and the day counts as a day.') +
+        ' The numbers are still yours to see — the button below opens the full board.';
+    } else if (easeDay) {
+      /* Deliberately not the floor-day page. Nothing is hidden, nothing is
+         folded, and the red column below is the same red column as any
+         other day — because you said this was a slower day, not a lost one,
+         and a hub that hides your numbers the moment you admit to a bad
+         shoulder is a hub you learn not to tell the truth to. */
+      h1.className = 'floor';
+      h1.innerHTML = 'Today is an <em>easier day</em>.';
+      var eb = easing.map(function (c) {
+        var w = C().phrase(c);
+        return c.outAreas.length
+          ? w + ' — ' + c.outAreas.map(function (a) { return a.label.toLowerCase(); }).join(', ') + ' out'
+          : w;
+      });
+      var ne = eased.length;
+      sub.textContent = cap(eb.join('; ')) + '. Nothing is held and nothing is hidden: the board below is ' +
+        'the real one, with the real numbers. ' +
+        (ne ? (ne === 1 ? 'One system is eased' : cap(COUNT[ne] || String(ne)) + ' systems are eased') +
+              ' — the small version clears ' + (ne === 1 ? 'it' : 'them') + ' today.'
+            : 'The ask is smaller today; the standing is not.');
     } else if (owed.length === 0) {
       h1.className = 'clear';
       h1.innerHTML = 'Everything is <em>current</em>.';
@@ -686,38 +998,65 @@ footer {
         'colouring it red — a rut is a fact about the last week, not a verdict on the plan.';
     }
 
-    $('#one-sec').hidden = !floorDay;
-    if (floorDay) {
-      var ramp = C().ramp({ reentry: false });
+    /* The same block serves both kinds of lowered day, because they are the
+       same idea at two strengths — but it must not call an eased ask "the
+       one thing", which would imply the rest had been taken away. */
+    $('#one-sec').hidden = !(floorDay || easeDay);
+    if (floorDay || easeDay) {
+      var ramp = holding.length ? C().ramp({ reentry: false })
+               : (drift >= 3 && !easing.length) ? C().RAMPS.drift
+               : C().ramp({ reentry: false });
+      $('#one-lab').textContent = floorDay ? 'The one thing' : "Today's smaller ask";
       $('#one-ask').textContent = ramp.ask;
       $('#one-why').textContent = ramp.why;
       $('#one-alt').textContent = ramp.alt;
       var env = C().envelope(), wa = $('#one-around');
-      if (env.blocks.length) {
+      if (env.blocks.length || env.swaps.length) {
         wa.hidden = false;
-        wa.innerHTML = '<b>out:</b> ' + esc(env.blocks.join(' · ')) +
-                       '&#12288;&#12288;<b>still on:</b> ' + esc(env.allows.join(' · '));
+        var lines = [];
+        if (env.blocks.length) lines.push('<b>out:</b> ' + esc(env.blocks.join(' · ')));
+        if (env.allows.length) lines.push('<b>still on:</b> ' + esc(env.allows.join(' · ')));
+        /* The alternatives, which is the question anybody actually has when
+           something is ruled out. Derived from the areas you ticked, so it
+           can never contradict them. */
+        var out = lines.join('&#12288;&#12288;');
+        if (env.swaps.length) out += '<br><b>instead:</b> ' + esc(env.swaps.join(' · '));
+        wa.innerHTML = out;
       } else { wa.hidden = true; }
       $('#one-did').setAttribute('aria-pressed', String(met));
       $('#one-did-t').textContent = met ? 'logged — the day counted' : "that's the day";
     }
 
-    /* The inversion that matters: on a floor day the red column is not
-       rendered at all. */
-    $('#owed-sec').hidden = floorDay || owed.length === 0;
-    $('#owed-note').textContent = owed.length ? 'the ones with something owed' : '';
+    /* The inversion that matters: on a floor day the red column is folded
+       away by default. Folded, though — not deleted, and no longer without
+       a way back. Asking for the numbers is one tap, the answer is
+       remembered for the day, and what comes back is the ordinary board
+       rather than a censored one. */
+    $('#owed-sec').hidden = !showOwed || owed.length === 0;
+    $('#owed-note').textContent = owed.length
+      ? (floorDay ? 'shown because you asked — none of it is accruing today'
+                  : (easeDay ? 'the real numbers · the ask is smaller, the standing is not'
+                             : 'the ones with something owed'))
+      : '';
     var grid = $('#owed-grid'); grid.innerHTML = '';
-    if (!floorDay) owed.forEach(function (s) {
-      var a = el('a', 'tile'); a.href = s.href;
+    if (showOwed) owed.forEach(function (s) {
+      var a = el('a', 'tile' + (s.eased ? ' is-eased' : '')); a.href = s.href;
       a.appendChild(el('div', 'name', s.name));
       var fig = el('div', 'fig');
       fig.appendChild(el('span', 'big', s.big));
       fig.appendChild(el('span', 'unit', s.unit));
       a.appendChild(fig);
       a.appendChild(el('div', 'line', s.line));
+      if (s.eased) a.appendChild(el('div', 'mark', 'eased today'));
       a.appendChild(el('div', 'go-to', 'open ' + s.name.toLowerCase() + ' →'));
       grid.appendChild(a);
     });
+
+    var rv = $('#reveal');
+    rv.hidden = !floorDay || owed.length === 0;
+    rv.textContent = revealed
+      ? '↑ fold the numbers away again'
+      : '↓ show me the numbers anyway (' + owed.length + ' owed, none of it accruing)';
 
     $('#held-fold').hidden = held.length === 0;
     if (held.length) {
@@ -726,12 +1065,12 @@ footer {
       fill($('#held-list'), held, 'is-held');
     }
 
-    var waiting = rest.length + (floorDay ? owed.length : 0);
-    $('#cur-label').innerHTML = floorDay
+    var waiting = rest.length + (showOwed ? 0 : owed.length);
+    $('#cur-label').innerHTML = (floorDay && !showOwed)
       ? '<b>' + (COUNT[waiting] || waiting) + ' waiting</b> — the hub will show them when you ask'
       : '<b>' + (COUNT[rest.length] || rest.length) + ' system' + (rest.length === 1 ? '' : 's') +
         ' current</b>' + (owed.length ? ', nothing owed' : ' — the whole board');
-    fill($('#cur-list'), floorDay ? rest.concat(owed) : rest, '');
+    fill($('#cur-list'), showOwed ? rest : rest.concat(owed), '');
 
     /* Folded, not deleted. "They will keep" is the message; hiding them
        outright would move the dread somewhere you cannot see it. */
@@ -743,7 +1082,7 @@ footer {
     buildActs($('#acts'), acts);
     buildActs($('#acts2'), acts);
 
-    paintDirectory($('#filter').value, floorDay);
+    paintDirectory($('#filter').value, floorDay && !showOwed);
   }
 
   function fill(node, list, extra) {
@@ -751,6 +1090,7 @@ footer {
     list.forEach(function (s) {
       var cls = 'row ' + (extra || (s.tone === 'ok' ? '' : 'is-quiet'));
       if (s.tone === 'go') cls = 'row is-quiet';
+      if (s.eased) cls += ' is-eased';
       var a = el('a', cls.trim()); a.href = s.href;
       a.appendChild(el('span', 'big', s.big));
       var t = el('span', 'txt');
@@ -799,6 +1139,15 @@ footer {
 
   $('#one-did').addEventListener('click', function () {
     setFloorMet(this.getAttribute('aria-pressed') !== 'true');
+    paint();
+  });
+
+  /* "Show me the numbers anyway." The floor day's whole argument is that
+     the shortest page is the kindest one — but that argument is only
+     honest if it is a default rather than a wall, and the first version
+     had no door in it at all. */
+  $('#reveal').addEventListener('click', function () {
+    setRevealed(!(lsJson(RKEY, {})[C().today()] === 1));
     paint();
   });
 
