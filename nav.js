@@ -36,6 +36,7 @@
     ['Body', [
       ['Grind.dc.html', 'Grind board'],
       ['Life Log.dc.html', 'Life Log'],
+      ['Health.html', 'The Body · health + moments'],
     ]],
     /* The five documents are one entry, not five. They are things you read
        rather than things you use, and they were each costing a drawer slot

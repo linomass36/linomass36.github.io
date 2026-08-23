@@ -99,6 +99,52 @@
       },
     },
 
+    /* The body's record. All three of its parts are dated, and all three
+       grow without limit — the events especially, since a day of ordinary
+       eating and one walk is already half a dozen of them. `meta` is live
+       state (last import, units) and stays hot whatever its age. */
+    ct_health_v1: {
+      split: function (o, before) {
+        var hot = {}, cold = {}, k;
+        for (k in o) if (Object.prototype.hasOwnProperty.call(o, k)) hot[k] = o[k];
+        hot.days = {}; hot.events = []; hot.moments = [];
+
+        function bucket(day) {
+          var p = periodOf(day);
+          return (cold[p] = cold[p] || { days: {}, events: [], moments: [] });
+        }
+        Object.keys(o.days || {}).forEach(function (day) {
+          if (day < before) bucket(day).days[day] = o.days[day];
+          else hot.days[day] = o.days[day];
+        });
+        ['events', 'moments'].forEach(function (part) {
+          (Array.isArray(o[part]) ? o[part] : []).forEach(function (r) {
+            var day = r && dayOfMs(r.ts);
+            if (day && day < before) bucket(day)[part].push(r);
+            else hot[part].push(r);
+          });
+        });
+        return { hot: hot, cold: cold };
+      },
+      join: function (target, chunk) {
+        if (!target.days) target.days = {};
+        Object.keys((chunk && chunk.days) || {}).forEach(function (d) {
+          if (!(d in target.days)) target.days[d] = chunk.days[d];
+        });
+        ['events', 'moments'].forEach(function (part) {
+          if (!Array.isArray(target[part])) target[part] = [];
+          var seen = {};
+          target[part].forEach(function (r) { if (r && r.id) seen[r.id] = 1; });
+          (((chunk && chunk[part]) || [])).forEach(function (r) {
+            if (!r || (r.id && seen[r.id])) return;
+            target[part].push(r); if (r.id) seen[r.id] = 1;
+          });
+          target[part].sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+        });
+        return target;
+      },
+    },
+
     /* A flat list of entries, each carrying the day it belongs to. */
     ct_journal_v1: {
       isArray: true,
