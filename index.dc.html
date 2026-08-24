@@ -147,11 +147,14 @@ class Component extends DCLogic {
   // All config now lives in config.js (window.APP_CONFIG). Edit it there.
   get CONF() { return window.APP_CONFIG || {}; }
   get AUTHORIZED_EMAIL() { return this.CONF.authorizedEmail || 'you@gmail.com'; }
-  // A phone lands on Today; a desktop lands on Mission Control.
+  // A phone lands on mobileHubUrl if one is set; otherwise phone and desktop
+  // land on the same hubUrl (see the "Set to '' to send phones to hubUrl"
+  // comment in config.js — the old `|| 'Today.dc.html'` fallback here ignored
+  // that and always sent phones to Today regardless of the setting).
   get HUB_URL() {
     var small = false;
     try { small = window.matchMedia('(max-width: 640px)').matches; } catch (e) {}
-    if (small && (this.CONF.mobileHubUrl || 'Today.dc.html')) return this.CONF.mobileHubUrl || 'Today.dc.html';
+    if (small && this.CONF.mobileHubUrl) return this.CONF.mobileHubUrl;
     return this.CONF.hubUrl || 'Hub.dc.html';
   }
   get FIREBASE_CONFIG() { return this.CONF.firebase || { apiKey: 'PASTE_FIREBASE_API_KEY' }; }
