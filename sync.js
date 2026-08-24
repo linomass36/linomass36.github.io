@@ -227,9 +227,21 @@
      mobile browsers routinely suspend the network/listeners of), and the
      live onSnapshot listener came back stale or not at all. Now, if sync
      is already running, coming back to the tab forces the same fetch the
-     "Sync now" button does instead of trusting a listener that may not
-     have survived being backgrounded. */
-  function resync() { if (uid) window.hubSync.syncNow(); else boot(); }
+     "Sync now" button does — reconcile(), gated exactly like hydrate(), so
+     this can never turn into an unconditional push — instead of trusting a
+     listener that may not have survived being backgrounded.
+
+     visibilitychange can fire more than once for one real foregrounding
+     (some browsers pair it with other focus events), so this is throttled:
+     at most one reconcile pass per 10s, no matter how many events land. */
+  var lastResync = 0;
+  function resync() {
+    if (!uid) { boot(); return; }
+    var now = Date.now();
+    if (now - lastResync < 10000) return;
+    lastResync = now;
+    reconcile('resume').catch(function (e) { fail('resync', e); });
+  }
   window.addEventListener('online', resync);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) resync(); });
 
@@ -295,11 +307,7 @@
       uid = u.uid;
       window.hubSync.syncNow = function () {
         UI.set('connecting', 'Checking…');
-        return docRef().get().then(function (snap) {
-          cloudRead = true;
-          if (applyIfNewer(snap)) { location.reload(); return; }  // the cloud was ahead
-          return pushNow();
-        }).catch(function (e) { fail('sync now', e); });
+        return reconcile('manual').catch(function (e) { fail('sync now', e); });
       };
       hydrate();
     });
@@ -429,18 +437,33 @@
     return out;
   }
 
+  /* The one place that decides what a sync pass actually does: pull
+     anything newer from the cloud, and — only if this device genuinely owes
+     it something (an edit, or a key the cloud has never seen) — push that
+     up. Never an unconditional push. hydrate(), the manual "Sync now"
+     button, and resuming from background all funnel through this, so
+     there's exactly one definition of "safe to push" instead of the manual
+     button quietly having its own, looser one. Resolves true if a reload
+     was triggered (the caller should do nothing further), false otherwise. */
+  function reconcile(reason) {
+    return docRef().get().then(function (snap) {
+      cloudRead = true;                       // we know what the cloud holds
+      if (snap.exists && applyIfNewer(snap)) { location.reload(); return true; }
+      var cloudStore = (snap.exists && (snap.data() || {}).store) || {};
+      var owed = localOnly(cloudStore);
+      Object.keys(owed).forEach(function (k) { touched[k] = touched[k] || 1; });
+      if (Object.keys(touched).length) return pushNow(snap.exists ? reason : 'seed').then(function () { return false; });
+      syncedLabel();
+      return false;
+    });
+  }
+
   function hydrate() {
     touched = readPending();  // an edit the last page made but navigated away
                                // before it could push is still owed to the
                                // cloud — carry it forward, don't drop it.
-    docRef().get().then(function (snap) {
-      cloudRead = true;                       // we know what the cloud holds
-      var applied = snap.exists && applyIfNewer(snap);
-      if (applied) { location.reload(); return; }
-      var cloudStore = (snap.exists && (snap.data() || {}).store) || {};
-      var owed = localOnly(cloudStore);
-      Object.keys(owed).forEach(function (k) { touched[k] = touched[k] || 1; });
-      if (Object.keys(touched).length) pushNow(snap.exists ? 'reconcile' : 'seed');
+    reconcile('reconcile').then(function (reloading) {
+      if (reloading) return;
       watch();
       patch();
       hydrateArchive().then(function () {
