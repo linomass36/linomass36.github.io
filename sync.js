@@ -183,6 +183,17 @@
   // Declared up here because the loader reports through them.
   var db, uid, unsub, pushTimer, applyingRemote = false, lastSync = 0, lastErr = '', cloudRead = false, touched = {};
 
+  /* Mirrors `touched` to localStorage synchronously on every real edit, so a
+     key that was edited and then lost to navigation (the user taps to a
+     different hub page inside the 800ms debounce window, killing this
+     page's pending push along with the rest of its JS) is not lost — the
+     next page's hydrate() reads this back and still owes it to the cloud. */
+  var PENDING = '__sync_pending';
+  function readPending() {
+    try { var o = JSON.parse(localStorage.getItem(PENDING)); return (o && typeof o === 'object') ? o : {}; }
+    catch (e) { return {}; }
+  }
+
   var SDK = '10.12.2';
   var BASE = 'https://www.gstatic.com/firebasejs/' + SDK + '/';
   var SDK_URLS = [
@@ -330,10 +341,17 @@
      it here verbatim would delete every older day this device holds — the
      whole archive, silently, on one sync. Archive.rejoin keeps ours and
      takes theirs. See archive.js. */
-  function applyToLocal(store) {
+  /* Keys this device has edited but not yet confirmed pushed. `protect`
+     is that same set (or the pending set carried over from a page that
+     navigated away before it could push — see PENDING below): a key in it
+     is strictly newer here than whatever the cloud is holding, so an
+     incoming sync must leave it alone rather than overwrite an unpushed
+     edit with an older value. */
+  function applyToLocal(store, protect) {
     var changed = false;
     var A = window.Archive;
     Object.keys(store).forEach(function (k) {
+      if (protect && protect[k]) return;
       var incoming = store[k];
       if (A && A.splittable(k)) incoming = A.rejoin(k, incoming, localStorage.getItem(k));
       if (localStorage.getItem(k) !== incoming) { localStorage.setItem(k, incoming); changed = true; }
@@ -349,7 +367,7 @@
     if (rev && rev === localStorage.getItem('__sync_rev')) return false; // already applied
     keepUndo(store);
     applyingRemote = true;
-    var changed = applyToLocal(store);
+    var changed = applyToLocal(store, touched);
     localStorage.setItem('__sync_rev', rev);
     applyingRemote = false;
     return changed;
@@ -363,6 +381,7 @@
     try {
       var prev = {}, n = 0, A = window.Archive;
       Object.keys(store).forEach(function (k) {
+        if (touched[k]) return;   // an unpushed local edit — applyToLocal won't touch it either
         var was = localStorage.getItem(k);
         var incoming = (A && A.splittable(k)) ? A.rejoin(k, store[k], was) : store[k];
         if (was !== null && was !== incoming) { prev[k] = was; n += was.length; }
@@ -389,14 +408,31 @@
     UI.set('synced', 'Synced ✓');
   }
 
+  /* Local keys the given cloud store has never seen. Covers three cases the
+     same way: the doc does not exist yet (first sync anywhere), it exists
+     but is missing keys this device holds (two devices seeding the same
+     brand-new account within moments of each other — whichever write lands
+     first "wins" the exists check, and without this the second device would
+     just say "already there" and never correct it), or this device is still
+     carrying an edit a previous page never got to push. */
+  function localOnly(cloudStore) {
+    var mine = localSnapshot(), out = {};
+    Object.keys(mine).forEach(function (k) { if (!(k in cloudStore)) out[k] = 1; });
+    return out;
+  }
+
   function hydrate() {
+    touched = readPending();  // an edit the last page made but navigated away
+                               // before it could push is still owed to the
+                               // cloud — carry it forward, don't drop it.
     docRef().get().then(function (snap) {
       cloudRead = true;                       // we know what the cloud holds
-      if (snap.exists) {
-        if (applyIfNewer(snap)) { location.reload(); return; }
-      } else {
-        pushNow('seed'); // first run for this account: seed the cloud from local
-      }
+      var applied = snap.exists && applyIfNewer(snap);
+      if (applied) { location.reload(); return; }
+      var cloudStore = (snap.exists && (snap.data() || {}).store) || {};
+      var owed = localOnly(cloudStore);
+      Object.keys(owed).forEach(function (k) { touched[k] = touched[k] || 1; });
+      if (Object.keys(touched).length) pushNow(snap.exists ? 'reconcile' : 'seed');
       watch();
       patch();
       hydrateArchive().then(function () {
@@ -504,6 +540,7 @@
         }
         return docRef().set({ store: payload, updatedAt: rev }).then(function () {
           touched = {};
+          localStorage.removeItem(PENDING);
           if (ok && chunks.length) archived = true;
           syncedLabel();
         });
@@ -655,12 +692,20 @@
     var setItem = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (k, v) {
       setItem(k, v);
-      if (!applyingRemote && String(k).indexOf('__sync') !== 0) { touched[k] = 1; pushSoon(); }
+      if (!applyingRemote && String(k).indexOf('__sync') !== 0) {
+        touched[k] = 1;
+        try { setItem(PENDING, JSON.stringify(touched)); } catch (e) {}
+        pushSoon();
+      }
     };
     var removeItem = localStorage.removeItem.bind(localStorage);
     localStorage.removeItem = function (k) {
       removeItem(k);
-      if (!applyingRemote && String(k).indexOf('__sync') !== 0) { touched[k] = 'del'; pushSoon(); }
+      if (!applyingRemote && String(k).indexOf('__sync') !== 0) {
+        touched[k] = 'del';
+        try { setItem(PENDING, JSON.stringify(touched)); } catch (e) {}
+        pushSoon();
+      }
     };
   }
 
