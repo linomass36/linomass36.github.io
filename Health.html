@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Body</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<script src="./conditions.js"></script>
+<script src="./health-data.js"></script>
+<style>
+/* ─────────────────────────────────────────────────────────────
+   The Body — what the phone measured, and what you felt.
+
+   The hub's other pages compute what is owed. This one computes
+   nothing of the sort: it is the only page here with no targets,
+   no streak and no verdict, because a body is not behind on
+   anything and telling it so has never once helped.
+
+   Two halves. Above, what Health recorded — sleep, fuel, training,
+   the resting numbers. Below, what you noticed, stamped to the
+   minute, with the twelve hours that led to it rendered underneath
+   so the question "what was I doing before this?" is answered by
+   looking rather than by remembering.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --ground: #F7F5F1; --card: #FFFDF8; --raise: #FFFFFF;
+  --ink: #1A1B1A; --mid: #55564F; --muted: #8A8B82; --faint: #B4B2A9;
+  --rule: #E4E2DD; --rust: #993C1D; --rust-dim: #FBF2EE;
+  --owed: #A32E27; --owed-bg: #FBEDE8; --owed-ln: #E8C4B6;
+  --ok: #0F6E56; --ok-bg: #EEF5F1; --ok-ln: #C4DED2;
+  --held: #7A6A4E; --held-bg: #F4F0E6; --held-ln: #DED4BE;
+
+  /* ── viz tokens ────────────────────────────────────────────
+     Not the hub's semantic colours. A sleep stage is not "good"
+     or "owed", and painting it with a status hue would make it
+     read as a verdict. These are a categorical set in fixed
+     order, validated for colour-vision separation against this
+     page's own surface rather than chosen by eye. */
+  --stage-deep:  #2F5FA6;
+  --stage-core:  #1F9E86;
+  --stage-rem:   #C97B24;
+  --stage-awake: #C6C2B8;
+  /* Diverging, for the sign of a correlation. Blue↔rust with a
+     neutral midpoint: the midpoint has to read as "nothing", so
+     it is grey rather than a third hue. */
+  --r-neg: #2F5FA6;
+  --r-pos: #A8341F;
+  --r-mid: #E4E2DD;
+
+  --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --serif: "Newsreader", Georgia, serif;
+  --shadow: 0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131315; --card: #1B1B1D; --raise: #212124;
+    --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+    --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+    --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+    --ok: #5FBF9B; --ok-bg: #14231E; --ok-ln: #24463A;
+    --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+    --stage-deep: #5B8FD6; --stage-core: #22A183; --stage-rem: #BB7E30;
+    --stage-awake: #3A3A3D;
+    --r-neg: #5A8FD4; --r-pos: #D9694A; --r-mid: #383835;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131315; --card: #1B1B1D; --raise: #212124;
+  --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
+  --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
+  --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
+  --ok: #5FBF9B; --ok-bg: #14231E; --ok-ln: #24463A;
+  --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
+  --stage-deep: #5B8FD6; --stage-core: #22A183; --stage-rem: #BB7E30;
+  --stage-awake: #3A3A3D;
+  --r-neg: #5A8FD4; --r-pos: #D9694A; --r-mid: #383835;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px; }
+
+.top {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 13px 68px 13px 20px;
+  background: color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
+.dateline { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+.top .sp { flex: 1; }
+.top a.back { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.top a.back:hover { color: var(--rust); }
+
+main { max-width: 960px; margin: 0 auto; padding: 26px 20px 100px; }
+
+h1 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(28px, 5.6vw, 40px); line-height: 1.08;
+  letter-spacing: -.018em; margin: 0; text-wrap: balance;
+}
+.lede { margin: 12px 0 0; max-width: 60ch; font-family: var(--serif); font-style: italic; font-size: 16.5px; line-height: 1.55; color: var(--mid); }
+section { margin-top: 38px; }
+.kicker {
+  display: flex; align-items: baseline; gap: 10px;
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--rust);
+  margin-bottom: 14px;
+}
+.kicker .note { margin-left: auto; letter-spacing: .04em; text-transform: none; color: var(--faint); font-weight: 400; }
+
+/* ── the import ribbon ── */
+.ribbon {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 15px; border-radius: 11px;
+  background: var(--held-bg); border: 1px solid var(--held-ln);
+  font-size: 13.5px; color: var(--held);
+}
+.ribbon.none { background: transparent; border-color: var(--rule); color: var(--muted); }
+.ribbon .pip { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.ribbon b { font-weight: 600; }
+.ribbon .act { margin-left: auto; display: flex; gap: 8px; }
+.ribbon button {
+  background: none; border: 0; cursor: pointer; min-height: 34px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em;
+  color: inherit; text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* ── today ── */
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); }
+.card {
+  padding: 16px 17px 15px; border-radius: 13px;
+  background: var(--card); border: 1px solid var(--rule); box-shadow: var(--shadow);
+}
+.card .lab { font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.card .fig { display: flex; align-items: baseline; gap: 8px; margin-top: 9px; }
+.card .big { font-family: var(--serif); font-size: 31px; font-weight: 500; line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.card .unit { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.card .sub { margin-top: 9px; font-size: 12.5px; line-height: 1.5; color: var(--mid); }
+.card .none { font-family: var(--serif); font-style: italic; color: var(--faint); font-size: 15px; margin-top: 9px; }
+
+/* ── the sleep bar ──────────────────────────────────────────
+   A stacked bar for one night: four parts of a whole, in a
+   fixed order. 2px of surface between segments so adjacent
+   fills never touch, and every segment carries its own label —
+   identity must not rest on hue alone. */
+.stages { margin-top: 13px; }
+.stagebar { display: flex; gap: 2px; height: 15px; }
+.stagebar i { display: block; min-width: 3px; }
+.stagebar i:first-child { border-radius: 4px 0 0 4px; }
+.stagebar i:last-child { border-radius: 0 4px 4px 0; }
+.stagekey { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.stagekey span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--mid); }
+.stagekey i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.stagekey b { font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* ── the moment logger ── */
+.logger { padding: 19px 20px 18px; border-radius: 14px; background: var(--card); border: 1px solid var(--rule); box-shadow: var(--shadow); }
+.fld + .fld { margin-top: 17px; }
+.fld > .q { display: block; margin-bottom: 8px; font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--rust); }
+.fld > .q .sub { letter-spacing: .03em; text-transform: none; color: var(--faint); font-weight: 400; }
+.scale { display: flex; gap: 7px; flex-wrap: wrap; }
+.scale button {
+  min-width: 46px; min-height: 42px; padding: 8px 12px; cursor: pointer;
+  background: var(--raise); border: 1px solid var(--rule); border-radius: 10px;
+  font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums;
+}
+.scale button:hover { border-color: var(--rust); }
+.scale button[aria-pressed="true"] { background: var(--rust); border-color: var(--rust); color: var(--ground); font-weight: 600; }
+.scale .ends { display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; color: var(--faint); padding: 0 2px; }
+.chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.chips button {
+  min-height: 36px; padding: 6px 13px; cursor: pointer; font-size: 13.5px;
+  background: var(--raise); border: 1px solid var(--rule); border-radius: 18px;
+}
+.chips button:hover { border-color: var(--held); }
+.chips button[aria-pressed="true"] { background: var(--held-bg); border-color: var(--held); color: var(--held); font-weight: 500; }
+.logger textarea {
+  width: 100%; min-height: 76px; padding: 10px 12px; resize: vertical; line-height: 1.55;
+  background: var(--raise); border: 1px solid var(--rule); border-radius: 10px; font-size: 14px;
+}
+.logger textarea:focus, .logger input:focus { border-color: var(--rust); outline: none; }
+.logger input[type="datetime-local"] {
+  min-height: 40px; padding: 8px 12px; background: var(--raise);
+  border: 1px solid var(--rule); border-radius: 10px; font-size: 13.5px;
+}
+.saverow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.saverow .go {
+  min-height: 44px; padding: 11px 22px; cursor: pointer; font-size: 14.5px; font-weight: 500;
+  background: var(--rust); border: 1px solid var(--rust); border-radius: 22px; color: var(--ground);
+}
+.saverow .go:hover { filter: brightness(1.08); }
+.saverow .said { font-family: var(--mono); font-size: 10.5px; color: var(--ok); }
+
+/* ── moments ── */
+.moment { padding: 15px 17px; border-radius: 12px; background: var(--card); border: 1px solid var(--rule); }
+.moment + .moment { margin-top: 10px; }
+.mhead { display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap; }
+.mhead .when { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+.mhead .scores { display: flex; gap: 9px; flex-wrap: wrap; }
+.mhead .sc { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; padding: 2px 8px; border-radius: 9px; background: var(--held-bg); color: var(--held); }
+.mhead .from { margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.moment .note { margin-top: 9px; font-family: var(--serif); font-size: 16px; line-height: 1.5; }
+.moment .syms { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+.moment .syms span { font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em; padding: 2px 8px; border-radius: 9px; background: var(--owed-bg); color: var(--owed); }
+.moment .open {
+  margin-top: 11px; background: none; border: 0; cursor: pointer; padding: 6px 0; min-height: 32px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; color: var(--rust);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.moment .drop { display: none; margin-top: 12px; padding-top: 13px; border-top: 1px solid var(--rule); }
+.moment .drop.open { display: block; }
+.tl { list-style: none; margin: 0; padding: 0; }
+.tl li { display: flex; gap: 12px; padding: 6px 0; font-size: 13px; }
+.tl .t { font-family: var(--mono); font-size: 10.5px; color: var(--faint); min-width: 42px; font-variant-numeric: tabular-nums; }
+.tl .k { min-width: 62px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tl .d { color: var(--mid); }
+.feat { display: flex; gap: 8px 18px; flex-wrap: wrap; margin-top: 12px; padding: 10px 12px; border-radius: 9px; background: var(--held-bg); }
+.feat span { font-family: var(--mono); font-size: 10px; color: var(--held); }
+.feat b { font-weight: 600; }
+.drop .del { margin-top: 12px; background: none; border: 0; cursor: pointer; padding: 4px 0; min-height: 30px; font-family: var(--mono); font-size: 10px; color: var(--owed); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── patterns ──────────────────────────────────────────────
+   A diverging bar: the sign of r is the whole point, so the
+   marks grow left and right from a shared centre line and the
+   midpoint is neutral. Every row carries its number and a
+   plain sentence, so nothing is ever read from colour alone. */
+.ptabs { display: flex; gap: 7px; margin-bottom: 14px; }
+.ptabs button {
+  min-height: 36px; padding: 6px 15px; cursor: pointer; font-size: 13.5px;
+  background: var(--raise); border: 1px solid var(--rule); border-radius: 18px;
+}
+.ptabs button[aria-pressed="true"] { background: var(--held-bg); border-color: var(--held); color: var(--held); font-weight: 500; }
+.ptable { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); overflow: hidden; }
+.prow { display: grid; grid-template-columns: minmax(140px, 1.3fr) minmax(120px, 1fr) auto; gap: 12px; align-items: center; padding: 11px 15px; border-bottom: 1px solid var(--rule); }
+.prow:last-child { border-bottom: 0; }
+.prow .lbl { font-size: 13.5px; }
+.prow .lbl small { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--faint); margin-top: 2px; }
+.prow.thin { opacity: .55; }
+.rbar { position: relative; height: 15px; background: linear-gradient(var(--r-mid), var(--r-mid)) center/1px 100% no-repeat; }
+.rbar i { position: absolute; top: 0; height: 15px; display: block; }
+.rbar i.neg { right: 50%; border-radius: 4px 0 0 4px; background: var(--r-neg); }
+.rbar i.pos { left: 50%; border-radius: 0 4px 4px 0; background: var(--r-pos); }
+.prow .rv { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; min-width: 52px; }
+.prow .rv small { display: block; font-size: 9px; color: var(--faint); }
+.caveat {
+  margin-top: 14px; padding: 14px 16px; border-radius: 11px;
+  background: var(--card); border: 1px dashed var(--held-ln);
+  font-size: 13px; line-height: 1.6; color: var(--mid); max-width: 68ch;
+}
+.caveat b { color: var(--ink); font-weight: 600; }
+.empty { padding: 22px 4px; font-family: var(--serif); font-style: italic; color: var(--muted); max-width: 58ch; }
+
+/* ── import panel ── */
+.import { padding: 18px 19px; border-radius: 13px; background: var(--card); border: 1px solid var(--rule); }
+.drop-zone {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 26px 18px; border: 1px dashed var(--held-ln); border-radius: 11px; cursor: pointer; text-align: center;
+  background: var(--held-bg);
+}
+.drop-zone:hover, .drop-zone.over { border-color: var(--rust); border-style: solid; }
+.drop-zone b { font-size: 14.5px; }
+.drop-zone span { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.import textarea { width: 100%; min-height: 84px; margin-top: 12px; padding: 10px 12px; font-family: var(--mono); font-size: 11.5px; background: var(--raise); border: 1px solid var(--rule); border-radius: 10px; resize: vertical; }
+.import .go { margin-top: 12px; min-height: 40px; padding: 9px 18px; cursor: pointer; background: var(--rust); border: 1px solid var(--rust); border-radius: 20px; color: var(--ground); font-size: 14px; font-weight: 500; }
+.report { margin-top: 13px; padding: 11px 13px; border-radius: 9px; font-family: var(--mono); font-size: 11px; line-height: 1.7; }
+.report.ok { background: var(--ok-bg); border: 1px solid var(--ok-ln); color: var(--ok); }
+.report.bad { background: var(--owed-bg); border: 1px solid var(--owed-ln); color: var(--owed); }
+.report .un { color: var(--held); }
+
+footer {
+  margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--rule);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--faint);
+  display: flex; gap: 14px; flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  main { padding: 0 16px 90px; }
+  .top { padding: 11px 64px 11px 16px; }
+  .prow { grid-template-columns: 1fr auto; }
+  .prow .rbar { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span class="dateline" id="dateline"></span>
+  <span class="sp"></span>
+  <a class="back" href="Standing.html">&larr; the standing</a>
+</header>
+
+<main>
+
+  <h1 id="verdict">&mdash;</h1>
+  <p class="lede" id="lede">&mdash;</p>
+
+  <div class="ribbon" id="ribbon" style="margin-top:20px">
+    <span class="pip"></span>
+    <span id="ribbon-text">&mdash;</span>
+    <span class="act"><button id="btn-import" type="button">import</button></span>
+  </div>
+
+  <section id="today-sec">
+    <div class="kicker">Today <span class="note" id="today-note"></span></div>
+    <div class="cards" id="today"></div>
+  </section>
+
+  <section>
+    <div class="kicker">Log a moment <span class="note">what you feel, when you feel it</span></div>
+    <div class="logger" id="logger"></div>
+  </section>
+
+  <section>
+    <div class="kicker">Moments <span class="note" id="moments-note"></span></div>
+    <div id="moments"></div>
+  </section>
+
+  <section>
+    <div class="kicker">What moves with it <span class="note" id="pat-note"></span></div>
+    <div class="ptabs" id="ptabs"></div>
+    <div id="patterns"></div>
+  </section>
+
+  <section id="import-sec" hidden>
+    <div class="kicker">Import <span class="note">Health Auto Export JSON, or anything shaped like it</span></div>
+    <div class="import">
+      <div class="drop-zone" id="drop">
+        <b>Choose a file, or drop one here</b>
+        <span>iCloud Drive &rsaquo; HealthAutoExport &rsaquo; today&rsquo;s .json</span>
+      </div>
+      <input type="file" id="file" accept=".json,application/json" hidden multiple>
+      <textarea id="paste" placeholder="&hellip;or paste the JSON here"></textarea>
+      <button class="go" id="paste-go" type="button">import what is pasted</button>
+      <div id="report"></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>The Body</span>
+    <span>no targets, no streak — a body is not behind on anything</span>
+  </footer>
+
+</main>
+<script>
+/* ─────────────────────────────────────────────────────────────
+   The Body — render.
+
+   health-data.js owns the schema, the normalising and the
+   statistics. This file owns only what is shown, in what order,
+   and how honestly. Nothing here computes a number; if a figure
+   needs deriving it is derived there and named once.
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+  var H = window.Health;
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
+  var COUNT = ['no','one','two','three','four','five','six','seven','eight','nine','ten',
+               'eleven','twelve','thirteen','fourteen'];
+  function cap(x) { return x ? x.charAt(0).toUpperCase() + x.slice(1) : x; }
+
+  function fmtTime(ts) {
+    var d = new Date(ts);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  function fmtDay(k) {
+    var d = new Date(k + 'T12:00:00');
+    return d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  function relDay(ts) {
+    var k = H.dayOf(ts), t = H.today();
+    if (k === t) return 'today';
+    var y = H.dayOf(Date.now() - 86400000);
+    if (k === y) return 'yesterday';
+    return new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  }
+  function hm(h) {
+    if (h == null) return '—';
+    var t = Math.round(h * 60);
+    return Math.floor(t / 60) + 'h ' + String(t % 60).padStart(2, '0');
+  }
+
+  $('#dateline').textContent = fmtDay(H.today());
+
+  /* ── the headline ────────────────────────────────────────────
+     Deliberately not a verdict. It says what is on record and how
+     much of it, because that is the only thing this page is in a
+     position to know. */
+  function paintHead() {
+    var m = H.moments(), d = H.days(), n = Object.keys(d).length;
+    var h1 = $('#verdict'), lede = $('#lede');
+    if (!n && !m.length) {
+      h1.textContent = 'Nothing on record yet.';
+      lede.textContent = 'Import a Health export and the top half fills itself. The bottom half is yours to write — ' +
+        'log the first moment now if you like, and it will have something to sit against once the data lands.';
+      return;
+    }
+    h1.textContent = n ? (COUNT[n] ? cap(COUNT[n]) : n) + (n === 1 ? ' day' : ' days') + ' on record.' : 'No days imported yet.';
+    lede.textContent = m.length
+      ? (m.length === 1 ? 'One moment logged' : cap(COUNT[m.length] || String(m.length)) + ' moments logged') +
+        '. Each one keeps the twelve hours that led to it, so the question is answered by looking rather than by remembering.'
+      : 'No moments logged yet. The numbers above are what the phone measured; a moment is what you noticed, and only you can put that in.';
+  }
+
+  function paintRibbon() {
+    var meta = H.meta(), r = $('#ribbon'), t = $('#ribbon-text');
+    if (!meta.lastImport) {
+      r.className = 'ribbon none';
+      t.textContent = 'Nothing imported yet — the top half of this page is empty until something lands.';
+      return;
+    }
+    r.className = 'ribbon';
+    var days = Object.keys(H.days()).sort();
+    var ago = Math.round((Date.now() - meta.lastImport) / 3600000);
+    t.innerHTML = '<b>Last import ' + (ago < 1 ? 'just now' : ago + 'h ago') + '</b> ' +
+      '<span style="opacity:.8">— ' + esc(meta.lastSource || 'file') + ' · ' +
+      (days.length ? esc(days[0]) + ' → ' + esc(days[days.length - 1]) : 'no days') + '</span>';
+  }
+
+  /* ── today ─────────────────────────────────────────────────── */
+  var STAGES = [
+    { key: 'deepH',  label: 'Deep', varn: '--stage-deep' },
+    { key: 'coreH',  label: 'Core', varn: '--stage-core' },
+    { key: 'remH',   label: 'REM',  varn: '--stage-rem' }
+  ];
+
+  function card(lab, big, unit, sub) {
+    var c = el('div', 'card');
+    c.appendChild(el('div', 'lab', lab));
+    if (big == null) { c.appendChild(el('div', 'none', '—')); }
+    else {
+      var f = el('div', 'fig');
+      f.appendChild(el('span', 'big', String(big)));
+      if (unit) f.appendChild(el('span', 'unit', unit));
+      c.appendChild(f);
+    }
+    if (sub) c.appendChild(el('div', 'sub', sub));
+    return c;
+  }
+
+  function paintToday() {
+    var k = H.today(), s = H.summary(k), grid = $('#today');
+    grid.innerHTML = '';
+    /* Yesterday's night is today's sleep, and on a morning before the
+       first import today holds nothing at all — so fall back rather than
+       render four dashes and look broken. */
+    if (!s.has) {
+      var prev = Object.keys(H.days()).sort().pop();
+      if (prev) { s = H.summary(prev); $('#today-note').textContent = 'nothing for today yet — showing ' + prev; }
+      else { $('#today-note').textContent = ''; }
+    } else {
+      $('#today-note').textContent = '';
+    }
+    if (!s.has) {
+      grid.appendChild(Object.assign(el('p', 'empty',
+        'No days imported. The import panel takes a Health Auto Export JSON file — or anything shaped like one.'),
+        { style: 'grid-column:1/-1' }));
+      return;
+    }
+
+    // Sleep, with its stages.
+    var sc = el('div', 'card');
+    sc.appendChild(el('div', 'lab', 'Slept'));
+    if (s.sleepH == null) { sc.appendChild(el('div', 'none', 'no night recorded')); }
+    else {
+      var f = el('div', 'fig');
+      f.appendChild(el('span', 'big', hm(s.sleepH)));
+      if (s.sleepStart && s.sleepEnd) f.appendChild(el('span', 'unit', fmtTime(s.sleepStart) + '–' + fmtTime(s.sleepEnd)));
+      sc.appendChild(f);
+      var parts = STAGES.map(function (st) { return { st: st, v: s[st.key] || 0 }; });
+      var known = parts.reduce(function (a, p) { return a + p.v; }, 0);
+      /* The stages should sum to the night, so anything left over is either
+         rounding or a genuinely unclassified stretch. Under five minutes it
+         is the former, and giving rounding error its own labelled segment
+         would be inventing a sleep stage. */
+      var slack = Math.max(0, Math.round(((s.sleepH || 0) - known) * 10) / 10);
+      var awake = slack * 60 >= 5 ? slack : 0;
+      var total = known + awake;
+      if (total > 0) {
+        var wrap = el('div', 'stages'), bar = el('div', 'stagebar');
+        parts.concat([{ st: { label: 'Other', varn: '--stage-awake' }, v: awake }]).forEach(function (p) {
+          if (p.v <= 0) return;
+          var i = el('i');
+          i.style.flex = String(p.v);
+          i.style.background = 'var(' + p.st.varn + ')';
+          i.title = p.st.label + ' ' + hm(p.v);
+          bar.appendChild(i);
+        });
+        wrap.appendChild(bar);
+        /* Direct labels on every segment. A stacked bar whose parts are
+           only distinguishable by hue is unreadable to a good number of
+           people, and unreadable in print to everyone. */
+        var key = el('div', 'stagekey');
+        parts.concat([{ st: { label: 'Other', varn: '--stage-awake' }, v: awake }]).forEach(function (p) {
+          if (p.v <= 0) return;
+          var sp = el('span');
+          var sw = el('i'); sw.style.background = 'var(' + p.st.varn + ')';
+          sp.appendChild(sw);
+          sp.appendChild(document.createTextNode(p.st.label + ' '));
+          sp.appendChild(el('b', null, hm(p.v)));
+          key.appendChild(sp);
+        });
+        wrap.appendChild(key);
+        sc.appendChild(wrap);
+      }
+    }
+    grid.appendChild(sc);
+
+    // Fuel.
+    var macros = [];
+    if (s.protein != null) macros.push('P ' + Math.round(s.protein) + 'g');
+    if (s.carbs != null) macros.push('C ' + Math.round(s.carbs) + 'g');
+    if (s.fat != null) macros.push('F ' + Math.round(s.fat) + 'g');
+    grid.appendChild(card('Ate', s.kcal != null ? Math.round(s.kcal) : null, 'kcal',
+      macros.length ? macros.join('  ·  ') : 'no macros in this export'));
+
+    // Training.
+    var tc = el('div', 'card');
+    tc.appendChild(el('div', 'lab', 'Trained'));
+    if (!s.workouts.length) { tc.appendChild(el('div', 'none', 'nothing logged')); }
+    else {
+      var tf = el('div', 'fig');
+      tf.appendChild(el('span', 'big', String(s.workouts.length)));
+      tf.appendChild(el('span', 'unit', s.workouts.length === 1 ? 'session' : 'sessions'));
+      tc.appendChild(tf);
+      tc.appendChild(el('div', 'sub', s.workouts.map(function (wo) {
+        var bits = [wo.name];
+        if (wo.dur) bits.push(Math.round(wo.dur / 60) + ' min');
+        if (wo.v && wo.v.km) bits.push(wo.v.km + ' km');
+        return bits.join(' · ');
+      }).join('\n')));
+    }
+    grid.appendChild(tc);
+
+    // The resting numbers.
+    var rest = [];
+    if (s.hrv != null) rest.push('HRV ' + Math.round(s.hrv) + ' ms');
+    if (s.steps != null) rest.push(Math.round(s.steps).toLocaleString() + ' steps');
+    if (s.weight != null) rest.push(s.weight + ' kg');
+    if (s.caffeine != null) rest.push(Math.round(s.caffeine) + ' mg caffeine');
+    grid.appendChild(card('Resting HR', s.rhr != null ? Math.round(s.rhr) : null, 'bpm',
+      rest.length ? rest.join('  ·  ') : null));
+  }
+
+  /* ── the moment logger ───────────────────────────────────────
+     Three scales and a note. The scales are 1–5 rather than 1–10
+     because a scale you have to think about is a scale you stop
+     filling in, and five points is the most anyone can place a
+     feeling on consistently. */
+  var SCALES = [
+    { key: 'energy', label: 'Energy', lo: 'flat', hi: 'wired' },
+    { key: 'mood',   label: 'Mood',   lo: 'low',  hi: 'good' },
+    { key: 'focus',  label: 'Focus',  lo: 'foggy', hi: 'sharp' }
+  ];
+  var SYMPTOMS = ['headache', 'nausea', 'congested', 'sore throat', 'feverish',
+                  'aching', 'no appetite', 'dizzy', 'gut', 'pain'];
+  var TAGS = ['caffeine', 'alcohol', 'late night', 'nap', 'stress', 'outdoors',
+              'travel', 'screens', 'skipped a meal', 'big meal'];
+
+  var draft = { energy: null, mood: null, focus: null, symptoms: {}, tags: {}, note: '', ts: null };
+
+  function buildLogger() {
+    var L = $('#logger');
+    L.innerHTML = '';
+
+    SCALES.forEach(function (S) {
+      var f = el('div', 'fld');
+      var q = el('span', 'q');
+      q.innerHTML = esc(S.label) + ' <span class="sub">&mdash; ' + esc(S.lo) + ' to ' + esc(S.hi) + '</span>';
+      f.appendChild(q);
+      var row = el('div', 'scale');
+      row.appendChild(el('span', 'ends', S.lo));
+      for (var i = 1; i <= 5; i++) (function (v) {
+        var b = el('button', null, String(v)); b.type = 'button';
+        b.setAttribute('data-scale', S.key); b.setAttribute('data-v', String(v));
+        b.setAttribute('aria-pressed', String(draft[S.key] === v));
+        b.addEventListener('click', function () {
+          draft[S.key] = draft[S.key] === v ? null : v;   // tapping the same one clears it
+          syncLogger();
+        });
+        row.appendChild(b);
+      })(i);
+      row.appendChild(el('span', 'ends', S.hi));
+      f.appendChild(row);
+      L.appendChild(f);
+    });
+
+    L.appendChild(chipField('Anything the body is doing', 'symptoms', SYMPTOMS,
+      'these also mark the moment as one to read with suspicion later'));
+    L.appendChild(chipField('What was around it', 'tags', TAGS, 'optional, and only if it is true'));
+
+    var nf = el('div', 'fld');
+    var nq = el('span', 'q');
+    nq.innerHTML = 'What happened <span class="sub">&mdash; the sentence you would say out loud</span>';
+    nf.appendChild(nq);
+    var ta = el('textarea');
+    ta.placeholder = 'felt really energetic despite being sick — came on around 4pm, out of nowhere';
+    ta.value = draft.note;
+    ta.addEventListener('input', function () { draft.note = ta.value; });
+    nf.appendChild(ta);
+    L.appendChild(nf);
+
+    var tf = el('div', 'fld');
+    var tq = el('span', 'q');
+    tq.innerHTML = 'When <span class="sub">&mdash; change it if you are writing this up later</span>';
+    tf.appendChild(tq);
+    var ti = el('input'); ti.type = 'datetime-local'; ti.id = 'when';
+    ti.value = localInput(draft.ts || Date.now());
+    tf.appendChild(ti);
+    L.appendChild(tf);
+
+    var row = el('div', 'saverow');
+    var go = el('button', 'go', 'log it'); go.type = 'button';
+    go.addEventListener('click', save);
+    row.appendChild(go);
+    row.appendChild(el('span', 'said', ''));
+    L.appendChild(row);
+    syncLogger();
+  }
+
+  function chipField(label, bucket, list, hint) {
+    var f = el('div', 'fld');
+    var q = el('span', 'q');
+    q.innerHTML = esc(label) + (hint ? ' <span class="sub">&mdash; ' + esc(hint) + '</span>' : '');
+    f.appendChild(q);
+    var row = el('div', 'chips');
+    list.forEach(function (name) {
+      var b = el('button', null, name); b.type = 'button';
+      b.setAttribute('data-bucket', bucket); b.setAttribute('data-name', name);
+      b.addEventListener('click', function () {
+        draft[bucket][name] = !draft[bucket][name];
+        syncLogger();
+      });
+      row.appendChild(b);
+    });
+    f.appendChild(row);
+    return f;
+  }
+
+  function syncLogger() {
+    var L = $('#logger');
+    Array.prototype.forEach.call(L.querySelectorAll('.scale button'), function (b) {
+      b.setAttribute('aria-pressed', String(draft[b.getAttribute('data-scale')] === +b.getAttribute('data-v')));
+    });
+    Array.prototype.forEach.call(L.querySelectorAll('.chips button'), function (b) {
+      b.setAttribute('aria-pressed', String(!!draft[b.getAttribute('data-bucket')][b.getAttribute('data-name')]));
+    });
+  }
+
+  function localInput(ts) {
+    var d = new Date(ts - d0(ts));
+    return d.toISOString().slice(0, 16);
+  }
+  function d0(ts) { return new Date(ts).getTimezoneOffset() * 60000; }
+
+  function picked(bucket) {
+    return Object.keys(draft[bucket]).filter(function (k) { return draft[bucket][k]; });
+  }
+
+  function save() {
+    var when = $('#when').value;
+    var ts = when ? Date.parse(when) : Date.now();   // datetime-local is local time
+    if (isNaN(ts)) ts = Date.now();
+    if (draft.energy == null && draft.mood == null && draft.focus == null &&
+        !draft.note.trim() && !picked('symptoms').length) {
+      $('.saverow .said').textContent = 'nothing to log yet';
+      return;
+    }
+    H.logMoment({
+      ts: ts, energy: draft.energy, mood: draft.mood, focus: draft.focus,
+      symptoms: picked('symptoms'), tags: picked('tags'), note: draft.note
+    });
+    draft = { energy: null, mood: null, focus: null, symptoms: {}, tags: {}, note: '', ts: null };
+    buildLogger();
+    $('.saverow .said').textContent = 'logged';
+    paintMoments(); paintPatterns(); paintHead();
+  }
+
+  /* ── moments, each with the hours that led to it ─────────── */
+  var KINDLABEL = { meal: 'ate', workout: 'trained', sleep: 'woke', caffeine: 'caffeine', symptom: 'symptom' };
+
+  function describe(e) {
+    if (e.kind === 'meal') {
+      var b = [];
+      if (e.v.kcal) b.push(Math.round(e.v.kcal) + ' kcal');
+      if (e.v.protein) b.push(Math.round(e.v.protein) + 'g protein');
+      if (e.v.carbs) b.push(Math.round(e.v.carbs) + 'g carbs');
+      return b.join(' · ') || 'a meal';
+    }
+    if (e.kind === 'workout') {
+      var w = [e.name];
+      if (e.dur) w.push(Math.round(e.dur / 60) + ' min');
+      if (e.v.km) w.push(e.v.km + ' km');
+      if (e.v.hrAvg) w.push('avg ' + Math.round(e.v.hrAvg) + ' bpm');
+      return w.join(' · ');
+    }
+    if (e.kind === 'sleep') {
+      return 'after ' + hm((e.v.asleep || 0) / 60) + ' asleep' +
+             (e.v.deep ? ' · ' + hm(e.v.deep / 60) + ' deep' : '');
+    }
+    if (e.kind === 'caffeine') return Math.round(e.v.qty) + ' ' + (e.v.units || 'mg');
+    if (e.kind === 'symptom') return e.name + (e.v.severity ? ' (' + e.v.severity + ')' : '');
+    return e.name || e.kind;
+  }
+
+  function paintMoments() {
+    var ms = H.moments(), box = $('#moments');
+    box.innerHTML = '';
+    $('#moments-note').textContent = ms.length ? ms.length + ' logged' : '';
+    if (!ms.length) {
+      box.appendChild(el('p', 'empty',
+        'Nothing logged yet. A moment takes about fifteen seconds and does not need all three scales — ' +
+        'one number and a sentence is a complete entry.'));
+      return;
+    }
+    ms.slice(0, 40).forEach(function (m) {
+      var c = el('div', 'moment');
+      var head = el('div', 'mhead');
+      head.appendChild(el('span', 'when', relDay(m.ts) + ' · ' + fmtTime(m.ts)));
+      var sc = el('div', 'scores');
+      SCALES.forEach(function (S) {
+        if (m[S.key] == null) return;
+        sc.appendChild(el('span', 'sc', S.label.toLowerCase() + ' ' + m[S.key] + '/5'));
+      });
+      head.appendChild(sc);
+      if (m.src === 'health') head.appendChild(el('span', 'from', 'from Health'));
+      c.appendChild(head);
+
+      if (m.note) c.appendChild(el('div', 'note', m.note));
+      if ((m.symptoms || []).length) {
+        var sy = el('div', 'syms');
+        m.symptoms.forEach(function (s) { sy.appendChild(el('span', null, s)); });
+        (m.tags || []).forEach(function (t) {
+          var sp = el('span', null, t);
+          sp.style.background = 'var(--held-bg)'; sp.style.color = 'var(--held)';
+          sy.appendChild(sp);
+        });
+        c.appendChild(sy);
+      } else if ((m.tags || []).length) {
+        var tg = el('div', 'syms');
+        m.tags.forEach(function (t) {
+          var sp = el('span', null, t);
+          sp.style.background = 'var(--held-bg)'; sp.style.color = 'var(--held)';
+          tg.appendChild(sp);
+        });
+        c.appendChild(tg);
+      }
+
+      var btn = el('button', 'open', 'the twelve hours before →'); btn.type = 'button';
+      var drop = el('div', 'drop');
+      btn.addEventListener('click', function () {
+        var open = drop.classList.toggle('open');
+        btn.textContent = open ? 'hide the hours before' : 'the twelve hours before →';
+        if (open && !drop.childNodes.length) fillDrop(drop, m);
+      });
+      c.appendChild(btn);
+      c.appendChild(drop);
+      box.appendChild(c);
+    });
+  }
+
+  function fillDrop(drop, m) {
+    var tl = H.timeline(m.ts, 12);
+    if (!tl.length) {
+      drop.appendChild(el('p', 'empty',
+        'Nothing on record for those hours — import the day and this fills in.'));
+    } else {
+      var ul = el('ul', 'tl');
+      tl.forEach(function (e) {
+        var li = el('li');
+        li.appendChild(el('span', 't', fmtTime(e.ts)));
+        li.appendChild(el('span', 'k', KINDLABEL[e.kind] || e.kind));
+        li.appendChild(el('span', 'd', describe(e)));
+        ul.appendChild(li);
+      });
+      drop.appendChild(ul);
+    }
+    var f = H.featuresAt(m.ts), row = el('div', 'feat');
+    function add(label, v, unit) {
+      if (v == null) return;
+      var s = el('span');
+      s.appendChild(document.createTextNode(label + ' '));
+      s.appendChild(el('b', null, v + (unit || '')));
+      row.appendChild(s);
+    }
+    add('slept', f.sleepH, 'h');
+    add('awake', f.awakeH, 'h');
+    add('since eating', f.sinceMealH, 'h');
+    add('kcal/6h', f.kcal6h, '');
+    add('protein/6h', f.protein6h, 'g');
+    add('caffeine/8h', f.caffeine8h, 'mg');
+    add('since training', f.sinceTrainH, 'h');
+    if (row.childNodes.length) drop.appendChild(row);
+
+    var del = el('button', 'del', 'delete this moment'); del.type = 'button';
+    del.addEventListener('click', function () {
+      H.removeMoment(m.id);
+      paintMoments(); paintPatterns(); paintHead();
+    });
+    drop.appendChild(del);
+  }
+
+  /* ── patterns ────────────────────────────────────────────── */
+  var against = 'energy';
+
+  function paintTabs() {
+    var box = $('#ptabs');
+    box.innerHTML = '';
+    SCALES.forEach(function (S) {
+      var b = el('button', null, S.label); b.type = 'button';
+      b.setAttribute('aria-pressed', String(against === S.key));
+      b.addEventListener('click', function () { against = S.key; paintTabs(); paintPatterns(); });
+      box.appendChild(b);
+    });
+  }
+
+  function paintPatterns() {
+    var p = H.patterns(against), box = $('#patterns');
+    box.innerHTML = '';
+    $('#pat-note').textContent = p.n + ' moment' + (p.n === 1 ? ' carries' : 's carry') +
+      ' a' + (/^[aeiou]/.test(against) ? 'n ' : ' ') + against + ' score';
+
+    if (!p.ready) {
+      box.appendChild(el('p', 'empty',
+        'Not enough yet. This needs ' + p.min + ' moments carrying a ' + against + ' score before it will say ' +
+        'anything, and there ' + (p.n === 1 ? 'is one' : 'are ' + (COUNT[p.n] || p.n)) + '. ' +
+        'The number is not arbitrary — below it, a table like this finds a strong-looking pattern in pure noise ' +
+        'more often than not, and one confident wrong answer would cost more than the wait.'));
+      return;
+    }
+
+    var table = el('div', 'ptable');
+    p.rows.forEach(function (r) {
+      var row = el('div', 'prow' + (r.thin ? ' thin' : ''));
+      var lbl = el('div', 'lbl');
+      lbl.appendChild(document.createTextNode(r.label));
+      lbl.appendChild(el('small', null, r.thin
+        ? 'only ' + r.n + ' moment' + (r.n === 1 ? '' : 's') + ' carry it'
+        : sentence(r)));
+      row.appendChild(lbl);
+
+      var bar = el('div', 'rbar');
+      if (r.r != null) {
+        var i = el('i', r.r < 0 ? 'neg' : 'pos');
+        i.style.width = (Math.min(1, Math.abs(r.r)) * 50) + '%';
+        i.title = 'r ' + r.r.toFixed(2) + ' over ' + r.n + ' moments';
+        bar.appendChild(i);
+      }
+      row.appendChild(bar);
+
+      var rv = el('div', 'rv');
+      rv.appendChild(document.createTextNode(
+        r.flat ? 'flat' : r.r == null ? '—' : (r.r > 0 ? '+' : '') + r.r.toFixed(2)));
+      rv.appendChild(el('small', null, 'n=' + r.n));
+      row.appendChild(rv);
+      table.appendChild(row);
+    });
+    box.appendChild(table);
+
+    var c = el('div', 'caveat');
+    c.innerHTML =
+      '<b>Read this as association, not cause.</b> ' + p.tested + ' feature' + (p.tested === 1 ? ' that varied was' : 's that varied were') +
+      ' tested against ' + p.n + ' moment' + (p.n === 1 ? '' : 's') +
+      '. With that many comparisons the largest number in the table will look convincing even when nothing is there, ' +
+      'which is why only |r| ≥ ' + H.STRONG + ' is called strong and why the row for a standing condition is in the ' +
+      'table at all — a bad week moves every other line at once, and it belongs on screen competing with them.' +
+      '<br><br>Every feature is computed strictly from what happened <em>before</em> the moment. Whole-day totals ' +
+      'are deliberately absent: a day’s step count includes the hours after you logged, so any pattern it ' +
+      'produced would be partly you predicting the past from the future.';
+    box.appendChild(c);
+  }
+
+  function sentence(r) {
+    /* Three different silences, and they are not interchangeable: this never
+       varied, this varied and showed nothing, this has too little behind it
+       to ask. Collapsing them into one dash was the version that read as a
+       broken table. */
+    if (r.flat) return 'never varied — every moment had the same value' +
+      (r.only != null ? ' (' + r.only + r.unit + ')' : '');
+    if (r.r == null) return 'nothing to say';
+    if (!r.strong) return 'no clear relationship yet';
+    if (r.flag) return r.r > 0 ? String(cap(against)) + ' ran higher when a condition stood'
+                               : String(cap(against)) + ' ran lower when a condition stood';
+    return r.phrase + ', ' + (r.r > 0 ? 'more ' : 'less ') + against +
+           (r.nHi && r.nLo ? ' (' + r.hi + ' vs ' + r.lo + r.unit + ')' : '');
+  }
+
+  /* ── import ──────────────────────────────────────────────── */
+  $('#btn-import').addEventListener('click', function () {
+    var s = $('#import-sec');
+    s.hidden = !s.hidden;
+    if (!s.hidden) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function report(reps) {
+    var box = $('#report');
+    box.innerHTML = '';
+    var bad = reps.filter(function (r) { return !r.ok; });
+    var d = reps.reduce(function (a, r) { return a + r.days; }, 0);
+    var e = reps.reduce(function (a, r) { return a + r.events; }, 0);
+    var mo = reps.reduce(function (a, r) { return a + r.moments; }, 0);
+    var du = reps.reduce(function (a, r) { return a + r.dupes; }, 0);
+    var un = {};
+    reps.forEach(function (r) { (r.unknown || []).forEach(function (u) { un[u] = 1; }); });
+    var div = el('div', 'report ' + (bad.length && !d ? 'bad' : 'ok'));
+    if (bad.length && !d) {
+      div.textContent = bad[0].error || 'nothing landed';
+    } else {
+      div.appendChild(document.createTextNode(
+        d + ' day' + (d === 1 ? '' : 's') + ' · ' + e + ' new event' + (e === 1 ? '' : 's') +
+        (mo ? ' · ' + mo + ' moment' + (mo === 1 ? '' : 's') : '') +
+        (du ? ' · ' + du + ' already had' : '')));
+      var names = Object.keys(un);
+      if (names.length) {
+        var u = el('div', 'un', 'not mapped, so not stored: ' + names.join(', ') +
+          ' — tell me and they get a home');
+        div.appendChild(u);
+      }
+    }
+    box.appendChild(div);
+    paintHead(); paintRibbon(); paintToday(); paintMoments(); paintPatterns();
+  }
+
+  function readFiles(list) {
+    var files = Array.prototype.slice.call(list || []);
+    if (!files.length) return;
+    var reps = [], done = 0;
+    files.forEach(function (f) {
+      var fr = new FileReader();
+      fr.onload = function () {
+        reps.push(H.ingest(String(fr.result), 'file:' + f.name));
+        if (++done === files.length) report(reps);
+      };
+      fr.onerror = function () {
+        reps.push({ ok: false, days: 0, events: 0, moments: 0, dupes: 0, error: 'could not read ' + f.name });
+        if (++done === files.length) report(reps);
+      };
+      fr.readAsText(f);
+    });
+  }
+
+  $('#drop').addEventListener('click', function () { $('#file').click(); });
+  $('#file').addEventListener('change', function () { readFiles(this.files); this.value = ''; });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    $('#drop').addEventListener(ev, function (e) { e.preventDefault(); this.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    $('#drop').addEventListener(ev, function (e) { e.preventDefault(); this.classList.remove('over'); });
+  });
+  $('#drop').addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) readFiles(e.dataTransfer.files);
+  });
+  $('#paste-go').addEventListener('click', function () {
+    var v = $('#paste').value.trim();
+    if (!v) return;
+    report([H.ingest(v, 'paste')]);
+    $('#paste').value = '';
+  });
+
+  /* A payload handed over in the URL fragment, the way anki_sync.py
+     already does it. A fragment never reaches the server, so a Shortcut
+     can carry a day across without a credential and without it landing
+     in any log. Wiped from the address bar afterwards so a stale export
+     cannot be replayed out of history. */
+  (function () {
+    var m = /[#&]hk=([A-Za-z0-9_-]+)/.exec(location.hash || '');
+    if (!m) return;
+    try {
+      var b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var rep = H.ingest(JSON.parse(decodeURIComponent(escape(atob(b)))), 'shortcut');
+      history.replaceState(null, '', location.pathname + location.search);
+      $('#import-sec').hidden = false;
+      report([rep]);
+    } catch (e) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  })();
+
+  paintHead(); paintRibbon(); paintToday(); buildLogger(); paintMoments(); paintTabs(); paintPatterns();
+})();
+</script>
+<script src="./nav.js"></script>
+</body>
+</html>
