@@ -719,25 +719,73 @@
 
   function pushSoon() { clearTimeout(pushTimer); UI.set('saving', 'Saving…'); pushTimer = setTimeout(pushNow, 800); }
 
+  /* ─────────── Where every local edit is noticed ───────────
+     This is the foundation the whole push side stands on: nothing else
+     tells sync that this device changed something.
+
+     It used to assign onto the instance — `localStorage.setItem = fn` —
+     which does not do what it reads like. localStorage is a Storage
+     object, and Storage has a NAMED PROPERTY SETTER: assigning any string
+     property on it stores an ITEM under that name instead of replacing the
+     method. So that line never patched anything. It created a storage key
+     literally called "setItem" holding the function's source text (and one
+     called "removeItem"), which then got pushed to the cloud as junk and
+     showed up in the sync panel's key list next to the real data.
+
+     The consequence was silent and total: no write was ever intercepted,
+     so `touched` stayed permanently empty, so this device never knew it
+     owed the cloud anything. Only keys the cloud had NEVER seen went up
+     (via localOnly). Editing a key the cloud already held — writing a
+     journal entry, ticking off a session — was never pushed at all, while
+     the pill sat on a confident green "Synced ✓" and reported no error.
+
+     The prototype is an ordinary object and the only place a Storage hook
+     can actually live, so patch there. sessionStorage shares that
+     prototype, hence the instance guard. */
   function patch() {
-    var setItem = localStorage.setItem.bind(localStorage);
-    localStorage.setItem = function (k, v) {
-      setItem(k, v);
-      if (!applyingRemote && String(k).indexOf('__sync') !== 0) {
-        touched[k] = 1;
-        try { setItem(PENDING, JSON.stringify(touched)); } catch (e) {}
-        pushSoon();
-      }
+    var proto = Object.getPrototypeOf(localStorage) ||
+                (window.Storage && window.Storage.prototype);
+    if (!proto || typeof proto.setItem !== 'function') return;
+    if (proto.__hubSyncPatched) return;          // one page, one wrap
+    var rawSet = proto.setItem, rawRemove = proto.removeItem;
+    proto.__hubSyncPatched = true;
+
+    function note(k, how) {
+      if (applyingRemote || String(k).indexOf('__sync') === 0) return;
+      touched[k] = how;
+      // rawSet, not the patched one: writing the marker must not re-enter.
+      try { rawSet.call(localStorage, PENDING, JSON.stringify(touched)); } catch (e) {}
+      pushSoon();
+    }
+
+    proto.setItem = function (k, v) {
+      rawSet.call(this, k, v);
+      if (this === localStorage) note(k, 1);
     };
-    var removeItem = localStorage.removeItem.bind(localStorage);
-    localStorage.removeItem = function (k) {
-      removeItem(k);
-      if (!applyingRemote && String(k).indexOf('__sync') !== 0) {
-        touched[k] = 'del';
-        try { setItem(PENDING, JSON.stringify(touched)); } catch (e) {}
-        pushSoon();
-      }
+    proto.removeItem = function (k) {
+      rawRemove.call(this, k);
+      if (this === localStorage) note(k, 'del');
     };
+
+    purgeJunk();
+  }
+
+  /* The keys the old instance-level patch left behind, on every device that
+     ever ran it — and in the cloud, since they were pushed like real data.
+     Only ever removes a key whose value is the stringified function that
+     created it, so a genuine key that happens to share the name is safe.
+     Marked as a deletion so it clears the cloud copy too, not just this
+     device's. */
+  function purgeJunk() {
+    ['setItem', 'removeItem', 'getItem', 'key', 'clear'].forEach(function (k) {
+      var v;
+      try { v = localStorage.getItem(k); } catch (e) { return; }
+      if (typeof v !== 'string' || v.indexOf('function') !== 0) return;
+      try {
+        localStorage.removeItem(k);              // patched → marks it deleted
+        console.log('[sync] removed the stray "' + k + '" key left by the old storage patch');
+      } catch (e) {}
+    });
   }
 
   function watch() {
