@@ -219,11 +219,19 @@
   }
   boot();
 
-  // A phone drops a request, sleeps a tab, or walks out of signal. Any of
-  // those used to kill syncing until a manual reload; now the moment the
-  // network or the tab comes back, we try again.
-  window.addEventListener('online', boot);
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) boot(); });
+  /* A phone drops a request, sleeps a tab, or walks out of signal. Any of
+     those used to kill syncing until a manual reload. boot() only covers
+     the case where the SDK never finished loading in the first place — once
+     booted it's a no-op, so on its own this did nothing for the far more
+     common case: sync was already up, the tab got backgrounded (which
+     mobile browsers routinely suspend the network/listeners of), and the
+     live onSnapshot listener came back stale or not at all. Now, if sync
+     is already running, coming back to the tab forces the same fetch the
+     "Sync now" button does instead of trusting a listener that may not
+     have survived being backgrounded. */
+  function resync() { if (uid) window.hubSync.syncNow(); else boot(); }
+  window.addEventListener('online', resync);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) resync(); });
 
   // Each script gets a few goes with a widening gap before we give up.
   function loadSeq(urls, done, fail) {
