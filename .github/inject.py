@@ -54,15 +54,29 @@ VERSION_FILE = "version.txt"
 # differ, reloads once with a cache-busting query so fresh HTML is fetched.
 # The sessionStorage guard makes it reload at most once per version per session,
 # so it can never loop.
+#
+# Checking only at load isn't enough on a phone: the normal way a phone "uses"
+# a tab is to background it and come back, not to reload it, so a tab left
+# open across a deploy would run the old JS (old sync.js included) for as
+# long as it stayed open — which looks exactly like "I shipped a fix and nothing
+# changed" from the outside. So the same check also runs on visibilitychange
+# and pageshow (the bfcache-restore event neither fires a normal load nor
+# visibilitychange on some browsers), catching the tab back up the moment it's
+# looked at again, not just the moment it was opened.
 VERSION_CHECK = (
-    "<script>(function(){var B=\"__APP_VERSION__\";try{"
+    "<script>(function(){var B=\"__APP_VERSION__\",checking=false;function check(){"
+    "if(checking)return;checking=true;try{"
     "fetch(\"version.txt?_=\"+Date.now(),{cache:\"no-store\"})"
     ".then(function(r){return r.ok?r.text():null;})"
-    ".then(function(v){if(!v)return;v=v.trim();if(!v||v===B)return;"
+    ".then(function(v){checking=false;if(!v)return;v=v.trim();if(!v||v===B)return;"
     "var k=\"__ver_reload_\"+v;if(sessionStorage.getItem(k))return;"
     "sessionStorage.setItem(k,\"1\");"
     "location.replace(location.pathname+\"?v=\"+encodeURIComponent(v)+location.hash);"
-    "}).catch(function(){});}catch(e){}})();</script>\n"
+    "}).catch(function(){checking=false;});}catch(e){checking=false;}}"
+    "check();"
+    "document.addEventListener(\"visibilitychange\",function(){if(!document.hidden)check();});"
+    "addEventListener(\"pageshow\",check);"
+    "})();</script>\n"
 )
 
 
