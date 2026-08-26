@@ -45,15 +45,36 @@ jobs:
           echo "version=$next" >> "$GITHUB_OUTPUT"
           echo "Bumped $cur -> $next"
 
+      # Two merges seconds apart put two runs in this step at once. The one that
+      # gets here second finds main already moved and its push comes back a
+      # non-fast-forward. That much is survivable: rebase the one-line bump onto
+      # whatever main is now and try again.
+      #
+      # Failing here is not. The bump is bookkeeping; publishing the site is the
+      # point, and every step that does it comes after this one — so a run that
+      # stops here never builds, and the commit that triggered it never reaches
+      # the site. When the run that loses the race is the older one that costs
+      # nothing, because the newer one deploys the same code and more. When it is
+      # the newer one, the newest code silently does not ship and the only trace
+      # is one red entry in a run history that is otherwise green.
       - name: Commit bumped version
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet -- VERSION; then
-            git add VERSION
-            git commit -m "chore: bump version to v${{ steps.bump.outputs.version }} [skip ci]"
-            git push
+          if git diff --quiet -- VERSION; then
+            echo "VERSION unchanged — nothing to commit"
+            exit 0
           fi
+          git add VERSION
+          git commit -m "chore: bump version to v${{ steps.bump.outputs.version }} [skip ci]"
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "push rejected (attempt $attempt) — main moved underneath; rebasing the bump onto it"
+            git fetch origin main || break
+            git rebase origin/main || { git rebase --abort || true; break; }
+            sleep $((attempt * 3))
+          done
+          echo "::warning title=Version bump not pushed::Another run moved main first. The build and deploy below are unaffected."
 
       - name: Install build dependencies
         run: python3 -m pip install --quiet --upgrade cryptography markdown
