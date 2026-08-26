@@ -114,7 +114,7 @@
       <div style="display: grid; grid-template-columns: 1fr 130px 90px 70px; gap: 8px; margin-top: 12px;">
         <input value="{{ eName }}" onChange="{{ setEName }}" placeholder="exam / deadline — e.g. anatomy midterm" style="min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
         <input type="date" value="{{ eDate }}" onChange="{{ setEDate }}" style="min-height: 44px; font-size: 12px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
-        <input type="number" inputmode="decimal" value="{{ eHrs }}" onChange="{{ setEHrs }}" placeholder="hrs/wk" title="target hours per week" style="min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+        <input type="text" inputmode="decimal" value="{{ eHrs }}" onChange="{{ setEHrs }}" placeholder="hrs/wk" title="target hours per week" style="min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
         <button onClick="{{ addExam }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; min-height: 44px; border-radius: 22px; border: 1px solid #185FA5; background: #185FA5; color: #FFF; cursor: pointer;">add</button>
       </div>
       <div style="font-size: 11px; color: #A6A79F; margin-top: 8px; line-height: 1.5;">Hours come straight from the Life Log focus timer — the bar is this week's actual vs your target.</div>
@@ -165,7 +165,14 @@ class Component extends DCLogic {
   iso(off) { if (window.CTDay) return window.CTDay.offset(off || 0);
     const t = new Date(); t.setDate(t.getDate() + (off || 0)); return t.toISOString().slice(0, 10); }
   dayOf(ms) { return window.CTDay ? window.CTDay.key(ms) : new Date(ms).toISOString().slice(0, 10); }
-  num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+  /* A phone set to a comma locale offers "," on the decimal keypad, not ".".
+     Typed into <input type="number"> that value is invalid, so the browser
+     hands back an empty string and the digits are gone before any of this
+     runs — which is why the decimal fields here are type="text" with
+     inputmode="decimal". The comma arrives intact and is normalised once, on
+     the way in, so what gets stored is always a dot. */
+  dec(v) { return typeof v === 'string' ? v.replace(',', '.') : v; }
+  num(v) { const n = parseFloat(this.dec(v)); return isNaN(n) ? null : n; }
   fmtDay(k) { return new Date(k + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 
   weekStudyHours() {
@@ -276,7 +283,7 @@ class Component extends DCLogic {
       hasExams: examRows.length > 0, examRows,
       eName: S.eName, setEName: (e) => this.setState({ eName: e.target.value }),
       eDate: S.eDate, setEDate: (e) => this.setState({ eDate: e.target.value }),
-      eHrs: S.eHrs, setEHrs: (e) => this.setState({ eHrs: e.target.value }), addExam,
+      eHrs: S.eHrs, setEHrs: (e) => this.setState({ eHrs: this.dec(e.target.value) }), addExam,
       deckSummary: d.cards.length + ' cards · ' + due.length + ' due · ' + dueTomorrowN + ' tomorrow',
       hasCards: d.cards.length > 0, noCards: d.cards.length === 0, boxChips, cardRows
     };

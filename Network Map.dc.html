@@ -327,11 +327,11 @@
           </div>
           <div>
             <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Latitude</label>
-            <input type="number" data-field="lat" value="{{ draft.lat }}" oninput="{{ onField }}" step="0.01" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+            <input type="text" inputmode="decimal" data-field="lat" value="{{ draft.lat }}" oninput="{{ onField }}" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
           </div>
           <div>
             <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Longitude</label>
-            <input type="number" data-field="lon" value="{{ draft.lon }}" oninput="{{ onField }}" step="0.01" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
+            <input type="text" inputmode="decimal" data-field="lon" value="{{ draft.lon }}" oninput="{{ onField }}" style="width:100%;background:rgba(6,10,20,.7);border:1px solid rgba(90,130,180,.28);color:#e8eef7;font-size:13px;padding:9px 11px;border-radius:8px;outline:none">
           </div>
           <div style="grid-column:1 / 3">
             <label style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:#6b86a8;text-transform:uppercase;margin-bottom:5px">Introduced by</label>
@@ -1057,9 +1057,17 @@ class Component extends DCLogic {
     }, geoHint:'', geoFound:false});
   }
   closeForm() { this.setState({ formOpen:false, geoHint:'', geoFound:false }); }
+  /* A phone set to a comma locale offers "," on the decimal keypad, not ".".
+     Typed into <input type="number"> that value is invalid, so the browser
+     hands back an empty string and the digits are gone before any of this
+     runs — which is why the decimal fields here are type="text" with
+     inputmode="decimal". The comma arrives intact and is normalised once, on
+     the way in, so what gets stored is always a dot. */
+  dec(v) { return typeof v === 'string' ? v.replace(',', '.') : v; }
   onField(e) {
     const f = e.target.dataset.field;
-    const v = e.target.type==='checkbox' ? e.target.checked : e.target.value;
+    let v = e.target.type==='checkbox' ? e.target.checked : e.target.value;
+    if (f === 'lat' || f === 'lon') v = this.dec(v);
     if (f==='city') {
       const hit = this.lookupCity(v);
       this.setState(s=>({

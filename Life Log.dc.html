@@ -90,7 +90,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
           <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">In bed from</span><input type="time" value="{{ sl_from }}" onChange="{{ setSl_from }}" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
           <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Until</span><input type="time" value="{{ sl_to }}" onChange="{{ setSl_to }}" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
-          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Hrs asleep</span><input type="number" step="0.1" inputmode="decimal" value="{{ sl_asleep }}" onChange="{{ setSl_asleep }}" placeholder="7.3" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Hrs asleep</span><input type="text" inputmode="decimal" value="{{ sl_asleep }}" onChange="{{ setSl_asleep }}" placeholder="7.3" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
           <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Quality /100</span><input type="number" inputmode="numeric" value="{{ sl_quality }}" onChange="{{ setSl_quality }}" placeholder="82" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
           <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Resting HR</span><input type="number" inputmode="numeric" value="{{ sl_rhr }}" onChange="{{ setSl_rhr }}" placeholder="54" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
           <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Readiness /10</span><input type="number" inputmode="numeric" value="{{ sl_ready }}" onChange="{{ setSl_ready }}" placeholder="7" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
@@ -105,9 +105,9 @@
           <sc-if value="{{ hasWDelta }}"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ wDeltaColor }};">{{ wDelta }} vs last</div></sc-if>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
-          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Weight kg</span><input type="number" step="0.1" inputmode="decimal" value="{{ w_kg }}" onChange="{{ setW_kg }}" placeholder="78.4" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
-          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Body fat %</span><input type="number" step="0.1" inputmode="decimal" value="{{ w_bf }}" onChange="{{ setW_bf }}" placeholder="15.2" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
-          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Muscle kg</span><input type="number" step="0.1" inputmode="decimal" value="{{ w_mm }}" onChange="{{ setW_mm }}" placeholder="36.1" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Weight kg</span><input type="text" inputmode="decimal" value="{{ w_kg }}" onChange="{{ setW_kg }}" placeholder="78.4" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Body fat %</span><input type="text" inputmode="decimal" value="{{ w_bf }}" onChange="{{ setW_bf }}" placeholder="15.2" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+          <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Muscle kg</span><input type="text" inputmode="decimal" value="{{ w_mm }}" onChange="{{ setW_mm }}" placeholder="36.1" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
         </div>
       </div>
 
@@ -124,7 +124,7 @@
           <div style="margin-top: 14px; border-top: 1px solid #F2F0EB; padding-top: 12px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Session length, min</span><input type="number" inputmode="numeric" value="{{ gy_len }}" onChange="{{ setGy_len }}" placeholder="75" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
-              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Avg break, min</span><input type="number" step="0.5" inputmode="decimal" value="{{ gy_break }}" onChange="{{ setGy_break }}" placeholder="2.5" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+              <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Avg break, min</span><input type="text" inputmode="decimal" value="{{ gy_break }}" onChange="{{ setGy_break }}" placeholder="2.5" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px;">
               <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Bench</span><input value="{{ gy_bench }}" onChange="{{ setGy_bench }}" placeholder="80×5×5" style="width: 100%; min-height: 44px; font-size: 14px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;"></label>
@@ -173,7 +173,7 @@
           <sc-for list="{{ studyRows }}" as="s" hint-placeholder-count="3">
             <div style="display: flex; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid #F7F5F1;">
               <span style="flex: none; width: 76px; font-size: 12.5px; font-weight: 600; color: {{ s.color }};">{{ s.label }}</span>
-              <input type="number" step="0.25" inputmode="decimal" value="{{ s.hours }}" onChange="{{ s.onHours }}" placeholder="{{ s.autoH }}" title="override timer hours" style="flex: none; width: 64px; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace; text-align: center;">
+              <input type="text" inputmode="decimal" value="{{ s.hours }}" onChange="{{ s.onHours }}" placeholder="{{ s.autoH }}" title="override timer hours" style="flex: none; width: 64px; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace; text-align: center;">
               <input value="{{ s.note }}" onChange="{{ s.onNote }}" placeholder="what I covered — one line" style="flex: 1; min-width: 0; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
             </div>
           </sc-for>
@@ -188,7 +188,7 @@
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ budColor }};">{{ budLine }}</div>
         </div>
         <div style="display: flex; gap: 8px; margin-top: 12px;">
-          <input type="number" step="0.01" inputmode="decimal" value="{{ spendAmt }}" onChange="{{ setSpendAmt }}" placeholder="$" style="flex: none; width: 90px; min-height: 44px; font-size: 15px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;">
+          <input type="text" inputmode="decimal" value="{{ spendAmt }}" onChange="{{ setSpendAmt }}" placeholder="$" style="flex: none; width: 90px; min-height: 44px; font-size: 15px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace;">
           <input value="{{ spendNote }}" onChange="{{ setSpendNote }}" placeholder="what for (optional)" style="flex: 1; min-width: 0; min-height: 44px; font-size: 13px; padding: 6px 10px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
           <button onClick="{{ addSpend }}" style="flex: none; min-height: 44px; padding: 0 16px; border-radius: 9px; border: none; background: #b0741a; color: #FFF; font-size: 14px; font-weight: 600; cursor: pointer;">＋</button>
         </div>
@@ -221,9 +221,9 @@
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #A6A79F; margin-top: 14px;">Screen</div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 7px;">
           <div class="ll-f"><label>Total h</label>
-            <input type="number" step="0.25" inputmode="decimal" value="{{ scrTotal }}" onChange="{{ setScrTotal }}" placeholder="6.5"></div>
+            <input type="text" inputmode="decimal" value="{{ scrTotal }}" onChange="{{ setScrTotal }}" placeholder="6.5"></div>
           <div class="ll-f"><label>Social / fun h</label>
-            <input type="number" step="0.25" inputmode="decimal" value="{{ scrSocial }}" onChange="{{ setScrSocial }}" placeholder="2.0"></div>
+            <input type="text" inputmode="decimal" value="{{ scrSocial }}" onChange="{{ setScrSocial }}" placeholder="2.0"></div>
           <div class="ll-f"><label>Pickups</label>
             <input type="number" inputmode="numeric" value="{{ scrPickups }}" onChange="{{ setScrPickups }}" placeholder="—"></div>
           <div style="flex: 1; min-width: 150px; align-self: flex-end;">
@@ -331,7 +331,7 @@
               <span style="flex: none; width: 110px; font-size: 12.5px; font-weight: 600;">{{ tr.label }}</span>
               <div style="flex: 1; height: 6px; border-radius: 3px; background: #EFECE6; overflow: hidden;"><div style="height: 100%; border-radius: 3px; background: {{ tr.barColor }}; width: {{ tr.pct }}%;"></div></div>
               <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #55564F; flex: none;">{{ tr.actual }} /</span>
-              <input type="number" step="{{ tr.step }}" inputmode="decimal" value="{{ tr.target }}" onChange="{{ tr.onTarget }}" style="flex: none; width: 54px; min-height: 38px; font-size: 12px; padding: 4px 6px; border: 1px solid #DAD7D0; border-radius: 8px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace; text-align: center;">
+              <input type="text" inputmode="decimal" value="{{ tr.target }}" onChange="{{ tr.onTarget }}" style="flex: none; width: 54px; min-height: 38px; font-size: 12px; padding: 4px 6px; border: 1px solid #DAD7D0; border-radius: 8px; background: #FCFBF9; font-family: 'IBM Plex Mono', monospace; text-align: center;">
             </div>
           </sc-for>
         </div>
@@ -577,10 +577,17 @@ class Component extends DCLogic {
   day(d, k) { if (!d.days[k]) d.days[k] = {}; return d.days[k]; }
   sec(d, k, s) { const dy = this.day(d, k); if (!dy[s]) dy[s] = {}; return dy[s]; }
 
+  /* A phone set to a comma locale offers "," on the decimal keypad, not ".".
+     Typed into <input type="number"> that value is invalid, so the browser
+     hands back an empty string and the digits are gone before any of this
+     runs — which is why the decimal fields here are type="text" with
+     inputmode="decimal". The comma arrives intact and is normalised once, on
+     the way in, so what gets stored is always a dot. */
+  dec(v) { return typeof v === 'string' ? v.replace(',', '.') : v; }
   setF(section, field) {
-    return (e) => { const v = e && e.target ? e.target.value : e; this.mut(d => { this.sec(d, this.key(), section)[field] = v; }); };
+    return (e) => { const v = this.dec(e && e.target ? e.target.value : e); this.mut(d => { this.sec(d, this.key(), section)[field] = v; }); };
   }
-  num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+  num(v) { const n = parseFloat(this.dec(v)); return isNaN(n) ? null : n; }
   fmtH(h) { return (Math.round(h * 10) / 10) + 'h'; }
   fmtHM(ms) { const m = Math.floor(ms / 60000); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') + ':' + String(Math.floor(ms / 1000) % 60).padStart(2, '0'); }
   fmtMin(ms) { const m = Math.round(ms / 60000); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : m + 'm'; }
@@ -808,7 +815,7 @@ class Component extends DCLogic {
         label: s[1], color: s[2],
         hours: st.h !== undefined && st.h !== null ? st.h : '',
         autoH: auto > 0 ? String(Math.round(auto * 100) / 100) : '0',
-        onHours: (e) => this.mut(D => { const dd = this.sec(D, k, 'study'); dd[s[0]] = dd[s[0]] || {}; dd[s[0]].h = e.target.value; }),
+        onHours: (e) => { const v = this.dec(e.target.value); this.mut(D => { const dd = this.sec(D, k, 'study'); dd[s[0]] = dd[s[0]] || {}; dd[s[0]].h = v; }); },
         note: st.note || '',
         onNote: (e) => this.mut(D => { const dd = this.sec(D, k, 'study'); dd[s[0]] = dd[s[0]] || {}; dd[s[0]].note = e.target.value; })
       };
@@ -891,7 +898,7 @@ class Component extends DCLogic {
       return {
         label: t[0], actual: String(t[1]), target: T[t[2]], step: String(t[3]),
         pct: Math.round(r * 100), barColor: r >= 1 ? '#0F6E56' : (r >= 0.6 ? '#b0741a' : '#993C1D'),
-        onTarget: (e) => this.mut(D => { D.targets[t[2]] = e.target.value; })
+        onTarget: (e) => { const v = this.dec(e.target.value); this.mut(D => { D.targets[t[2]] = v; }); }
       };
     });
     const scorePct = scoreN ? Math.round(scoreSum / scoreN * 100) : 0;
@@ -1183,7 +1190,7 @@ class Component extends DCLogic {
       cl_count: F('climb', 'count'), setCl_count: this.setF('climb', 'count'),
       cl_notes: F('climb', 'notes'), setCl_notes: this.setF('climb', 'notes'),
       studyRows,
-      spendAmt: S.spendAmt, setSpendAmt: (e) => this.setState({ spendAmt: e.target.value }),
+      spendAmt: S.spendAmt, setSpendAmt: (e) => this.setState({ spendAmt: this.dec(e.target.value) }),
       spendNote: S.spendNote, setSpendNote: (e) => this.setState({ spendNote: e.target.value }),
       spendCats, addSpend, hasSpends: spends.length > 0, spendRows, budLine, budColor,
       evNote: dy.note || '', setEvNote: (e) => this.mut(D => { this.day(D, k).note = e.target.value; }),
