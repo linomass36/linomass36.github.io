@@ -18,7 +18,6 @@ The GitHub Action calls it at build time and deploys _site/ to Pages.
 
 import os
 import re
-import secrets
 import shutil
 import sys
 
@@ -412,7 +411,9 @@ def lock(version):
         sys.exit("[inject] FATAL: HUB_PASSPHRASE is under 12 characters. "
                  "The passphrase is the only thing protecting the site.")
 
-    salt = secrets.token_bytes(16)
+    # Deterministic, not random — see vault.salt_for(). A random salt per
+    # build silently un-remembers every device on every deploy.
+    salt = vault.salt_for(passphrase)
     key = vault.derive(passphrase, salt)
     vault.write_meta(SITE, key, salt)
 
