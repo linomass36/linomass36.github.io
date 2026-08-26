@@ -1,7 +1,8 @@
 # Cancer Research — Status & Publication Pipeline
 
 *Audit of the oncology/GI thread across the CT Hub, plus a proposed publication pipeline.*
-Compiled 2026-08-24 from the hub's own plan and network data.
+*Names real people. Published only as an encrypted page — see VAULT.md.*
+Compiled 2026-08-24 · sources: `hub-data.js`, `CT Master Plan.html` (bundled `PLAN_DATA` / `PLAN_EXTRAS`), `Network Map.dc.html`, `Research Plan.dc.html`
 
 ---
 
@@ -17,7 +18,7 @@ For scale: the CAV biomarker track has 21 sequenced steps across five phases wit
 
 | Location | Item ID | Content |
 |---|---|---|
-| Research Horizons → H1 · Before leaving for the States | `hz-h1-4` | **GI cancer paper #1 — finalize & submit before departure**<br>*"Existing work, credibility in the bank. Far easier to close from the home faculty than from abroad."*<br>Badge: **Bank GI credibility** |
+| Research Horizons → H1 · Before leaving for the States | `hz-h1-4` | **GI cancer paper #1 — finalize & submit before departure**<br>*"Existing work, credibility in the bank. Far easier to close from Lublin than Arizona."*<br>Badge: **Bank GI credibility** |
 | same | `hz-h1-5` | **GI cancer paper #2 — finalize & submit before departure** *(no note text)*<br>Badge: **Bank GI credibility** |
 | same | `hz-h1-6` | **Resolve all coauthor / revision threads now**<br>*"Don't carry manuscript edits into 13-hour shifts."* |
 | Checkpoints → CP1 · Oct 2026 | `cp-cp1-research-2` | *"Both GI-cancer papers in hand — proof you can execute and publish, even if off-thesis."* |
@@ -56,7 +57,7 @@ defaultChecked: ['hz-h1-1', 'hz-h1-2', 'hz-h1-3']
 Two caveats:
 
 1. **Live progress lives in `localStorage`, not the repo.** Whatever you have actually ticked in the browser is invisible from here. The committed seed is the only ground truth available.
-2. **The window has passed.** These sit in Horizon 1, scoped as *"~3 weeks · gate: exams come first"* — the pre-departure window. If they are still open, they are overdue, and the plan's own instruction was to close them **from the home faculty**, which is precisely the access lost once abroad.
+2. **The window has passed.** These sit in Horizon 1, scoped as *"~3 weeks · gate: exams come first"* — the pre-departure window. If they are still open, they are overdue, and the plan's own instruction was to close them **from Lublin**, which is precisely the access you lose in Arizona.
 
 ---
 
@@ -64,21 +65,22 @@ Two caveats:
 
 Both relationships are warm; neither is connected to the paper thread.
 
-### The oncology professor — surgical oncology, home faculty
+### Prof. Rawicz — oncology surgeon, Lublin
 - Type: mentor · Strength: **warm** · Reach: **2** · Last contact: **~40 days** · Owed: **no**
-- Relationship: long-standing, warm; low-frequency check-ins keep it alive
+- Met: *"Knows you personally and likes you."*
+- Notes: *"Genuine warmth. A reliable local mentor — keep the relationship warm with occasional check-ins."*
 - **Standing opportunities:**
   - **"Ask to co-author a case report"**
-  - **National oncology society meeting · ~Sep 15–16 2026** — logged as *"From the oncology professor's opener — a co-authoring relationship trip."* (date approximate)
+  - **Oncology Society Meeting · Kraków · ~Sep 15–16 2026** — logged as *"From Prof. Rawicz's opener — a co-authoring relationship trip."* (date approximate)
 
-### The breast-surgery professor — home faculty
+### Prof. Polkowski — breast cancer surgeon, Lublin
 - Type: mentor · Strength: **warm** · Reach: **3** *(highest-reach Polish mentor in the map)* · Last contact: **~30 days** · Owed: **YES**
-- Relationship: introduced through family; high willingness to help
-- Notes: high reach, limited time — a light, specific ask lands best
+- Met: *"Knows you personally through your mother — adores her, very willing to help."*
+- Notes: *"High willingness, high reach — but very busy. Worth a light, specific ask."*
 - **Standing opportunities:**
   - Ask for a rec letter for CT electives
-  - Shadow invitation — a day in his OR · home faculty
-  - Intro to the home surgical faculty · Sep 2026 · home faculty
+  - Shadow invitation — a day in his OR · Lublin
+  - Intro to the UMLub surgical faculty · Sep 2026 · Lublin
 
 > **An unpaid social debt (`owed: true`) to your highest-reach local mentor is the most actionable item in this entire audit — and it sits in the oncology corner of the network map.**
 
@@ -142,7 +144,7 @@ Off-thesis work must be cheap or it is not worth its cost to the thesis.
 
 | Tier | Your hours | Cycle time | Use for |
 |---|---|---|---|
-| **Case report** | 8–15 | 2–4 mo | the oncology professor's standing offer. Cheapest real paper that exists |
+| **Case report** | 8–15 | 2–4 mo | Prof. Rawicz's standing offer. Cheapest real paper that exists |
 | **Narrative review** | 30–50 | 4–8 mo | No data access needed — the pediatric valve review's shape |
 | **Retrospective on existing DB** | 40–80 | 6–12 mo | Redo-sternotomy pattern |
 | **Original analysis** | 150+ | 12–18 mo | CAV. **On-thesis only** |
@@ -157,9 +159,9 @@ A middle-author GI or oncology paper still counts on the ERAS line, still proves
 
 Conference abstract deadlines are the only **externally enforced** dates in this system. Intentions do not hold; deadlines do.
 
-**the national oncology meeting (~Sep 15–16 2026)** is already logged as a relationship trip. Make it an **abstract** trip instead:
+**ONKO Kraków (~Sep 15–16 2026)** is already logged as a relationship trip. Make it an **abstract** trip instead:
 - An accepted abstract converts to a manuscript *with a deadline attached*
-- It gives the the oncology professor relationship a concrete artifact rather than a coffee
+- It gives the Prof. Rawicz relationship a concrete artifact rather than a coffee
 - It satisfies the "co-author a case report" opportunity already sitting in the network map
 
 ### 6.8 Instrumentation — `Pipeline.dc.html`
@@ -191,7 +193,7 @@ A **capped annex**:
 - Tier **≤ case report**
 - Hard stop: the moment an oncology item costs more than **~15 of your hours**, it is competing with CAV — and CAV is the thesis
 
-What the annex buys: the breast-surgery professor (whom you owe), the oncology professor, and a conference trip with a purpose. It buys nothing else, and it should not try to.
+What the annex buys: Prof. Polkowski (whom you owe), Prof. Rawicz, and a Kraków trip with a purpose. It buys nothing else, and it should not try to.
 
 ---
 
@@ -210,7 +212,7 @@ What the annex buys: the breast-surgery professor (whom you owe), the oncology p
 | # | Action | Cost | Why |
 |---|---|---|---|
 | 1 | Establish true status of GI papers #1 and #2 | 10 min | Everything else depends on it |
-| 2 | Clear the `owed: true` debt to the breast-surgery professor | 1 message | Highest-reach mentor, 30 days cold |
-| 3 | Convert the national oncology meeting into an abstract deadline | 1 email to the oncology professor | The only external forcing function on the board |
+| 2 | Clear the `owed: true` debt to Prof. Polkowski | 1 message | Highest-reach mentor, 30 days cold |
+| 3 | Convert ONKO Kraków into an abstract deadline | 1 email to Prof. Rawicz | The only external forcing function on the board |
 | 4 | Build `Pipeline.dc.html` + wire into `nav.js` | ~half a day | Makes the co-author-inbox failure mode visible |
 | 5 | Reconcile `Research Plan.dc.html` against `CT Master Plan.html` | ~1 hour | Two portfolios have drifted apart |
