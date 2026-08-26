@@ -204,5 +204,35 @@ ok(loops.A.openLoops(rec).every((b) => !!loops.A.blockRec(rec, b.id).studied),
 ok(loops.A.openLoops(rec).filter((b) => loops.A.blockRec(rec, b.id).studied === TODAY).length === 1,
    'and one of them is only waiting on tomorrow morning, not missing');
 
+/* ── 5. the tripwire panel tells the truth at rest ── */
+group('Tripwire lines on a log with almost nothing in it');
+
+const fresh = load(true);
+const fs5 = fresh.A.blank();
+fs5.days[TODAY] = day({ tier: 'full', p0: false, minRead: 90, minDraw: 0 });
+fresh.A.write(fs5);
+const lines = fresh.A.tripwires(fresh.A.read());
+
+ok(lines.every((x) => !/NaN|undefined|null/.test(x.text)),
+   'no line prints NaN, undefined or null');
+ok(!/above 5 \(0\)/.test(lines[0].text), 'does not claim open loops are above five when there are none');
+ok(/no d45 retest scored yet/i.test(lines[3].text), 'says nothing has been scored rather than "pass rate 0%"');
+ok(/says nothing yet/.test(lines[5].text), 'says cards per block is not measurable rather than NaN');
+ok(!/^Past /.test(lines[6].text), 'does not say "Past <gate>" before the gate: ' + JSON.stringify(lines[6].text));
+ok(lines.filter((x) => x.fired).length === 2,
+   'and the two that genuinely fired still fire (nothing on paper, draw behind read)');
+
+/* The wording turns, what fires does not. */
+const breached = load(true);
+const bs = breached.A.blank();
+REF.allBlocks().slice(0, 7).forEach((b) => { bs.blocks[b.id] = block({ studied: ago(1) }); });
+bs.days[TODAY] = day({ tier: 'full', p0: false, minRead: 100, minDraw: 10 });
+bs.days[ago(1)] = day({ tier: 'full', p0: false, minRead: 10, minDraw: 0 });
+breached.A.write(bs);
+const hot = breached.A.tripwires(breached.A.read());
+ok(hot[0].fired && /above 5 \(7\)/.test(hot[0].text), 'seven open loops still fires with the breach wording');
+ok(hot[1].fired && /skipped 2 times/.test(hot[1].text), 'two skipped Phase 0s still fires');
+ok(hot.every((x) => !/NaN|undefined/.test(x.text)), 'and nothing prints NaN there either');
+
 console.log(failed ? '\n' + failed + ' failed\n' : '\nall green\n');
 process.exit(failed ? 1 : 0);

@@ -450,22 +450,51 @@
     var thorax = regions().filter(function (r) { return r.id === 'thorax'; })[0];
     var thoraxStarted = thorax ? thorax.blocks.some(function (b) { return peek(s, b.id).studied; }) : true;
 
+    /* A tripwire that has not fired still prints its line, muted, so the panel
+       reads as a set of gauges rather than a list of alarms. That only works if
+       the resting line is true, and several were not: "Open loops above 5 (0)",
+       "D45 pass rate 0%" with nothing ever scored, "Past <gate>" a fortnight
+       before the gate, and a bare "NaN new cards per closed block" whenever no
+       block had closed that week. Each line now says what is actually the case.
+       What fires is untouched — only the wording turns. */
+    var cardsPer = w.closed > 0 ? Math.round(w.cardsNew / w.closed) : null;
+    var pastGate = !!gate() && t >= gate();
+
     return [
       { fired: open.length > 5,
-        text: 'Open loops above 5 (' + open.length + '). No new block until they clear.' },
+        text: open.length > 5
+          ? 'Open loops above 5 (' + open.length + '). No new block until they clear.'
+          : open.length + ' open loop' + (open.length === 1 ? '' : 's') + '. The ceiling is five.' },
       { fired: w.p0missed >= 2,
-        text: 'Phase 0 skipped ' + w.p0missed + ' times in the last 7 days. That week\'s checkmarks are void.' },
+        text: w.p0missed >= 2
+          ? 'Phase 0 skipped ' + w.p0missed + ' times in the last 7 days. That week\'s checkmarks are void.'
+          : w.p0missed === 1 ? 'Phase 0 skipped once in the last 7 days. Twice voids the week.'
+                             : 'Phase 0 kept on every day run this week.' },
       { fired: paperGap >= 14,
-        text: lp ? paperGap + ' days since anything was scored on paper. Studying by impression again.'
-                 : 'Nothing has been scored on paper yet.' },
+        text: !lp ? 'Nothing has been scored on paper yet.'
+          : paperGap >= 14 ? paperGap + ' days since anything was scored on paper. Studying by impression again.'
+                           : paperGap + ' day' + (paperGap === 1 ? '' : 's') + ' since the last paper score. The limit is fourteen.' },
       { fired: rate !== null && rate < 70,
-        text: 'D45 pass rate ' + (rate || 0) + '%. Closure is not holding — card design or block size, not effort.' },
+        text: rate === null ? 'No D45 retest scored yet — nothing to say about whether closure holds.'
+          : rate < 70 ? 'D45 pass rate ' + rate + '%. Closure is not holding — card design or block size, not effort.'
+                      : 'D45 pass rate ' + rate + '%. Closure is holding.' },
       { fired: w.draw < w.read * 0.6 && w.read > 0,
-        text: 'Draw ' + w.draw + ' min against read ' + w.read + ' min this week. Intake is crowding out generation — the exact shape of last year.' },
+        text: w.read === 0 ? 'No read or draw minutes logged this week.'
+          : w.draw < w.read * 0.6
+            ? 'Draw ' + w.draw + ' min against read ' + w.read + ' min this week. Intake is crowding out generation — the exact shape of last year.'
+            : 'Draw ' + w.draw + ' min against read ' + w.read + ' min this week. Generation is keeping up.' },
       { fired: w.closed > 0 && w.cardsNew / w.closed > 20,
-        text: Math.round(w.cardsNew / w.closed) + ' new cards per closed block this week. Authoring is expanding again; the ceiling is about 15.' },
-      { fired: !!gate() && t >= gate() && !thoraxStarted,
-        text: 'Past ' + gate() + ' and thorax has not started. Move unfinished regions to closure-track and begin.' },
+        text: cardsPer === null ? 'No block closed this week, so cards per block says nothing yet.'
+          : cardsPer + ' new cards per closed block this week. '
+            + (w.cardsNew / w.closed > 20 ? 'Authoring is expanding again; the ceiling is about 15.'
+                                          : 'The ceiling is about 15.') },
+      { fired: pastGate && !thoraxStarted,
+        text: !gate() ? 'No thorax gate set.'
+          : pastGate
+            ? (thoraxStarted ? 'Past ' + gate() + ' and thorax has started.'
+                             : 'Past ' + gate() + ' and thorax has not started. Move unfinished regions to closure-track and begin.')
+            : (thoraxStarted ? 'Thorax has started, ahead of the ' + gate() + ' gate.'
+                             : daysBetween(t, gate()) + ' days to the thorax gate on ' + gate() + '.') },
     ];
   }
 
