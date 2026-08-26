@@ -102,7 +102,19 @@
       .catch(function () { return false; });
   }
 
+  /* The design-canvas runtime rebuilds its template from the page's own
+     source, because the copy the HTML parser leaves in the DOM has had the
+     rows inside <table> and <select> hoisted out of it — that is what fills
+     the day log and the Data panel. It reaches for that source with
+     fetch(location.href), which under the vault answers with this shell and
+     no <x-dc> in it, so the repair silently never happens and those tables
+     come up as bare headers.
+
+     The plaintext is right here, so hand it over. `document.open()` resets
+     the document, not the global object, so a value set on `window` before
+     the write is still there when the page's own scripts run. */
   function open(plain) {
+    try { window.__dcSource = plain; } catch (e) {}
     document.open();
     document.write(plain);
     document.close();
