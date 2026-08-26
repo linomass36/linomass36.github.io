@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+</head>
+<body>
+<!-- ─────────────────────────────────────────────────────────────
+     The Plan — v2's front door, and the page that replaces the
+     CT Master Plan as the thing you open.
+
+     v1 showed 371 steps across 13 branches. That is an inventory,
+     and an inventory of 371 things is a document you stop opening.
+     This page shows ONE date, the ten items that serve it, and a
+     door to each phase. Everything else in v2 lives one tap away
+     on a page of its own.
+     ───────────────────────────────────────────────────────────── -->
+<div class="pv" id="app"></div>
+<script>
+(function () {
+  var P = window.PlanV2, D = P.plan(), esc = P.esc;
+  var app = document.getElementById('app');
+  var H = [];
+
+  /* ── the forcing function, and nothing above it ───────────────── */
+  var left = P.daysUntil(D.forcingFunction.date);
+  H.push('<div class="pv-kick">CT Master Plan · v' + esc(D.version) + '</div>');
+  H.push('<h1 class="pv-h1">The Plan</h1>');
+  H.push('<p class="pv-lede">' + esc(D.howToRead.lede) +
+         ' Recalibrated ' + esc(P.fmtDate(D.recalibrated)) +
+         '. Everything below either serves the next dated gate or is marked dormant.</p>');
+
+  H.push('<div class="pv-ff">' +
+    '<div class="pv-ff-lab">The forcing function</div>' +
+    '<div class="pv-ff-n">' + (left === null ? '—' : left + '<span style="font-size:18px"> days</span>') + '</div>' +
+    '<div class="pv-ff-t">' + esc(D.forcingFunction.label) + ' · ' + esc(P.fmtDate(D.forcingFunction.date)) + '</div>' +
+    '<div class="pv-ff-d">' + esc(D.forcingFunction.why) + '</div></div>');
+
+  /* ── Phase 0 — the only live work, checkable ──────────────────── */
+  var p0 = D.phase0, ids = p0.items.map(function (i) { return i.id; });
+  var done = P.doneCount(ids), pct = Math.round(done / ids.length * 100);
+
+  H.push('<h2 class="pv-h2">Phase 0 — close out the summer</h2>');
+  H.push('<div class="pv-sub">' + esc(p0.window) + ' · ' + esc(p0.lede) + '</div>');
+  H.push('<div class="pv-bar"><i id="bar" style="width:' + pct + '%"></i></div>');
+  H.push('<div class="pv-count" id="cnt">' + done + ' of ' + ids.length + ' done</div>');
+
+  H.push('<div class="pv-card" style="margin-top:14px">');
+  p0.items.forEach(function (it) {
+    var on = P.isDone(it.id);
+    H.push('<div class="pv-item" data-done="' + (on ? 1 : 0) + '" data-id="' + esc(it.id) + '">');
+    H.push('<div class="pv-box" role="checkbox" tabindex="0" aria-checked="' + on + '">✓</div>');
+    H.push('<div class="pv-grow">');
+    H.push('<div class="pv-row"><span class="pv-it-t">' + esc(it.t) + '</span>' +
+           (it.tag ? '<span class="pv-chip c-live">' + esc(it.tag) + '</span>' : '') +
+           (it.due ? '<span class="pv-chip c-verify">' + esc(P.fmtDate(it.due)) + '</span>' : '') + '</div>');
+    if (it.d)  H.push('<div class="pv-it-d">' + esc(it.d) + '</div>');
+    if (it.d2) H.push('<div class="pv-quote">' + esc(it.d2) + '</div>');
+    if (it.d3) H.push('<div class="pv-it-d">' + esc(it.d3) + '</div>');
+    if (it.script) H.push('<div class="pv-quote">' + esc(it.script) + '</div>');
+    if (it.steps) {
+      H.push('<ul class="pv-steps">');
+      it.steps.forEach(function (s) { H.push('<li>' + esc(s) + '</li>'); });
+      H.push('</ul>');
+    }
+    if (it.jobs) it.jobs.forEach(function (j) {
+      H.push('<div class="pv-h3">' + esc(j.k) + '</div><div class="pv-it-d">' + esc(j.v) + '</div>');
+    });
+    if (it.sources) {
+      H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Source</th><th>Access cost</th><th>Fit</th></tr></thead><tbody>');
+      it.sources.forEach(function (s) {
+        H.push('<tr class="' + (s.good ? '' : 'dim') + '"><td><b>' + esc(s.src) + '</b></td><td>' +
+               esc(s.cost) + '</td><td>' + esc(s.fit) + '</td></tr>');
+      });
+      H.push('</tbody></table></div>');
+    }
+    if (it.table) {
+      H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+      it.table.forEach(function (r) {
+        H.push('<tr><td><b>' + esc(r.k) + '</b></td><td>' + esc(r.v) + '</td>' +
+               (r.n !== undefined ? '<td>' + esc(r.n) + '</td>' : '') + '</tr>');
+      });
+      H.push('</tbody></table></div>');
+    }
+    if (it.target) H.push('<div class="pv-rule"><b>Target.</b> ' + esc(it.target) + '</div>');
+    if (it.rule)   H.push('<div class="pv-rule">' + esc(it.rule) + '</div>');
+    if (it.kill)   H.push('<div class="pv-rule pv-kill"><b>Kill criterion.</b> ' + esc(it.kill) + '</div>');
+    H.push('</div></div>');
+  });
+  H.push('</div>');
+
+  H.push('<div class="pv-h3">Phase 0 exit criteria</div>');
+  H.push('<p class="pv-small">' + p0.exit.map(esc).join(' · ') + '</p>');
+
+  /* ── the rest of the arc, as doors ────────────────────────────── */
+  var LINK = { p1: 'Campaign.html', p5: 'Campaign.html' };
+  H.push('<h2 class="pv-h2">The phases</h2>');
+  H.push('<div class="pv-sub">One objective each, and the way each one fails</div>');
+  D.phases.forEach(function (ph) {
+    var href = LINK[ph.id];
+    var tag = ph.status === 'live' ? 'c-live' : 'c-queued';
+    var open = href ? '<a href="' + href + '" class="pv-phase"' : '<div class="pv-phase"';
+    H.push(open + ' style="border-left-color:' + ph.color + '">');
+    H.push('<div class="pv-row"><span class="pv-ph-n">PHASE ' + esc(ph.num) + '</span>' +
+           '<span class="pv-chip ' + tag + '">' + esc(ph.status) + '</span>' +
+           '<span class="pv-ph-n">' + esc(P.fmtDate(ph.start)) + ' → ' + esc(P.fmtDate(ph.end)) + '</span></div>');
+    H.push('<div class="pv-ph-t">' + esc(ph.label) + '</div>');
+    H.push('<div class="pv-ph-o">' + esc(ph.objective) + '</div>');
+    H.push('<div class="pv-ph-f">Fails by: ' + esc(ph.failure) + '</div>');
+    H.push(href ? '</a>' : '</div>');
+  });
+
+  /* ── governing logic ──────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Governing logic</h2>');
+  H.push('<div class="pv-sub">The seven rules the rest of the plan obeys</div>');
+  H.push('<div class="pv-card">');
+  D.governingLogic.forEach(function (g) {
+    H.push('<div class="pv-item"><div class="pv-grow">' +
+      '<div class="pv-it-t">' + g.n + '. ' + esc(g.t) + '</div>' +
+      '<div class="pv-it-d">' + esc(g.d) + '</div></div></div>');
+  });
+  H.push('</div>');
+
+  /* ── ground truth ─────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Ground truth</h2>');
+  H.push('<div class="pv-sub">What v1 assumed, against what is actually true · ' + esc(P.fmtDate(D.groundTruth.asOf)) + '</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th></th><th>v1 assumed</th><th>Actual</th></tr></thead><tbody>');
+  D.groundTruth.rows.forEach(function (r) {
+    H.push('<tr><td><b>' + esc(r.dim) + '</b></td><td class="dim">' + esc(r.v1) + '</td><td>' + esc(r.actual) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+
+  H.push('<div class="pv-h3">Fixed facts that shape everything</div>');
+  H.push('<div class="pv-card">');
+  D.groundTruth.fixedFacts.forEach(function (f) {
+    var c = f.tone === 'good' ? 'c-ok' : f.tone === 'warn' ? 'c-verify' : 'c-live';
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t">' + esc(f.k) + '</span><span class="pv-chip ' + c + '">' +
+      (f.tone === 'good' ? 'asset' : f.tone === 'warn' ? 'watch' : 'key') + '</span></div>' +
+      '<div class="pv-it-d">' + esc(f.v) + '</div></div></div>');
+  });
+  H.push('</div>');
+
+  /* ── what v1 said that is now wrong ───────────────────────────── */
+  H.push('<h2 class="pv-h2">Retired from v1</h2>');
+  H.push('<div class="pv-sub">Obsolete — do not display these as behind schedule</div>');
+  H.push('<div class="pv-card">');
+  D.corrections.forEach(function (c) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t" style="text-decoration:line-through;color:var(--muted)">' + esc(c.was) + '</span>' +
+      '<span class="pv-chip c-' + esc(c.status) + '">' + esc(c.status) + '</span></div>' +
+      '<div class="pv-it-d">' + esc(c.fix) + '</div></div></div>');
+  });
+  H.push('</div>');
+
+  H.push('<div class="pv-h3">Parked, not failed</div>');
+  H.push('<p class="pv-small">A plan that displays five failing metrics gets abandoned; a plan that displays two live ones gets used. These are greyed on purpose.</p>');
+  H.push('<div class="pv-card">');
+  D.dormant.forEach(function (d) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t" style="color:var(--muted)">' + esc(d.label) + '</span>' +
+      '<span class="pv-chip ' + (d.dead ? 'c-dead' : 'c-dormant') + '">' + (d.dead ? 'dead' : 'dormant') + '</span></div>' +
+      '<div class="pv-it-d">Reopen ' + esc(d.reopen) + '</div></div></div>');
+  });
+  H.push('</div>');
+
+  /* ── cadence + the paragraph ──────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Cadence</h2>');
+  H.push('<div class="pv-sub">What keeps it alive between recalibrations</div>');
+  H.push('<div class="pv-card">');
+  D.cadence.forEach(function (c) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t">' + esc(c.t) + '</span><span class="pv-chip c-queued">' + esc(c.every) + '</span>' +
+      '<span class="pv-ph-n">' + esc(c.mins) + '</span></div>' +
+      '<div class="pv-it-d">' + esc(c.d) + '</div></div></div>');
+  });
+  H.push('</div>');
+  H.push('<p class="pv-small" style="margin-top:10px">Two metrics only — ' +
+         D.metrics.map(function (m) { return '<b>' + esc(m.label) + '</b>'; }).join(' and ') +
+         '. Both live on the <a href="Pipeline.html">Pipeline</a>.</p>');
+
+  H.push('<h2 class="pv-h2">The one-paragraph version</h2>');
+  H.push('<div class="pv-sub">If you read nothing else on a bad day</div>');
+  H.push('<div class="pv-card acc" style="border-left-color:var(--rust)">' +
+         '<p class="pv-p" style="font-family:var(--serif);font-size:16.5px;color:var(--ink)">' +
+         esc(D.oneParagraph) + '</p></div>');
+
+  H.push('<p class="pv-foot">This page supersedes ' + esc(D.supersedes) +
+         '. The v1 documents are intact and reachable from <a href="Archive.html"><b>the Archive</b></a>. ' +
+         'To recalibrate against a new file, go to <a href="Settings.html"><b>Plan Settings</b></a>.' +
+         (P.isImported() ? ' <b>A custom plan is currently loaded.</b>' : '') + '</p>');
+
+  app.innerHTML = H.join('');
+
+  /* Checking an item is the only write this page makes. Progress is
+     recomputed from the store rather than from the DOM, so a sync that
+     lands mid-session cannot desynchronise the bar from the boxes. */
+  function repaint() {
+    var n = P.doneCount(ids);
+    document.getElementById('bar').style.width = Math.round(n / ids.length * 100) + '%';
+    document.getElementById('cnt').textContent = n + ' of ' + ids.length + ' done';
+  }
+  function hit(row) {
+    var id = row.getAttribute('data-id');
+    var on = P.toggleDone(id);
+    row.setAttribute('data-done', on ? '1' : '0');
+    row.querySelector('.pv-box').setAttribute('aria-checked', String(on));
+    repaint();
+  }
+  app.addEventListener('click', function (e) {
+    var b = e.target.closest('.pv-box');
+    if (b) hit(b.closest('.pv-item'));
+  });
+  app.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var b = e.target.closest && e.target.closest('.pv-box');
+    if (b) { e.preventDefault(); hit(b.closest('.pv-item')); }
+  });
+})();
+</script>
+</body>
+</html>

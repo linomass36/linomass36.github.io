@@ -26,6 +26,7 @@
     ['Every day', [
       ['Standing.html', 'The Standing'],
       ['Today.dc.html', 'Today'],
+      ['Plan.html', 'The Plan'],
       ['Hub.dc.html', 'Mission Control'],
     ]],
     ['Study', [
@@ -38,17 +39,22 @@
       ['Life Log.dc.html', 'Life Log'],
       ['Health.html', 'The Body · health + moments'],
     ]],
-    /* The five documents are one entry, not five. They are things you read
-       rather than things you use, and they were each costing a drawer slot
-       at the same weight as a page you open every morning. Reference is the
-       door; every one of them is still its own page, one tap behind it. */
+    /* v2 splits what used to be one "plan" entry into the pages the plan
+       is actually worked on: the campaign that wins 2027, the money that
+       has to be re-checked quarterly, and the assumptions that could each
+       end a phase. The Plan itself sits under Every day, because it is
+       now something you open rather than something you consult. */
     ['The plan', [
-      ['Reference.dc.html', 'Reference · the documents'],
+      ['Campaign.html', 'The Campaign · phases 1–5'],
+      ['Verify.html', 'Verify · assumptions & risk'],
+      ['Debt.html', 'The Debt'],
       ['Ledger.html', 'The Ledger'],
       ['Day Budget.html', 'The Day Budget'],
       ['Conditions.html', 'Conditions'],
     ]],
     ['Research', [
+      ['Pipeline.html', 'Pipeline · the board'],
+      ['Publication Pipeline.md', 'Pipeline · the write-up'],
       ['Conference Radar.dc.html', 'Conference Radar'],
     ]],
     ['People &amp; money', [
@@ -61,16 +67,23 @@
       ['Journal.dc.html', 'Journal'],
       ['Examiner.dc.html', 'Examiner'],
     ]],
+    ['Plan upkeep', [
+      ['Settings.html', 'Recalibrate the plan'],
+      ['Archive.html', 'Archive · v1 documents'],
+    ]],
   ];
-  /* The documents behind Reference are still hub pages — they carry the
-     drawer, they get highlighted as current, and they are reachable by URL.
-     They are simply not listed twice. */
+  /* The v1 documents are still hub pages — they carry the drawer, they get
+     highlighted as current, and they are reachable by URL. They are simply
+     not listed in the drawer any more: they live behind Archive, which says
+     what each one was and what replaced it. Reference is one of them now,
+     since the door it opened has been superseded. */
   var BEHIND_REFERENCE = [
     ['CT Master Plan.html', 'CT Master Plan'],
     ['Summer Sprint.dc.html', 'Summer Sprint'],
     ['Plan Analysis.dc.html', 'Plan Analysis'],
     ['Research Plan.dc.html', 'Research Plan'],
     ['Timeline.dc.html', 'Timeline'],
+    ['Reference.dc.html', 'Reference'],
   ];
   var PAGES = GROUPS.reduce(function (a, g) { return a.concat(g[1]); }, []).concat(BEHIND_REFERENCE);
   function behindReference(file) {
@@ -200,10 +213,11 @@
     function render() {
       var pageLinks = GROUPS.map(function (g) {
         var links = g[1].map(function (p) {
-          /* Standing on one of the documents, the drawer highlights the door
-             you came through rather than nothing at all — you are inside
-             Reference, and the drawer should say so. */
-          var on = (p[0] === here || (p[0] === 'Reference.dc.html' && behindReference(here))) ? ' on' : '';
+          /* Standing on one of the archived v1 documents, the drawer
+             highlights the door you came through rather than nothing at
+             all — you are inside the Archive, and the drawer should say
+             so, which also makes it obvious you are not on a live page. */
+          var on = (p[0] === here || (p[0] === 'Archive.html' && behindReference(here))) ? ' on' : '';
           return '<a class="hbnav-lnk' + on + '" href="' + esc(p[0]) + '">' + esc(p[1]) + '</a>';
         }).join('');
         return '<div class="hbnav-grp">' + g[0] + '</div>' + links;

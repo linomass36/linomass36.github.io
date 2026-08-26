@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plan Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+</head>
+<body>
+<!-- ─────────────────────────────────────────────────────────────
+     Plan Settings — how the plan gets recalibrated without a deploy.
+
+     v1 went stale because changing it meant editing a 1 MB bundled
+     HTML file. So it was never changed; it was abandoned and then
+     rewritten from scratch eight months later. That is the failure
+     this page exists to prevent.
+
+     An imported plan SHADOWS the shipped file rather than replacing
+     it — plan-v2.js prefers state.imported and falls back to
+     window.PLAN_V2. A bad import is therefore always one tap from
+     being undone, which is what makes it safe to import at all.
+     ───────────────────────────────────────────────────────────── -->
+<div class="pv" id="app"></div>
+<script>
+(function () {
+  var P = window.PlanV2, esc = P.esc;
+  var app = document.getElementById('app');
+
+  /* The prompt handed to an assistant. Kept as an array so the source
+     stays readable; joined with newlines for the copy button. */
+  var PROMPT = [
+    'You are recalibrating my CT Master Plan. I will give you the current plan and a description of what has changed. Return ONE fenced ```json block and nothing else outside it.',
+    '',
+    'RULES',
+    '1. Output must be a single JSON object matching the schema below. Every key shown is required unless marked optional.',
+    '2. Never name a real person, institution, city, or email address. Use role descriptors ("the oncology professor", "the senior sponsor", "home faculty", "a major cancer centre"). This file is served from a public origin.',
+    '3. Bump "version" (2.0 -> 2.1 for a revision, 3.0 for a replacement of the operating logic) and set "recalibrated" to today in YYYY-MM-DD.',
+    '4. There is exactly ONE forcingFunction: the next externally-imposed deadline. Everything live must serve it.',
+    '5. Anything that no longer serves the forcing function goes in "dormant" with a "reopen" condition — never delete it, and never leave it live where it will read as "behind schedule".',
+    '6. Status values are exactly: live | queued | dormant | dead.',
+    '7. Prefer fewer, dated items over many undated ones. If an item has no date and no owner, it is not a plan item.',
+    '8. Keep prose in the plain, direct voice of the input. No exclamation marks, no motivational language.',
+    '',
+    'SCHEMA (abbreviated — keep every key that exists in the plan I give you, even those not listed here)',
+    '{',
+    '  "version": "2.1",',
+    '  "recalibrated": "YYYY-MM-DD",',
+    '  "supersedes": "string",',
+    '  "horizon": "string",',
+    '  "forcingFunction": { "label": "string", "date": "YYYY-MM-DD", "why": "string" },',
+    '  "howToRead": { "lede": "string", "changed": ["string"] },',
+    '  "groundTruth": {',
+    '    "asOf": "YYYY-MM-DD",',
+    '    "rows": [{ "dim": "string", "v1": "what was assumed", "actual": "what is true" }],',
+    '    "fixedFacts": [{ "k": "string", "v": "string", "tone": "good|warn|key" }]',
+    '  },',
+    '  "corrections": [{ "was": "string", "fix": "string", "status": "dead|dormant" }],',
+    '  "governingLogic": [{ "n": 1, "t": "short rule", "d": "why" }],',
+    '  "phases": [{ "id": "p0", "num": "0", "label": "string", "start": "YYYY-MM-DD",',
+    '               "end": "YYYY-MM-DD", "status": "live|queued", "objective": "one sentence",',
+    '               "failure": "how this phase fails", "color": "#RRGGBB" }],',
+    '  "milestones": [{ "id": "string", "label": "string", "date": "YYYY-MM-DD", "kind": "crit|open" }],',
+    '  "phase0": {',
+    '    "window": "string", "lede": "string",',
+    '    "items": [{ "id": "p0-slug", "t": "title", "d": "body",',
+    '                "tag": "optional short badge", "due": "optional YYYY-MM-DD",',
+    '                "steps": ["optional"], "rule": "optional", "kill": "optional kill criterion" }],',
+    '    "exit": ["exit criterion"]',
+    '  },',
+    '  "pipeline": {',
+    '    "stages": ["Idea","Question locked","Access","Analysis","Draft","Co-author review","Submitted","Revision","Accepted"],',
+    '    "redFlagDays": 21,',
+    '    "wip": { "inFlight": 3, "offThesis": 1, "note": "string" },',
+    '    "tiers": [{ "t": "string", "hrs": "8-15", "cyc": "2-4 mo", "use": "string" }],',
+    '    "board": [{ "id": "pipe-slug", "title": "string", "tier": "string", "stage": "one of stages",',
+    '                "ball": "you|co-author|PI|journal", "onThesis": true,',
+    '                "due": "YYYY-MM-DD or null", "priority": "P0|P1|P3|queued|dormant|optional",',
+    '                "note": "optional", "blocker": "optional" }]',
+    '  },',
+    '  "risks": [{ "r": "string", "sev": "string", "sig": "observable signal", "mit": "string" }],',
+    '  "verification": [{ "n": "1", "q": "question", "how": "method", "by": "date or cadence",',
+    '                     "sev": "fatal|fatal-to-phase|high|medium", "done": false, "result": "optional" }],',
+    '  "cadence": [{ "every": "Weekly", "mins": "20 min", "t": "string", "d": "string" }],',
+    '  "metrics": [{ "id": "string", "label": "string", "target": 2 }],',
+    '  "dormant": [{ "id": "slug", "label": "string", "reopen": "the condition", "dead": false }],',
+    '  "oneParagraph": "the whole plan in one paragraph, for a bad day"',
+    '}',
+    '',
+    'CHECK BEFORE YOU ANSWER',
+    '- Is there exactly one forcingFunction, and does every live item serve it?',
+    '- Did anything get deleted that should have become dormant with a reopen condition?',
+    '- Are all dates YYYY-MM-DD and internally consistent (phase ends after it starts)?',
+    '- Did any real name, institution, city, or email survive?',
+    '- Does the JSON parse?'
+  ].join('\n');
+
+  function render(msg) {
+    var D = P.plan(), imported = P.isImported(), at = P.importedAt();
+    var H = [];
+
+    H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+    H.push('<div class="pv-kick">Plan settings</div>');
+    H.push('<h1 class="pv-h1">Recalibrate</h1>');
+    H.push('<p class="pv-lede">v1 went stale because changing it meant editing a one-megabyte bundled file, so it was never changed — it was abandoned and rewritten from scratch. ' +
+      'This page is the fix: hand an assistant the plan and what changed, paste the answer back, done.</p>');
+
+    /* ── what is loaded right now ─────────────────────────────── */
+    H.push('<div class="pv-ff" style="' + (imported ? '' : 'background:var(--ok-bg);border-color:var(--ok-ln);border-left-color:var(--ok)') + '">');
+    H.push('<div class="pv-ff-lab" style="' + (imported ? '' : 'color:var(--ok)') + '">Currently loaded</div>');
+    H.push('<div class="pv-ff-t" style="font-size:19px;margin-top:6px">Plan v' + esc(D.version) +
+      ' · recalibrated ' + esc(P.fmtDate(D.recalibrated)) + '</div>');
+    H.push('<div class="pv-ff-d">' + (imported
+      ? 'Loaded from an imported file on ' + esc(P.fmtDate((at || '').slice(0, 10))) +
+        '. It shadows the shipped plan — revert at any time and nothing is lost.'
+      : 'The shipped plan, as deployed. No custom file is loaded.') + '</div>');
+    if (imported) H.push('<div style="margin-top:13px"><button class="pv-btn" id="revert">Revert to the shipped plan</button></div>');
+    H.push('</div>');
+
+    if (msg) H.push('<div class="pv-note ' + (msg.ok ? 'n-ok' : 'n-bad') + '">' + esc(msg.text) + '</div>');
+
+    /* ── step 1: export ───────────────────────────────────────── */
+    H.push('<h2 class="pv-h2">1 · Take the current plan</h2>');
+    H.push('<div class="pv-sub">Give this to the assistant along with what has changed</div>');
+    H.push('<p class="pv-p">Copy the plan as JSON, or download it as a markdown file you can attach to a chat. ' +
+      'Either carries the whole plan — phases, pipeline, risks, verification queue and all.</p>');
+    H.push('<div class="pv-row" style="gap:9px">' +
+      '<button class="pv-btn" id="copy-plan">Copy plan JSON</button>' +
+      '<button class="pv-btn" id="dl-md">Download as .md</button>' +
+      '<button class="pv-btn" id="dl-json">Download as .json</button></div>');
+
+    /* ── step 2: the prompt ───────────────────────────────────── */
+    H.push('<h2 class="pv-h2">2 · The prompt</h2>');
+    H.push('<div class="pv-sub">Paste this above the plan, then describe what changed</div>');
+    H.push('<p class="pv-p">This tells the assistant the exact shape to return and the rules that keep the result usable — ' +
+      'one forcing function, dormant instead of deleted, and <b>no real names</b>, because these files are served from a public origin.</p>');
+    H.push('<div class="pv-row" style="gap:9px;margin-bottom:6px">' +
+      '<button class="pv-btn pri" id="copy-prompt">Copy the prompt</button></div>');
+    H.push('<div class="pv-pre" id="prompt">' + esc(PROMPT) + '</div>');
+
+    /* ── step 3: import ───────────────────────────────────────── */
+    H.push('<h2 class="pv-h2">3 · Bring the answer back</h2>');
+    H.push('<div class="pv-sub">Paste JSON, or a markdown file containing a fenced json block</div>');
+    H.push('<p class="pv-p">Both work. If you paste a whole assistant reply, the first ```json block in it is extracted automatically. ' +
+      'The file is validated before anything is stored — a malformed plan is rejected rather than half-applied.</p>');
+    H.push('<textarea class="pv-ta" id="in" placeholder="Paste the JSON, or the whole reply, or drop a .md / .json file below…"></textarea>');
+    H.push('<div class="pv-row" style="gap:9px;margin-top:10px">' +
+      '<button class="pv-btn pri" id="apply">Validate & apply</button>' +
+      '<label class="pv-btn" for="file">Choose a file…</label>' +
+      '<input type="file" id="file" accept=".md,.json,.txt,text/markdown,application/json" style="display:none">' +
+      '</div>');
+
+    /* ── progress ─────────────────────────────────────────────── */
+    H.push('<h2 class="pv-h2">Your progress</h2>');
+    H.push('<div class="pv-sub">Checkboxes, pipeline positions and recorded answers</div>');
+    var st = P.exportState();
+    H.push('<p class="pv-p">' + Object.keys(st.done).length + ' items checked · ' +
+      Object.keys(st.pipe).length + ' pipeline items moved · ' +
+      Object.keys(st.verify).length + ' answers recorded. ' +
+      'This is separate from the plan itself, so importing a new plan keeps it.</p>');
+    H.push('<div class="pv-row" style="gap:9px">' +
+      '<button class="pv-btn" id="dl-state">Download progress</button>' +
+      '<button class="pv-btn" id="reset">Reset progress…</button></div>');
+
+    H.push('<p class="pv-foot">Everything on this page writes to one key in your browser store, which sync.js carries across your devices. ' +
+      'Nothing is sent anywhere by this page. The shipped plan lives in <code>plan-v2-data.js</code> in the repo — ' +
+      'if you want an import to become permanent, paste it there and deploy.</p>');
+
+    app.innerHTML = H.join('');
+    wire();
+  }
+
+  function download(name, text, mime) {
+    var b = new Blob([text], { type: mime || 'text/plain' });
+    var u = URL.createObjectURL(b), a = document.createElement('a');
+    a.href = u; a.download = name; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(u); }, 1000);
+  }
+  function copy(text, btn) {
+    var done = function () { var o = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = o; }, 1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+    } else fallback(text, done);
+  }
+  function fallback(text, done) {
+    var t = document.createElement('textarea');
+    t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(t);
+  }
+
+  /* Markdown rendering of the plan — what gets attached to a chat.
+     Deliberately lossy in layout but complete in content: every key the
+     schema names is represented, so a round-trip loses nothing that
+     matters. */
+  function toMarkdown(D) {
+    var L = [];
+    L.push('# CT Master Plan — v' + D.version);
+    L.push('');
+    L.push('Recalibrated ' + D.recalibrated + ' · supersedes ' + (D.supersedes || '—'));
+    L.push('Horizon: ' + (D.horizon || '—'));
+    L.push('');
+    L.push('**Forcing function:** ' + D.forcingFunction.label + ' — ' + D.forcingFunction.date);
+    L.push('');
+    L.push('> ' + D.forcingFunction.why);
+    L.push('');
+    if (D.oneParagraph) { L.push('## The one-paragraph version'); L.push(''); L.push(D.oneParagraph); L.push(''); }
+    if (D.groundTruth) {
+      L.push('## Ground truth (' + D.groundTruth.asOf + ')'); L.push('');
+      L.push('| Dimension | Assumed | Actual |'); L.push('|---|---|---|');
+      D.groundTruth.rows.forEach(function (r) { L.push('| ' + r.dim + ' | ' + r.v1 + ' | ' + r.actual + ' |'); });
+      L.push('');
+      L.push('**Fixed facts**'); L.push('');
+      D.groundTruth.fixedFacts.forEach(function (f) { L.push('- **' + f.k + '** (' + f.tone + ') — ' + f.v); });
+      L.push('');
+    }
+    if (D.governingLogic) {
+      L.push('## Governing logic'); L.push('');
+      D.governingLogic.forEach(function (g) { L.push(g.n + '. **' + g.t + '** ' + g.d); });
+      L.push('');
+    }
+    L.push('## Phases'); L.push('');
+    L.push('| # | Phase | Window | Status | Objective | Fails by |'); L.push('|---|---|---|---|---|---|');
+    D.phases.forEach(function (p) {
+      L.push('| ' + p.num + ' | ' + p.label + ' | ' + p.start + ' → ' + p.end + ' | ' + p.status + ' | ' + p.objective + ' | ' + p.failure + ' |');
+    });
+    L.push('');
+    if (D.phase0) {
+      L.push('## Phase 0 — ' + D.phase0.window); L.push(''); L.push(D.phase0.lede); L.push('');
+      D.phase0.items.forEach(function (i) {
+        L.push('### ' + i.t + (i.due ? ' (due ' + i.due + ')' : ''));
+        if (i.d) { L.push(''); L.push(i.d); }
+        if (i.steps) { L.push(''); i.steps.forEach(function (s) { L.push('- ' + s); }); }
+        if (i.rule) { L.push(''); L.push('> **Rule.** ' + i.rule); }
+        if (i.kill) { L.push(''); L.push('> **Kill criterion.** ' + i.kill); }
+        L.push('');
+      });
+      L.push('**Exit criteria:** ' + D.phase0.exit.join(' · ')); L.push('');
+    }
+    if (D.pipeline) {
+      L.push('## Pipeline'); L.push('');
+      L.push('Stages: ' + D.pipeline.stages.join(' → ')); L.push('');
+      L.push('| Item | Tier | Stage | Ball | On-thesis | Priority |'); L.push('|---|---|---|---|---|---|');
+      D.pipeline.board.forEach(function (b) {
+        L.push('| ' + b.title + ' | ' + b.tier + ' | ' + b.stage + ' | ' + b.ball + ' | ' + (b.onThesis ? 'yes' : 'no') + ' | ' + b.priority + ' |');
+      });
+      L.push('');
+    }
+    if (D.risks) {
+      L.push('## Risks'); L.push('');
+      L.push('| Risk | Severity | Signal | Mitigation |'); L.push('|---|---|---|---|');
+      D.risks.forEach(function (r) { L.push('| ' + r.r + ' | ' + r.sev + ' | ' + r.sig + ' | ' + r.mit + ' |'); });
+      L.push('');
+    }
+    if (D.verification) {
+      L.push('## Verification queue'); L.push('');
+      L.push('| # | Question | How | By | Severity | Settled |'); L.push('|---|---|---|---|---|---|');
+      D.verification.forEach(function (v) {
+        L.push('| ' + v.n + ' | ' + v.q + ' | ' + v.how + ' | ' + v.by + ' | ' + v.sev + ' | ' + (v.done ? (v.result || 'yes') : 'no') + ' |');
+      });
+      L.push('');
+    }
+    if (D.dormant) {
+      L.push('## Dormant'); L.push('');
+      D.dormant.forEach(function (d) { L.push('- **' + d.label + '** — reopen ' + d.reopen + (d.dead ? ' _(dead)_' : '')); });
+      L.push('');
+    }
+    L.push('---'); L.push('');
+    L.push('_Full machine-readable plan:_'); L.push('');
+    L.push('```json'); L.push(JSON.stringify(D, null, 2)); L.push('```');
+    return L.join('\n');
+  }
+
+  /* Accepts a bare JSON document, or any text containing a fenced json
+     block — which is what an assistant reply actually looks like. */
+  function extract(text) {
+    text = String(text || '').trim();
+    if (!text) throw new Error('Nothing to import — the box is empty.');
+    var fence = text.match(/```(?:json)?\s*\n([\s\S]*?)```/i);
+    var body = fence ? fence[1] : text;
+    var first = body.indexOf('{');
+    if (first > 0) body = body.slice(first);
+    try { return JSON.parse(body); }
+    catch (e) { throw new Error('That is not valid JSON. ' + e.message); }
+  }
+
+  function wire() {
+    var $ = function (id) { return document.getElementById(id); };
+    var D = P.plan();
+
+    $('copy-plan').addEventListener('click', function () { copy(JSON.stringify(D, null, 2), this); });
+    $('copy-prompt').addEventListener('click', function () { copy(PROMPT, this); });
+    $('dl-md').addEventListener('click', function () {
+      download('CT Master Plan v' + D.version + '.md', toMarkdown(D), 'text/markdown');
+    });
+    $('dl-json').addEventListener('click', function () {
+      download('ct-master-plan-v' + D.version + '.json', JSON.stringify(D, null, 2), 'application/json');
+    });
+    $('dl-state').addEventListener('click', function () {
+      download('plan-progress.json', JSON.stringify(P.exportState(), null, 2), 'application/json');
+    });
+
+    var rev = $('revert');
+    if (rev) rev.addEventListener('click', function () {
+      if (!window.confirm('Revert to the shipped plan? Your progress is kept.')) return;
+      P.revertPlan();
+      render({ ok: true, text: 'Reverted to the shipped plan.' });
+    });
+
+    $('reset').addEventListener('click', function () {
+      if (!window.confirm('Clear every checkbox, pipeline position and recorded answer? This cannot be undone.')) return;
+      P.resetProgress();
+      render({ ok: true, text: 'Progress cleared.' });
+    });
+
+    $('apply').addEventListener('click', function () {
+      try {
+        var obj = extract($('in').value);
+        P.importPlan(obj);
+        render({ ok: true, text: 'Loaded plan v' + obj.version + ' with ' + obj.phases.length +
+          ' phases. Open The Plan to see it — revert here at any time.' });
+      } catch (e) {
+        render({ ok: false, text: 'Not applied — ' + e.message });
+      }
+    });
+
+    $('file').addEventListener('change', function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        /* render() rebuilds the DOM, so the textarea has to be filled
+           after it, not before. */
+        render({ ok: true, text: 'Loaded ' + f.name + ' into the box. Check it, then Validate & apply.' });
+        document.getElementById('in').value = String(r.result || '');
+      };
+      r.onerror = function () { render({ ok: false, text: 'Could not read that file.' }); };
+      r.readAsText(f);
+    });
+  }
+
+  render(null);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Verify</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+</head>
+<body>
+<!-- ─────────────────────────────────────────────────────────────
+     Verify — the assumptions that could each end a phase, and the
+     risk register underneath them.
+
+     The pre-mortem for March 2027 names three causes, and two of
+     them are unverified assumptions discovered too late. That is
+     what this page is for: an assumption with a date and an owner
+     stops being a risk and becomes a task.
+     ───────────────────────────────────────────────────────────── -->
+<div class="pv" id="app"></div>
+<script>
+(function () {
+  var P = window.PlanV2, D = P.plan(), esc = P.esc;
+  var app = document.getElementById('app');
+
+  function render() {
+    var H = [];
+    var open = D.verification.filter(function (v) { return !v.done && !P.verifyResult(v.n); });
+    var fatal = open.filter(function (v) { return v.sev.indexOf('fatal') === 0; });
+
+    H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+    H.push('<div class="pv-kick">Assumptions & risk</div>');
+    H.push('<h1 class="pv-h1">Verify</h1>');
+    H.push('<p class="pv-lede">Nothing downstream should be planned around an unresolved row. ' +
+      'Tap <b>record</b> to write an answer — it is stored with today’s date and stops the question counting as open.</p>');
+
+    H.push('<div class="pv-row" style="gap:10px;margin-bottom:20px">');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">OPEN QUESTIONS</div><div class="pv-ff-n" style="font-size:34px;color:' +
+      (open.length ? 'var(--warn)' : 'var(--ok)') + '">' + open.length + '</div>' +
+      '<div class="pv-count">of ' + D.verification.length + '</div></div>');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">PHASE-ENDING</div><div class="pv-ff-n" style="font-size:34px;color:' +
+      (fatal.length ? 'var(--bad)' : 'var(--ok)') + '">' + fatal.length + '</div>' +
+      '<div class="pv-count">still unanswered</div></div>');
+    H.push('</div>');
+
+    H.push('<h2 class="pv-h2">The queue</h2>');
+    H.push('<div class="pv-sub">In order of consequence</div>');
+    D.verification.forEach(function (v) {
+      var saved = P.verifyResult(v.n);
+      var settled = v.done || saved;
+      var sevCls = v.sev.indexOf('fatal') === 0 ? 'c-bad' : v.sev === 'high' ? 'c-verify' : 'c-queued';
+      H.push('<div class="pv-lane" data-n="' + esc(v.n) + '"' + (settled ? ' style="opacity:.68"' : '') + '>');
+      H.push('<div class="pv-row"><span class="pv-ph-n">' + esc(v.n) + '</span>' +
+        '<span class="pv-lane-t pv-grow">' + esc(v.q) + '</span>' +
+        '<span class="pv-chip ' + (settled ? 'c-ok' : sevCls) + '">' + (settled ? 'settled' : esc(v.sev)) + '</span></div>');
+      H.push('<div class="pv-lane-m"><span>' + esc(v.how) + '</span><span>by ' + esc(v.by) + '</span></div>');
+      if (v.result) H.push('<div class="pv-it-d" style="margin-top:7px;color:var(--ok)">' + esc(v.result) + '</div>');
+      if (saved) H.push('<div class="pv-it-d" style="margin-top:7px;color:var(--ok)"><b>' + esc(saved.result) +
+        '</b> <span style="color:var(--muted)">· recorded ' + esc(P.fmtDate(saved.at)) + '</span></div>');
+      if (!v.done) {
+        H.push('<div class="pv-lane-m" style="margin-top:9px">' +
+          '<span data-act="record" style="cursor:pointer;color:var(--cool)">' + (saved ? 'edit answer' : 'record answer') + '</span>' +
+          (saved ? ' <span data-act="clear" style="cursor:pointer;color:var(--muted)">clear</span>' : '') + '</div>');
+      }
+      H.push('</div>');
+    });
+
+    /* ── risk register ───────────────────────────────────────────── */
+    H.push('<h2 class="pv-h2">Risk register</h2>');
+    H.push('<div class="pv-sub">The signal that it is happening, and the move that answers it</div>');
+    H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Risk</th><th>Severity</th><th>Signal</th><th>Mitigation</th></tr></thead><tbody>');
+    D.risks.forEach(function (r) {
+      H.push('<tr><td><b>' + esc(r.r) + '</b></td><td>' + esc(r.sev) + '</td><td>' + esc(r.sig) + '</td><td>' + esc(r.mit) + '</td></tr>');
+    });
+    H.push('</tbody></table></div>');
+
+    H.push('<h2 class="pv-h2">Pre-mortem</h2>');
+    H.push('<div class="pv-sub">' + esc(D.premortem.q) + '</div>');
+    H.push('<div class="pv-card"><ul class="pv-steps">');
+    D.premortem.causes.forEach(function (c) { H.push('<li>' + esc(c) + '</li>'); });
+    H.push('</ul><div class="pv-rule pv-kill">' + esc(D.premortem.note) + '</div></div>');
+
+    H.push('<p class="pv-foot">A recorded answer lives in your own store and syncs across devices. ' +
+      'It does not edit the shipped plan file — to change the plan itself, use <a href="Settings.html"><b>Plan Settings</b></a>.</p>');
+
+    app.innerHTML = H.join('');
+  }
+
+  app.addEventListener('click', function (e) {
+    var hit = e.target.closest('[data-act]');
+    if (!hit) return;
+    var n = hit.closest('.pv-lane').getAttribute('data-n');
+    if (hit.getAttribute('data-act') === 'clear') { P.setVerify(n, null); return render(); }
+    var cur = P.verifyResult(n);
+    var ans = window.prompt('What is the answer? (recorded with today’s date)', cur ? cur.result : '');
+    if (ans === null) return;
+    P.setVerify(n, ans.trim() || null);
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

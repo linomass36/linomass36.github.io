@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Campaign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+</head>
+<body>
+<!-- ─────────────────────────────────────────────────────────────
+     The Campaign — Phases 1 through 5.
+
+     Phase 1 is the whole ballgame and it has exactly one mechanic
+     that decides it: the NIH does not select centrally. Individual
+     PIs pick and fund their own interns. Submitting and waiting is
+     the standard way to be rejected. So the target list gets a
+     table and the PI protocol gets a callout, and everything
+     downstream (the summer, Step 1, NYC, the match) is a shorter
+     section under it.
+     ───────────────────────────────────────────────────────────── -->
+<div class="pv" id="app"></div>
+<script>
+(function () {
+  var P = window.PlanV2, D = P.plan(), esc = P.esc;
+  var p1 = D.phase1, p2 = D.phase2, p3 = D.phase3, p4 = D.phase4, p5 = D.phase5;
+  var H = [];
+
+  H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+  H.push('<div class="pv-kick">Phases 1 – 5</div>');
+  H.push('<h1 class="pv-h1">The Campaign</h1>');
+  H.push('<p class="pv-lede">' + esc(p1.lede) + '</p>');
+
+  /* ── the mechanic first: it is the thing people get wrong ────── */
+  H.push('<h2 class="pv-h2">The mechanic that decides it</h2>');
+  H.push('<div class="pv-sub">Phase 1 · Oct 2026 – Jun 2027</div>');
+  H.push('<p class="pv-p">' + esc(p1.piProtocol.lede) + '</p>');
+  H.push('<p class="pv-punch">' + esc(p1.piProtocol.punch) + '</p>');
+  H.push('<div class="pv-card"><div class="pv-h3" style="margin-top:0">The PI outreach protocol</div><ul class="pv-steps">');
+  p1.piProtocol.steps.forEach(function (s) { H.push('<li>' + esc(s) + '</li>'); });
+  H.push('</ul><div class="pv-it-d" style="margin-top:9px">' + esc(p1.piProtocol.note) + '</div></div>');
+
+  /* ── target list ─────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The target list</h2>');
+  H.push('<div class="pv-sub">Every eligibility note must be confirmed before it is planned around</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>#</th><th>Program</th><th>Field</th><th>Paid</th><th>Opens</th><th>Closes</th><th>Eligibility</th></tr></thead><tbody>');
+  p1.targets.forEach(function (t) {
+    H.push('<tr class="' + (t.n === 1 || t.n === 12 ? 'hot' : '') + '">' +
+      '<td class="num">' + t.n + '</td><td><b>' + esc(t.name) + '</b></td><td>' + esc(t.field) + '</td>' +
+      '<td>' + esc(t.paid) + '</td><td class="num">' + esc(t.opens) + '</td><td class="num">' + esc(t.closes) + '</td>' +
+      '<td>' + (t.verified ? '' : '<span class="pv-chip c-verify">verify</span> ') + esc(t.note) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule">' + esc(p1.applyRule) + '</div>');
+
+  /* ── the year, quarter by quarter ────────────────────────────── */
+  H.push('<h2 class="pv-h2">The year</h2>');
+  H.push('<div class="pv-sub">Build the machine, run the campaign, convert</div>');
+  p1.quarters.forEach(function (q) {
+    H.push('<div class="pv-card"><div class="pv-h3" style="margin-top:0">' + esc(q.label) + '</div><ul class="pv-steps">');
+    q.items.forEach(function (i) { H.push('<li>' + esc(i) + '</li>'); });
+    H.push('</ul></div>');
+  });
+
+  H.push('<div class="pv-h3">Fallback ladder — if no US position by March 2027</div>');
+  H.push('<div class="pv-card">');
+  p1.fallback.forEach(function (f) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-it-t">' + f.n + '. ' + esc(f.t) + '</div>' +
+      (f.d ? '<div class="pv-it-d">' + esc(f.d) + '</div>' : '') + '</div></div>');
+  });
+  H.push('</div>');
+
+  /* ── Phase 2 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 2 — the summer itself</h2>');
+  H.push('<div class="pv-sub">' + esc(p2.lede) + '</div>');
+  H.push('<div class="pv-card">');
+  p2.deliverables.forEach(function (d) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-it-t">' + esc(d.t) + '</div>' +
+      '<div class="pv-it-d">' + esc(d.d) + '</div></div></div>');
+  });
+  H.push('</div>');
+  H.push('<ul class="pv-steps">');
+  p2.rules.forEach(function (r) { H.push('<li>' + esc(r) + '</li>'); });
+  H.push('</ul>');
+  H.push('<div class="pv-rule"><b>Thesis bend.</b> ' + esc(p2.bend) + '</div>');
+
+  /* ── Phase 3 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 3 — Step 1</h2>');
+  H.push('<div class="pv-sub">A threshold, not a differentiator</div>');
+  H.push('<p class="pv-p">' + esc(p3.step1.what) + '</p>');
+  H.push('<div class="pv-rule">' + esc(p3.step1.consequence) + '</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  p3.step1.plan.forEach(function (r) {
+    H.push('<tr><td><b>' + esc(r.k) + '</b></td><td>' + esc(r.v) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-h3">In parallel, 2027/28</div><div class="pv-card">');
+  p3.parallel.forEach(function (x) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t">' + esc(x.t) + '</span><span class="pv-chip c-' + esc(x.s) + '">' + esc(x.s) + '</span></div>' +
+      (x.d ? '<div class="pv-it-d">' + esc(x.d) + '</div>' : '') + '</div></div>');
+  });
+  H.push('</div>');
+
+  /* ── Phase 4 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 4 — NYC clinical years</h2>');
+  H.push('<div class="pv-sub">' + esc(p4.lede) + '</div>');
+  H.push('<div class="pv-h3">Step 2 CK — the only number</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  p4.step2.forEach(function (r) {
+    H.push('<tr class="' + (r.hot ? 'hot' : '') + '"><td class="num"><b>' + esc(r.k) + '</b></td><td>' + esc(r.v) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-p">' + esc(p4.step2Note) + '</p>');
+
+  H.push('<div class="pv-h3">ECFMG certification</div>');
+  H.push('<p class="pv-p">' + esc(p4.ecfmg) + '</p>');
+  H.push('<div class="pv-rule pv-kill"><b>Verify now.</b> ' + esc(p4.ecfmgVerify) + '</div>');
+
+  H.push('<div class="pv-h3">US clinical experience and letters</div>');
+  H.push('<p class="pv-small">This is where an IMG application is won or lost.</p><ul class="pv-steps">');
+  p4.letters.forEach(function (l) { H.push('<li>' + esc(l) + '</li>'); });
+  H.push('</ul>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  p4.timeline.forEach(function (r) {
+    H.push('<tr><td class="num"><b>' + esc(r.w) + '</b></td><td>' + esc(r.d) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+
+  /* ── Phase 5 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 5 — residency targets</h2>');
+  H.push('<div class="pv-sub">Three tiers, and the rule that keeps the year safe</div>');
+  H.push('<p class="pv-p">' + esc(p5.picture) + '</p>');
+  H.push('<div class="pv-row" style="gap:10px;margin:12px 0">');
+  H.push('<div class="pv-card" style="flex:1;min-width:210px;margin:0;border-left:4px solid var(--ok)">' +
+    '<div class="pv-ph-n">ADVANTAGES</div><div class="pv-it-d">' + esc(p5.advantages) + '</div></div>');
+  H.push('<div class="pv-card" style="flex:1;min-width:210px;margin:0;border-left:4px solid var(--bad)">' +
+    '<div class="pv-ph-n">DISADVANTAGES</div><div class="pv-it-d">' + esc(p5.disadvantages) + '</div></div>');
+  H.push('</div>');
+  p5.tiers.forEach(function (t) {
+    H.push('<div class="pv-card acc" style="border-left-color:' + t.color + '">' +
+      '<div class="pv-row"><span class="pv-chip c-live">TIER ' + esc(t.id) + '</span>' +
+      '<span class="pv-lane-t">' + esc(t.label) + '</span></div>' +
+      '<div class="pv-it-d" style="margin-top:8px">' + esc(t.d) + '</div>' +
+      '<div class="pv-rule">' + esc(t.rule) + '</div></div>');
+  });
+  H.push('<div class="pv-rule pv-kill"><b>Rule.</b> ' + esc(p5.gateRule) + '</div>');
+
+  H.push('<p class="pv-foot">Every gate above is opened by a named human — see the <a href="Plan.html">network rule</a>. ' +
+    'The eligibility questions that could end Phase 1 live on <a href="Verify.html"><b>Verify</b></a>, ' +
+    'and every output this campaign produces is tracked on <a href="Pipeline.html"><b>Pipeline</b></a>.</p>');
+
+  document.getElementById('app').innerHTML = H.join('');
+})();
+</script>
+</body>
+</html>

@@ -646,22 +646,25 @@ footer {
      board once should not mean wanting it for the rest of the injury. */
   var RKEY = 'ct_standing_reveal_v1';
 
-  /* The directory. nav.js's own groups, plus the three pages this
-     redesign added. The five plan documents are listed by name rather
-     than hidden a door deeper behind Reference — with a filter, more
-     named things beat fewer and a folder. */
+  /* The directory. Mirrors nav.js's groups. Since the v2 recalibration the
+     five v1 plan documents are no longer listed here as live destinations —
+     they sit behind Archive, which says what each one was and what replaced
+     it. Listing an archived plan next to a live one is exactly how the two
+     drifted portfolios went unnoticed for eight months. */
   var GROUPS = [
-    ['Every day',      [['Standing.html','The Standing'], ['Today.dc.html','Today'], ['Hub.dc.html','The workshop']]],
+    ['Every day',      [['Standing.html','The Standing'], ['Today.dc.html','Today'],
+                        ['Plan.html','The Plan'], ['Hub.dc.html','The workshop']]],
     ['Study',          [['Anatomy.dc.html','Anatomy'], ['Study Engine.dc.html','Study Engine'], ['Reading List.dc.html','Reading List']]],
     ['Body',           [['Grind.dc.html','Grind board'], ['Life Log.dc.html','Life Log'],
                         ['Health.html','The Body']]],
-    ['The plan',       [['CT Master Plan.html','CT Master Plan'], ['Ledger.html','The Ledger'],
-                        ['Day Budget.html','The Day Budget'], ['Conditions.html','Conditions'],
-                        ['Summer Sprint.dc.html','Summer Sprint'], ['Research Plan.dc.html','Research Plan'],
-                        ['Plan Analysis.dc.html','Plan Analysis'], ['Timeline.dc.html','Timeline']]],
-    ['Research',       [['Conference Radar.dc.html','Conference Radar']]],
+    ['The plan',       [['Plan.html','The Plan'], ['Campaign.html','The Campaign'],
+                        ['Verify.html','Verify'], ['Debt.html','The Debt'],
+                        ['Ledger.html','The Ledger'], ['Day Budget.html','The Day Budget'],
+                        ['Conditions.html','Conditions']]],
+    ['Research',       [['Pipeline.html','Pipeline'], ['Conference Radar.dc.html','Conference Radar']]],
     ['People & money', [['Network Map.dc.html','Network Map'], ['Dossiers.dc.html','Dossiers'], ['Vault.dc.html','Vault']]],
-    ['Looking back',   [['Weekly Review.dc.html','Weekly Review'], ['Journal.dc.html','Journal'], ['Examiner.dc.html','Examiner']]]
+    ['Looking back',   [['Weekly Review.dc.html','Weekly Review'], ['Journal.dc.html','Journal'], ['Examiner.dc.html','Examiner']]],
+    ['Plan upkeep',    [['Settings.html','Recalibrate'], ['Archive.html','Archive · v1']]]
   ];
 
   function lsJson(k, f) {
