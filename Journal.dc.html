@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="./mobile.css">
 <script src="./support.js"></script>
+<script src="./day.js"></script>
 </head>
 <body>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="32" y="28" width="36" height="44" rx="4" fill="#FFFFFF" stroke="#0F6E56" stroke-width="2"></rect><line x1="38" y1="40" x2="62" y2="40" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"></line><line x1="38" y1="48" x2="62" y2="48" stroke="#993C1D" stroke-width="2.5" stroke-linecap="round"></line><line x1="38" y1="56" x2="54" y2="56" stroke="#b0741a" stroke-width="2.5" stroke-linecap="round"></line></svg></template>
@@ -249,7 +250,8 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('storage', this._onStorage); }
 
-  todayIso() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  todayIso() { if (window.CTDay) return window.CTDay.today();
+    const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   load() { try { const raw = localStorage.getItem(this.KEY); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } } catch (e) {} return []; }
   persist(list) { try { localStorage.setItem(this.KEY, JSON.stringify(list)); } catch (e) {} }
 
@@ -350,7 +352,8 @@ class Component extends DCLogic {
     const ws = this.weekStart(now.getTime());
     const dayMs = 86400000;
     const dset = {}; entries.forEach(e => { dset[e.date] = 1; });
-    const isoOf = off => { const d = new Date(now.getTime() - off * dayMs); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    const isoOf = off => window.CTDay ? window.CTDay.offset(-off)
+      : (d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'))(new Date(now.getTime() - off * dayMs));
     let streak = 0; { let i = 0; if (!dset[isoOf(0)] && dset[isoOf(1)]) i = 1; while (dset[isoOf(i)]) { streak++; i++; } }
     const weekCount = entries.filter(e => { const p = e.date.split('-'); const t = new Date(+p[0], +p[1] - 1, +p[2]).getTime(); return t >= ws; }).length;
 

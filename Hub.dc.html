@@ -7,6 +7,7 @@
 <meta name="ext-resource-dependency" content="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js">
 <link rel="stylesheet" href="./mobile.css">
 <script src="./support.js"></script>
+<script src="./day.js"></script>
 </head>
 <body>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="18" height="18" rx="3" fill="#993C1D"></rect><rect x="52" y="30" width="18" height="18" rx="3" fill="#0F6E56"></rect><rect x="30" y="52" width="18" height="18" rx="3" fill="#b0741a"></rect><rect x="52" y="52" width="18" height="18" rx="3" fill="#1A1B1A"></rect></svg></template>
@@ -1271,7 +1272,8 @@ class Component extends DCLogic {
     const ringDash = (pct / 100 * RC * f).toFixed(1) + ' ' + RC.toFixed(1);
 
     // ---- streak / momentum / heat ----
-    const dayKey = ts => { const d = new Date(ts); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+    const dayKey = ts => { if (window.CTDay) return window.CTDay.key(ts);
+      const d = new Date(ts); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
     const history = plan.history || [];
     const checkEvents = history.filter(h => h.a === 1);
     const dayset = {}; checkEvents.forEach(h => { const k = dayKey(h.ts); dayset[k] = (dayset[k] || 0) + 1; });
@@ -1730,7 +1732,8 @@ class Component extends DCLogic {
     // ---- journal (logbook) card ----
     const jEntries = this.readJournal();
     const jset = {}; jEntries.forEach(e => { if (e && e.date) jset[e.date] = 1; });
-    const jIso = off => { const d = new Date(nowMs - off * 86400000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    const jIso = off => { if (window.CTDay) return window.CTDay.offset(-off);
+      const d = new Date(nowMs - off * 86400000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
     let jStreak = 0; { let i = 0; if (!jset[jIso(0)] && jset[jIso(1)]) i = 1; while (jset[jIso(i)]) { jStreak++; i++; } }
     // ---- life log stats ----
     let llDays = 0, llHint = 'start today', llColor = '#A6A79F';
@@ -1740,20 +1743,21 @@ class Component extends DCLogic {
       if (ll) {
         const t0 = new Date(nowMs); const dow = (t0.getDay() + 6) % 7;
         const anyv = o => o && Object.values(o).some(v => v !== '' && v != null && v !== false);
-        const sessDays = {}; (ll.sessions || []).forEach(s => { sessDays[new Date(s.start).toISOString().slice(0, 10)] = 1; });
+        const llDay = ms => window.CTDay ? window.CTDay.key(ms) : new Date(ms).toISOString().slice(0, 10);
+        const sessDays = {}; (ll.sessions || []).forEach(s => { sessDays[llDay(s.start)] = 1; });
         for (let i = 0; i < 7; i++) {
           const x = new Date(t0); x.setDate(t0.getDate() - dow + i);
-          const kk = x.toISOString().slice(0, 10); const dd = (ll.days || {})[kk];
+          const kk = llDay(x.getTime()); const dd = (ll.days || {})[kk];
           if ((dd && (anyv(dd.sleep) || anyv(dd.weight) || anyv(dd.gym) || anyv(dd.swim) || anyv(dd.climb) || dd.note || (dd.spends || []).length)) || sessDays[kk]) llDays++;
         }
         if (llDays > 0) { llHint = 'week in motion'; llColor = '#0F6E56'; }
         if (ll.active) { llHint = 'timer running'; llColor = '#0F6E56'; }
         const logged = kk => { const dd = (ll.days || {})[kk]; return !!((dd && (anyv(dd.sleep) || anyv(dd.weight) || anyv(dd.gym) || anyv(dd.swim) || anyv(dd.climb) || dd.note || (dd.spends || []).length)) || sessDays[kk]); };
-        const isoOff = n => new Date(nowMs - n * 86400000).toISOString().slice(0, 10);
+        const isoOff = n => window.CTDay ? window.CTDay.offset(-n) : new Date(nowMs - n * 86400000).toISOString().slice(0, 10);
         { let i = 0; if (!logged(isoOff(0)) && logged(isoOff(1))) i = 1; while (logged(isoOff(i)) && llStreak < 999) { llStreak++; i++; } }
         const tIso = isoOff(0);
-        (ll.sessions || []).forEach(s => { if (s.type === 'study' && new Date(s.start).toISOString().slice(0, 10) === tIso) llStudyH += (s.end - s.start) / 3600000; });
-        if (ll.active && ll.active.mode === 'study' && new Date(ll.active.start).toISOString().slice(0, 10) === tIso) llStudyH += (Date.now() - ll.active.start) / 3600000;
+        (ll.sessions || []).forEach(s => { if (s.type === 'study' && llDay(s.start) === tIso) llStudyH += (s.end - s.start) / 3600000; });
+        if (ll.active && ll.active.mode === 'study' && llDay(ll.active.start) === tIso) llStudyH += (Date.now() - ll.active.start) / 3600000;
         const wKeys = Object.keys(ll.days || {}).filter(kk => ll.days[kk].weight && parseFloat(ll.days[kk].weight.kg)).sort();
         if (wKeys.length) {
           const last = parseFloat(ll.days[wKeys[wKeys.length - 1]].weight.kg);
@@ -1839,7 +1843,7 @@ class Component extends DCLogic {
     const vLast = vSnaps[vSnaps.length - 1];
     const vNet = vLast ? (parseFloat(vLast.cash) || 0) + (parseFloat(vLast.inv) || 0) - (parseFloat(vLast.debt) || 0) : null;
     const studyD = lsJson('ct_study_v1', { cards: [], exams: [] });
-    const todayIso2 = new Date(nowMs).toISOString().slice(0, 10);
+    const todayIso2 = window.CTDay ? window.CTDay.key(nowMs) : new Date(nowMs).toISOString().slice(0, 10);
     const dueN = (studyD.cards || []).filter(c => c && c.due && c.due <= todayIso2).length;
     const wkR = lsJson('ct_weekly_v1', { reviews: {} });
     const wkMon = (() => { const x = new Date(nowMs); const d = (x.getDay() + 6) % 7; x.setDate(x.getDate() - d); x.setHours(0, 0, 0, 0); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); })();

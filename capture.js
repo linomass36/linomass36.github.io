@@ -41,6 +41,10 @@
     try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; }
   }
   function isoDay(d) {
+    /* The hub's day boundary lives in day.js: a day ends at 05:00, so work
+       that runs past midnight belongs to the day it started. Falls back to the
+       calendar date when that file has not loaded. */
+    if (window.CTDay) return window.CTDay.key(d ? d.getTime() : undefined);
     d = d || new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
            String(d.getDate()).padStart(2, '0');

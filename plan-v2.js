@@ -27,7 +27,8 @@
   }
   function patch(fn) { var s = read(); fn(s); return write(s); }
 
-  function today() { return new Date().toISOString().slice(0, 10); }
+  // day.js decides when a day starts — 05:00, not midnight.
+  function today() { return window.CTDay ? window.CTDay.today() : new Date().toISOString().slice(0, 10); }
   function daysBetween(iso, from) {
     if (!iso) return null;
     var a = new Date(iso + 'T00:00:00'), b = from ? new Date(from + 'T00:00:00') : new Date();

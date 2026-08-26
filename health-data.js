@@ -117,11 +117,13 @@
     return isNaN(v) ? null : v;
   }
 
-  // The local date a timestamp belongs to. Local, because a day is a thing
-  // you live in, not a UTC window.
+  // The day a timestamp belongs to. Local, because a day is a thing you live
+  // in, not a UTC window — and it ends at 05:00, so a reading taken at two in
+  // the morning lands on the evening it belongs to. See day.js.
   function dayOf(ms) {
     var d = new Date(ms);
     if (isNaN(d)) return null;
+    if (w.CTDay) return w.CTDay.key(ms);
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
            String(d.getDate()).padStart(2, '0');
   }

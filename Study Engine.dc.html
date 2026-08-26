@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="./mobile.css">
 <script src="./support.js"></script>
+<script src="./day.js"></script>
 </head>
 <body>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#3B6D11"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="17" fill="#FFFFFF">SE</text></svg></template>
@@ -160,7 +161,10 @@ class Component extends DCLogic {
   lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   read() { const d = this.lsJson(this.KEY, null); return (d && typeof d === 'object') ? { cards: d.cards || [], exams: d.exams || [] } : { cards: [], exams: [] }; }
   write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} this.setState(s => ({ tick: s.tick + 1 })); }
-  iso(off) { const t = new Date(); t.setDate(t.getDate() + (off || 0)); return t.toISOString().slice(0, 10); }
+  // The hub's day boundary — 05:00, not midnight. See day.js.
+  iso(off) { if (window.CTDay) return window.CTDay.offset(off || 0);
+    const t = new Date(); t.setDate(t.getDate() + (off || 0)); return t.toISOString().slice(0, 10); }
+  dayOf(ms) { return window.CTDay ? window.CTDay.key(ms) : new Date(ms).toISOString().slice(0, 10); }
   num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
   fmtDay(k) { return new Date(k + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 
@@ -169,17 +173,17 @@ class Component extends DCLogic {
     if (!ll) return 0;
     const days = ll.days || {}, sess = ll.sessions || [];
     const t = new Date(); const dow = (t.getDay() + 6) % 7; const wk = [];
-    for (let i = 0; i < 7; i++) { const x = new Date(t); x.setDate(t.getDate() - dow + i); wk.push(x.toISOString().slice(0, 10)); }
+    for (let i = 0; i < 7; i++) { const x = new Date(t); x.setDate(t.getDate() - dow + i); wk.push(this.dayOf(x.getTime())); }
     let h = 0;
     wk.forEach(k => {
       const st = (days[k] || {}).study || {};
       ['anatomy', 'math', 'python', 'research', 'other'].forEach(s => {
         const ov = st[s] && st[s].h;
         if (ov !== undefined && ov !== null && ov !== '') { h += this.num(ov) || 0; }
-        else { sess.forEach(x => { if (x.type === 'study' && x.subject === s && new Date(x.start).toISOString().slice(0, 10) === k) h += (x.end - x.start) / 3600000; }); }
+        else { sess.forEach(x => { if (x.type === 'study' && x.subject === s && this.dayOf(x.start) === k) h += (x.end - x.start) / 3600000; }); }
       });
     });
-    if (ll.active && ll.active.mode === 'study' && wk.indexOf(new Date(ll.active.start).toISOString().slice(0, 10)) >= 0) h += (Date.now() - ll.active.start) / 3600000;
+    if (ll.active && ll.active.mode === 'study' && wk.indexOf(this.dayOf(ll.active.start)) >= 0) h += (Date.now() - ll.active.start) / 3600000;
     return h;
   }
 
