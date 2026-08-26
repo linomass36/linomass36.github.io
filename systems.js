@@ -37,6 +37,10 @@
   }
 
   function isoDay(d) {
+    /* The hub's day boundary lives in day.js: a day ends at 05:00, so work
+       that runs past midnight belongs to the day it started. Falls back to the
+       calendar date when that file has not loaded. */
+    if (w.CTDay) return w.CTDay.key(d ? d.getTime() : undefined);
     d = d || new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
            String(d.getDate()).padStart(2, '0');
@@ -53,7 +57,10 @@
   /* The Life Log keys its days by the UTC date and filters sessions the same
      way. Anything reading that store has to use its convention, not the
      local one, or a late evening lands on tomorrow. */
-  function logDay() { return new Date().toISOString().slice(0, 10); }
+  // Which day a timestamp belongs to, by the hub's boundary.
+  function dayOfMs(ms) { return w.CTDay ? w.CTDay.key(ms) : new Date(ms).toISOString().slice(0, 10); }
+
+  function logDay() { return w.CTDay ? w.CTDay.today() : new Date().toISOString().slice(0, 10); }
 
   // ── the closure log ────────────────────────────────────────────────────
   function anatomy() {
@@ -380,7 +387,7 @@
       if (ov !== undefined && ov !== null && ov !== '') { h += num(ov) || 0; return; }
       (d.sessions || []).forEach(function (x) {
         if (x && x.type === 'study' && x.subject === sub &&
-            new Date(x.start).toISOString().slice(0, 10) === day) h += (x.end - x.start) / 3600000;
+            dayOfMs(x.start) === day) h += (x.end - x.start) / 3600000;
       });
     });
     return h;

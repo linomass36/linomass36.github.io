@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="./mobile.css">
 <script src="./support.js"></script>
+<script src="./day.js"></script>
 </head>
 <body>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F7F5F1"></rect><rect x="34" y="30" width="8" height="40" rx="2" fill="#534AB7"></rect><rect x="46" y="42" width="8" height="28" rx="2" fill="#0F6E56"></rect><rect x="58" y="36" width="8" height="34" rx="2" fill="#993C1D"></rect></svg></template>
@@ -564,7 +565,14 @@ class Component extends DCLogic {
   write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} }
   mut(fn) { const d = this.read(); fn(d); this.write(d); this.setState(s => ({ tick: s.tick + 1 })); }
 
-  iso(off) { const t = new Date(); t.setDate(t.getDate() + off); return t.toISOString().slice(0, 10); }
+  /* The day a moment belongs to ends at 05:00, not midnight — see day.js.
+     This store used to key by the UTC date, which put a late evening on
+     tomorrow and a 2am session on a day you had not lived yet. */
+  iso(off) {
+    if (window.CTDay) return window.CTDay.offset(off || 0);
+    const t = new Date(); t.setDate(t.getDate() + off); return t.toISOString().slice(0, 10);
+  }
+  dayOf(ms) { return window.CTDay ? window.CTDay.key(ms) : new Date(ms).toISOString().slice(0, 10); }
   key() { return this.iso(this.state.off); }
   day(d, k) { if (!d.days[k]) d.days[k] = {}; return d.days[k]; }
   sec(d, k, s) { const dy = this.day(d, k); if (!dy[s]) dy[s] = {}; return dy[s]; }
@@ -577,12 +585,12 @@ class Component extends DCLogic {
   fmtHM(ms) { const m = Math.floor(ms / 60000); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') + ':' + String(Math.floor(ms / 1000) % 60).padStart(2, '0'); }
   fmtMin(ms) { const m = Math.round(ms / 60000); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : m + 'm'; }
 
-  daySessions(k) { return this.read().sessions.filter(s => new Date(s.start).toISOString().slice(0, 10) === k); }
+  daySessions(k) { return this.read().sessions.filter(s => this.dayOf(s.start) === k); }
   timerHours(k, subj) {
     let ms = 0;
     this.daySessions(k).forEach(s => { if (s.type === 'study' && (!subj || s.subject === subj)) ms += s.end - s.start; });
     const d = this.read();
-    if (d.active && d.active.mode === 'study' && (!subj || d.active.subject === subj) && new Date(d.active.start).toISOString().slice(0, 10) === k) ms += Date.now() - d.active.start;
+    if (d.active && d.active.mode === 'study' && (!subj || d.active.subject === subj) && this.dayOf(d.active.start) === k) ms += Date.now() - d.active.start;
     return ms / 3600000;
   }
   studyHoursDay(k) {
@@ -599,7 +607,7 @@ class Component extends DCLogic {
 
   weekKeys() {
     const t = new Date(); const dow = (t.getDay() + 6) % 7; const out = [];
-    for (let i = 0; i < 7; i++) { const x = new Date(t); x.setDate(t.getDate() - dow + i); out.push(x.toISOString().slice(0, 10)); }
+    for (let i = 0; i < 7; i++) { const x = new Date(t); x.setDate(t.getDate() - dow + i); out.push(this.dayOf(x.getTime())); }
     return out;
   }
   dayLogged(d, k) {
@@ -1056,12 +1064,12 @@ class Component extends DCLogic {
       const sc = this.mkChart([{ pts: sPts, color: '#534AB7', dots: true }], f1);
       const sAvg = sPts.length ? sPts.reduce((a, p) => a + p[1], 0) / sPts.length : 0;
       const sessH = {};
-      d.sessions.forEach(s => { if (s.type === 'study') { const kk = new Date(s.start).toISOString().slice(0, 10); sessH[kk] = sessH[kk] || {}; sessH[kk][s.subject] = (sessH[kk][s.subject] || 0) + (s.end - s.start) / 3600000; } });
+      d.sessions.forEach(s => { if (s.type === 'study') { const kk = this.dayOf(s.start); sessH[kk] = sessH[kk] || {}; sessH[kk][s.subject] = (sessH[kk][s.subject] || 0) + (s.end - s.start) / 3600000; } });
       const dayStudy = kk => { const st = (d.days[kk] || {}).study || {}; let h = 0; ['anatomy', 'math', 'python', 'research', 'other'].forEach(sj => { const ov = st[sj] && st[sj].h; if (ov !== undefined && ov !== null && ov !== '') h += this.num(ov) || 0; else h += (sessH[kk] || {})[sj] || 0; }); return h; };
       const wkPts = [];
       for (let i = 7; i >= 0; i--) {
         const t = new Date(); const dow = (t.getDay() + 6) % 7; t.setDate(t.getDate() - dow - i * 7);
-        let h = 0; for (let j = 0; j < 7; j++) { const x = new Date(t); x.setDate(t.getDate() + j); h += dayStudy(x.toISOString().slice(0, 10)); }
+        let h = 0; for (let j = 0; j < 7; j++) { const x = new Date(t); x.setDate(t.getDate() + j); h += dayStudy(this.dayOf(x.getTime())); }
         wkPts.push([t.getTime() + 43200000, Math.round(h * 10) / 10]);
       }
       while (wkPts.length && wkPts[0][1] === 0) wkPts.shift();

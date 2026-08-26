@@ -687,7 +687,8 @@
   }
 
   function dailyBackup() {
-    var day = new Date().toISOString().slice(0, 10);
+    // One backup per day, by the hub's 05:00 boundary rather than UTC midnight.
+    var day = window.CTDay ? window.CTDay.today() : new Date().toISOString().slice(0, 10);
     var all = readDaily();
     if (all.length && all[all.length - 1].day === day) return;   // today is already kept
     var store = hotHalf(localSnapshot());

@@ -29,6 +29,10 @@
   var CODES = ['USD', 'PLN', 'EUR', 'GBP'];
 
   function today() {
+    /* The hub's day boundary lives in day.js: a day ends at 05:00, so work
+       that runs past midnight belongs to the day it started. Falls back to the
+       calendar date when that file has not loaded. */
+    if (w.CTDay) return w.CTDay.today();
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
            String(d.getDate()).padStart(2, '0');

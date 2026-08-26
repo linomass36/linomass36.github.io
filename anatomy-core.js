@@ -24,9 +24,11 @@
    back out of `orphans` on the next read.
 
    The day boundary is 05:00 by default (meta.rollover), because a session
-   that runs past midnight belongs to the day it started. That is deliberately
-   not the Life Log's convention — separate stores, and each keeps the
-   boundary that suits what it records.
+   that runs past midnight belongs to the day it started. That used to be this
+   store's alone, deliberately: the Life Log keyed by the UTC date and each
+   store kept the boundary that suited what it recorded. It suited nothing, in
+   the end — the same 02:00 session was yesterday on one page and today on the
+   next. This setting is now the hub's, read by day.js and applied everywhere.
 
    Requires anatomy-data.js for the syllabus.
    ───────────────────────────────────────────────────────────────────────── */
@@ -284,7 +286,15 @@
   }
 
   /* ── dates ── */
-  function rollover(s) { var r = s && s.meta && s.meta.rollover; return (r === 0 || r) ? r : 5; }
+  /* This store's rollover is now the whole hub's: day.js reads the same
+     meta.rollover, so the control on the Log tab moves every day boundary in
+     the hub at once rather than this page's alone. The default lives in
+     day.js when it is loaded, and stays 5 here when it is not. */
+  function rollover(s) {
+    var r = s && s.meta && s.meta.rollover;
+    if (r === 0 || r) return r;
+    return (window.CTDay && window.CTDay.DEFAULT_ROLLOVER) || 5;
+  }
   function isoLocal(d) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }

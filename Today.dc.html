@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="stylesheet" href="./mobile.css">
 <script src="./support.js"></script>
+<script src="./day.js"></script>
 </head>
 <body>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#993C1D"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="15" fill="#FFFFFF">TD</text></svg></template>
@@ -333,7 +334,8 @@ class Component extends DCLogic {
     this.setState({ toast: msg });
     clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
   }
-  isoDay(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  isoDay(d) { return window.CTDay ? window.CTDay.key(d.getTime())
+    : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
   /* The reading store is shared with the Reading List page, so everything
      written here uses exactly the shapes that page expects. */
@@ -385,11 +387,12 @@ class Component extends DCLogic {
      indistinguishable from one entered on the Life Log page itself.
 
      One thing to know about the day key: the Life Log keys its days by the
-     UTC date (`toISOString().slice(0,10)`) and filters sessions the same
+     hub's day boundary (day.js — a day ends at 05:00) and filters the same
      way, so late-evening entries in a positive offset land on the next
      day's key. That is its convention, not a bug to fix from here — this
      page copies it exactly, which is why logDay() is not isoDay(). */
-  logDay() { return new Date().toISOString().slice(0, 10); }
+  logDay() { return window.CTDay ? window.CTDay.today() : new Date().toISOString().slice(0, 10); }
+  dayOf(ms) { return window.CTDay ? window.CTDay.key(ms) : new Date(ms).toISOString().slice(0, 10); }
   SUBJECTS = [['anatomy', 'Anatomy'], ['math', 'Math'], ['python', 'Python'],
               ['research', 'Research'], ['other', 'Other']];
 
@@ -435,12 +438,12 @@ class Component extends DCLogic {
       const ov = st[s] && st[s].h;
       if (ov !== undefined && ov !== null && ov !== '') { h += parseFloat(ov) || 0; return; }
       d.sessions.forEach(x => {
-        if (x.type === 'study' && x.subject === s && new Date(x.start).toISOString().slice(0, 10) === k) {
+        if (x.type === 'study' && x.subject === s && this.dayOf(x.start) === k) {
           h += (x.end - x.start) / 3600000;
         }
       });
     });
-    if (d.active && d.active.mode === 'study' && new Date(d.active.start).toISOString().slice(0, 10) === k) {
+    if (d.active && d.active.mode === 'study' && this.dayOf(d.active.start) === k) {
       h += (Date.now() - d.active.start) / 3600000;
     }
     return h;
