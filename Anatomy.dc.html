@@ -225,22 +225,27 @@
           <div class="an-eyebrow">2 · Phase 0 — the gate</div>
           <div class="an-h2">Blank paper, before anything else</div>
           <div class="an-note">This is the engine; everything else is optional by comparison.</div>
+          <sc-if value="{{ hasGateLine }}" hint-placeholder-val="{{ true }}">
+            <div class="an-note">{{ gateLine }}</div>
+          </sc-if>
 
           <sc-for list="{{ gateBlocks }}" as="g" hint-placeholder-count="1">
             <div class="an-task {{ g.cls }}">
               <div class="an-task-t">{{ g.name }}</div>
               <div class="an-task-d">{{ g.hint }}</div>
-              <div class="an-row" style="margin-top: 10px;">
-                <div class="an-field"><label>Inventory %</label>
-                  <input type="number" min="0" max="100" inputmode="numeric" value="{{ g.inv }}" onChange="{{ g.setInv }}"></div>
-                <div class="an-field"><label>Topology %</label>
-                  <input type="number" min="0" max="100" inputmode="numeric" value="{{ g.topo }}" onChange="{{ g.setTopo }}"></div>
-                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; padding-bottom: 12px;">closes at 80 / 80</span>
-              </div>
+              <sc-if value="{{ g.canScore }}" hint-placeholder-val="{{ true }}">
+                <div class="an-row" style="margin-top: 10px;">
+                  <div class="an-field"><label>Inventory %</label>
+                    <input type="number" min="0" max="100" inputmode="numeric" value="{{ g.inv }}" onChange="{{ g.setInv }}"></div>
+                  <div class="an-field"><label>Topology %</label>
+                    <input type="number" min="0" max="100" inputmode="numeric" value="{{ g.topo }}" onChange="{{ g.setTopo }}"></div>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; padding-bottom: 12px;">closes at 80 / 80</span>
+                </div>
+              </sc-if>
             </div>
           </sc-for>
           <sc-if value="{{ noGate }}" hint-placeholder-val="{{ false }}">
-            <div class="an-empty">No block waiting on a gate. If you studied one today, it appears here tomorrow.</div>
+            <div class="an-empty">Nothing open. A block you start today is listed here the moment it is opened.</div>
           </sc-if>
 
           <div class="an-task {{ randCls }}">
@@ -689,7 +694,7 @@ class Component extends DCLogic {
     let hasBanner = false, bannerCls = '', bannerText = '';
     if (reentry) {
       hasBanner = true; bannerCls = '';
-      bannerText = 'Re-entry — ' + sum.gap + ' days since the last logged day. No new blocks for two days, and overdue '
+      bannerText = 'Re-entry — ' + sum.gap + ' days away. No new block until your second day back, and overdue '
         + 'retests are capped at three. Any block studied but never scored is stale now: re-study it at half depth '
         + 'rather than scoring it from memory. Run Core today — that is a full day by this system\'s standards.';
     } else if (gap >= 1 && gap < 3 && A.lastActive(S)) {
@@ -705,23 +710,43 @@ class Component extends DCLogic {
     const isRest = day.tier === 'rest';
     const dayOpen = !!day.tier && !isRest;
 
-    // ── Phase 0: blocks studied on an earlier day are the ones with a gate to clear ──
-    const gateBlocks = open
-      .filter(b => { const r = A.blockRec(S, b.id); return r.studied && r.studied < t; })
-      .map(b => {
-        const r = A.blockRec(S, b.id);
-        const st = A.status(S, b.id);
-        return {
-          name: b.name + (st === 'stale' ? ' — stale' : ''),
-          cls: st === 'stale' ? 'urgent' : '',
-          hint: st === 'stale'
+    /* ── Phase 0: every open loop, whether or not it can be scored today ──
+       Only blocks studied on an earlier day have a gate to clear, and this
+       list used to be filtered down to those. That made a loop invisible on
+       the day it was opened, and invisible again the day you re-studied a
+       stale one — which is the day the re-entry banner tells you to. The
+       count said one thing and the page showed another. So everything open is
+       listed; what changes is whether there is anything to score against it
+       yet. */
+    const gateOf = (b) => {
+      const r = A.blockRec(S, b.id);
+      const st = A.status(S, b.id);
+      const fresh = r.studied === t;
+      const waiting = fresh && st === 'open';        // opened today: no gate until tomorrow
+      return {
+        name: b.name + (st === 'stale' ? ' — stale' : (fresh ? ' — opened today' : '')),
+        cls: st === 'stale' ? 'urgent' : '',
+        canScore: !waiting,
+        waiting,
+        hint: waiting
+          ? 'Studied today, so the gate is tomorrow morning. Listed so you can see it is open, not because there is anything to score.'
+          : st === 'stale'
             ? 'Studied ' + A.daysBetween(r.studied, t) + ' days ago and never scored. Re-study at half depth today, then score tomorrow. Don\'t score it from memory now.'
-            : 'Redraw cold, then score against Moore\'s.',
-          inv: r.inv, topo: r.topo,
-          setInv: (e) => this.setScore(b.id, 'inv', e.target.value),
-          setTopo: (e) => this.setScore(b.id, 'topo', e.target.value),
-        };
-      });
+            : fresh
+              ? 'Scored today and under the bar. It stays open — redraw it cold tomorrow.'
+              : 'Redraw cold, then score against Moore\'s.',
+        inv: r.inv, topo: r.topo,
+        setInv: (e) => this.setScore(b.id, 'inv', e.target.value),
+        setTopo: (e) => this.setScore(b.id, 'topo', e.target.value),
+      };
+    };
+    // The ones with a gate to clear are this morning's work, so they lead.
+    const allGate = open.filter(b => A.blockRec(S, b.id).studied).map(gateOf);
+    const gateBlocks = allGate.filter(g => !g.waiting).concat(allGate.filter(g => g.waiting));
+    const waitingN = allGate.filter(g => g.waiting).length;
+    const gateLine = !allGate.length ? ''
+      : allGate.length + ' open loop' + (allGate.length === 1 ? '' : 's')
+        + (waitingN ? ' — ' + (allGate.length - waitingN) + ' to score now, ' + waitingN + ' opened today' : ', all scoreable now');
 
     const closedBlocks = blocks.filter(b => A.status(S, b.id) === 'closed');
     const randBlock = day.rand ? A.findBlock(day.rand) : null;
@@ -854,7 +879,7 @@ class Component extends DCLogic {
       hasBanner, bannerCls, bannerText,
       tierBtns, tierDesc, isRest, dayOpen,
 
-      gateBlocks, noGate: gateBlocks.length === 0,
+      gateBlocks, noGate: gateBlocks.length === 0, gateLine, hasGateLine: !!gateLine,
       randCls: day.randScore !== '' ? 'done' : '',
       randHint: !closedBlocks.length ? 'Starts once something is closed.'
         : (!day.rand ? 'One older block, different region, redrawn cold. Under 70% and it goes back in the queue.'
@@ -877,7 +902,8 @@ class Component extends DCLogic {
 
       showSession: day.tier !== 'core',
       blocked, canStart: !blocked,
-      blockedWhy: reentry ? 'Re-entry: no new block today. Clear the gate and the retests.'
+      blockedWhy: reentry ? 'Re-entry: no new block today. Phase 0 and the retests are the day\'s work — '
+                            + 'the cap lifts on your second day back, not by clearing them.'
                           : 'Six or more open loops. No new block until they clear.',
       todoBlocks, pickId: this.state.pickId,
       setPick: (e) => this.setState({ pickId: e.target.value }),
