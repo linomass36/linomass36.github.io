@@ -288,11 +288,11 @@
     <div class="td-study">
       <div style="flex: 1; min-width: 0;">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">Screen h</div>
-        <input type="number" step="0.25" inputmode="decimal" value="{{ scrTotal }}" onChange="{{ setScrTotal }}" placeholder="6.5" class="td-field">
+        <input type="text" inputmode="decimal" value="{{ scrTotal }}" onChange="{{ setScrTotal }}" placeholder="6.5" class="td-field">
       </div>
       <div style="flex: 1; min-width: 0;">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">Social / fun h</div>
-        <input type="number" step="0.25" inputmode="decimal" value="{{ scrSocial }}" onChange="{{ setScrSocial }}" placeholder="2" class="td-field">
+        <input type="text" inputmode="decimal" value="{{ scrSocial }}" onChange="{{ setScrSocial }}" placeholder="2" class="td-field">
       </div>
     </div>
     <div style="display: flex; gap: 8px; margin-top: 10px;">
@@ -553,7 +553,15 @@ class Component extends DCLogic {
     if (!d.days) d.days = {};
     return d;
   }
+  /* A phone set to a comma locale offers "," on the decimal keypad, not ".".
+     Typed into <input type="number"> that value is invalid, so the browser
+     hands back an empty string and the digits are gone before any of this
+     runs — which is why the decimal fields here are type="text" with
+     inputmode="decimal". The comma arrives intact and is normalised once, on
+     the way in, so what gets stored is always a dot. */
+  dec(v) { return typeof v === 'string' ? v.replace(',', '.') : v; }
   llSet(section, field, v) {
+    v = this.dec(v);
     const k = this.logDay();
     const d = this.llDay();
     if (!d.days[k]) d.days[k] = {};

@@ -93,9 +93,9 @@
       </div>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 12px;">
         <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Month</span><input type="month" value="{{ fM }}" onChange="{{ setFM }}" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
-        <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Cash</span><input type="number" inputmode="decimal" value="{{ fCash }}" onChange="{{ setFCash }}" placeholder="4200" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
-        <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Invested</span><input type="number" inputmode="decimal" value="{{ fInv }}" onChange="{{ setFInv }}" placeholder="1500" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
-        <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Debts</span><input type="number" inputmode="decimal" value="{{ fDebt }}" onChange="{{ setFDebt }}" placeholder="0" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+        <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Cash</span><input type="text" inputmode="decimal" value="{{ fCash }}" onChange="{{ setFCash }}" placeholder="4200" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+        <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Invested</span><input type="text" inputmode="decimal" value="{{ fInv }}" onChange="{{ setFInv }}" placeholder="1500" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+        <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Debts</span><input type="text" inputmode="decimal" value="{{ fDebt }}" onChange="{{ setFDebt }}" placeholder="0" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
       </div>
       <div style="display: flex; gap: 8px; margin-top: 8px;">
         <input value="{{ fNote }}" onChange="{{ setFNote }}" placeholder="note — e.g. scholarship landed, IBKR deposit, flights to WTSA" style="flex: 1; min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
@@ -142,7 +142,14 @@ class Component extends DCLogic {
   lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   read() { const d = this.lsJson(this.KEY, null); return (d && Array.isArray(d.snaps)) ? d : { snaps: [] }; }
   write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} this.setState(s => ({ tick: s.tick + 1 })); }
-  num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+  /* A phone set to a comma locale offers "," on the decimal keypad, not ".".
+     Typed into <input type="number"> that value is invalid, so the browser
+     hands back an empty string and the digits are gone before any of this
+     runs — which is why the decimal fields here are type="text" with
+     inputmode="decimal". The comma arrives intact and is normalised once, on
+     the way in, so what gets stored is always a dot. */
+  dec(v) { return typeof v === 'string' ? v.replace(',', '.') : v; }
+  num(v) { const n = parseFloat(this.dec(v)); return isNaN(n) ? null : n; }
   cur() { return this.props.currency ?? '$'; }
   fmt(n) { const c = this.cur(); const r = Math.round(n); return (r < 0 ? '−' : '') + c + Math.abs(r).toLocaleString('en-US'); }
   mLabel(m) { return new Date(m + '-15T12:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }).replace(' ', ' ’'); }
@@ -227,9 +234,9 @@ class Component extends DCLogic {
       chartSub: snaps.length + ' snapshot' + (snaps.length === 1 ? '' : 's'),
       hasChart, noChart: !hasChart, linePts, dots, yMaxLabel, yMinLabel, xMinLabel, xMaxLabel,
       fM: S.fM, setFM: (e) => this.setState({ fM: e.target.value }),
-      fCash: S.fCash, setFCash: (e) => this.setState({ fCash: e.target.value }),
-      fInv: S.fInv, setFInv: (e) => this.setState({ fInv: e.target.value }),
-      fDebt: S.fDebt, setFDebt: (e) => this.setState({ fDebt: e.target.value }),
+      fCash: S.fCash, setFCash: (e) => this.setState({ fCash: this.dec(e.target.value) }),
+      fInv: S.fInv, setFInv: (e) => this.setState({ fInv: this.dec(e.target.value) }),
+      fDebt: S.fDebt, setFDebt: (e) => this.setState({ fDebt: this.dec(e.target.value) }),
       fNote: S.fNote, setFNote: (e) => this.setState({ fNote: e.target.value }),
       saveSnap, msg: S.msg, hasMsg: !!S.msg,
       hasSnaps: snapRows.length > 0, noSnaps: snapRows.length === 0, snapRows
