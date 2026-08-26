@@ -6,7 +6,8 @@
    so they run in a vm context with a window and a localStorage stub, exactly
    as a page loads them.
 
-   It covers the two failures behind "the closure log is glitching out":
+   It covers the failures behind "the closure log is glitching out", and the
+   shape the Today tab reads back out of them:
 
      1. A load where anatomy-data.js did not arrive — a request that failed,
         a 404 served mid-deploy, a partial offline cache — used to file every
@@ -17,6 +18,10 @@
      2. Re-entry used to depend on whether the day's tier had been declared:
         on the second day back the cap said no, and lifted the instant you
         pressed a tier button.
+
+     3. What an open loop is, so the Phase 0 list can show all of them — a
+        block opened today included, which used to be filtered out for having
+        no gate to clear until tomorrow.
 
    Both are the kind of thing that only shows up on a specific day with a
    specific history, which is why they are tests rather than a careful read.
@@ -140,6 +145,26 @@ const sd = steady.A.blank();
 for (let n = 0; n < 10; n++) sd.days[ago(n)] = day({ tier: 'full' });
 steady.A.write(sd);
 ok(steady.A.reentryInfo(steady.A.read()).on === false, 'ten days straight: no re-entry at all');
+
+/* ── 4. what the Today tab lists as an open loop ── */
+group('Every open loop, including the ones opened today');
+
+const loops = load(true);
+const ls = loops.A.blank();
+ls.blocks.nk1 = block({ studied: TODAY });                                  // opened today
+ls.blocks.nk2 = block({ studied: ago(4) });                                 // stale
+ls.blocks.nk3 = block({ studied: ago(4), inv: '60', topo: '70' });          // repeat
+ls.blocks.nk4 = block({ studied: ago(4), inv: '85', topo: '90', gate: ago(4) }); // closed
+loops.A.write(ls);
+const rec = loops.A.read();
+
+ok(loops.A.status(rec, 'nk1') === 'open', 'a block studied today is open, not nothing');
+ok(loops.A.openLoops(rec).map((b) => b.id).sort().join() === 'nk1,nk2,nk3',
+   'open, stale and repeat are all open loops; closed is not');
+ok(loops.A.openLoops(rec).every((b) => !!loops.A.blockRec(rec, b.id).studied),
+   'every open loop carries a studied date — the Today list can show them all');
+ok(loops.A.openLoops(rec).filter((b) => loops.A.blockRec(rec, b.id).studied === TODAY).length === 1,
+   'and one of them is only waiting on tomorrow morning, not missing');
 
 console.log(failed ? '\n' + failed + ' failed\n' : '\nall green\n');
 process.exit(failed ? 1 : 0);
