@@ -55,10 +55,20 @@ jobs:
             git push
           fi
 
-      - name: Build _site (inject sync shim + stamp version)
+      - name: Install build dependencies
+        run: python3 -m pip install --quiet --upgrade cryptography markdown
+
+      # The vault pass needs the passphrase. inject.py exits non-zero if it is
+      # missing rather than shipping plaintext, so a deleted or renamed secret
+      # fails the deploy loudly instead of silently publishing the hub.
+      - name: Build _site (inline, stamp version, encrypt)
         env:
           APP_VERSION: ${{ steps.bump.outputs.version }}
+          HUB_PASSPHRASE: ${{ secrets.HUB_PASSPHRASE }}
         run: python3 .github/inject.py
+
+      - name: Verify the build shipped no plaintext
+        run: python3 .github/verify_vault.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -54,7 +54,7 @@
     ]],
     ['Research', [
       ['Pipeline.html', 'Pipeline · the board'],
-      ['Publication Pipeline.md', 'Pipeline · the write-up'],
+      ['Publication Pipeline.html', 'Pipeline · the write-up'],
       ['Conference Radar.dc.html', 'Conference Radar'],
     ]],
     ['People &amp; money', [

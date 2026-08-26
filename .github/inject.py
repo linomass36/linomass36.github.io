@@ -18,14 +18,19 @@ The GitHub Action calls it at build time and deploys _site/ to Pages.
 
 import os
 import re
+import secrets
 import shutil
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import vault
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "_site")
 
 # Files/dirs that must never ship to the live site.
-SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VERSION", ".gitignore"}
+SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VAULT.md", "VERSION",
+            ".gitignore", "node_modules"}
 
 # The gate. It already loads config.js + firebase itself and runs the
 # sign-in / intruder flow, so it must NOT get the hub sync shim.
@@ -257,6 +262,83 @@ def process_text_asset(path, version):
         f.write(stamp_version(text, version))
 
 
+MD_SHELL = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>%(title)s</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<style>
+  .md{max-width:820px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) 18px 140px;
+      font-family:var(--sans);color:var(--ink);font-size:15.5px;line-height:1.65}
+  .md h1{font-family:var(--serif);font-size:34px;font-weight:500;line-height:1.12;margin:6px 0 12px}
+  .md h2{font-family:var(--serif);font-size:23px;font-weight:500;margin:36px 0 8px;
+         padding-top:20px;border-top:1px solid var(--rule)}
+  .md h3{font-size:15.5px;font-weight:600;margin:22px 0 6px}
+  .md p{color:var(--mid);max-width:64ch}
+  .md li{color:var(--mid);margin-bottom:5px}
+  .md strong{color:var(--ink)}
+  .md code{font-family:var(--mono);font-size:12.8px;background:var(--rust-dim);
+           color:var(--rust);padding:1px 5px;border-radius:5px}
+  .md blockquote{margin:14px 0;padding:11px 15px;border-left:3px solid var(--rule);
+                 background:var(--card);border-radius:0 11px 11px 0;color:var(--mid)}
+  .md table{border-collapse:collapse;width:100%%;min-width:460px;font-size:13.8px}
+  .md .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0 16px;
+          border:1px solid var(--rule);border-radius:14px;background:var(--card)}
+  .md th{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+         color:var(--muted);text-align:left;padding:11px 13px;border-bottom:1px solid var(--rule)}
+  .md td{padding:11px 13px;border-bottom:1px solid var(--rule);color:var(--mid);vertical-align:top}
+  .md hr{border:0;border-top:1px solid var(--rule);margin:30px 0}
+  .md a{color:var(--rust)}
+</style>
+</head>
+<body><div class="md">%(body)s</div></body>
+</html>
+"""
+
+
+def render_markdown(site):
+    """Render every .md in the site into a hub page, then drop the source.
+
+    A .md file cannot decrypt itself, so shipping one would either leave a
+    plaintext hole in an otherwise encrypted site or 404 after the vault
+    pass removes it. Rendering it into a real page closes both.
+    """
+    try:
+        import markdown as md
+    except ImportError:
+        print("[inject] WARNING: python-markdown missing; .md files will be dropped")
+        md = None
+    made = 0
+    for dirpath, _dirs, files in os.walk(site):
+        for name in files:
+            if not name.lower().endswith(".md"):
+                continue
+            src = os.path.join(dirpath, name)
+            if md is not None:
+                with open(src, "r", encoding="utf-8") as f:
+                    text = f.read()
+                html = md.markdown(text, extensions=["tables", "fenced_code", "sane_lists"])
+                html = html.replace("<table>", '<div class="tw"><table>').replace("</table>", "</table></div>")
+                title = name[:-3]
+                for line in text.splitlines():
+                    if line.startswith("# "):
+                        title = line[2:].strip()
+                        break
+                out = os.path.join(dirpath, name[:-3] + ".html")
+                with open(out, "w", encoding="utf-8") as f:
+                    f.write(MD_SHELL % {"title": title, "body": html})
+                made += 1
+            os.remove(src)
+    if made:
+        print("[inject] rendered %d markdown page(s) into HTML" % made)
+
+
 def build():
     version = read_version()
     print("[inject] building _site for version", version)
@@ -280,6 +362,10 @@ def build():
     with open(os.path.join(SITE, VERSION_FILE), "w", encoding="utf-8") as f:
         f.write(version + "\n")
 
+    # Markdown -> HTML before the HTML pass, so rendered pages get the shims
+    # and are encrypted with everything else.
+    render_markdown(SITE)
+
     # Gate: index.dc.html becomes index.html (overwriting the committed copy).
     gate_src = os.path.join(SITE, GATE_SOURCE)
     if os.path.isfile(gate_src):
@@ -298,7 +384,76 @@ def build():
             elif lower.endswith((".js", ".css")):
                 process_text_asset(path, version)
 
-    print("[inject] done — hub pages carry sync.js, gate left clean.")
+    print("[inject] pages built — applying the vault")
+    lock(version)
+
+
+def lock(version):
+    """Encrypt the built site in place.
+
+    Every page is inlined (so it has no local dependencies), encrypted, and
+    replaced by a shell that loads vault.js. Every plaintext asset that is
+    not needed before unlock is then deleted, because leaving hub-data.js on
+    disk would make encrypting the page that reads it pointless.
+
+    Refuses to run without HUB_PASSPHRASE. A build that quietly falls back to
+    plaintext is the exact failure this whole mechanism exists to prevent —
+    so an unset passphrase is a hard error, not a warning.
+    """
+    passphrase = os.environ.get("HUB_PASSPHRASE", "")
+    if not passphrase:
+        sys.exit(
+            "[inject] FATAL: HUB_PASSPHRASE is not set.\n"
+            "         The site would ship in plaintext to a public origin.\n"
+            "         Set the HUB_PASSPHRASE repository secret (Settings -> \n"
+            "         Secrets and variables -> Actions), or export it locally."
+        )
+    if len(passphrase) < 12:
+        sys.exit("[inject] FATAL: HUB_PASSPHRASE is under 12 characters. "
+                 "The passphrase is the only thing protecting the site.")
+
+    salt = secrets.token_bytes(16)
+    key = vault.derive(passphrase, salt)
+    vault.write_meta(SITE, key, salt)
+
+    # Copy the decryptor in as a plaintext asset, stamped like the rest.
+    src = os.path.join(ROOT, "vault.js")
+    if os.path.isfile(src):
+        with open(src, "r", encoding="utf-8") as f:
+            vjs = stamp_version(f.read(), version)
+        with open(os.path.join(SITE, "vault.js"), "w", encoding="utf-8") as f:
+            f.write(vjs)
+
+    sealed, cleared = 0, 0
+    for dirpath, _dirs, files in os.walk(SITE):
+        for name in files:
+            path = os.path.join(dirpath, name)
+            rel = os.path.relpath(path, SITE)
+            if vault.is_plaintext(rel):
+                continue
+            if name.lower().endswith((".html", ".htm")):
+                with open(path, "r", encoding="utf-8", errors="replace") as f:
+                    html = f.read()
+                html = vault.inline_assets(html, SITE, dirpath)
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(vault.shell_for(vault.seal(key, html), version))
+                sealed += 1
+
+    # Second pass: nothing else ships. Anything a page needed is now inside it.
+    for dirpath, _dirs, files in list(os.walk(SITE, topdown=False)):
+        for name in files:
+            path = os.path.join(dirpath, name)
+            rel = os.path.relpath(path, SITE)
+            if vault.is_plaintext(rel) or name.lower().endswith((".html", ".htm")):
+                continue
+            os.remove(path)
+            cleared += 1
+        if not os.listdir(dirpath) and os.path.abspath(dirpath) != os.path.abspath(SITE):
+            os.rmdir(dirpath)
+
+    print("[inject] vault: %d pages encrypted, %d plaintext assets removed"
+          % (sealed, cleared))
+    print("[inject] done — the published site is ciphertext.")
 
 
 if __name__ == "__main__":
