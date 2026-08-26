@@ -11,10 +11,12 @@
    goal reordered from topic-fit to institution-brand. v2 replaces four
    parallel tracks and six dimensions with ONE forcing function at a time.
 
-   NAMING: no third party is named in this file. The hub is served from a
-   public origin and only the HTML pages carry the auth gate, so every
-   collaborator appears by role. Roles are stable and unambiguous to the
-   one person who reads them.
+   NAMING: this file names real people and institutions, because a target
+   list you cannot act on is not a target list. That is safe only because
+   the published site is ciphertext — see VAULT.md, vault.js and
+   .github/vault.py. If the vault is ever removed or bypassed, this file
+   must be sanitised in the same commit: it is the most identifying file
+   in the repo.
 
    Status vocabulary, used throughout:
      live    — worked on now
@@ -68,12 +70,12 @@ window.PLAN_V2 = {
     ],
     fixedFacts: [
       { k: 'US citizen', v: 'The single most valuable asset in the file. Clears the citizenship gate on nearly every competitive US summer program and eliminates visa sponsorship as a residency barrier — the constraint that sinks most IMGs.', tone: 'good' },
-      { k: 'Home school is ECFMG-accredited', v: 'RESOLVED 24 Aug 2026 — the pathway-ending risk is closed.', tone: 'good' },
-      { k: 'Home school is FAFSA / Title IV eligible', v: 'RESOLVED — but eligibility is not capacity. See the debt page.', tone: 'warn' },
+      { k: 'UMLub is ECFMG-accredited', v: 'RESOLVED 24 Aug 2026 — the pathway-ending risk is closed.', tone: 'good' },
+      { k: 'UMLub is FAFSA / Title IV eligible', v: 'RESOLVED — but eligibility is not capacity. See the debt page.', tone: 'warn' },
       { k: 'Enrolling in the American Track', v: 'USMLE tutoring built into the curriculum plus clinical years in NYC. Structural spine of Phases 3 and 4, and it carries a ~$350k USD price tag.', tone: 'warn' },
       { k: 'USMLE Step 1: summer 2028', v: 'Which makes summer 2027 the only clean research summer that exists before the clinical phase.', tone: 'key' },
       { k: 'Unpaid is survivable', v: 'Via family, scholarships, stipends, loans as last resort. A strategic unlock, not a footnote — most elite summer programs are unpaid or low-stipend.', tone: 'good' },
-      { k: 'Letter writers exist', v: 'Two home-faculty professors (one a vice dean) plus one clinical supervisor, pending completion of the voluntary clinic internship.', tone: 'good' }
+      { k: 'Letter writers exist', v: 'Two Polish professors (one a vice dean) plus one clinical supervisor, pending completion of the voluntary clinic internship.', tone: 'good' }
     ]
   },
 
@@ -121,7 +123,7 @@ window.PLAN_V2 = {
       objective: 'Convert the position into an abstract + a US letter',
       failure: 'Doing good work nobody writes down', color: '#0F6E56' },
     { id: 'p3', num: '3', label: 'Academic year 27/28 + Step 1', start: '2027-10-01', end: '2028-08-31', status: 'queued',
-      objective: 'Pass Step 1; bank home-faculty research',
+      objective: 'Pass Step 1; bank Polish research',
       failure: 'Step 1 slips and collides with the US move', color: '#854F0B' },
     { id: 'p4', num: '4', label: 'NYC clinical years', start: '2028-09-01', end: '2031-05-31', status: 'queued',
       objective: 'Step 2 CK ≥255, ECFMG, US LORs, match',
@@ -168,12 +170,12 @@ window.PLAN_V2 = {
       { id: 'p0-clinic', t: 'Finish the clinic weeks — treat them as letter-generating',
         d: 'The clinical letter only exists if the supervisor can describe your work specifically. Before the internship ends: ask for a 10-minute conversation, state that you are applying to US summer research programs in December, and ask whether they would be willing to write in support. Getting the yes now costs nothing; getting it in December may be impossible.' },
 
-      { id: 'p0-sponsor', t: 'The senior sponsor call', tag: 'HIGHEST EV',
-        d: 'The highest-expected-value hour of the autumn. A paediatric CT surgeon inside the hospital cluster ranked first, who has known you since childhood.',
+      { id: 'p0-sponsor', t: 'The Boston call', tag: 'HIGHEST EV',
+        d: 'The highest-expected-value hour of the autumn. A paediatric CT surgeon inside the Harvard/MGB cluster ranked first, who has known you since childhood.',
         d2: 'Structure: relationship first, no ask in the first ten minutes. Then — I’m applying for US summer research positions for 2027, NIH and several affiliated programs. I’d value your read on which are realistic for someone at a European school, and whether there’s anyone you’d suggest I speak to.',
         d3: 'That is not asking for a job. It is asking for a map, and it lets him offer more if he wants to. A position arranged this way has a far higher probability than any open application, is more likely to be CT than ortho, and carries the same brand.' },
 
-      { id: 'p0-debt', t: 'Clear the owed debt to the breast-surgery professor',
+      { id: 'p0-debt', t: 'Clear the owed debt to Prof. Polkowski',
         d: 'Highest-reach local mentor, flagged owed, ~30 days cold, and a rec-letter source. One message, specific, no ask attached. The cheapest item on the board and prerequisite to the December letter request.' },
 
       { id: 'p0-income', t: 'The income stack',
@@ -196,8 +198,8 @@ window.PLAN_V2 = {
           { src: 'GEO (gene expression)', cost: 'Free, instant', fit: 'Cardiac transplant / CAV datasets. Directly on-thesis. Needs R or Python.', good: true },
           { src: 'MIMIC-IV (ICU)', cost: 'CITI training + credentialing, ~2–6 weeks, needs a referee', fit: 'Cardiac surgery subpopulation. Best fit for post-op deterioration questions.', good: true },
           { src: 'NHANES', cost: 'Free, instant', fit: 'Weak CT relevance. Skip.', good: false },
-          { src: 'Transplant registry STAR files', cost: 'Data request, fee, usually needs institutional affiliation', fit: 'The real prize for heart transplant research — but gated. Route through a mentor, not solo.', good: false },
-          { src: 'National inpatient sample', cost: 'Purchase + DUA + training', fit: 'Cost-gated. Skip for now.', good: false }
+          { src: 'UNOS / SRTR STAR files', cost: 'Data request, fee, usually needs institutional affiliation', fit: 'The real prize for heart transplant research — but gated. Route through a mentor, not solo.', good: false },
+          { src: 'HCUP NIS', cost: 'Purchase + DUA + training', fit: 'Cost-gated. Skip for now.', good: false }
         ],
         rule: 'The one rule that decides whether this works: get a senior author. A solo-authored paper from a pre-clinical student with no supervising name reads as low quality to reviewers and to program directors, and journals reject it disproportionately. Ask a professor: I’ll do all the work — the search, the screening, the extraction, the analysis, the writing. Would you supervise and be senior author? That costs them very little and roughly doubles your odds of acceptance.',
         kill: 'If by 15 October there is no senior author and no locked question, drop Job A and keep only Job B. A code repository with a competent analysis still does the work in a PI email; a half-finished manuscript does nothing.' },
@@ -218,7 +220,7 @@ window.PLAN_V2 = {
         d: 'Back for the first classes. Work to the last practical day — but the abstract, the sponsor call, and the credit infrastructure all have to be finished before the flight, because term time will not make room for them.' }
     ],
     exit: ['Abstract submitted', 'NIH screener result known', '4 eligibility emails sent and logged',
-           'Clinical letter verbally agreed', 'Sponsor call done', 'Owed debt cleared',
+           'Clinical letter verbally agreed', 'Boston call done', 'Owed debt cleared',
            'Tutoring stream live', 'CTS paper question locked with a named senior author (or consciously deferred)',
            'US driver’s license issued', 'Authorized-user status active', 'Own card approved',
            'Recurring autopay running', 'Flight home 30 Sep']
@@ -228,30 +230,30 @@ window.PLAN_V2 = {
   phase1: {
     lede: 'The year has one job: win a US summer research position. Coursework is a floor requirement, not an achievement.',
     targets: [
-      { n: 1,  name: 'NIH SIP — heart/lung, neuro, musculoskeletal institutes', field: 'All three', paid: 'Yes, stipend',
+      { n: 1,  name: 'NIH SIP — NHLBI (cardiac), NINDS (neuro), NIAMS (musculoskeletal)', field: 'All three', paid: 'Yes, stipend',
         opens: 'mid-Nov 2026', closes: 'mid-Feb 2027 (+1 wk for letters)', verified: true,
         note: 'US citizen + enrolled ≥half-time at an accredited college/university. The US-institution restriction is written for permanent residents only. Strongest single target.' },
-      { n: 2,  name: 'A top-tier affiliated ortho trauma programme', field: 'Ortho', paid: 'No',
+      { n: 2,  name: 'Harvard Ortho Trauma (MGB)', field: 'Ortho', paid: 'No',
         opens: '~Jan 5', closes: '~Feb 27', verified: false, note: 'US citizen ✓. "Accredited medical school" undefined — VERIFY.' },
-      { n: 3,  name: 'Major cardiac institute summer internship', field: 'CT', paid: 'Varies',
+      { n: 3,  name: 'Texas Heart Institute summer internship', field: 'CT', paid: 'Varies',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: 'Most CT-specific option in the file.' },
-      { n: 4,  name: 'Specialty orthopaedic hospital, NYC', field: 'Ortho', paid: 'Varies',
+      { n: 4,  name: 'Hospital for Special Surgery (HSS)', field: 'Ortho', paid: 'Varies',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: 'Top ortho brand in NYC — aligns with the later NYC phase.' },
-      { n: 5,  name: 'Top-tier midwest clinic summer research', field: 'CT / all', paid: 'Varies',
+      { n: 5,  name: 'Cleveland Clinic summer research', field: 'CT / all', paid: 'Varies',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: 'Top-tier CT institution.' },
-      { n: 6,  name: 'Major cancer centre, NYC', field: 'Onc / surgical', paid: 'Varies',
+      { n: 6,  name: 'Memorial Sloan Kettering', field: 'Onc / surgical', paid: 'Varies',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: 'Direct continuity with the gastric-cancer work.' },
-      { n: 7,  name: 'Mid-atlantic academic summer surgical research', field: 'All', paid: 'Varies',
+      { n: 7,  name: 'Johns Hopkins summer surgical research', field: 'All', paid: 'Varies',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: '' },
-      { n: 8,  name: 'Large clinic SURF programme', field: 'All', paid: 'Yes',
+      { n: 8,  name: 'Mayo Clinic SURF', field: 'All', paid: 'Yes',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: 'Often restricted to US institutions — VERIFY early.' },
-      { n: 9,  name: 'NYC academic medical centres (three)', field: 'CT + neuro', paid: 'Varies',
+      { n: 9,  name: 'Columbia / Weill Cornell / Mount Sinai', field: 'CT + neuro', paid: 'Varies',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: 'Seeds the NYC clinical phase.' },
-      { n: 10, name: 'CT surgical society summer intern scholarship', field: 'CT', paid: 'Yes',
+      { n: 10, name: 'AATS Summer Intern Scholarship', field: 'CT', paid: 'Yes',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: 'Likely restricted to North American schools — VERIFY.' },
       { n: 11, name: 'Thoracic surgery foundation student programmes', field: 'CT', paid: 'Varies',
         opens: 'VERIFY', closes: 'VERIFY', verified: false, note: '' },
-      { n: 12, name: 'Sponsor-brokered position', field: 'CT', paid: '?',
+      { n: 12, name: 'Boston-surgeon-brokered position', field: 'CT', paid: '?',
         opens: 'n/a', closes: 'n/a', verified: true, note: 'Highest probability per unit effort.' }
     ],
     applyRule: 'Apply to 8–12. Breadth is the strategy for a single-shot summer. A brand-first ranking with one application is not a plan, it is a wish.',
@@ -264,7 +266,7 @@ window.PLAN_V2 = {
         'Track: sent date · reply · interview · outcome',
         'Expect a 10–20% reply rate. Thirty emails is the input for three conversations.'
       ],
-      note: 'This is the same skill you already run on the home network, at higher volume.'
+      note: 'This is the same skill you already run on the Polish network, at higher volume.'
     },
     quarters: [
       { id: 'q1', label: 'Q1 · Oct–Dec 2026 — build the machine', items: [
@@ -291,8 +293,8 @@ window.PLAN_V2 = {
       ] }
     ],
     fallback: [
-      { n: 1, t: 'Sponsor-brokered position', d: 'Even unofficial, even unpaid, even 6 weeks.' },
-      { n: 2, t: 'Home-faculty CT research summer', d: 'With the national CT surgeon or the local CT surgeon — an abstract from home still beats no summer.' },
+      { n: 1, t: 'Boston-surgeon-brokered position', d: 'Even unofficial, even unpaid, even 6 weeks.' },
+      { n: 2, t: 'Polish CT research summer', d: 'With the national CT surgeon or the local CT surgeon — an abstract from home still beats no summer.' },
       { n: 3, t: 'The CAV computational project, properly scoped', d: 'Public expression data, remote, no lab needed. This is the one that has been available all along and keeps not getting done. Give it a supervisor and a deadline or it will not happen a second time.' },
       { n: 4, t: 'Earn', d: 'If all research doors close, take the highest-paying summer available and stop pretending otherwise.' }
     ]
@@ -347,7 +349,7 @@ window.PLAN_V2 = {
     ],
     step2Note: 'Take it after the core clinical year that best supports it — typically after surgery and medicine — and before ERAS opens in September 2030. Do not delay it into the application year.',
     ecfmg: 'Required before you can enter a US residency. Components: Step 1 pass, Step 2 CK pass, and a medical school that satisfies the recognized-accreditation policy — accredited by an agency recognized by WFME or NCFMEA, with a sponsor note in its World Directory listing. Also required: the English/pathways requirements as they stand at the time, and identity and credential verification, which is slow. Start the application in 2029, not 2030.',
-    ecfmgVerify: 'Look up the home school in the World Directory of Medical Schools now. Check the sponsor-notes tab for both the sponsor note and recognized-accreditation status. This is a five-minute check on a requirement that, if unmet, ends the entire US pathway — and it should not be discovered in 2030.',
+    ecfmgVerify: 'Look up the Medical University of Lublin in the World Directory of Medical Schools now. Check the sponsor-notes tab for both the sponsor note and recognized-accreditation status. This is a five-minute check on a requirement that, if unmet, ends the entire US pathway — and it should not be discovered in 2030.',
     letters: [
       'Hands-on beats observership. Sub-internships and acting internships in the specialty are what generate letters that carry weight.',
       'Target 3–4 letters, ideally two from US surgeons in the target specialty',
@@ -414,13 +416,13 @@ window.PLAN_V2 = {
 
   /* ── §12 network CRM — roles only, no names ──────────────────────── */
   network: [
-    { role: 'Senior sponsor — paediatric CT surgeon, inside the first-ranked hospital cluster', reach: 'Highest', owed: false, next: 'The 45-minute call: map, not ask', by: 'Sep 2026' },
-    { role: 'Breast-surgery professor — home faculty',        reach: '3', owed: true,  next: 'Clear the debt; letter ask in December', by: 'Sep 2026' },
-    { role: 'Oncology professor — home faculty',              reach: '2', owed: false, next: 'Case-report offer — accept only if ≤15 hrs', by: 'Optional' },
-    { role: 'Vice dean + second professor — academic letters', reach: '—', owed: false, next: 'Warn in November, packet in December', by: 'Dec 2026' },
+    { role: 'Boston paediatric CT surgeon — senior sponsor, inside the Harvard/MGB cluster', reach: 'Highest', owed: false, next: 'The 45-minute call: map, not ask', by: 'Sep 2026' },
+    { role: 'Prof. Polkowski — breast cancer surgeon, Lublin',        reach: '3', owed: true,  next: 'Clear the debt; letter ask in December', by: 'Sep 2026' },
+    { role: 'Prof. Rawicz — oncology surgeon, Lublin',              reach: '2', owed: false, next: 'Case-report offer — accept only if ≤15 hrs', by: 'Optional' },
+    { role: 'Vice dean + Polish professors — academic letters', reach: '—', owed: false, next: 'Warn in November, packet in December', by: 'Dec 2026' },
     { role: 'Clinic supervisor — clinical letter',            reach: '—', owed: false, next: 'Secure the verbal yes before the internship ends', by: 'Sep 2026' },
-    { role: 'Peer CT resident in the US — ground truth on the IMG pathway', reach: '—', owed: false, next: 'One call on I-6 realism and away rotations', by: 'Winter 2026/27' },
-    { role: 'National CT surgeon — research access',          reach: '—', owed: false, next: 'Reactivate only for the 2027 fallback', by: 'Mar 2027' },
+    { role: 'Polish CT resident in Texas — ground truth on the IMG → US CT pathway', reach: '—', owed: false, next: 'One call on I-6 realism and away rotations', by: 'Winter 2026/27' },
+    { role: 'National Polish CT surgeon — research access',          reach: '—', owed: false, next: 'Reactivate only for the 2027 fallback', by: 'Mar 2027' },
     { role: 'NIH principal investigators (×30) — the actual selectors', reach: '—', owed: false, next: 'Build list November; email December–January', by: 'Jan 2027' }
   ],
   networkRule: 'Every gate in this document is opened by a named human. Cold applications are the low-probability path in all of them.',
@@ -447,7 +449,7 @@ window.PLAN_V2 = {
       'Private loans — last resort. Private debt is never forgiveness-eligible. A $210k private balance is not forgiven after 120 payments; it follows you through residency at commercial interest.'
     ],
     costModel: [
-      { phase: 'Pre-clinical, home faculty', years: '2026/27 – 2027/28', per: '$10,000 tuition', total: 20000 },
+      { phase: 'Pre-clinical, Lublin', years: '2026/27 – 2027/28', per: '$10,000 tuition', total: 20000 },
       { phase: 'NYC clinical',               years: '2028/29 – 2030/31', per: '$70,000 tuition + ~$60,000 living', total: 390000 }
     ],
     costTotal: 410000,
@@ -460,7 +462,7 @@ window.PLAN_V2 = {
     keyMove: {
       t: 'Max out federal in the pre-clinical years',
       d: 'Federal borrowing is limited by both the $50,000 annual cap and each year’s cost of attendance. In the NYC years, COA is ~$130k, so you take the full $50k — three years = $150,000. That leaves only $50,000 of your $200,000 aggregate cap for the two pre-clinical years. Tuition is $10,000/year, but cost of attendance includes a living allowance. If you borrow only tuition, you will hit graduation having used roughly $170,000 of a $200,000 forgivable allowance — and the missing $30,000 becomes private debt instead.',
-      rule: 'Borrow up to the full certified COA in each pre-clinical year, even if you do not need the cash. Hold the surplus and use it to displace private borrowing in the NYC years. Every dollar moved from private to federal is a dollar that gets forgiven in 2041 instead of repaid at 10%. Confirm your certified COA with the financial aid office in autumn 2026.'
+      rule: 'Borrow up to the full certified COA in each pre-clinical year, even if you do not need the cash. Hold the surplus and use it to displace private borrowing in the NYC years. Every dollar moved from private to federal is a dollar that gets forgiven in 2041 instead of repaid at 10%. Confirm your certified COA with the UMLub financial aid office in autumn 2026.'
     },
     atGraduation: { federal: 237000, private: 246000, total: 483000, interest: 73000 },
     rap: {
@@ -522,7 +524,7 @@ window.PLAN_V2 = {
       mit: 'Own-occupation disability insurance secured before residency ends' },
     { r: 'Foreign-enrollment ineligibility (summer programs)', sev: 'Fatal to Phase 1', sig: 'Screener or program says no',
       mit: 'Run the screener in Phase 0; pivot to sponsor-brokered + home-faculty fallback' },
-    { r: 'Home school loses Title IV eligibility', sev: 'Severe', sig: 'Annual check fails',
+    { r: 'UMLub loses Title IV eligibility', sev: 'Severe', sig: 'Annual check fails',
       mit: 'Currently eligible. Reconfirm each year; build a non-federal contingency for the NYC years' },
     { r: 'No summer 2027 position', sev: 'High', sig: 'No offers by mid-March', mit: 'Fallback ladder' },
     { r: 'Letters not uploaded', sev: 'High, silent', sig: 'No confirmation email',
@@ -560,22 +562,22 @@ window.PLAN_V2 = {
 
   /* ── §16 verification queue ──────────────────────────────────────── */
   verification: [
-    { n: '1',  q: 'Home school ECFMG accreditation', how: '—', by: '—', sev: 'fatal', done: true, result: 'RESOLVED 24 Aug 2026 — accredited' },
-    { n: '2',  q: 'Home school Title IV / FAFSA eligibility', how: '—', by: 'recheck annually', sev: 'fatal', done: true, result: 'RESOLVED 24 Aug 2026 — eligible' },
+    { n: '1',  q: 'UMLub ECFMG accreditation', how: '—', by: '—', sev: 'fatal', done: true, result: 'RESOLVED 24 Aug 2026 — accredited' },
+    { n: '2',  q: 'UMLub Title IV / FAFSA eligibility', how: '—', by: 'recheck annually', sev: 'fatal', done: true, result: 'RESOLVED 24 Aug 2026 — eligible' },
     { n: '3',  q: 'Grandfathering under pre-July-2026 loan rules', how: '—', by: '—', sev: 'high', done: true, result: 'RESOLVED — not grandfathered, no prior disbursement' },
     { n: '4',  q: 'Funding plan for the gap above the federal cap', how: '—', by: '—', sev: 'high', done: true, result: 'DECIDED — private loans' },
     { n: '4b', q: 'Private lender comparison: fixed rate, cosigner terms, in-school interest-only option, refinance flexibility', how: 'Four lender rate quotes', by: 'Spring 2028', sev: 'high', done: false },
     { n: '4c', q: 'Does the first attending employer in 2038 need to be a qualifying non-profit? Confirm the rules still stand', how: 'Federal student aid site, annually', by: 'Annually', sev: 'high', done: false },
     { n: '5',  q: 'Does NIH SIP accept a US citizen enrolled at a foreign accredited medical school?', how: 'NIH Application Center eligibility screener', by: '2026-09-30', sev: 'fatal-to-phase', done: false },
-    { n: '6',  q: 'Does the top-tier affiliated ortho programme count a European medical school as accredited?', how: 'Email the programme office', by: '2026-09-30', sev: 'high', done: false },
-    { n: '6b', q: 'Same question — cardiac institute, orthopaedic hospital, midwest clinic, SURF', how: 'Email each', by: '2026-10-31', sev: 'high', done: false },
+    { n: '6',  q: 'Does MGB Harvard Ortho Trauma count a European medical school as accredited?', how: 'Email the programme office', by: '2026-09-30', sev: 'high', done: false },
+    { n: '6b', q: 'Same question — Texas Heart, HSS, Cleveland Clinic, Mayo', how: 'Email each', by: '2026-10-31', sev: 'high', done: false },
     { n: '6c', q: 'Is the American Track’s US clinical placement contingent on anything (GPA, exam, quota)?', how: 'American Track office', by: '2026-10-31', sev: 'high', done: false },
     { n: '7',  q: 'Confirmed 2027 dates and deadlines for targets 3–11', how: 'Program sites', by: '2026-10-31', sev: 'medium', done: false },
     { n: '8',  q: 'Current NRMP Charting Outcomes: IMG match rates, I-6 and GS', how: 'NRMP publications', by: '2029', sev: 'medium', done: false }
   ],
 
   /* ── §18 the one-paragraph version ───────────────────────────────── */
-  oneParagraph: 'You are a US citizen at a European medical school with one clean research summer left before Step 1. The only thing that matters between now and mid-February 2027 is winning a US summer research position — and the way that is won is not applications, it is thirty emails to named principal investigators plus one phone call to a surgeon who has known you since you were a toddler. Everything financial, entrepreneurial, and multi-track in the previous version of this plan is parked, not because it was wrong, but because it competes with the only gate that is currently open. Ship the abstract by 7 September, verify three eligibility questions that could each end a phase, ask for letters in December, and apply everywhere. The rest of the decade is downstream of doing that one thing well.',
+  oneParagraph: 'You are a US citizen at the Medical University of Lublin with one clean research summer left before Step 1. The only thing that matters between now and mid-February 2027 is winning a US summer research position — and the way that is won is not applications, it is thirty emails to named principal investigators plus one phone call to a surgeon who has known you since you were a toddler. Everything financial, entrepreneurial, and multi-track in the previous version of this plan is parked, not because it was wrong, but because it competes with the only gate that is currently open. Ship the abstract by 7 September, verify three eligibility questions that could each end a phase, ask for letters in December, and apply everywhere. The rest of the decade is downstream of doing that one thing well.',
 
   /* Everything v1 carried that is now off the board. Shown greyed, never as
      "behind schedule" — a dormant layer that reads as failure gets the whole
