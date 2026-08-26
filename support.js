@@ -156,10 +156,21 @@
     runtime.setRootName(rootName);
     runtime.adoptParsed(rootName, parsed);
     if (!window.__resources) {
-      fetch(location.href).then((res) => res.ok ? res.text() : "").then((t) => {
+      const useSource = (t) => {
         const raw = t ? parseDcText(t) : null;
         if (raw?.template) runtime.updateHtml(rootName, raw.template);
-      }).catch(() => {
+        return !!raw?.template;
+      };
+      // A page served from behind the vault is a shell at its own URL: the
+      // decryptor leaves the real source on window.__dcSource, and fetching
+      // location.href would only get the shell back. It is handed over on a
+      // timer rather than straight away because the fetch it stands in for
+      // could only ever resolve after this function had finished mounting the
+      // root — do it synchronously and the update lands on a page that is not
+      // there yet.
+      const src = window.__dcSource;
+      if (typeof src === "string" && src) setTimeout(() => useSource(src), 0);
+      else fetch(location.href).then((res) => res.ok ? res.text() : "").then(useSource).catch(() => {
       });
     }
     const dc = doc.querySelector("x-dc");
