@@ -134,18 +134,35 @@
 
     function record(rec) {
       var r = Object.assign({}, BLOCK_DEF, rec || {});
-      r.reps = Array.isArray(r.reps) ? r.reps : [];
+      r.reps = Array.isArray(r.reps) ? r.reps.slice() : [];   // never share BLOCK_DEF's array
       r.cards = +r.cards || 0;
       return r;
+    }
+
+    /* A bare record is not evidence of anything. Asking status() about a block
+       used to create one, so a single press of "Draw one" — which consults
+       every block inside a write — left a blank for all sixty-one behind. A
+       store that went through the parking bug can therefore hold a full set of
+       blanks in `blocks` and its entire real history in `orphans`, and a blank
+       must never outrank that history or push it out of the store. */
+    function bare(r) {
+      return !r.studied && r.inv === '' && r.topo === '' && !r.gate
+             && !r.cards && !(r.reps || []).length;
     }
 
     Object.keys(d.blocks || {}).forEach(function (id) {
       ((known && !findBlock(id)) ? out.orphans : out.blocks)[id] = record(d.blocks[id]);
     });
     Object.keys(d.orphans || {}).forEach(function (id) {
-      if (out.blocks[id]) return;                    // a live record outranks a parked one
-      if (known && findBlock(id)) { out.blocks[id] = record(d.orphans[id]); lastRestored++; }
-      else out.orphans[id] = record(d.orphans[id]);
+      var parked = record(d.orphans[id]);
+      if (!(known && findBlock(id))) { out.orphans[id] = parked; return; }
+      var live = out.blocks[id];
+      if (!live || bare(live)) {                     // nothing real is displaced
+        out.blocks[id] = parked;
+        if (!bare(parked)) lastRestored++;
+        return;
+      }
+      if (!bare(parked)) out.orphans[id] = parked;   // two real records: keep both
     });
     Object.keys(d.days || {}).forEach(function (day) {
       var r = Object.assign({}, DAY_DEF, d.days[day] || {});
@@ -292,9 +309,15 @@
     return out;
   }
 
-  /* ── block status ── */
+  /* ── block status ──
+     A read that does not create. Every render asks status() about every block,
+     and blockRec() would leave a blank record behind for each one — harmless
+     until something consults status inside a write, at which point the whole
+     set is persisted and starts standing in for records that are not there. */
+  function peek(s, id) { return s.blocks[id] || BLOCK_DEF; }
+
   function status(s, id) {
-    var b = blockRec(s, id);
+    var b = peek(s, id);
     if (!b.studied) return 'todo';
     if (b.inv === '' || b.topo === '') {
       return daysBetween(b.studied, today(s)) > 2 ? 'stale' : 'open';
@@ -302,11 +325,11 @@
     return (parseFloat(b.inv) >= 80 && parseFloat(b.topo) >= 80) ? 'closed' : 'repeat';
   }
   function closedDate(s, id) {
-    var b = blockRec(s, id);
+    var b = peek(s, id);
     return status(s, id) === 'closed' ? (b.gate || b.studied) : '';
   }
   function dueDate(s, id, k) {
-    var b = blockRec(s, id), cd = closedDate(s, id);
+    var b = peek(s, id), cd = closedDate(s, id);
     if (!cd) return '';
     return b[k + 'due'] || addDays(cd, k === 'd14' ? 14 : 45);
   }
@@ -314,7 +337,7 @@
     var t = today(s), out = [];
     allBlocks().forEach(function (b) {
       if (!closedDate(s, b.id)) return;
-      var r = blockRec(s, b.id);
+      var r = peek(s, b.id);
       ['d14', 'd45'].forEach(function (k) {
         if (r[k]) return;
         var dd = dueDate(s, b.id, k);
@@ -382,7 +405,7 @@
   function lastPaperScore(s) {
     var last = '';
     allBlocks().forEach(function (b) {
-      var r = blockRec(s, b.id);
+      var r = peek(s, b.id);
       (r.reps || []).forEach(function (x) { if (x.date > last) last = x.date; });
     });
     Object.keys(s.days).forEach(function (d) { if (s.days[d].randScore !== '' && d > last) last = d; });
@@ -391,7 +414,7 @@
   function d45Rate(s) {
     var p = 0, f = 0;
     allBlocks().forEach(function (b) {
-      var r = blockRec(s, b.id);
+      var r = peek(s, b.id);
       if (r.d45 === 'pass') p++;
       if (r.d45 === 'fail') f++;
     });
@@ -425,7 +448,7 @@
     var lp = lastPaperScore(s);
     var paperGap = lp ? daysBetween(lp, t) : 999;
     var thorax = regions().filter(function (r) { return r.id === 'thorax'; })[0];
-    var thoraxStarted = thorax ? thorax.blocks.some(function (b) { return blockRec(s, b.id).studied; }) : true;
+    var thoraxStarted = thorax ? thorax.blocks.some(function (b) { return peek(s, b.id).studied; }) : true;
 
     return [
       { fired: open.length > 5,
@@ -489,7 +512,7 @@
     rollover: rollover, isoLocal: isoLocal, today: today, clockNow: clockNow,
     addDays: addDays, daysBetween: daysBetween, lastNDays: lastNDays,
 
-    status: status, closedDate: closedDate, dueDate: dueDate, dueList: dueList, openLoops: openLoops,
+    peek: peek, status: status, closedDate: closedDate, dueDate: dueDate, dueList: dueList, openLoops: openLoops,
     activeDays: activeDays, lastActive: lastActive, gapDays: gapDays,
     reentryInfo: reentryInfo, inReentry: inReentry,
     p0Rate: p0Rate, lastPaperScore: lastPaperScore, d45Rate: d45Rate,

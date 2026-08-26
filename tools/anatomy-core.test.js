@@ -109,6 +109,44 @@ ok(/returned to its block/.test(repaired.A.migrationNote()), 'the Data panel say
 ok(!Object.keys(JSON.parse(repaired.store.ct_anatomy_v1).orphans).length,
    'and the repair is written back, not redone on every load');
 
+group('Blanks written over the parked history');
+
+/* Asking status() about a block used to create a record for it. Anything that
+   consulted status inside a write — "Draw one" does — persisted a blank for
+   every block, so a store caught by the parking bug ends up holding a full set
+   of blanks in `blocks` and its whole real history in `orphans`. */
+const smothered = JSON.stringify({
+  schema: 3, app: 'anatomy-closure', savedAt: '',
+  meta: { repaired: 0, rollover: 5, mirrored: 1 }, days: {},
+  blocks: Object.fromEntries(REF.allBlocks().map((b) => [b.id, block({})])),   // 61 blanks
+  orphans: { nk2: block({ studied: ago(12) }),
+             nk1: block({ studied: ago(20), inv: '85', topo: '90', gate: ago(20) }) },
+});
+const dug = load(true, smothered);
+const ds = dug.A.read();
+ok(dug.A.status(ds, 'nk2') === 'stale', 'a blank does not outrank the real record behind it');
+ok(dug.A.status(ds, 'nk1') === 'closed', 'a closed block comes back closed, not "not started"');
+ok(!Object.keys(JSON.parse(dug.store.ct_anatomy_v1).orphans).length, 'and the repair is written back');
+
+const bothReal = JSON.stringify({
+  schema: 3, app: 'anatomy-closure', meta: {}, days: {},
+  blocks: { nk2: block({ studied: ago(2), inv: '90', topo: '90', gate: ago(2) }) },
+  orphans: { nk2: block({ studied: ago(40) }) },
+});
+const clash = load(true, bothReal);
+const cs = clash.A.read();
+ok(clash.A.status(cs, 'nk2') === 'closed', 'a real live record is not displaced by a parked one');
+ok(!!cs.orphans.nk2, 'and the parked one is kept rather than thrown away');
+
+group('status() is a read, not a write');
+const quiet = load(true);
+const qs = quiet.A.blank();
+qs.blocks.nk1 = block({ studied: ago(3) });
+quiet.A.write(qs);
+quiet.A.mut((st) => { quiet.A.allBlocks().forEach((b) => quiet.A.status(st, b.id)); });
+ok(Object.keys(JSON.parse(quiet.store.ct_anatomy_v1).blocks).join() === 'nk1',
+   'consulting every block inside a write leaves no blanks behind');
+
 group('An id that really is not in this build');
 const ghost = load(true, JSON.stringify({ schema: 3, app: 'anatomy-closure', meta: {}, days: {}, orphans: {},
                                           blocks: { zz9: block({ studied: ago(5) }) } }));
