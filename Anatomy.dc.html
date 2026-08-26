@@ -689,7 +689,7 @@ class Component extends DCLogic {
     let hasBanner = false, bannerCls = '', bannerText = '';
     if (reentry) {
       hasBanner = true; bannerCls = '';
-      bannerText = 'Re-entry — ' + sum.gap + ' days since the last logged day. No new blocks for two days, and overdue '
+      bannerText = 'Re-entry — ' + sum.gap + ' days away. No new block until your second day back, and overdue '
         + 'retests are capped at three. Any block studied but never scored is stale now: re-study it at half depth '
         + 'rather than scoring it from memory. Run Core today — that is a full day by this system\'s standards.';
     } else if (gap >= 1 && gap < 3 && A.lastActive(S)) {
@@ -877,7 +877,8 @@ class Component extends DCLogic {
 
       showSession: day.tier !== 'core',
       blocked, canStart: !blocked,
-      blockedWhy: reentry ? 'Re-entry: no new block today. Clear the gate and the retests.'
+      blockedWhy: reentry ? 'Re-entry: no new block today. Phase 0 and the retests are the day\'s work — '
+                            + 'the cap lifts on your second day back, not by clearing them.'
                           : 'Six or more open loops. No new block until they clear.',
       todoBlocks, pickId: this.state.pickId,
       setPick: (e) => this.setState({ pickId: e.target.value }),

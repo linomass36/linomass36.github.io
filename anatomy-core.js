@@ -19,7 +19,9 @@
    Block ids (nk1, hd4, tx10 …) are permanent primary keys. A title or a
    relation may be edited freely; an id must never be reused or renumbered.
    Ids no longer present in anatomy-data.js are parked in `orphans` rather
-   than dropped, so no history is ever lost.
+   than dropped, so no history is ever lost — and only ever while the
+   syllabus is loaded to be checked against. An id that reappears in it comes
+   back out of `orphans` on the next read.
 
    The day boundary is 05:00 by default (meta.rollover), because a session
    that runs past midnight belongs to the day it started. That is deliberately
@@ -47,6 +49,7 @@
   // Set by read() so a page can say where the data came from.
   var lastImport = '';
   var lastMigrationNote = '';
+  var lastRestored = 0;      // records migrate() brought back out of `orphans`
 
   function data() { return (window.ANATOMY_DATA || {}); }
   function regions() { return data().regions || []; }
@@ -112,11 +115,37 @@
 
     var out = blank();
     out.meta = Object.assign({}, META_DEF, d.meta || {});
-    Object.keys(d.blocks || {}).forEach(function (id) {
-      var r = Object.assign({}, BLOCK_DEF, d.blocks[id] || {});
+
+    /* Parking a record as an orphan only means anything when the syllabus is
+       here to be checked against. anatomy-data.js is a separate script, and a
+       page that opens without it — a request that failed, a 404 served while
+       a deploy propagates, a partial offline cache — used to see every id as
+       unknown and file the whole closure log under `orphans` on the next
+       write. That was silent and permanent: every block came back "not
+       started" and the open loops vanished from the log, on that load and on
+       every healthy load after it.
+
+       So nothing is reclassified unless the syllabus is loaded, and the move
+       runs both ways — an id that is in the syllabus again is not an orphan
+       any more, however it came to be parked. That is what brings a log
+       flattened by an earlier bad load back on its own. */
+    var known = allBlocks().length > 0;
+    lastRestored = 0;
+
+    function record(rec) {
+      var r = Object.assign({}, BLOCK_DEF, rec || {});
       r.reps = Array.isArray(r.reps) ? r.reps : [];
       r.cards = +r.cards || 0;
-      (findBlock(id) ? out.blocks : out.orphans)[id] = r;
+      return r;
+    }
+
+    Object.keys(d.blocks || {}).forEach(function (id) {
+      ((known && !findBlock(id)) ? out.orphans : out.blocks)[id] = record(d.blocks[id]);
+    });
+    Object.keys(d.orphans || {}).forEach(function (id) {
+      if (out.blocks[id]) return;                    // a live record outranks a parked one
+      if (known && findBlock(id)) { out.blocks[id] = record(d.orphans[id]); lastRestored++; }
+      else out.orphans[id] = record(d.orphans[id]);
     });
     Object.keys(d.days || {}).forEach(function (day) {
       var r = Object.assign({}, DAY_DEF, d.days[day] || {});
@@ -124,7 +153,8 @@
       r.p0 = !!r.p0;
       out.days[day] = r;
     });
-    Object.assign(out.orphans, d.orphans || {});
+    if (lastRestored) notes.push(lastRestored + ' parked record' + (lastRestored > 1 ? 's' : '') +
+      ' returned to its block — the syllabus was missing when they were last saved');
     var orphanN = Object.keys(out.orphans).length;
     if (orphanN) notes.push(orphanN + ' block record' + (orphanN > 1 ? 's' : '') + ' kept aside — those ids are not in this build');
     lastMigrationNote = notes.join('; ');
@@ -137,7 +167,9 @@
     if (raw) {
       try {
         var s = migrate(JSON.parse(raw));
-        if (backfillStudy(s)) write(s);
+        // A repair is written back the moment it is made, rather than waiting
+        // for the next edit: until it lands, every load has to make it again.
+        if (backfillStudy(s) || lastRestored) write(s);
         return s;
       } catch (e) { return blank(); }
     }
@@ -310,7 +342,14 @@
      the cap lifted.
      The break is now measured where it actually happened — between the last
      two logged days, or between the last logged day and today — and re-entry
-     holds until two days have been logged since it. */
+     holds until two days have been logged since it.
+
+     Today counts as one of them from the moment it starts, declared or not.
+     Counting only declared days left the cap hanging on the tier button: on
+     your second day back the page said "no new block" until you pressed a
+     tier, and changed its mind the instant you did. That is the original bug
+     one day later rather than fixed, and it is the half you notice, because
+     the second day back is the day you actually want a block. */
   function reentryInfo(s) {
     var t = today(s);
     var active = activeDays(s).filter(function (d) { return d <= t; });
@@ -320,10 +359,14 @@
     var tail = daysBetween(active[active.length - 1], t);
     if (tail >= 3) return { on: true, gap: tail };
 
-    // Back: find the most recent break and count the days logged since it.
-    for (var i = active.length - 1; i > 0; i--) {
-      var g = daysBetween(active[i - 1], active[i]);
-      if (g >= 3) return { on: (active.length - i) < 2, gap: g };
+    // Back: find the most recent break and count the days since it, today
+    // included. Appending today cannot invent a break — reaching here means
+    // the last logged day is at most two days ago.
+    var seq = active.slice();
+    if (seq[seq.length - 1] !== t) seq.push(t);
+    for (var i = seq.length - 1; i > 0; i--) {
+      var g = daysBetween(seq[i - 1], seq[i]);
+      if (g >= 3) return { on: (seq.length - i) < 2, gap: g };
     }
     return { on: false, gap: 0 };
   }
