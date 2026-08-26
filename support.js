@@ -36,10 +36,22 @@
     };
   }
   function parseDcText(src) {
-    const openMatch = /<x-dc(?:\s[^>]*)?>/.exec(src);
-    if (!openMatch) return null;
     const close = src.lastIndexOf("</x-dc>");
-    if (close === -1 || close < openMatch.index) return null;
+    if (close === -1) return null;
+    /* The opening tag is the LAST one before that close, not the first one in
+       the file. Scripts inlined into the page — which is what a page served
+       from behind the vault is made of — carry their own source into the
+       document, and this runtime's source contains the literal "<x-dc>" in the
+       message it prints when a page has no such block. Taking the first match
+       started the template inside that string and swallowed every inlined
+       script up to the real close: a couple of hundred kilobytes of JavaScript
+       handed to the template compiler, which duly encoded its camelCase
+       identifiers and turned `let rootName = null` into
+       `let sc-camel-root-name = null`. */
+    let openMatch = null;
+    const openRe = /<x-dc(?:\s[^>]*)?>/g;
+    for (let m = openRe.exec(src); m && m.index < close; m = openRe.exec(src)) openMatch = m;
+    if (!openMatch) return null;
     const template = src.slice(openMatch.index + openMatch[0].length, close);
     const doc = new DOMParser().parseFromString(src, "text/html");
     const scriptEl = doc.querySelector("script[data-dc-script]");
