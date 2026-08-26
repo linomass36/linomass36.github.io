@@ -48,6 +48,29 @@ LINK_RE = re.compile(
     re.IGNORECASE)
 
 
+def salt_for(passphrase: str) -> bytes:
+    """Derive the salt deterministically from the passphrase.
+
+    A fresh random salt per build looked correct and was wrong here: it
+    changes the derived key on every deploy, so a browser that had been told
+    to stay unlocked fails verification the next time the site ships and
+    silently forgets itself. Since every push redeploys, "remember this
+    device" never survived more than one commit.
+
+    Deterministic means the same passphrase always yields the same key, so a
+    remembered device stays remembered across deploys, and changing the
+    passphrase still invalidates every device — which is the behaviour you
+    actually want from a rotation.
+
+    A salt is not a secret; its job is to stop one precomputed table from
+    covering every site. A per-passphrase salt still does that. What it gives
+    up is uniqueness between two people who chose the same passphrase, which
+    does not apply to a single-user hub. IVs remain random per file, so
+    identical content still encrypts differently on every build.
+    """
+    return hashlib.sha256(b"ct-hub-vault-salt-v1|" + passphrase.encode("utf-8")).digest()[:16]
+
+
 def derive(passphrase: str, salt: bytes) -> bytes:
     return hashlib.pbkdf2_hmac("sha256", passphrase.encode("utf-8"), salt, ITERATIONS, 32)
 

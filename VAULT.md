@@ -49,7 +49,7 @@ A stranger fetching any page gets this and nothing else:
 |---|---|
 | Key derivation | PBKDF2-SHA256, **600,000** iterations, 32-byte key |
 | Cipher | **AES-256-GCM** |
-| Salt | 16 bytes, fresh **per build**, published in `vault.json` |
+| Salt | 16 bytes, derived **deterministically from the passphrase**, published in `vault.json` |
 | IV | 12 bytes, fresh **per file** |
 | Verifier | a known string sealed under the same key |
 
@@ -57,6 +57,17 @@ The salt being public is not a weakness — that is what a salt is for. It stops
 precomputed tables; it is not a secret. **Security rests entirely on the
 passphrase.** A weak passphrase is a weak site, and no amount of iteration
 count fixes that.
+
+The salt is derived from the passphrase rather than drawn fresh each build,
+and that is deliberate. A random per-build salt changes the derived key on
+every deploy, so a browser told to stay unlocked fails verification the next
+time the site ships and silently forgets itself — since every push redeploys,
+"remember this device" never survived a single commit. Deterministic means a
+remembered device stays remembered, and **changing the passphrase still
+re-locks every device**, which is what you want from a rotation. What it gives
+up is uniqueness between two people who picked the same passphrase, which
+does not apply to a single-user hub. IVs stay random per file, so identical
+content still encrypts differently on every build.
 
 600k iterations costs an attacker real time per guess. It also costs *you* about
 a second on a phone, which is why the derived key — never the passphrase — is
@@ -122,9 +133,16 @@ The repo working copy stays plaintext. Only `_site/` is sealed.
   forward does nothing about that; only making the repo private removes public
   access to history, and nothing removes what has already been cloned.
 - **A weak passphrase.** This is the whole ballgame.
-- **Your unlocked device.** "Stay unlocked" writes the key to `localStorage`.
-  On a shared or lost device, that is the key. `hubVaultLock()` from the console
-  clears it.
+- **Your unlocked device.** "Stay unlocked" writes the key to `localStorage`
+  under `__local_vault_device_v1`. On a shared or lost device, that is the key.
+  `hubVaultLock()` from the console clears it; changing `HUB_PASSPHRASE` and
+  redeploying revokes every device at once.
+
+  The `__local` prefix is load-bearing. `sync.js` pushes every localStorage key
+  that is not `__sync*` or `__local*` to Firestore, so under any other name the
+  key that opens the whole hub would be uploaded to the cloud in plaintext —
+  handing the contents to anyone who reached the Firestore document or the
+  Google account. **Never store anything vault-related under a syncable key.**
 - **Metadata.** Filenames, page count, and file sizes are visible. Someone can
   tell there is a page called `Debt.html` and roughly how long it is.
 - **Anyone with the passphrase.** It is one secret shared by every device.

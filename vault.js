@@ -30,8 +30,13 @@
   if (window.__vaultRan) return;
   window.__vaultRan = true;
 
-  var SKEY = 'hub_vault_key_v1';    // sessionStorage: derived key, this tab only
-  var DKEY = 'hub_vault_device_v1'; // localStorage: opt-in, this device
+  /* The __local prefix is load-bearing, not cosmetic: sync.js pushes every
+     localStorage key that is not __sync* or __local* to Firestore, so under
+     the old names the raw AES key that opens the entire hub was being
+     uploaded to the cloud on the first sync after unlocking. */
+  var SKEY = '__local_vault_key_v1';    // sessionStorage: derived key, this tab only
+  var DKEY = '__local_vault_device_v1'; // localStorage: opt-in, this device
+  var OLD  = ['hub_vault_key_v1', 'hub_vault_device_v1'];
   var C = window.crypto && window.crypto.subtle;
 
   /* The ciphertext sits in <body>, and the lock screen rewrites <body> to
@@ -74,22 +79,50 @@
       .then(function (out) { return new TextDecoder().decode(out); });
   }
 
+  /* Anything written under the old names is migrated and then removed —
+     including from the cloud, because the removal goes through sync.js's
+     patched removeItem and is pushed as a deletion. */
+  function migrateOldKeys() {
+    var found = null;
+    OLD.forEach(function (k) {
+      try {
+        var v = sessionStorage.getItem(k);
+        if (v) { found = found || v; sessionStorage.removeItem(k); }
+      } catch (e) {}
+      try {
+        var w = localStorage.getItem(k);
+        if (w) { found = found || w; localStorage.removeItem(k); }
+      } catch (e) {}
+    });
+    return found;
+  }
+
   function loadCachedKey() {
     var raw = null;
     try { raw = sessionStorage.getItem(SKEY) || localStorage.getItem(DKEY); } catch (e) {}
+    if (!raw) raw = migrateOldKeys();
     if (!raw) return Promise.resolve(null);
     return C.importKey('raw', b64d(raw), { name: 'AES-GCM', length: 256 }, true, ['decrypt'])
       .catch(function () { return null; });
   }
+  /* Returns whether the device-level write actually survived. Swallowing a
+     failed setItem meant a ticked box could do nothing at all and say
+     nothing about it, which is indistinguishable from a bug in the feature. */
   function cacheKey(key, alsoDevice) {
     return C.exportKey('raw', key).then(function (raw) {
       var s = b64e(raw);
       try { sessionStorage.setItem(SKEY, s); } catch (e) {}
-      if (alsoDevice) { try { localStorage.setItem(DKEY, s); } catch (e) {} }
+      if (!alsoDevice) return true;
+      try {
+        localStorage.setItem(DKEY, s);
+        return localStorage.getItem(DKEY) === s;   // read back: quota, private mode, policy
+      } catch (e) { return false; }
     });
   }
   function forget() {
-    try { sessionStorage.removeItem(SKEY); localStorage.removeItem(DKEY); } catch (e) {}
+    try { sessionStorage.removeItem(SKEY); } catch (e) {}
+    try { localStorage.removeItem(DKEY); } catch (e) {}
+    migrateOldKeys();
   }
   window.hubVaultLock = function () { forget(); location.reload(); };
 
@@ -163,7 +196,18 @@
           .then(function (key) {
             return verify(key, meta).then(function (ok) {
               if (!ok) throw new Error('wrong');
-              return cacheKey(key, r.checked).then(function () { return unlockWith(key); });
+              return cacheKey(key, r.checked).then(function (stuck) {
+                if (r.checked && !stuck) {
+                  /* Unlock anyway — the passphrase was right — but say so,
+                     rather than letting the box look like it worked. */
+                  e.textContent = 'Unlocked, but this browser refused to remember it ' +
+                    '(private window, or storage is blocked or full).';
+                  return new Promise(function (res) {
+                    setTimeout(function () { res(unlockWith(key)); }, 2200);
+                  });
+                }
+                return unlockWith(key);
+              });
             });
           })
           .catch(function (err) {

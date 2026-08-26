@@ -341,7 +341,14 @@
     var o = {};
     for (var i = 0; i < localStorage.length; i++) {
       var k = localStorage.key(i);
-      if (k && k.indexOf('__sync') !== 0) o[k] = localStorage.getItem(k);
+      /* __sync* is bookkeeping. __local* is deliberately device-only: the
+         vault's decryption key lives there, and pushing it would put the key
+         that opens the whole hub into the cloud in plaintext — handing the
+         contents to anyone who reaches the Firestore document or the Google
+         account, which is precisely what the vault exists to prevent. */
+      if (k && k.indexOf('__sync') !== 0 && k.indexOf('__local') !== 0) {
+        o[k] = localStorage.getItem(k);
+      }
     }
     return o;
   }
