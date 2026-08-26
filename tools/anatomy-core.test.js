@@ -109,6 +109,44 @@ ok(/returned to its block/.test(repaired.A.migrationNote()), 'the Data panel say
 ok(!Object.keys(JSON.parse(repaired.store.ct_anatomy_v1).orphans).length,
    'and the repair is written back, not redone on every load');
 
+group('Blanks written over the parked history');
+
+/* Asking status() about a block used to create a record for it. Anything that
+   consulted status inside a write — "Draw one" does — persisted a blank for
+   every block, so a store caught by the parking bug ends up holding a full set
+   of blanks in `blocks` and its whole real history in `orphans`. */
+const smothered = JSON.stringify({
+  schema: 3, app: 'anatomy-closure', savedAt: '',
+  meta: { repaired: 0, rollover: 5, mirrored: 1 }, days: {},
+  blocks: Object.fromEntries(REF.allBlocks().map((b) => [b.id, block({})])),   // 61 blanks
+  orphans: { nk2: block({ studied: ago(12) }),
+             nk1: block({ studied: ago(20), inv: '85', topo: '90', gate: ago(20) }) },
+});
+const dug = load(true, smothered);
+const ds = dug.A.read();
+ok(dug.A.status(ds, 'nk2') === 'stale', 'a blank does not outrank the real record behind it');
+ok(dug.A.status(ds, 'nk1') === 'closed', 'a closed block comes back closed, not "not started"');
+ok(!Object.keys(JSON.parse(dug.store.ct_anatomy_v1).orphans).length, 'and the repair is written back');
+
+const bothReal = JSON.stringify({
+  schema: 3, app: 'anatomy-closure', meta: {}, days: {},
+  blocks: { nk2: block({ studied: ago(2), inv: '90', topo: '90', gate: ago(2) }) },
+  orphans: { nk2: block({ studied: ago(40) }) },
+});
+const clash = load(true, bothReal);
+const cs = clash.A.read();
+ok(clash.A.status(cs, 'nk2') === 'closed', 'a real live record is not displaced by a parked one');
+ok(!!cs.orphans.nk2, 'and the parked one is kept rather than thrown away');
+
+group('status() is a read, not a write');
+const quiet = load(true);
+const qs = quiet.A.blank();
+qs.blocks.nk1 = block({ studied: ago(3) });
+quiet.A.write(qs);
+quiet.A.mut((st) => { quiet.A.allBlocks().forEach((b) => quiet.A.status(st, b.id)); });
+ok(Object.keys(JSON.parse(quiet.store.ct_anatomy_v1).blocks).join() === 'nk1',
+   'consulting every block inside a write leaves no blanks behind');
+
 group('An id that really is not in this build');
 const ghost = load(true, JSON.stringify({ schema: 3, app: 'anatomy-closure', meta: {}, days: {}, orphans: {},
                                           blocks: { zz9: block({ studied: ago(5) }) } }));
@@ -165,6 +203,36 @@ ok(loops.A.openLoops(rec).every((b) => !!loops.A.blockRec(rec, b.id).studied),
    'every open loop carries a studied date — the Today list can show them all');
 ok(loops.A.openLoops(rec).filter((b) => loops.A.blockRec(rec, b.id).studied === TODAY).length === 1,
    'and one of them is only waiting on tomorrow morning, not missing');
+
+/* ── 5. the tripwire panel tells the truth at rest ── */
+group('Tripwire lines on a log with almost nothing in it');
+
+const fresh = load(true);
+const fs5 = fresh.A.blank();
+fs5.days[TODAY] = day({ tier: 'full', p0: false, minRead: 90, minDraw: 0 });
+fresh.A.write(fs5);
+const lines = fresh.A.tripwires(fresh.A.read());
+
+ok(lines.every((x) => !/NaN|undefined|null/.test(x.text)),
+   'no line prints NaN, undefined or null');
+ok(!/above 5 \(0\)/.test(lines[0].text), 'does not claim open loops are above five when there are none');
+ok(/no d45 retest scored yet/i.test(lines[3].text), 'says nothing has been scored rather than "pass rate 0%"');
+ok(/says nothing yet/.test(lines[5].text), 'says cards per block is not measurable rather than NaN');
+ok(!/^Past /.test(lines[6].text), 'does not say "Past <gate>" before the gate: ' + JSON.stringify(lines[6].text));
+ok(lines.filter((x) => x.fired).length === 2,
+   'and the two that genuinely fired still fire (nothing on paper, draw behind read)');
+
+/* The wording turns, what fires does not. */
+const breached = load(true);
+const bs = breached.A.blank();
+REF.allBlocks().slice(0, 7).forEach((b) => { bs.blocks[b.id] = block({ studied: ago(1) }); });
+bs.days[TODAY] = day({ tier: 'full', p0: false, minRead: 100, minDraw: 10 });
+bs.days[ago(1)] = day({ tier: 'full', p0: false, minRead: 10, minDraw: 0 });
+breached.A.write(bs);
+const hot = breached.A.tripwires(breached.A.read());
+ok(hot[0].fired && /above 5 \(7\)/.test(hot[0].text), 'seven open loops still fires with the breach wording');
+ok(hot[1].fired && /skipped 2 times/.test(hot[1].text), 'two skipped Phase 0s still fires');
+ok(hot.every((x) => !/NaN|undefined/.test(x.text)), 'and nothing prints NaN there either');
 
 console.log(failed ? '\n' + failed + ' failed\n' : '\nall green\n');
 process.exit(failed ? 1 : 0);

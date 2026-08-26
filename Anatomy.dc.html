@@ -195,6 +195,12 @@
 
   <div class="an-wrap">
 
+    <sc-if value="{{ noSyllabus }}" hint-placeholder-val="{{ false }}">
+      <div class="an-banner bad">The syllabus did not load, so every list on this page is empty — the blocks, the
+        tiers, the picker. Nothing has been lost and nothing has been written: what you have logged is untouched in
+        this device's storage and comes back as soon as the file does. Reload the page, with a signal if you can.</div>
+    </sc-if>
+
     <!-- ══ TODAY ══ -->
     <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
       <sc-if value="{{ hasBanner }}" hint-placeholder-val="{{ false }}">
@@ -665,6 +671,11 @@ class Component extends DCLogic {
     const day = S.days[t] || Object.assign({}, A.DAY_DEF);
     const TIERS = A.tiers();
     const blocks = A.allBlocks();
+    /* anatomy-data.js is a separate script. When it does not arrive, every
+       list here renders empty and the page looks like a log with nothing in
+       it — which is indistinguishable from having lost the lot, and was.
+       The store is safe either way now; say so rather than showing blanks. */
+    const noSyllabus = blocks.length === 0;
     const view = this.state.view;
     const sum = A.summary(S);
 
@@ -881,7 +892,7 @@ class Component extends DCLogic {
 
     return {
       dayStamp: 'Study day ' + t + ' · rollover ' + String(A.rollover(S)).padStart(2, '0') + ':00 · clock ' + A.clockNow(),
-      bench, tabs,
+      bench, tabs, noSyllabus,
       isToday: view === 'today', isBlocks: view === 'blocks', isLog: view === 'log',
 
       hasBanner, bannerCls, bannerText,
