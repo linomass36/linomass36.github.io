@@ -311,17 +311,40 @@
           <sc-if value="{{ capped }}" hint-placeholder-val="{{ false }}">
             <div class="an-banner bad">{{ cappedWhy }}</div>
           </sc-if>
-          <div class="an-row" style="margin-top: 12px;">
-            <div class="an-field grow"><label>Pick a block</label>
-              <select value="{{ pickId }}" onChange="{{ setPick }}">
-                <option value="">— choose —</option>
-                <sc-for list="{{ todoBlocks }}" as="b" hint-placeholder-count="5">
-                  <option value="{{ b.id }}">{{ b.label }}</option>
-                </sc-for>
-              </select></div>
-            <button onClick="{{ startBlock }}" class="an-btn go">{{ startLabel }}</button>
-          </div>
-          <div class="an-note">{{ startNote }}</div>
+          <sc-if value="{{ noPick }}" hint-placeholder-val="{{ true }}">
+            <div class="an-row" style="margin-top: 12px;">
+              <div class="an-field grow"><label>Pick a block</label>
+                <select value="{{ pickId }}" onChange="{{ setPick }}">
+                  <option value="">— choose —</option>
+                  <sc-for list="{{ todoBlocks }}" as="b" hint-placeholder-count="5">
+                    <option value="{{ b.id }}">{{ b.label }}</option>
+                  </sc-for>
+                </select></div>
+              <button onClick="{{ confirmPick }}" class="an-btn go">Work on this today</button>
+            </div>
+            <div class="an-note">Choosing sets today's block and nothing else. No loop opens and nothing is logged
+              against it until you mark it studied, at the end.</div>
+          </sc-if>
+
+          <sc-if value="{{ hasPick }}" hint-placeholder-val="{{ false }}">
+            <div class="an-task {{ pickCls }}" style="margin-top: 12px;">
+              <div class="an-task-t">{{ pickName }}</div>
+              <div class="an-task-d">{{ pickHint }}</div>
+              <sc-if value="{{ hasPickRel }}" hint-placeholder-val="{{ true }}">
+                <div class="an-task-d" style="margin-top: 7px; color: #8B8C83;">{{ pickRel }}</div>
+              </sc-if>
+              <div class="an-row" style="margin-top: 10px;">
+                <sc-if value="{{ pickWorking }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ finishBlock }}" class="an-btn go">{{ studiedLabel }}</button>
+                </sc-if>
+                <sc-if value="{{ pickStudied }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ undoStudied }}" class="an-btn">Not yet — undo</button>
+                </sc-if>
+                <button onClick="{{ clearPick }}" class="an-btn">{{ clearLabel }}</button>
+              </div>
+            </div>
+            <div class="an-note">{{ startNote }}</div>
+          </sc-if>
 
           <div class="an-h3">Phase 2 &amp; 3 — read, then draw</div>
           <div class="an-row">
@@ -613,15 +636,39 @@ class Component extends DCLogic {
       }
     });
   }
-  startBlock(againstRamp) {
+  /* ── today's block, in two presses ──
+     Choosing it and finishing it used to be the same press: picking a block
+     from the list wrote `studied` there and then, so a session you sat down
+     to but never finished left an open loop behind that only a manual edit
+     could take back. Now the choice is a note to yourself — it can be changed
+     or dropped all day and costs nothing — and marking it studied at the end
+     is the write that opens the loop and starts the gate. */
+  confirmPick() {
     const A = this.A;
     const id = this.state.pickId;
     if (!id) { this.toast('choose a block first'); return; }
-    this.mut(s => { A.blockRec(s, id).studied = A.today(s); });
+    A.setPick(id); this.bump();
     this.setState({ pickId: '' });
     const b = A.findBlock(id);
+    this.toast('today\u2019s block — ' + (b ? b.name : id));
+  }
+  clearPick() {
+    this.A.setPick(''); this.bump();
+    this.setState({ pickId: '' });
+    this.toast('cleared — nothing was logged');
+  }
+  finishBlock(id, againstRamp) {
+    const A = this.A;
+    if (!id) { this.toast('choose a block first'); return; }
+    A.markStudied(id); this.bump();
+    const b = A.findBlock(id);
     const name = b ? b.name : id;
-    this.toast(againstRamp ? 'opened against the ramp — ' + name : 'opened — ' + name);
+    this.toast(againstRamp ? 'studied, against the ramp — ' + name : '\u2713 studied — ' + name);
+  }
+  undoStudied(id) {
+    if (!id) return;
+    this.A.unmarkStudied(id); this.bump();
+    this.toast('unmarked — still today\u2019s block');
   }
   setMeta(k, v) { this.mut(s => { s.meta[k] = +v || 0; }); }
 
@@ -784,13 +831,22 @@ class Component extends DCLogic {
        The panel is always here now. The rule says its piece above the list,
        the list stays, and opening one anyway is a decision you get to make
        and see yourself make — which is the only kind this system has ever
-       been able to enforce. */
+       been able to enforce.
+
+       The pick itself is two presses, not one: `pick` on the day record says
+       what you sat down to, and marking it studied at the end is the write
+       that opens the loop. Choosing used to be that write, which meant every
+       session you started and abandoned counted as a block studied. */
     const capped = sum.openLoops > 5 || reentry;
     const isCore = day.tier === 'core';
     const todoBlocks = [];
     A.regions().forEach(r => r.blocks.forEach(b => {
       if (A.status(S, b.id) === 'todo') todoBlocks.push({ id: b.id, label: r.name + ' — ' + b.name });
     }));
+    /* The choice is kept in the day record rather than in component state, so
+       it survives a reload and a walk to the library — the whole point of it
+       being a choice you make before the work rather than after. */
+    const pick = A.pickOf(S);
 
     // ── the timer ──
     const left = this.state.timerEnd ? Math.max(0, this.state.timerEnd - this.state.now) : 0;
@@ -925,15 +981,34 @@ class Component extends DCLogic {
         ? 'Re-entry: the ramp says no new block today, and the cap lifts on your second day back — '
           + 'Phase 0 and the retests are what clears, not this. Open one anyway if you judge otherwise.'
         : capped
-          ? 'Six or more open loops. The ramp says clear some before opening another.'
+          ? 'Six or more open loops. The ramp says clear some before you close another one out.'
           : 'Core day — Phase 0 and the reviews are the whole of it. A block is not part of the tier you declared.',
-      startLabel: (capped || isCore) ? 'Open it anyway' : 'Mark studied today',
-      startNote: (capped || isCore)
-        ? 'Marking it studied opens a loop and counts against you like any other. The ramp above is advice with a reason; it is not a lock.'
-        : 'Marking it studied opens a loop. It closes tomorrow morning, or not at all.',
+      startNote: pick.studied
+        ? 'The loop is open and the gate is tomorrow morning: redraw it cold, then score it under Phase 0.'
+        : (capped || isCore)
+          ? 'Marking it studied opens a loop and counts against you like any other. The ramp above is advice with a reason; it is not a lock.'
+          : 'Marking it studied opens the loop. It closes tomorrow morning, or not at all.',
       todoBlocks, pickId: this.state.pickId,
       setPick: (e) => this.setState({ pickId: e.target.value }),
-      startBlock: () => this.startBlock(capped || isCore),
+
+      noPick: !pick.id, hasPick: !!pick.id,
+      pickCls: pick.studied ? 'done' : '',
+      pickName: (pick.block ? pick.block.region + ' — ' + pick.block.name : pick.id)
+        + (pick.studied ? '  ✓ studied' : ''),
+      pickHint: pick.studied
+        ? 'Marked studied today. Nothing else to press here — it comes back in Phase 0 tomorrow morning.'
+        : 'Today\u2019s block. Work the phases below, then mark it studied when you have actually done it.',
+      // The relation list is what the block is for, so it is in front of you
+      // while you work rather than three panels away on the Blocks tab.
+      hasPickRel: !pick.studied && !!(pick.block && pick.block.rel),
+      pickRel: (pick.block && pick.block.rel) || '',
+      pickWorking: !pick.studied, pickStudied: pick.studied,
+      studiedLabel: (capped || isCore) ? 'Mark it studied anyway' : 'Mark it studied',
+      clearLabel: pick.studied ? 'Pick another block' : 'Pick a different one',
+      confirmPick: () => this.confirmPick(),
+      clearPick: () => this.clearPick(),
+      finishBlock: () => this.finishBlock(pick.id, capped || isCore),
+      undoStudied: () => this.undoStudied(pick.id),
 
       timerDisp, timerCls: (left > 0 && left < 60000) ? 'warn' : '',
       read30: () => this.startTimer(30, 'read'),

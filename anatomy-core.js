@@ -14,7 +14,7 @@
                        days:{<YYYY-MM-DD>:DayRec},
                        orphans:{<unknownId>:BlockRec} }
      BlockRec {studied,inv,topo,gate,d14,d45,d14due,d45due,reps[],cards}
-     DayRec   {tier,p0,rand,randScore,minRead,minDraw,cardsNew,cardsFixed,cardsCut,sheet,note}
+     DayRec   {tier,p0,pick,rand,randScore,minRead,minDraw,cardsNew,cardsFixed,cardsCut,sheet,note}
 
    Block ids (nk1, hd4, tx10 …) are permanent primary keys. A title or a
    relation may be edited freely; an id must never be reused or renumbered.
@@ -44,7 +44,13 @@
 
   var BLOCK_DEF = { studied: '', inv: '', topo: '', gate: '', d14: '', d45: '',
                     d14due: '', d45due: '', reps: [], cards: 0 };
-  var DAY_DEF = { tier: '', p0: false, rand: '', randScore: '', minRead: 0, minDraw: 0,
+  /* `pick` is the block you sat down to today; `studied` on the block record is
+     the block you finished. They are deliberately two fields and two presses:
+     choosing costs nothing and can be changed, while marking it studied is
+     what opens the loop and starts the clock on the gate. Setting the second
+     from the first — as the page used to, in one press before any work had
+     happened — meant every abandoned session left an open loop behind. */
+  var DAY_DEF = { tier: '', p0: false, pick: '', rand: '', randScore: '', minRead: 0, minDraw: 0,
                   cardsNew: 0, cardsFixed: 0, cardsCut: 0, sheet: '', note: '' };
   var META_DEF = { repaired: 0, rollover: 5 };
 
@@ -538,6 +544,39 @@
   function setTier(k) { return mut(function (s) { dayRec(s, today(s)).tier = k; }); }
   function toggleP0() { return mut(function (s) { var d = dayRec(s, today(s)); d.p0 = !d.p0; }); }
 
+  /* ── today's block: chosen, then finished ──
+     setPick only records what you are working on. markStudied is the one that
+     writes the block record, and therefore the only one that opens a loop. */
+  function setPick(id) { return mut(function (s) { dayRec(s, today(s)).pick = id || ''; }); }
+  function markStudied(id) {
+    return mut(function (s) {
+      var t = today(s), d = dayRec(s, t);
+      var b = id || d.pick;
+      if (!b) return;
+      blockRec(s, b).studied = t;
+      d.pick = b;
+    });
+  }
+  /* Undoing a mis-press is the same day's work being taken back, so the scores
+     and the attempt it may have recorded go with it. Anything studied on an
+     earlier day is left alone — that is history, not a slip. */
+  function unmarkStudied(id) {
+    return mut(function (s) {
+      var t = today(s), b = id || dayRec(s, t).pick;
+      if (!b) return;
+      var r = blockRec(s, b);
+      if (r.studied !== t) return;
+      r.studied = ''; r.inv = ''; r.topo = ''; r.gate = '';
+      r.reps = (r.reps || []).filter(function (x) { return x.date !== t; });
+    });
+  }
+  // What the day's pick is, and whether it has been finished yet.
+  function pickOf(s) {
+    var t = today(s), d = s.days[t];
+    var id = (d && d.pick) || '';
+    return { id: id, block: id ? findBlock(id) : null, studied: !!id && peek(s, id).studied === t };
+  }
+
   window.AnatomyCore = {
     KEY: KEY, IMPORT_FROM: IMPORT_FROM, SCHEMA: SCHEMA,
     BLOCK_DEF: BLOCK_DEF, DAY_DEF: DAY_DEF, META_DEF: META_DEF,
@@ -559,6 +598,7 @@
     weekStats: weekStats, tripwires: tripwires, summary: summary,
     dayMinutes: dayMinutes, mirrorStudy: mirrorStudy,
     setTier: setTier, toggleP0: toggleP0,
+    setPick: setPick, markStudied: markStudied, unmarkStudied: unmarkStudied, pickOf: pickOf,
 
     importedFrom: function () { return lastImport; },
     migrationNote: function () { return lastMigrationNote; },
