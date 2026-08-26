@@ -23,7 +23,11 @@
         block opened today included, which used to be filtered out for having
         no gate to clear until tomorrow.
 
-   Both are the kind of thing that only shows up on a specific day with a
+     4. Choosing today's block and finishing it are two separate writes: the
+        picker used to stamp `studied` the moment you chose, so a session you
+        sat down to but never finished left an open loop nothing could undo.
+
+   These are the kind of thing that only shows up on a specific day with a
    specific history, which is why they are tests rather than a careful read.
    ───────────────────────────────────────────────────────────────────────── */
 'use strict';
@@ -233,6 +237,44 @@ const hot = breached.A.tripwires(breached.A.read());
 ok(hot[0].fired && /above 5 \(7\)/.test(hot[0].text), 'seven open loops still fires with the breach wording');
 ok(hot[1].fired && /skipped 2 times/.test(hot[1].text), 'two skipped Phase 0s still fires');
 ok(hot.every((x) => !/NaN|undefined/.test(x.text)), 'and nothing prints NaN there either');
+
+/* ── 6. choosing today's block is not the same as finishing it ── */
+group('Pick a block, then mark it studied');
+
+const picked = load(true);
+picked.A.write(picked.A.blank());
+
+picked.A.setPick('nk1');
+let ps6 = picked.A.read();
+ok(ps6.days[TODAY].pick === 'nk1', 'the choice is recorded on the day, so it survives a reload');
+ok(picked.A.status(ps6, 'nk1') === 'todo', 'choosing does not start the block');
+ok(picked.A.openLoops(ps6).length === 0, 'and opens no loop');
+ok(picked.A.pickOf(ps6).studied === false, 'the page can tell the work is not finished yet');
+
+picked.A.setPick('nk2');
+ps6 = picked.A.read();
+ok(ps6.days[TODAY].pick === 'nk2' && picked.A.status(ps6, 'nk1') === 'todo',
+   'changing your mind costs nothing — the first block is untouched');
+
+picked.A.markStudied();
+ps6 = picked.A.read();
+ok(picked.A.status(ps6, 'nk2') === 'open', 'marking it studied is what opens the loop');
+ok(ps6.blocks.nk2.studied === TODAY, 'and stamps today on the block record');
+ok(picked.A.pickOf(ps6).studied === true, 'the panel reads back as finished for the day');
+
+picked.A.unmarkStudied();
+ps6 = picked.A.read();
+ok(picked.A.status(ps6, 'nk2') === 'todo', 'a mis-press can be taken back the same day');
+ok(ps6.days[TODAY].pick === 'nk2', 'and it is still the block you chose');
+
+// Yesterday's work is history, not a slip: undo must not reach back into it.
+const older = load(true);
+const os6 = older.A.blank();
+os6.blocks.nk3 = block({ studied: ago(2), inv: '85', topo: '90', gate: ago(2) });
+os6.days[TODAY] = day({ tier: 'full', pick: 'nk3' });
+older.A.write(os6);
+older.A.unmarkStudied('nk3');
+ok(older.A.read().blocks.nk3.studied === ago(2), 'a block studied on an earlier day is left alone');
 
 console.log(failed ? '\n' + failed + ' failed\n' : '\nall green\n');
 process.exit(failed ? 1 : 0);
