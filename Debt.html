@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Debt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+</head>
+<body>
+<!-- ─────────────────────────────────────────────────────────────
+     The Debt — the finance layer, recalibrated.
+
+     v1 assumed federal-only borrowing with the whole cost of
+     attendance covered and full forgiveness at the end. Grad PLUS
+     was eliminated for new borrowers on 1 July 2026, and no loan
+     was disbursed before that date, so none of it is grandfathered.
+     The arithmetic no longer closes and roughly $210k has to come
+     from private debt, which is never forgivable.
+
+     This page is deliberately separate from the plan pages. It is
+     read quarterly, not daily, and putting it on the front door
+     would make the dashboard feel like a bill.
+     ───────────────────────────────────────────────────────────── -->
+<div class="pv" id="app"></div>
+<script>
+(function () {
+  var P = window.PlanV2, D = P.plan(), F = D.finance, esc = P.esc, m = P.money;
+  var H = [];
+
+  H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+  H.push('<div class="pv-kick">Finance</div>');
+  H.push('<h1 class="pv-h1">The Debt</h1>');
+  H.push('<p class="pv-lede">Not part of the 2027 plan — every item in Phases 0–2 costs email, time and one plane ticket. ' +
+    'This page exists so the number is known and re-checked, not so it generates drag.</p>');
+
+  /* ── position ────────────────────────────────────────────────── */
+  H.push('<div class="pv-ff" style="background:var(--bad-bg);border-color:var(--bad-ln);border-left-color:var(--bad)">' +
+    '<div class="pv-ff-lab" style="color:var(--bad)">Net worth today</div>' +
+    '<div class="pv-ff-n" style="color:var(--bad)">' + m(F.position.netWorth) + '</div>' +
+    '<div class="pv-ff-d">' + esc(F.position.note) + '</div></div>');
+  H.push('<p class="pv-p">' + esc(F.changes) + '</p>');
+
+  /* ── the break: caps ─────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Why the math no longer closes</h2>');
+  H.push('<div class="pv-sub">Federal borrowing capacity from 1 July 2026</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  F.caps.forEach(function (c) {
+    H.push('<tr class="' + (c.bad ? '' : '') + '"><td><b>' + esc(c.k) + '</b></td><td class="num" style="' +
+      (c.bad ? 'color:var(--bad);font-weight:600' : '') + '">' + esc(c.v) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule pv-kill">' + esc(F.gapNote) + '</div>');
+  H.push('<p class="pv-small"><b>Grandfathering.</b> ' + esc(F.grandfathering) + '</p>');
+
+  /* ── cost model ──────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Cost model</h2>');
+  H.push('<div class="pv-sub">Five years, corrected</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Phase</th><th>Years</th><th>Per year</th><th>Total</th></tr></thead><tbody>');
+  F.costModel.forEach(function (c) {
+    H.push('<tr><td><b>' + esc(c.phase) + '</b></td><td>' + esc(c.years) + '</td><td>' + esc(c.per) +
+      '</td><td class="num"><b>' + m(c.total) + '</b></td></tr>');
+  });
+  H.push('<tr class="hot"><td colspan="3"><b>Total need</b></td><td class="num"><b>' + m(F.costTotal) + '</b></td></tr>');
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule"><b>Correction.</b> ' + esc(F.costCorrection) + '</div>');
+  H.push('<div class="pv-rule"><b>The biggest lever you control.</b> ' + esc(F.livingLever) + '</div>');
+
+  /* ── the locked decision ─────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The financing decision</h2>');
+  H.push('<div class="pv-sub">Locked · ' + esc(P.fmtDate(D.recalibrated)) + '</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Source</th><th>Amount</th><th>Forgivable</th><th>Rate</th><th></th></tr></thead><tbody>');
+  F.sources.forEach(function (s) {
+    H.push('<tr><td><b>' + esc(s.k) + '</b></td><td class="num">' + m(s.amt) + '</td>' +
+      '<td>' + (s.pslf ? '<span class="pv-chip c-ok">yes</span>' : '<span class="pv-chip c-bad">never</span>') + '</td>' +
+      '<td class="num">' + esc(s.rate) + '</td><td>' + esc(s.note) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+
+  H.push('<div class="pv-card acc" style="border-left-color:var(--warn)">' +
+    '<div class="pv-h3" style="margin-top:0">⚠ ' + esc(F.keyMove.t) + '</div>' +
+    '<div class="pv-it-d">' + esc(F.keyMove.d) + '</div>' +
+    '<div class="pv-rule">' + esc(F.keyMove.rule) + '</div></div>');
+
+  H.push('<div class="pv-h3">Before accepting private debt as final</div><ul class="pv-steps">');
+  F.exhaustFirst.forEach(function (x) { H.push('<li>' + esc(x) + '</li>'); });
+  H.push('</ul>');
+  H.push('<p class="pv-small"><b>Funding summer 2027, in order:</b> ' + F.funding2027.map(esc).join(' → ') +
+    '. ' + esc(F.fundingNote) + '</p>');
+
+  /* ── at graduation ───────────────────────────────────────────── */
+  var G = F.atGraduation;
+  H.push('<h2 class="pv-h2">Debt at graduation</h2>');
+  H.push('<div class="pv-sub">Unsubsidised interest accrues from disbursement — nothing is free during deferment</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th></th><th>Borrowed</th><th>Balance, Jun 2031</th></tr></thead><tbody>');
+  H.push('<tr><td><b>Federal</b></td><td class="num">' + m(F.sources[0].amt) + '</td><td class="num">~' + m(G.federal) + '</td></tr>');
+  H.push('<tr><td><b>Private</b></td><td class="num">' + m(F.sources[1].amt) + '</td><td class="num">~' + m(G.private) + '</td></tr>');
+  H.push('<tr class="hot"><td><b>Total</b></td><td class="num"><b>' + m(F.costTotal) + '</b></td><td class="num"><b>~' + m(G.total) + '</b></td></tr>');
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-punch">~' + m(G.interest) + ' of interest accrues before you earn a dollar as a physician.</p>');
+
+  /* ── residency repayment ─────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Residency — the federal half</h2>');
+  H.push('<div class="pv-sub">Income-driven repayment, 2031 – 2038</div>');
+  H.push('<p class="pv-p">' + esc(F.rap.note) + '</p>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Year</th><th>AGI</th><th>Rate</th><th>Payment</th></tr></thead><tbody>');
+  F.rap.rows.forEach(function (r) {
+    H.push('<tr><td><b>' + esc(r.y) + '</b></td><td class="num">' + m(r.agi) + '</td><td class="num">' + esc(r.rate) +
+      '</td><td class="num">' + m(r.pay) + '/mo</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-small">' + esc(F.rap.total) + '</p>');
+  H.push('<div class="pv-rule pv-kill"><b>Bracket cliffs.</b> ' + esc(F.rap.cliff) + '</div>');
+
+  H.push('<div class="pv-h3">Forgiveness timeline</div><ul class="pv-steps">');
+  F.forgiveness.steps.forEach(function (s) { H.push('<li>' + esc(s) + '</li>'); });
+  H.push('</ul>');
+  H.push('<div class="pv-rule pv-kill"><b>The condition.</b> ' + esc(F.forgiveness.condition) + '</div>');
+
+  /* ── private half ────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The private half — the real problem</h2>');
+  H.push('<div class="pv-sub">No forgiveness, ever</div>');
+  H.push('<p class="pv-p">' + esc(F.privateHalf.note) + '</p>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Strategy</th><th>Balance Jul 2038</th><th>Payoff</th><th>Cleared</th></tr></thead><tbody>');
+  F.privateHalf.strategies.forEach(function (s) {
+    H.push('<tr class="' + (s.best ? 'hot' : '') + '"><td><b>' + esc(s.s) + '</b></td><td class="num">' + esc(s.bal) +
+      '</td><td class="num">' + esc(s.payoff) + '</td><td class="num"><b>' + esc(s.clear) + '</b></td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-small">' + esc(F.privateHalf.delta) + '</p>');
+  H.push('<div class="pv-rule"><b>Refinancing.</b> ' + esc(F.privateHalf.refi) + '</div>');
+
+  /* ── scenarios ───────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Scenarios</h2>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th></th><th>Path</th><th>Debt free</th><th>Total paid on ' + m(F.costTotal) + '</th></tr></thead><tbody>');
+  F.scenarios.forEach(function (s) {
+    H.push('<tr class="' + (s.best ? 'hot' : '') + '"><td class="num">' + s.n + '</td><td><b>' + esc(s.path) +
+      '</b></td><td class="num">' + esc(s.free) + '</td><td class="num">' + esc(s.paid) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule">' + esc(F.scenarioNote) + '</div>');
+
+  /* ── rules ───────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The nine rules</h2>');
+  H.push('<div class="pv-card">');
+  F.rules.forEach(function (r, i) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-it-t">' + (i + 1) + '. ' + esc(r) + '</div></div></div>');
+  });
+  H.push('</div>');
+  H.push('<p class="pv-foot">' + esc(F.revisit) + ' The open financing questions are tracked on <a href="Verify.html"><b>Verify</b></a>.</p>');
+
+  document.getElementById('app').innerHTML = H.join('');
+})();
+</script>
+</body>
+</html>

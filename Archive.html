@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Archive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+</head>
+<body>
+<!-- ─────────────────────────────────────────────────────────────
+     Archive — the v1 documents, kept and labelled.
+
+     Nothing is deleted. Every v1 page is byte-for-byte where it
+     was and still reachable by URL, because a plan you can no
+     longer read is a plan you cannot learn from. What changes is
+     the frame: each one now says what it was for, what replaced
+     it, and why — so a stale bookmark can never be mistaken for
+     the live plan.
+     ───────────────────────────────────────────────────────────── -->
+<div class="pv" id="app"></div>
+<script>
+(function () {
+  var P = window.PlanV2, D = window.PLAN_V2, esc = P.esc;
+  var H = [];
+
+  var DOCS = [
+    { href: 'CT Master Plan.html', name: 'CT Master Plan (v1)', meta: '371 steps · 13 branches', color: '#993C1D',
+      was: 'The full inventory: four research tracks, six identity dimensions, and every step from the summer to the twenty-five-year view.',
+      why: 'Its three founding assumptions did not hold — the capital engine, the research spine, and topic-first specialty choice. Replaced wholesale rather than edited.',
+      now: 'Plan.html' },
+    { href: 'Summer Sprint.dc.html', name: 'Summer Sprint', meta: '35 moves · Jul – Oct 2026', color: '#3B6D11',
+      was: 'The 52-day sprint at term resolution: the guide, the capital ladder, the habits underneath them.',
+      why: 'The summer it planned has happened. Its earnings and product assumptions are superseded by the ground-truth table.',
+      now: 'Plan.html' },
+    { href: 'Research Plan.dc.html', name: 'Research Plan', meta: '5 tracks · 8 quarters', color: '#534AB7',
+      was: 'A five-track research portfolio with phase-by-phase execution, decision gates and a dependency view.',
+      why: 'It had drifted to five tracks while the master plan carried four, and neither matched what was actually being worked on. Collapsed to one live project plus an annex.',
+      now: 'Pipeline.html' },
+    { href: 'Plan Analysis.dc.html', name: 'Plan Analysis', meta: 'the strategic read', color: '#6E4B8A',
+      was: 'The v1 plan examined rather than listed — summer into year into decade, with its soft spots written out.',
+      why: 'It analyses a plan that no longer exists. Worth reading once as a record of what the reasoning looked like before the recalibration.',
+      now: 'Plan.html' },
+    { href: 'Timeline.dc.html', name: 'Collision Timeline', meta: 'one axis', color: '#2E6A86',
+      was: 'Checkpoints, conferences and deadlines merged onto a single line so collisions were visible early.',
+      why: 'The dates it merges are v1 dates. The v2 phase map carries the live ones.',
+      now: 'Plan.html' }
+  ];
+
+  H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+  H.push('<div class="pv-kick">Superseded ' + esc(P.fmtDate(D.recalibrated)) + '</div>');
+  H.push('<h1 class="pv-h1">Archive</h1>');
+  H.push('<p class="pv-lede">The v1 documents, intact. Nothing here has been edited or deleted — ' +
+    'a plan you can no longer read is a plan you cannot learn from. But nothing here is current either.</p>');
+
+  H.push('<div class="pv-rule pv-kill"><b>None of these is the live plan.</b> ' +
+    'They describe assumptions that were tested and did not hold. The current plan is ' +
+    '<a href="Plan.html"><b>The Plan</b></a>.</div>');
+
+  DOCS.forEach(function (d) {
+    H.push('<div class="pv-card acc" style="border-left-color:' + d.color + '">');
+    H.push('<div class="pv-row"><span class="pv-lane-t pv-grow">' + esc(d.name) + '</span>' +
+      '<span class="pv-chip c-dead">archived</span></div>');
+    H.push('<div class="pv-ph-n" style="margin-top:4px">' + esc(d.meta) + '</div>');
+    H.push('<div class="pv-it-d" style="margin-top:9px"><b>What it was.</b> ' + esc(d.was) + '</div>');
+    H.push('<div class="pv-it-d" style="margin-top:7px"><b>Why it is archived.</b> ' + esc(d.why) + '</div>');
+    H.push('<div class="pv-lane-m" style="margin-top:11px">' +
+      '<a href="' + esc(d.href) + '" style="color:' + d.color + '">open the archived page →</a>' +
+      '<a href="' + esc(d.now) + '" style="color:var(--ok)">what replaced it →</a></div>');
+    H.push('</div>');
+  });
+
+  /* The retired claims, so the archive says what was wrong, not just
+     that something was. This is the part that makes an archive useful
+     six months later. */
+  H.push('<h2 class="pv-h2">What v1 got wrong</h2>');
+  H.push('<div class="pv-sub">The specific claims that were retired</div>');
+  H.push('<div class="pv-card">');
+  D.corrections.forEach(function (c) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t" style="text-decoration:line-through;color:var(--muted)">' + esc(c.was) + '</span>' +
+      '<span class="pv-chip c-' + esc(c.status) + '">' + esc(c.status) + '</span></div>' +
+      '<div class="pv-it-d">' + esc(c.fix) + '</div></div></div>');
+  });
+  H.push('</div>');
+
+  H.push('<h2 class="pv-h2">Also still here</h2>');
+  H.push('<p class="pv-p">These were never part of the plan documents and are unaffected by the recalibration — ' +
+    'they keep working as they always did.</p>');
+  H.push('<p class="pv-small">' +
+    '<a href="Ledger.html">The Ledger</a> · ' +
+    '<a href="Day Budget.html">The Day Budget</a> · ' +
+    '<a href="Conditions.html">Conditions</a> · ' +
+    '<a href="Network Map.dc.html">Network Map</a> · ' +
+    '<a href="Conference Radar.dc.html">Conference Radar</a></p>');
+
+  H.push('<p class="pv-foot">Archived pages still carry the drawer and still sync. ' +
+    'If you want one back in circulation, the honest move is to fold what still applies into ' +
+    '<a href="Settings.html"><b>a recalibration</b></a> rather than run two plans at once — ' +
+    'which is exactly how the five-track and four-track portfolios drifted apart in the first place.</p>');
+
+  document.getElementById('app').innerHTML = H.join('');
+})();
+</script>
+</body>
+</html>

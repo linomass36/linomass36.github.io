@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+</head>
+<body>
+<!-- ─────────────────────────────────────────────────────────────
+     Pipeline — the research board that replaces the four-track
+     portfolio.
+
+     The insight this page exists to serve: a manuscript is not a
+     to-do, it is a POSITION. Two fields carry the whole system —
+     whose court it is in (ball) and how long it has been there
+     (days in stage). Ball in your court for 40 days is a discipline
+     problem. Ball in a co-author's court for 40 days is a nudge
+     problem. Opposite interventions, and most trackers conflate
+     them by showing only a status.
+     ───────────────────────────────────────────────────────────── -->
+<div class="pv" id="app"></div>
+<script>
+(function () {
+  var P = window.PlanV2, D = P.plan(), PL = D.pipeline, esc = P.esc;
+  var app = document.getElementById('app');
+  var BALLS = ['you', 'co-author', 'PI', 'journal'];
+
+  function render() {
+    var H = [];
+    H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+    H.push('<div class="pv-kick">Research</div>');
+    H.push('<h1 class="pv-h1">Pipeline</h1>');
+    H.push('<p class="pv-lede">Every output in one place, with the two fields that actually predict whether it finishes. ' +
+           'Tap a stage or a ball to move an item; moving the stage restamps the clock.</p>');
+
+    /* ── the two metrics, computed from the board itself ────────── */
+    var items = PL.board.map(P.pipeItem);
+    var live = items.filter(function (i) { return i.priority !== 'dormant'; });
+    var accepted = items.filter(function (i) { return i.stage === 'Accepted'; }).length;
+    var withDays = live.filter(function (i) { return i.days !== null; }).map(function (i) { return i.days; }).sort(function (a, b) { return a - b; });
+    var med = withDays.length ? withDays[Math.floor(withDays.length / 2)] : null;
+    var stale = live.filter(function (i) { return i.stale; });
+
+    H.push('<div class="pv-row" style="gap:10px;margin-bottom:20px">');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">ACCEPTED / 6 MO</div>' +
+      '<div class="pv-ff-n" style="font-size:34px;color:' + (accepted >= 2 ? 'var(--ok)' : 'var(--muted)') + '">' + accepted + '</div>' +
+      '<div class="pv-count">target 2</div></div>');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">MEDIAN DAYS IN STAGE</div>' +
+      '<div class="pv-ff-n" style="font-size:34px;color:' + (med !== null && med >= PL.redFlagDays ? 'var(--bad)' : 'var(--ok)') + '">' +
+      (med === null ? '—' : med) + '</div>' +
+      '<div class="pv-count">red flag at ' + PL.redFlagDays + '</div></div>');
+    H.push('</div>');
+
+    if (stale.length) {
+      H.push('<div class="pv-rule pv-kill"><b>' + stale.length + ' item' + (stale.length > 1 ? 's' : '') +
+        ' past ' + PL.redFlagDays + ' days.</b> ' +
+        stale.map(function (i) {
+          return esc(i.title) + ' — ' + i.days + 'd, ball with ' + esc(i.ball);
+        }).join(' · ') +
+        '. If the ball is not yours, send the nudge now; if it is, this is the next hour of work.</div>');
+    }
+
+    /* ── the board ───────────────────────────────────────────────── */
+    H.push('<h2 class="pv-h2">The board</h2>');
+    H.push('<div class="pv-sub">' + PL.wip.inFlight + ' in flight max · ' + PL.wip.offThesis + ' off-thesis max</div>');
+
+    items.forEach(function (i) {
+      var dim = (i.priority === 'dormant' || i.priority === 'optional');
+      H.push('<div class="pv-lane" data-id="' + esc(i.id) + '"' + (dim ? ' style="opacity:.62"' : '') + '>');
+      H.push('<div class="pv-row"><span class="pv-lane-t pv-grow">' + esc(i.title) + '</span>' +
+        (i.priority ? '<span class="pv-chip ' + (i.priority === 'P0' ? 'c-live' : i.priority === 'dormant' ? 'c-dormant' : 'c-queued') + '">' + esc(i.priority) + '</span>' : '') + '</div>');
+
+      H.push('<div class="pv-lane-m">');
+      H.push('<span>' + esc(i.tier) + '</span>');
+      H.push('<span class="pv-ball ' + (i.ball === 'you' ? 'b-you' : 'b-other') + '" data-act="ball">ball: ' + esc(i.ball) + '</span>');
+      H.push('<span data-act="stage" style="cursor:pointer;color:var(--cool)">' + esc(i.stage) + ' ▸</span>');
+      if (i.days !== null) {
+        H.push('<span style="color:' + (i.stale ? 'var(--bad)' : 'var(--muted)') + '">' + i.days + 'd in stage</span>');
+      } else {
+        H.push('<span data-act="touch" style="cursor:pointer;color:var(--muted)">start clock</span>');
+      }
+      if (i.due) H.push('<span style="color:var(--warn)">due ' + esc(P.fmtDate(i.due)) + '</span>');
+      H.push('<span>' + (i.onThesis ? 'on-thesis' : 'off-thesis') + '</span>');
+      if (i.blocker) H.push('<span style="color:var(--bad)">blocked: ' + esc(i.blocker) + '</span>');
+      H.push('</div>');
+      if (i.note) H.push('<div class="pv-it-d" style="margin-top:7px">' + esc(i.note) + '</div>');
+      H.push('</div>');
+    });
+
+    /* ── the method, so the board is legible in six months ──────── */
+    H.push('<h2 class="pv-h2">Stages</h2>');
+    H.push('<div class="pv-sub">' + esc(PL.stageNote) + '</div>');
+    H.push('<p class="pv-p">' + PL.stages.map(function (s, n) {
+      return '<b>' + esc(s) + '</b>' + (n < PL.stages.length - 1 ? ' → ' : '');
+    }).join('') + '</p>');
+
+    H.push('<div class="pv-rule">' + esc(PL.ballNote) + '</div>');
+
+    H.push('<h2 class="pv-h2">Tiers</h2>');
+    H.push('<div class="pv-sub">Cost in your hours, not in importance</div>');
+    H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Tier</th><th>Your hours</th><th>Cycle</th><th>Use for</th></tr></thead><tbody>');
+    PL.tiers.forEach(function (t) {
+      H.push('<tr class="' + (t.hot ? 'hot' : '') + '"><td><b>' + esc(t.t) + '</b></td><td class="num">' + esc(t.hrs) +
+        '</td><td class="num">' + esc(t.cyc) + '</td><td>' + esc(t.use) + '</td></tr>');
+    });
+    H.push('</tbody></table></div>');
+
+    H.push('<div class="pv-rule"><b>Authorship.</b> ' + esc(PL.authorshipRule) + '</div>');
+    H.push('<div class="pv-rule"><b>WIP.</b> ' + esc(PL.wip.note) + '</div>');
+
+    H.push('<p class="pv-foot">The weekly sweep is 20 minutes on a Sunday: one question per item — whose court, ' +
+      'how long, what is the smallest move that returns the ball? Anything stalled in someone else’s court past ' +
+      PL.redFlagDays + ' days gets the nudge sent <em>during</em> the sweep, not after it.</p>');
+
+    app.innerHTML = H.join('');
+  }
+
+  /* Cycling rather than a dropdown: on a phone a stage change is one
+     tap, and the only two fields that move are ordered lists anyway. */
+  function cycle(list, cur, back) {
+    var i = list.indexOf(cur);
+    if (i < 0) return list[0];
+    return list[(i + (back ? -1 : 1) + list.length) % list.length];
+  }
+
+  app.addEventListener('click', function (e) {
+    var hit = e.target.closest('[data-act]');
+    if (!hit) return;
+    var lane = hit.closest('.pv-lane');
+    if (!lane) return;
+    var id = lane.getAttribute('data-id');
+    var cur = P.pipeItem(PL.board.filter(function (b) { return b.id === id; })[0]);
+    var act = hit.getAttribute('data-act');
+    if (act === 'stage')      P.setPipe(id, 'stage', cycle(PL.stages, cur.stage, e.shiftKey));
+    else if (act === 'ball')  P.setPipe(id, 'ball',  cycle(BALLS, cur.ball, e.shiftKey));
+    else if (act === 'touch') P.touchPipe(id);
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
