@@ -297,57 +297,53 @@
         </div>
 
         <!-- Block of the day -->
-        <sc-if value="{{ showSession }}" hint-placeholder-val="{{ true }}">
-          <div class="an-panel">
-            <div class="an-eyebrow">4 · Block of the day</div>
-            <div class="an-h2">Construction</div>
+        <div class="an-panel">
+          <div class="an-eyebrow">4 · Block of the day</div>
+          <div class="an-h2">Construction</div>
 
-            <sc-if value="{{ blocked }}" hint-placeholder-val="{{ false }}">
-              <div class="an-banner bad">{{ blockedWhy }}</div>
-            </sc-if>
-            <sc-if value="{{ canStart }}" hint-placeholder-val="{{ true }}">
-              <div class="an-row" style="margin-top: 12px;">
-                <div class="an-field grow"><label>Pick a block</label>
-                  <select value="{{ pickId }}" onChange="{{ setPick }}">
-                    <option value="">— choose —</option>
-                    <sc-for list="{{ todoBlocks }}" as="b" hint-placeholder-count="5">
-                      <option value="{{ b.id }}">{{ b.label }}</option>
-                    </sc-for>
-                  </select></div>
-                <button onClick="{{ startBlock }}" class="an-btn go">Mark studied today</button>
-              </div>
-              <div class="an-note">Marking it studied opens a loop. It closes tomorrow morning, or not at all.</div>
-            </sc-if>
-
-            <div class="an-h3">Phase 2 &amp; 3 — read, then draw</div>
-            <div class="an-row">
-              <span class="an-timer {{ timerCls }}">{{ timerDisp }}</span>
-              <button onClick="{{ read30 }}" class="an-btn">Read 30</button>
-              <button onClick="{{ draw30 }}" class="an-btn">Draw 30</button>
-              <button onClick="{{ stopTimer }}" class="an-btn">Stop &amp; log</button>
-            </div>
-            <div class="an-note">Read is both screens open. Draw is both screens <em>closed</em> — that transition is the only part of this the page cannot check.</div>
-            <div class="an-row" style="margin-top: 12px;">
-              <div class="an-field"><label>Read min</label>
-                <input type="number" inputmode="numeric" value="{{ minRead }}" onChange="{{ setRead }}"></div>
-              <div class="an-field"><label>Draw min</label>
-                <input type="number" inputmode="numeric" value="{{ minDraw }}" onChange="{{ setDraw }}"></div>
-              <div class="an-field grow"><label>Red sheet ref</label>
-                <input type="text" value="{{ sheet }}" onChange="{{ setSheet }}" placeholder="e.g. 2026-08-02 nk6"></div>
-            </div>
-
-            <div class="an-h3">Phase 4 — cards</div>
-            <div class="an-row">
-              <div class="an-field"><label>New</label>
-                <input type="number" inputmode="numeric" value="{{ cardsNew }}" onChange="{{ setNew }}"></div>
-              <div class="an-field"><label>Rewritten</label>
-                <input type="number" inputmode="numeric" value="{{ cardsFixed }}" onChange="{{ setFixed }}"></div>
-              <div class="an-field"><label>Cut</label>
-                <input type="number" inputmode="numeric" value="{{ cardsCut }}" onChange="{{ setCut }}"></div>
-            </div>
-            <div class="an-note">Ceiling is about 15 new per block. Above that you are authoring, not closing.</div>
+          <sc-if value="{{ capped }}" hint-placeholder-val="{{ false }}">
+            <div class="an-banner bad">{{ cappedWhy }}</div>
+          </sc-if>
+          <div class="an-row" style="margin-top: 12px;">
+            <div class="an-field grow"><label>Pick a block</label>
+              <select value="{{ pickId }}" onChange="{{ setPick }}">
+                <option value="">— choose —</option>
+                <sc-for list="{{ todoBlocks }}" as="b" hint-placeholder-count="5">
+                  <option value="{{ b.id }}">{{ b.label }}</option>
+                </sc-for>
+              </select></div>
+            <button onClick="{{ startBlock }}" class="an-btn go">{{ startLabel }}</button>
           </div>
-        </sc-if>
+          <div class="an-note">{{ startNote }}</div>
+
+          <div class="an-h3">Phase 2 &amp; 3 — read, then draw</div>
+          <div class="an-row">
+            <span class="an-timer {{ timerCls }}">{{ timerDisp }}</span>
+            <button onClick="{{ read30 }}" class="an-btn">Read 30</button>
+            <button onClick="{{ draw30 }}" class="an-btn">Draw 30</button>
+            <button onClick="{{ stopTimer }}" class="an-btn">Stop &amp; log</button>
+          </div>
+          <div class="an-note">Read is both screens open. Draw is both screens <em>closed</em> — that transition is the only part of this the page cannot check.</div>
+          <div class="an-row" style="margin-top: 12px;">
+            <div class="an-field"><label>Read min</label>
+              <input type="number" inputmode="numeric" value="{{ minRead }}" onChange="{{ setRead }}"></div>
+            <div class="an-field"><label>Draw min</label>
+              <input type="number" inputmode="numeric" value="{{ minDraw }}" onChange="{{ setDraw }}"></div>
+            <div class="an-field grow"><label>Red sheet ref</label>
+              <input type="text" value="{{ sheet }}" onChange="{{ setSheet }}" placeholder="e.g. 2026-08-02 nk6"></div>
+          </div>
+
+          <div class="an-h3">Phase 4 — cards</div>
+          <div class="an-row">
+            <div class="an-field"><label>New</label>
+              <input type="number" inputmode="numeric" value="{{ cardsNew }}" onChange="{{ setNew }}"></div>
+            <div class="an-field"><label>Rewritten</label>
+              <input type="number" inputmode="numeric" value="{{ cardsFixed }}" onChange="{{ setFixed }}"></div>
+            <div class="an-field"><label>Cut</label>
+              <input type="number" inputmode="numeric" value="{{ cardsCut }}" onChange="{{ setCut }}"></div>
+          </div>
+          <div class="an-note">Ceiling is about 15 new per block. Above that you are authoring, not closing.</div>
+        </div>
 
         <div class="an-panel">
           <div class="an-eyebrow">5 · Close the day</div>
@@ -610,14 +606,15 @@ class Component extends DCLogic {
       }
     });
   }
-  startBlock() {
+  startBlock(againstRamp) {
     const A = this.A;
     const id = this.state.pickId;
     if (!id) { this.toast('choose a block first'); return; }
     this.mut(s => { A.blockRec(s, id).studied = A.today(s); });
     this.setState({ pickId: '' });
     const b = A.findBlock(id);
-    this.toast('opened — ' + (b ? b.name : id));
+    const name = b ? b.name : id;
+    this.toast(againstRamp ? 'opened against the ramp — ' + name : 'opened — ' + name);
   }
   setMeta(k, v) { this.mut(s => { s.meta[k] = +v || 0; }); }
 
@@ -765,8 +762,19 @@ class Component extends DCLogic {
       push: () => this.deferRetest(x.b.id, x.k, 1),
     }));
 
-    // ── block of the day ──
-    const blocked = sum.openLoops > 5 || reentry;
+    /* ── block of the day ──
+       A cap is a rule about what today should be, not a reason to hide the
+       shelf. Re-entry, six open loops, a Core day — each of them used to take
+       the list away: the picker was swapped for a red line, and on a Core day
+       the whole panel went with it, timers included. So you could not see
+       what was left to open on exactly the days you most wanted to know.
+
+       The panel is always here now. The rule says its piece above the list,
+       the list stays, and opening one anyway is a decision you get to make
+       and see yourself make — which is the only kind this system has ever
+       been able to enforce. */
+    const capped = sum.openLoops > 5 || reentry;
+    const isCore = day.tier === 'core';
     const todoBlocks = [];
     A.regions().forEach(r => r.blocks.forEach(b => {
       if (A.status(S, b.id) === 'todo') todoBlocks.push({ id: b.id, label: r.name + ' — ' + b.name });
@@ -900,14 +908,20 @@ class Component extends DCLogic {
       spreadLabel: 'Spread at ' + cap + ' a day',
       spread: () => this.spread(),
 
-      showSession: day.tier !== 'core',
-      blocked, canStart: !blocked,
-      blockedWhy: reentry ? 'Re-entry: no new block today. Phase 0 and the retests are the day\'s work — '
-                            + 'the cap lifts on your second day back, not by clearing them.'
-                          : 'Six or more open loops. No new block until they clear.',
+      capped: capped || isCore,
+      cappedWhy: reentry
+        ? 'Re-entry: the ramp says no new block today, and the cap lifts on your second day back — '
+          + 'Phase 0 and the retests are what clears, not this. Open one anyway if you judge otherwise.'
+        : capped
+          ? 'Six or more open loops. The ramp says clear some before opening another.'
+          : 'Core day — Phase 0 and the reviews are the whole of it. A block is not part of the tier you declared.',
+      startLabel: (capped || isCore) ? 'Open it anyway' : 'Mark studied today',
+      startNote: (capped || isCore)
+        ? 'Marking it studied opens a loop and counts against you like any other. The ramp above is advice with a reason; it is not a lock.'
+        : 'Marking it studied opens a loop. It closes tomorrow morning, or not at all.',
       todoBlocks, pickId: this.state.pickId,
       setPick: (e) => this.setState({ pickId: e.target.value }),
-      startBlock: () => this.startBlock(),
+      startBlock: () => this.startBlock(capped || isCore),
 
       timerDisp, timerCls: (left > 0 && left < 60000) ? 'warn' : '',
       read30: () => this.startTimer(30, 'read'),
