@@ -791,6 +791,67 @@ starts accumulating that day and cannot be reconstructed for any day before it.
 It carries `correlate`, `matrix` and `strongest`, holding the same
 `CORR_MIN = 8` floor the Life Log's Trends panel already applied.
 
+### Ruling things out
+
+The Trends page could draw a correlation matrix and nothing else, which is a
+machine for producing confident nonsense. Thirty-six cells, the top five
+printed in bold as findings, no p-values, no correction for having looked
+thirty-six times, no check for the third thing driving both, no direction.
+The page carried a disclaimer — *correlation is not cause* — and then set
+**Sleep rises with study** in 14px semibold underneath it, which is the
+disclaimer doing no work at all.
+
+`causality.js` is the arithmetic for knocking those down. Nothing here turns
+self-tracking into a randomised trial; what it can do is rule things out,
+which is most of what causal inference is in practice. Four rungs, each of
+which can end the climb:
+
+1. **Is it real?** `r` with a two-sided p from an exact t tail, a Fisher
+   interval, and — the one that matters most for daily data — a sample size
+   deflated for autocorrelation. Fifty consecutive days are not fifty
+   independent observations of anything; two smooth series are worth about a
+   tenth of their row count. Then Benjamini-Hochberg across the whole screen,
+   because ranking thirty coefficients by `|r|` and printing the top of it
+   selects for exactly the cells noise inflates.
+2. **Or is it a third thing?** Partial correlation against every other logged
+   measure, plus two the table does not store: whether it was a weekend, and
+   elapsed time. Weekends move sleep, study, screen and training at once, so
+   most of the strong cells in this matrix are, at bottom, a calendar. This
+   runs on the findings list itself and not only inside the workup — a badge
+   saying a pair cleared a multiple-comparisons screen must not sit next to a
+   bold sentence and be read as a badge saying the pair means something.
+3. **Which way does it run?** A lead-lag scan and a Granger F-test in both
+   directions: does X's history improve the prediction of Y beyond what Y's
+   own history already gives, and does Y return the favour. Granger causality
+   is not causality; it is precedence with the obvious confound removed,
+   which is strictly more than a same-day `r` can offer. Rows are built only
+   from runs of genuinely consecutive calendar dates — a fortnight's gap is
+   not a one-day lag.
+4. **Is it one strange day?** Leave-one-out, refitting without each day and
+   taking the largest swing; plus the same correlation on first differences,
+   which no shared trend can fake. A finding whose size halves when one
+   Tuesday is dropped is a story about that Tuesday.
+
+And the section the matrix cannot contain. A correlation matrix only ever
+asks about the same day, so an effect that takes a night to arrive is
+invisible to it by construction — which is the shape most of the questions
+worth asking here have. **And only a day later** scans every ordered pair one
+day apart and keeps the ones that are significant on the lag and absent on
+the same day. Those get their own screen, because a lagged correlation has
+three ordinary ways to be an illusion: the recipient's own momentum, the
+same-day relationship wearing a hat (X on Monday "predicts" Y on Tuesday
+through X on *Tuesday*), and the calendar. All three are held constant, and a
+coefficient that comes back with the opposite sign to the one it screened is
+refused rather than reported — a reversal under conditioning is a red flag,
+not a discovery.
+
+The verdict at the top of the workup is written to be able to say no, and
+most of its branches are refusals. It also refuses to borrow credit: a rung
+that could not run — nine days, so no covariate clears the overlap guard and
+no run of consecutive dates is long enough — is reported as untested, not as
+passed. An early version printed *"it survives every control tried"* on a
+table where no control could be tried.
+
 ### One person a day
 
 The Network Map knew everything needed for this and said none of it out loud:
@@ -995,7 +1056,10 @@ reading eight weeks in the past.
 - `calendar.js` + `Week.html` — next week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
 - `tools/calendar.test.js` — the named calendar is the one read, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
-- `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`.
+- `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`, then the four tests that try to knock each pair down. See **Ruling things out** above.
+- `causality.js` — the statistics: exact t and F tails from a regularised incomplete beta, OLS, partial correlation, Granger, cross-lag, leave-one-out, first differences, Welch contrast, effective-n deflation and Benjamini-Hochberg. No dependencies; reads `facts.js` or any table handed to it.
+- `tools/causality.test.js` — the tail probabilities against textbook values, and every rung against a NEGATIVE control as well as a positive one: noise must come back as noise, a confounded pair as its confounder, a symmetric relationship must refuse to name a direction.
+- `tools/trends-page.test.js` — lifts the inline script out of `Trends.html` and runs it against a table with known answers built in: a weekend confound that must be refused, a one-day lag that must be found, and noise.
 - `tools/feeds.test.js` — a newer reading wins, but does not delete the history it does not carry.
 - `tools/facts.test.js` — the daily table joins the right things to the right days: a closure is a block gated, and the Anki history lands on the day it happened.
 - `tools/sitemap.test.js` — the deploy tripwires: everything declared, nothing live pointing at an archived page, every page walkable home.

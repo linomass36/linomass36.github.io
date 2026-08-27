@@ -124,10 +124,58 @@ table.mx td.thin { background:repeating-linear-gradient(45deg,var(--mid0),var(--
 footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   padding-top:16px; border-top:1px solid var(--rule);
   font-family:var(--mono); font-size:10px; color:var(--faint); }
+.verdict { border-radius:10px; padding:12px 14px; background:var(--raise);
+  border:1px solid var(--rule); border-left-width:3px; }
+.verdict.v-linked, .verdict.v-directional, .verdict.v-lagged { border-left-color:var(--ok); }
+.verdict.v-confounded, .verdict.v-noise, .verdict.v-unscreened,
+.verdict.v-fragile, .verdict.v-thin, .verdict.v-none { border-left-color:var(--owed); }
+.verdict.v-loop, .verdict.v-bare { border-left-color:var(--rust); }
+.verdict b { display:block; font-family:var(--serif); font-size:19px; font-weight:500;
+  line-height:1.25; letter-spacing:-.01em; }
+.verdict p { margin:7px 0 0; font-size:13.5px; color:var(--mid); line-height:1.62; }
+.rung { border-top:1px solid var(--rule); padding:12px 0 4px; margin-top:12px; }
+.rung:first-of-type { margin-top:14px; }
+.rung .h { display:flex; align-items:center; gap:8px; font-family:var(--mono);
+  font-size:9px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.rung .h .sp2 { flex:1; }
+.rung .say { font-size:13.5px; color:var(--ink); margin-top:7px; line-height:1.55; }
+.rung .nums { font-family:var(--mono); font-size:10.5px; color:var(--muted);
+  margin-top:5px; line-height:1.75; }
+.rung .nums b { color:var(--mid); font-weight:600; }
+.tick { font-family:var(--mono); font-size:8.5px; font-weight:600; letter-spacing:.08em;
+  border-radius:9px; padding:2px 8px; text-transform:uppercase; white-space:nowrap; }
+.tick.yes { background:var(--pos1); color:var(--ink); }
+.tick.no  { background:var(--neg1); color:var(--ink); }
+.tick.meh { background:var(--mid0); color:var(--mid); }
+table.ctrls { width:100%; border-collapse:collapse; margin-top:8px;
+  font-family:var(--mono); font-size:10.5px; }
+table.ctrls td { padding:4px 0; border-bottom:1px solid var(--rule); vertical-align:middle; }
+table.ctrls tr:last-child td { border-bottom:0; }
+table.ctrls td.nm { color:var(--ink); white-space:nowrap; padding-right:8px; }
+table.ctrls td.rr { text-align:right; color:var(--mid); font-variant-numeric:tabular-nums;
+  white-space:nowrap; padding-left:8px; }
+table.ctrls td.br { width:38%; }
+.meter { height:5px; border-radius:3px; background:var(--mid0); overflow:hidden; }
+.meter i { display:block; height:100%; background:var(--neg2); }
+.lag { margin-top:9px; }
+.lag svg { display:block; width:100%; height:auto; }
+.pairbar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:11px; align-items:center; }
+.pairbar button { font-family:var(--mono); font-size:10.5px; color:var(--mid); background:var(--card);
+  border:1px solid var(--rule); border-radius:14px; padding:6px 12px; cursor:pointer; min-height:34px; }
+.pairbar button[aria-pressed="true"] { background:var(--rust); border-color:var(--rust); color:#fff; }
+.finding .q { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase;
+  border-radius:8px; padding:1px 7px; margin-left:7px; vertical-align:2px; }
+.finding .q.pass { background:var(--pos1); color:var(--ink); }
+.finding .q.fail { background:var(--mid0); color:var(--muted); }
+.finding.dim b { color:var(--mid); font-weight:500; }
+.finding.dim { border-left-color:var(--rule); }
+.finding button { font-family:var(--mono); font-size:9.5px; color:var(--rust); background:none;
+  border:0; padding:4px 0 0; cursor:pointer; text-decoration:underline; }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
 </style>
 <script src="./day.js"></script>
 <script src="./facts.js"></script>
+<script src="./causality.js"></script>
 </head>
 <body>
 <header class="top">
@@ -137,7 +185,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 </header>
 <main>
   <h1>What moves what.</h1>
-  <p class="lede">Every pair from the daily table. Correlation is not cause — this says where to look, not what to do.</p>
+  <p class="lede">Every pair from the daily table, then four tests that try to knock each one down: is it real once the days are counted honestly, is it a third thing, which way does it run, is it one strange Tuesday. Most pairs do not survive. That is the useful part.</p>
 
   <div class="kicker">Pick what to compare <span class="note" id="pick-note"></span></div>
   <div class="preset" id="presets"></div>
@@ -159,8 +207,12 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     <p class="cap">Hatched cells have fewer than eight paired days — <b>CORR_MIN</b>, the same floor the Life Log's Trends panel already applied. They report nothing rather than a shape drawn from five points.</p>
   </div>
 
-  <div class="kicker">What the table says</div>
+  <div class="kicker">What the table says <span class="note" id="find-note"></span></div>
   <div id="findings"></div>
+
+  <div class="kicker">Cause and effect <span class="note" id="cause-note"></span></div>
+  <div class="pairbar" id="pairbar"></div>
+  <div class="card" id="cause"></div>
 
   <div class="kicker">One series <span class="note">last 8 weeks</span></div>
   <div class="pick" id="pick"></div>
@@ -171,7 +223,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 
   <footer>
     <span>Trends</span>
-    <span>correlation is not cause</span>
+    <span>ruling out is most of what can be done</span>
   </footer>
 </main>
 <script>
@@ -221,6 +273,9 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   ];
   var LABEL = {}, UNITS = {}, TAG = {};
   KNOWN.forEach(function (k) { LABEL[k[0]] = k[1]; UNITS[k[0]] = k[2]; TAG[k[0]] = k[3]; });
+  /* causality.js writes sentences about these fields and has no business
+     knowing what any of them are called. */
+  window.CTTrendLabels = LABEL;
   function labelOf(f) { return LABEL[f] || f; }
   function unitOf(f) { return UNITS[f] || ''; }
 
@@ -257,8 +312,26 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   TAUTOLOGY.forEach(function (p2) { TAUT[p2.slice().sort().join('|')] = 1; });
   function tautological(a, b) { return !!TAUT[[a, b].sort().join('|')]; }
 
+  /* Everything that measures roughly the same thing as either half of a pair.
+     These must be kept OUT of the confounder screen: "your screen time and
+     your study hours are really just your social screen time" is arithmetic,
+     not an explanation, and it would out-compete every real confounder
+     because it removes the variance by construction. */
+  function tautPartners(a, b) {
+    var out = {};
+    TAUTOLOGY.forEach(function (pr) {
+      if (pr[0] === a || pr[1] === a || pr[0] === b || pr[1] === b) { out[pr[0]] = 1; out[pr[1]] = 1; }
+    });
+    delete out[a]; delete out[b];
+    return Object.keys(out);
+  }
+  function C() { return window.CTCause || null; }
+
   var selected = [];   // the fields currently in the grid
   var pairSel = null;  // the cell being explained, if any
+  var causeSel = null; // the pair under the full causal workup
+  var statCache = null, statKey = '';
+  var causeCache = {};
 
   function F() { return window.CTFacts || null; }
 
@@ -302,7 +375,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
         if (at >= 0) selected.splice(at, 1);
         else if (selected.length < 9) selected.push(x.field);
         pairSel = null;
-        paintFieldPicker(); paintMatrix(); paintFindings();
+        redraw();
       });
       box.appendChild(b);
     });
@@ -323,8 +396,8 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       b.title = usable.map(labelOf).join(' · ');
       b.addEventListener('click', function () {
         selected = usable.slice(0, 9);
-        pairSel = null;
-        paintFieldPicker(); paintMatrix(); paintFindings();
+        pairSel = null; causeSel = null;
+        redraw();
       });
       box.appendChild(b);
     });
@@ -332,8 +405,8 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     b2.type = 'button';
     b2.addEventListener('click', function () {
       selected = available().slice(0, 9).map(function (x) { return x.field; });
-      pairSel = null;
-      paintFieldPicker(); paintMatrix(); paintFindings();
+      pairSel = null; causeSel = null;
+      redraw();
     });
     box.appendChild(b2);
   }
@@ -385,7 +458,8 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
         if (!thin) {
           td.addEventListener('click', function () {
             pairSel = { x: c, y: rw, r: res.r, n: res.n };
-            paintMatrix(); paintPair();
+            causeSel = { x: c, y: rw };
+            paintMatrix(); paintPair(); paintPairbar(); paintCause();
           });
         }
         tr.appendChild(td);
@@ -410,7 +484,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
                  : Math.abs(pairSel.r) >= 0.15 ? 'weak' : 'barely there';
     var tail = tautological(pairSel.x, pairSel.y)
       ? 'These two measure much the same thing, so this says the data is consistent rather than telling you anything new.'
-      : 'Which one moves the other, this cannot say.';
+      : 'Whether it survives a third variable, and which way it runs, is the workup below.';
     box.appendChild(el('div', 'd',
       'r = ' + (pairSel.r > 0 ? '+' : '') + pairSel.r.toFixed(2) + ' · ' + strength +
       ' · ' + pairSel.n + ' days where both were logged. ' + tail));
@@ -425,25 +499,60 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
                  : a + ' falls as ' + b + ' goes up.';
   }
 
-  function paintFindings() {
-    var box = $('#findings'); box.innerHTML = '';
-    var f = F(); if (!f) return;
-    var out = [], seen = {};
+  /* Every reportable pair in the current selection, with a p-value and — the
+     part that was missing — a q-value.
+
+     The old version ranked thirty-odd coefficients by |r| and printed the top
+     five. That is a machine for finding things: rank a screen of pure noise by
+     effect size and the top of it always looks like a discovery. Benjamini-
+     Hochberg across the whole screen puts a number on how much of what
+     survives is expected to be nothing. Findings that do not clear it are
+     still shown, because "we looked and it did not hold up" is information —
+     but they are shown greyed, and they are not called findings. */
+  function pairStats() {
+    var f = F(), Cc = C(); if (!f || !Cc) return [];
+    var key = selected.slice().sort().join(',');
+    if (statCache && statKey === key) return statCache;
+    var table = f.all(), out = [], seen = {};
     selected.forEach(function (y) {
       selected.forEach(function (x) {
         if (x === y) return;
-        /* Symmetric, so each pair would otherwise be reported twice. */
-        var key = [x, y].sort().join('|');
-        if (seen[key]) return;
-        if (tautological(x, y)) return;
-        var res = f.correlate(x, y);
-        if (!res.ready || res.r == null || Math.abs(res.r) < 0.2) return;
-        seen[key] = 1;
-        out.push({ x: x, y: y, r: res.r, n: res.n });
+        var k = [x, y].sort().join('|');
+        if (seen[k]) return;
+        seen[k] = 1;
+        var a = Cc.align(table, [x, y]);
+        if (a.n < f.CORR_MIN) return;
+        var t = Cc.corrTest(a.v[x], a.v[y]);
+        if (t.r == null) return;
+        out.push({ x: x, y: y, r: t.r, n: t.n, nEff: t.nEff, p: t.p, ci: t.ci,
+                   rho: t.rho, taut: tautological(x, y) });
       });
     });
+    /* A tautological pair is not a hypothesis, so it does not consume a test.
+       Counting it would make the correction harsher for no reason. */
+    var real = out.filter(function (o) { return !o.taut; });
+    var qs = Cc.bh(real.map(function (o) { return o.p; }));
+    real.forEach(function (o, i) { o.q = qs[i]; });
     out.sort(function (a, b) { return Math.abs(b.r) - Math.abs(a.r); });
-    if (!out.length) {
+    statCache = out; statKey = key;
+    return out;
+  }
+
+  function paintFindings() {
+    var box = $('#findings'); box.innerHTML = '';
+    var f = F(); if (!f) return;
+    var stats = pairStats().filter(function (o) { return !o.taut && Math.abs(o.r) >= 0.2; });
+    var passing = stats.filter(function (o) { return o.q != null && o.q < 0.1; });
+    var tested = pairStats().filter(function (o) { return !o.taut; }).length;
+
+    $('#find-note').textContent = tested
+      ? tested + ' pair' + (tested === 1 ? '' : 's') + ' tested · ' +
+        passing.length + ' past correction'
+      : '';
+    /* filled in below, once the controls have had their say */
+    var noteEl = $('#find-note');
+
+    if (!stats.length) {
       var days = Object.keys(f.all()).length;
       var need = Math.max(0, f.CORR_MIN - days);
       box.appendChild(el('p', 'empty',
@@ -452,13 +561,459 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
         : 'Nothing above the noise floor in this selection. That is an answer too.'));
       return;
     }
-    out.slice(0, 5).forEach(function (o) {
-      var d = el('div', 'finding');
-      d.appendChild(el('b', null, sentence(o.x, o.y, o.r)));
+
+    var stood = 0;
+    stats.slice(0, 6).forEach(function (o) {
+      var pass = o.q != null && o.q < 0.1;
+      var killer = pass ? killedBy(o.x, o.y) : null;
+      var live = pass && !killer;
+      if (live) stood++;
+      var d = el('div', 'finding' + (live ? '' : ' dim'));
+      var b = el('b');
+      b.appendChild(document.createTextNode(sentence(o.x, o.y, o.r)));
+      b.appendChild(badge(live ? 'pass' : 'fail',
+        !pass ? 'not after correction' : killer ? 'this is ' + killer : 'survives a control'));
+      d.appendChild(b);
       d.appendChild(el('span', null,
-        'r = ' + (o.r > 0 ? '+' : '') + o.r.toFixed(2) + ' over ' + o.n + ' paired days'));
+        'r = ' + CF(o.r) + ' over ' + o.n + ' paired days, ' + o.nEff +
+        ' effective once day-to-day carryover is counted · p = ' + CP(o.p) +
+        ' · q = ' + CP(o.q)));
+      d.appendChild(workupLink(o.x, o.y));
       box.appendChild(d);
     });
+
+    if (tested) {
+      noteEl.textContent = tested + ' pair' + (tested === 1 ? '' : 's') + ' tested · ' +
+        passing.length + ' past correction · ' + stood + ' still standing after a control';
+    }
+    if (!stood) {
+      box.appendChild(el('p', 'cap', !passing.length
+        ? 'None of these clear the correction for having looked at ' + tested +
+          ' pairs at once, so none of them is a result yet. The strongest is ' +
+          'still the best place to look.'
+        : 'The ones that clear the correction are accounted for by something ' +
+          'else held constant. Nothing here is left standing on its own — ' +
+          'which is a finding about the days, not a failure of the table.'));
+    }
+
+    /* And the ones the matrix is structurally unable to see. */
+    var lag = lagStats();
+    if (lag.length) {
+      var h = el('div', 'kicker');
+      h.style.marginTop = '26px';
+      h.appendChild(document.createTextNode('And only a day later'));
+      var nt = el('span', 'note', 'invisible to the matrix above');
+      h.appendChild(nt);
+      box.appendChild(h);
+      lag.slice(0, 4).forEach(function (o) {
+        var d = el('div', 'finding');
+        var b = el('b');
+        b.appendChild(document.createTextNode(lagSentence(o.x, o.y, o.screen.r)));
+        b.appendChild(badge('pass', 'one-day lag'));
+        d.appendChild(b);
+        d.appendChild(el('span', null,
+          'r = ' + CF(o.r) + ' over ' + o.n + ' consecutive-day pairs, ' + o.nEff +
+          ' effective · p = ' + CP(o.p) + ' · q = ' + CP(o.q) +
+          ' · nothing on the same day. Still ' + CF(o.screen.r) + ' (p = ' +
+          CP(o.screen.p) + ') holding ' + o.screen.controls.join(', ') + '.'));
+        d.appendChild(workupLink(o.x, o.y));
+        box.appendChild(d);
+      });
+    }
+  }
+
+  function badge(kind, text) {
+    var q = el('span', 'q ' + kind, text);
+    q.style.display = 'inline-block'; q.style.marginTop = '0';
+    return q;
+  }
+
+  function workupLink(x, y) {
+    var go = el('button', null, 'run the full workup →');
+    go.type = 'button';
+    go.addEventListener('click', function () {
+      causeSel = { x: x, y: y };
+      paintPairbar(); paintCause();
+      var t = document.getElementById('cause');
+      if (t && t.scrollIntoView) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    return go;
+  }
+
+  /* "Sleep, and then the next day's Anki reps." The order is the claim, so it
+     is written as an order rather than as a symmetric "rises with". */
+  function lagSentence(x, y, r) {
+    var a = labelOf(x), b = labelOf(y);
+    if (/^[A-Z][a-z]+$/.test(b)) b = b.toLowerCase();
+    return r > 0 ? 'A high ' + (/^[A-Z][a-z]+$/.test(a) ? a.toLowerCase() : a) +
+                   ' day is followed by a high ' + b + ' day.'
+                 : 'A high ' + (/^[A-Z][a-z]+$/.test(a) ? a.toLowerCase() : a) +
+                   ' day is followed by a low ' + b + ' day.';
+  }
+
+  /* Rung 2, run on the findings list rather than only inside the workup.
+
+     Without this the page prints "Screen falls as study goes up — HOLDS UP"
+     in bold and only admits, several hundred pixels further down and only if
+     you click, that the whole thing is the weekend. A badge that says a pair
+     cleared the multiple-comparisons screen is not a badge that says the pair
+     means anything, and putting the two next to each other invites exactly
+     the reading the page exists to prevent. Cheap enough to run on the six
+     shown: one partial correlation per candidate control. */
+  var confCache = {};
+  function confoundOf(x, y) {
+    var f = F(), Cc = C(); if (!f || !Cc) return null;
+    var k = x + '|' + y + '|' + statKey;
+    if (!(k in confCache)) {
+      confCache[k] = Cc.confounders(f.all(), x, y, { exclude: tautPartners(x, y) });
+    }
+    return confCache[k];
+  }
+  function killedBy(x, y) {
+    var c = confoundOf(x, y), Cc = C();
+    if (!c || !c.ready || !c.tested.length) return null;
+    var r = c.joint ? c.joint.r : c.worst.rAfter;
+    var pv = c.joint ? c.joint.p : c.worst.p;
+    if (Math.abs(r) >= 0.15 && !(pv != null && pv > 0.1 && c.worst.drop > 0.5)) return null;
+    /* When one measure is the whole story — and when everything on screen is
+       really the calendar, it is — name that one. Listing every covariate
+       that happens to be downstream of the same driver ("this is the weekend
+       + study + pickups") is longer, and says less. */
+    if (Math.abs(c.worst.rAfter) < 0.15) return Cc.labelFor(c.worst.field);
+    return c.joint ? c.joint.fields.map(Cc.labelFor).join(' + ')
+                   : Cc.labelFor(c.worst.field);
+  }
+
+  /* The findings the matrix cannot contain.
+
+     A correlation matrix only ever asks about the same day, so an effect that
+     takes a night to arrive is invisible to it — r near zero, cell greyed,
+     nothing reported. That is the shape most of the interesting questions
+     here have: last night's sleep against today's work, today's training
+     against tomorrow's resting heart rate. This scans every ordered pair one
+     day apart and keeps the ones that are BOTH significant on the lag and
+     absent on the same day, so it adds what the matrix missed rather than
+     reprinting it a day out. */
+  var lagCache = null, lagKey = '';
+  function lagStats() {
+    var f = F(), Cc = C(); if (!f || !Cc) return [];
+    if (lagCache && lagKey === statKey) return lagCache;
+    var table = f.all(), out = [];
+    selected.forEach(function (x) {
+      selected.forEach(function (y) {
+        if (x === y || tautological(x, y)) return;
+        var t = Cc.lagTest(table, x, y, 1, f.CORR_MIN);
+        if (!t.ready || t.r == null) return;
+        out.push({ x: x, y: y, r: t.r, n: t.n, nEff: t.nEff, p: t.p });
+      });
+    });
+    var qs = Cc.bh(out.map(function (o) { return o.p; }));
+    out.forEach(function (o, i) { o.q = qs[i]; });
+    var sameDay = {};
+    pairStats().forEach(function (o) { sameDay[[o.x, o.y].sort().join('|')] = o; });
+    var keep = out.filter(function (o) {
+      if (Math.abs(o.r) < 0.2 || o.q == null || o.q >= 0.1) return false;
+      var sd = sameDay[[o.x, o.y].sort().join('|')];
+      /* Already reported as a same-day finding — this is the same fact with a
+         day's blur on it, not a second discovery. */
+      return !sd || sd.p == null || sd.p >= 0.05;
+    }).map(function (o) {
+      /* And the screen that matters: is it still there once yesterday's
+         value of the thing being predicted, today's value of the predictor,
+         and the weekend are all held constant? Nearly nothing is. Without
+         this the section repeats the same mistake the matrix was making,
+         one day out — "a high study day is followed by a low Anki reps day"
+         is the weekend twice over. */
+      o.screen = Cc.lagScreen(table, o.x, o.y, 1, f.CORR_MIN);
+      return o;
+    }).filter(function (o) {
+      return o.screen.ready && o.screen.holds;
+    }).sort(function (a, b) { return Math.abs(b.screen.r) - Math.abs(a.screen.r); });
+    lagCache = keep; lagKey = statKey;
+    return keep;
+  }
+
+  function CF(r) { var Cc = C(); return Cc ? Cc.fmt(r) : String(r); }
+  function CP(p) { var Cc = C(); return Cc ? Cc.fmtP(p) : String(p); }
+
+  /* ── the workup ────────────────────────────────────────────────────
+     One pair, four rungs, and a verdict that is usually a refusal. */
+
+  function paintPairbar() {
+    var box = $('#pairbar'); if (!box) return;
+    box.innerHTML = '';
+    var stats = pairStats().filter(function (o) { return !o.taut; }).slice(0, 6);
+    if (!stats.length) return;
+    stats.forEach(function (o) {
+      var b = el('button', null, labelOf(o.y) + ' × ' + labelOf(o.x));
+      b.type = 'button';
+      b.setAttribute('aria-pressed',
+        causeSel && ((causeSel.x === o.x && causeSel.y === o.y) ||
+                     (causeSel.x === o.y && causeSel.y === o.x)) ? 'true' : 'false');
+      b.title = 'r = ' + CF(o.r) + ' over ' + o.n + ' days';
+      b.addEventListener('click', function () {
+        causeSel = { x: o.x, y: o.y };
+        paintPairbar(); paintCause();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  function rung(n, title, state, said, nums) {
+    var d = el('div', 'rung');
+    var h = el('div', 'h');
+    h.appendChild(el('span', null, n + ' · ' + title));
+    h.appendChild(el('span', 'sp2'));
+    h.appendChild(el('span', 'tick ' + state[0], state[1]));
+    d.appendChild(h);
+    if (said) d.appendChild(el('div', 'say', said));
+    if (nums) {
+      var nd = el('div', 'nums');
+      nd.innerHTML = nums;
+      d.appendChild(nd);
+    }
+    return d;
+  }
+
+  /* Cross-correlation as a small bar chart. Bars to the right of centre are
+     X first, bars to the left are Y first; a peak sitting on zero means the
+     two move the same day and the clock has nothing to offer. */
+  function lagChart(lags, xf, yf) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var W = 640, H = 132, PT = 10, PB = 30, mid = PT + (H - PT - PB) / 2;
+    var live = lags.filter(function (l) { return l.r != null; });
+    if (live.length < 3) return null;
+    var peak = live.slice().sort(function (a, b) { return Math.abs(b.r) - Math.abs(a.r); })[0];
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label',
+      'Correlation between ' + labelOf(xf) + ' and ' + labelOf(yf) +
+      ' at day offsets from minus three to plus three. The strongest is ' +
+      CF(peak.r) + ' at an offset of ' + peak.lag + ' days.');
+    function line(x1, y1, x2, y2, col, w2) {
+      var l = document.createElementNS(ns, 'line');
+      l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+      l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+      l.setAttribute('stroke', col); l.setAttribute('stroke-width', w2 || 1);
+      svg.appendChild(l);
+    }
+    function txt(x, y, str, anchor, col, size) {
+      var t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', x); t.setAttribute('y', y);
+      t.setAttribute('text-anchor', anchor || 'middle');
+      t.setAttribute('font-family', 'IBM Plex Mono, monospace');
+      t.setAttribute('font-size', size || 9);
+      t.setAttribute('fill', col || 'var(--faint)');
+      t.textContent = str; svg.appendChild(t);
+    }
+    line(0, mid, W, mid, 'var(--rule)', 1);
+    var slot = W / lags.length, bw = Math.min(46, slot * 0.56);
+    var half = (H - PT - PB) / 2 - 6;
+    lags.forEach(function (l, i) {
+      var cx = slot * (i + 0.5);
+      if (l.r == null) {
+        txt(cx, mid + 4, '·', 'middle', 'var(--faint)', 11);
+      } else {
+        var h2 = Math.max(1.5, Math.abs(l.r) * half);
+        var rect = document.createElementNS(ns, 'rect');
+        rect.setAttribute('x', cx - bw / 2);
+        rect.setAttribute('y', l.r > 0 ? mid - h2 : mid);
+        rect.setAttribute('width', bw); rect.setAttribute('height', h2);
+        rect.setAttribute('rx', '2');
+        rect.setAttribute('fill', armFor(l.r));
+        if (l.lag === peak.lag) {
+          rect.setAttribute('stroke', 'var(--ink)');
+          rect.setAttribute('stroke-width', '1.5');
+        }
+        svg.appendChild(rect);
+        txt(cx, l.r > 0 ? mid - h2 - 4 : mid + h2 + 9, CF(l.r), 'middle',
+            l.lag === peak.lag ? 'var(--ink)' : 'var(--faint)', 8.5);
+      }
+      txt(cx, H - 16, (l.lag > 0 ? '+' : '') + l.lag, 'middle',
+          l.lag === 0 ? 'var(--mid)' : 'var(--faint)', 9);
+    });
+    txt(4, H - 3, '← ' + labelOf(yf) + ' first', 'start', 'var(--faint)', 8.5);
+    txt(W / 2, H - 3, 'same day', 'middle', 'var(--faint)', 8.5);
+    txt(W - 4, H - 3, labelOf(xf) + ' first →', 'end', 'var(--faint)', 8.5);
+    return svg;
+  }
+
+  function paintCause() {
+    var box = $('#cause'); if (!box) return;
+    box.innerHTML = '';
+    var f = F(), Cc = C();
+    $('#cause-note').textContent = '';
+    if (!f || !Cc) {
+      box.appendChild(el('p', 'empty', 'The analysis engine did not load.'));
+      return;
+    }
+    if (!causeSel) {
+      box.appendChild(el('p', 'empty',
+        'Tap a cell in the matrix, or a pair above, to put it through the four tests.'));
+      return;
+    }
+    var x = causeSel.x, y = causeSel.y;
+    var qrow = pairStats().filter(function (o) {
+      return (o.x === x && o.y === y) || (o.x === y && o.y === x);
+    })[0];
+
+    var ck = x + '|' + y + '|' + statKey;
+    var res = causeCache[ck];
+    if (!res) {
+      res = Cc.analyse(x, y, {
+        table: f.all(), floor: f.CORR_MIN,
+        q: qrow ? qrow.q : null,
+        exclude: tautPartners(x, y)
+      });
+      causeCache[ck] = res;
+    }
+
+    $('#cause-note').textContent = labelOf(y) + ' × ' + labelOf(x) + ' · ' + res.n + ' paired days';
+
+    var v = el('div', 'verdict v-' + res.verdict.level);
+    v.appendChild(el('b', null, res.verdict.headline));
+    v.appendChild(el('p', null, res.verdict.detail));
+    box.appendChild(v);
+    if (!res.ready) return;
+
+    var b = res.base;
+
+    /* ── 1 ── */
+    var real = b.q != null ? b.q < 0.1 : (b.p != null && b.p < 0.05);
+    var state1 = b.p == null || b.p >= 0.05 ? ['no', 'no']
+               : real ? ['yes', 'yes'] : ['meh', 'not after correction'];
+    var nums1 = '<b>r</b> ' + CF(b.r) +
+      (b.ci ? ' &nbsp;<b>95% CI</b> ' + CF(b.ci[0]) + ' to ' + CF(b.ci[1]) : '') +
+      ' &nbsp;<b>p</b> ' + CP(b.p) + (b.q != null ? ' &nbsp;<b>q</b> ' + CP(b.q) : '') +
+      '<br><b>n</b> ' + b.n + ' days, ' + b.nEff + ' effective once day-to-day ' +
+      'carryover is counted &nbsp;<b>Spearman</b> ' + CF(b.rho);
+    box.appendChild(rung('1', 'Is it real?', state1,
+      b.p != null && b.p < 0.05
+        ? sentence(x, y, b.r) + ' Bigger than this table would throw up by accident.'
+        : 'Not distinguishable from chance on the same day.',
+      nums1));
+
+    /* ── 2 ── */
+    var c = res.confound;
+    var r2, said2, ctrlTable = null;
+    if (!c || !c.ready || !c.tested.length) {
+      r2 = ['meh', 'untested'];
+      said2 = 'Nothing else is logged on enough of the same days to hold constant. ' +
+              'This rung needs a third column present on most of the same days.';
+    } else {
+      var top = c.tested.slice(0, 4);
+      var killed = c.joint || c.worst;
+      var kr = c.joint ? c.joint.r : c.worst.rAfter;
+      var dead = Math.abs(kr) < 0.15 || (c.worst.p != null && c.worst.p > 0.1 && c.worst.drop > 0.5);
+      r2 = dead ? ['no', 'explained away'] : ['yes', 'survives'];
+      said2 = dead
+        ? 'Hold ' + (c.joint ? c.joint.fields.map(Cc.labelFor).join(' and ')
+                             : Cc.labelFor(c.worst.field)) +
+          ' constant and the relationship goes with it.'
+        : 'Held against ' + c.tested.length + ' other measure' +
+          (c.tested.length === 1 ? '' : 's') + ' one at a time, it does not go away. ' +
+          'The biggest single dent is ' + Math.round(c.worst.drop * 100) + '%, from ' +
+          Cc.labelFor(c.worst.field) + '.';
+      var tb = el('table', 'ctrls');
+      top.forEach(function (t) {
+        var tr = el('tr');
+        tr.appendChild(el('td', 'nm', 'holding ' + Cc.labelFor(t.field)));
+        var bd = el('td', 'br');
+        var m = el('div', 'meter'), fill = el('i');
+        fill.style.width = Math.max(0, Math.min(100, t.drop * 100)) + '%';
+        m.appendChild(fill); bd.appendChild(m);
+        tr.appendChild(bd);
+        tr.appendChild(el('td', 'rr', CF(t.rBefore) + ' → ' + CF(t.rAfter) +
+          '  (' + (t.drop > 0 ? '−' : '+') + Math.abs(Math.round(t.drop * 100)) + '%)'));
+        tb.appendChild(tr);
+      });
+      if (c.joint) {
+        var tr2 = el('tr');
+        tr2.appendChild(el('td', 'nm', 'all ' + c.joint.fields.length + ' at once'));
+        tr2.appendChild(el('td', 'br'));
+        tr2.appendChild(el('td', 'rr', CF(c.joint.rBefore) + ' → ' + CF(c.joint.r) +
+          '  p ' + CP(c.joint.p)));
+        tb.appendChild(tr2);
+      }
+      ctrlTable = tb;
+    }
+    var d2 = rung('2', 'Or is it a third thing?', r2, said2, '');
+    if (ctrlTable) d2.appendChild(ctrlTable);
+    box.appendChild(d2);
+
+    /* ── 3 ── */
+    var dir = Cc.direction(res);
+    var g1 = res.granger.xy, g2 = res.granger.yx;
+    var state3 = (dir.xLeads || dir.yLeads) ? ['yes', dir.xLeads ? labelOf(x) + ' first' : labelOf(y) + ' first']
+               : dir.both ? ['meh', 'both ways'] : ['no', 'undecidable'];
+    var said3 = (dir.xLeads || dir.yLeads)
+      ? 'Yesterday\'s ' + labelOf(dir.xLeads ? x : y) + ' helps predict today\'s ' +
+        labelOf(dir.xLeads ? y : x) + ' beyond what that measure\'s own history already gives. ' +
+        'The reverse test does not clear.'
+      : dir.both
+      ? 'Both directions clear the test — a loop, or a shared driver arriving on a one-day lag.'
+      : (g1.ready || g2.ready)
+      ? 'Neither direction predicts the other once each measure\'s own history is accounted for. '
+        + 'On this data the two simply move together.'
+      : 'Not enough runs of consecutive days to test precedence — ' +
+        Math.max(g1.n || 0, g2.n || 0) + ' usable, ' + (g1.need || g2.need) + ' wanted.';
+    function gline(g, from, to) {
+      if (!g.ready) return '<b>' + from + ' → ' + to + '</b> not enough consecutive days (' + g.n + ')';
+      return '<b>' + from + ' → ' + to + '</b> F ' + g.F.toFixed(2) +
+             ' (df ' + g.df1 + ' and ' + g.df2 + '), p ' + CP(g.p) +
+             ' · explains ' + (g.gain * 100).toFixed(1) + '% of what its own history left over';
+    }
+    var d3 = rung('3', 'Which way does it run?', state3, said3,
+      gline(g1, labelOf(x), labelOf(y)) + '<br>' + gline(g2, labelOf(y), labelOf(x)));
+    var chart = lagChart(res.lags, x, y);
+    if (chart) {
+      var wrap = el('div', 'lag');
+      wrap.appendChild(chart);
+      d3.appendChild(wrap);
+    }
+    box.appendChild(d3);
+
+    /* ── 4 ── */
+    var loo = res.loo, dd = res.diff;
+    var state4 = !loo ? ['meh', 'too few days']
+               : loo.fragile ? ['no', 'fragile'] : ['yes', 'holds'];
+    var said4 = !loo ? 'Fewer than six days — nothing to drop.'
+      : loo.fragile
+      ? 'Drop ' + loo.worst.day + ' and r moves from ' + CF(loo.full) + ' to ' +
+        CF(loo.worst.r) + '. A finding that rests on one day is a story about that day.'
+      : 'No single day is carrying it: the biggest swing from dropping one is ' +
+        loo.swing.toFixed(2) + '.';
+    var nums4 = loo ? '<b>leave-one-out</b> r ranges ' + CF(loo.min) + ' to ' + CF(loo.max) : '';
+    if (dd && dd.ready) {
+      nums4 += (nums4 ? '<br>' : '') + '<b>day-to-day changes</b> r ' + CF(dd.r) +
+        ', p ' + CP(dd.p) + ' over ' + dd.n + ' consecutive pairs — ' +
+        (dd.p != null && dd.p < 0.05
+          ? 'the changes move together too, so this is not two lines drifting'
+          : 'the levels track but the changes do not, which is what a shared trend looks like');
+    }
+    box.appendChild(rung('4', 'Is it one strange day?', state4, said4, nums4));
+
+    /* A binary measure gets the thing a coefficient cannot give: how much. */
+    if (res.contrast) {
+      var ct = res.contrast;
+      var bx = ct.swapped ? y : x, by = ct.swapped ? x : y;
+      box.appendChild(rung('+', 'How much, in the unit',
+        ct.p != null && ct.p < 0.05 ? ['yes', 'measurable'] : ['meh', 'within noise'],
+        'On the ' + ct.n1 + ' days ' + labelOf(bx) + ' was ' + ct.hi + ', ' + labelOf(by) +
+        ' averaged ' + ct.m1.toFixed(2) + unitOf(by) + '. On the other ' + ct.n0 + ', ' +
+        ct.m0.toFixed(2) + unitOf(by) + '.',
+        '<b>difference</b> ' + (ct.diff > 0 ? '+' : '') + ct.diff.toFixed(2) + unitOf(by) +
+        ' &nbsp;<b>Welch t</b> ' + ct.t.toFixed(2) + ' on ' + ct.df.toFixed(1) + ' df' +
+        ' &nbsp;<b>p</b> ' + CP(ct.p) +
+        (ct.g != null ? ' &nbsp;<b>Hedges g</b> ' + ct.g.toFixed(2) : '')));
+    }
+
+    box.appendChild(el('p', 'cap',
+      'None of this is an experiment. Every test above can only rule things ' +
+      'out — a pair that clears all four is one nothing available here could ' +
+      'knock down, which is not the same as a cause. The one way to settle it ' +
+      'is to change the input on purpose and watch what the table does.'));
   }
 
   var sparkField = null;
@@ -554,6 +1109,33 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     $('#cov-note').textContent = ready + ' of ' + fs.length + ' past the 8-day floor';
   }
 
+  /* One entry point for "the selection changed". The q-values are a property
+     of the whole screen, so changing what is on screen changes every one of
+     them — a cache that outlived the selection would report a pair as
+     surviving a correction it was never put through. */
+  function redraw() {
+    statCache = null; statKey = '';
+    causeCache = {}; confCache = {}; lagCache = null; lagKey = '';
+    paintFieldPicker();
+    paintMatrix();
+    paintFindings();
+    if (causeSel && (selected.indexOf(causeSel.x) < 0 || selected.indexOf(causeSel.y) < 0)) {
+      causeSel = null;
+    }
+    if (!causeSel) causeSel = defaultPair();
+    paintPairbar();
+    paintCause();
+  }
+
+  /* Open on the strongest pair that is not a definition of itself — the one
+     the page would have led with anyway, now with its workup attached. */
+  function defaultPair() {
+    var best = pairStats().filter(function (o) {
+      return !o.taut && Math.abs(o.r) >= 0.2;
+    })[0];
+    return best ? { x: best.x, y: best.y } : null;
+  }
+
   function dateline() {
     var d = new Date();
     var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -577,9 +1159,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 
   dateline();
   paintPresets();
-  paintFieldPicker();
-  paintMatrix();
-  paintFindings();
+  redraw();
   paintPicker();
   paintSpark();
   paintCoverage();

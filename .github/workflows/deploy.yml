@@ -106,6 +106,8 @@ jobs:
           node tools/calendar.test.js
           node tools/day-boundary.test.js
           node tools/anatomy-core.test.js
+          node tools/causality.test.js
+          node tools/trends-page.test.js
 
       - name: Build _site (inline, stamp version, encrypt)
         env:
