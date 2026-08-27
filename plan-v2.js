@@ -89,6 +89,105 @@
     return n;
   }
 
+  /* ── what is actually next ─────────────────────────────────────────
+     The v2 recalibration replaced a 371-step inventory with one live phase
+     at a time, and every consumer that wanted "the next few moves" was
+     still walking v1's branches. They now all come through here, so there
+     is one answer to the question instead of four.
+
+     `live` is the phase the calendar is in, not the first one marked live:
+     a phase whose window has passed is history even if the file still says
+     otherwise. Only the live phase carries items — a queued phase states an
+     objective and a failure mode, and inventing tasks for it would be
+     exactly the over-planning v2 exists to stop. */
+  function livePhase() {
+    var P = plan();
+    var phases = P.phases || [];
+    var t = today();
+    var byDate = null, byFlag = null;
+    phases.forEach(function (ph) {
+      if (!byFlag && ph.status === 'live') byFlag = ph;
+      if (!byDate && ph.start && ph.end && ph.start <= t && t <= ph.end) byDate = ph;
+    });
+    return byDate || byFlag || phases[0] || null;
+  }
+
+  function phaseItems(ph) {
+    if (!ph) return [];
+    var P = plan();
+    var blk = P['phase' + ph.num];
+    return (blk && blk.items) ? blk.items : [];
+  }
+
+  /* Every item the plan currently holds, flattened, each tagged with the
+     phase it belongs to. */
+  function allItems() {
+    var P = plan();
+    var out = [];
+    (P.phases || []).forEach(function (ph) {
+      phaseItems(ph).forEach(function (it) {
+        out.push({ id: it.id, label: it.t, tag: it.tag || '', due: it.due || null,
+                   detail: it.d || '', steps: it.steps || [],
+                   phaseId: ph.id, phase: ph.label, color: ph.color || '#993C1D' });
+      });
+    });
+    return out;
+  }
+
+  /* The next open moves, soonest deadline first, undated last. A due date is
+     the only ordering v2 respects — everything live serves one date. */
+  function moves(limit) {
+    var d = read().done || {};
+    var open = allItems().filter(function (it) { return !d[it.id]; });
+    open.sort(function (a, b) {
+      if (a.due && b.due) return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;
+      if (a.due) return -1;
+      if (b.due) return 1;
+      return 0;
+    });
+    return limit ? open.slice(0, limit) : open;
+  }
+
+  /* Counted against the live phase, which is the whole point of v2: a
+     percentage of 371 items dated years out never moves and says nothing. */
+  function counts() {
+    var d = read().done || {};
+    var ph = livePhase();
+    var liveItems = phaseItems(ph);
+    var all = allItems();
+    var liveDone = 0;
+    liveItems.forEach(function (it) { if (d[it.id]) liveDone++; });
+    var totalDone = 0;
+    all.forEach(function (it) { if (d[it.id]) totalDone++; });
+    return {
+      phase: ph, phaseLabel: ph ? ph.label : '',
+      live: liveItems.length, liveDone: liveDone,
+      total: all.length, totalDone: totalDone,
+      later: all.length - liveItems.length,
+      pct: liveItems.length ? Math.round(liveDone / liveItems.length * 100) : 0,
+      pctAll: all.length ? Math.round(totalDone / all.length * 100) : 0
+    };
+  }
+
+  /* What got closed in the last N days. setDone stamps the day rather than a
+     timestamp, so this is day-accurate and needs no clock arithmetic. */
+  function winsSince(days) {
+    var d = read().done || {};
+    var byId = {};
+    allItems().forEach(function (it) { byId[it.id] = it; });
+    var out = [];
+    Object.keys(d).forEach(function (id) {
+      var when = d[id];
+      if (typeof when !== 'string') return;      // pre-dating writes stored 1
+      var ago = daysBetween(when);
+      if (ago === null || ago > days || ago < 0) return;
+      out.push({ id: id, when: when, ago: ago,
+                 label: byId[id] ? byId[id].label : id,
+                 known: !!byId[id] });
+    });
+    return out.sort(function (a, b) { return a.ago - b.ago; });
+  }
+
   /* ── pipeline ──────────────────────────────────────────────────────
      Stage and ball are user-editable; the shipped board is only the seed.
      movedAt is stamped on every stage change, because days-in-stage is
@@ -169,6 +268,8 @@
     today: today, daysBetween: daysBetween, daysUntil: daysUntil,
     fmtDate: fmtDate, money: money, esc: esc, el: el,
     isDone: isDone, setDone: setDone, toggleDone: toggleDone, doneCount: doneCount,
+    livePhase: livePhase, phaseItems: phaseItems, allItems: allItems,
+    moves: moves, counts: counts, winsSince: winsSince,
     pipeItem: pipeItem, setPipe: setPipe, touchPipe: touchPipe,
     verifyResult: verifyResult, setVerify: setVerify,
     importPlan: importPlan, revertPlan: revertPlan,

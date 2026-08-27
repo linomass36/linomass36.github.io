@@ -16,7 +16,8 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
 <script src="./anatomy-data.js"></script>
 <script src="./anatomy-core.js"></script>
-<script src="./hub-data.js"></script>
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
 <script src="./systems.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -385,7 +386,6 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:940,&quot;height&quot;:1700}}">
 class Component extends DCLogic {
-  PKEY = 'ct-master-plan-v2';
   NKEY = 'nm_nodes_v2';
   JKEY = 'ct_journal_v1';
   LKEY = 'ct_lifelog_v1';
@@ -408,8 +408,6 @@ class Component extends DCLogic {
   state = { tick: 0, reflectText: '', reflectMsg: '', prio0: '', prio1: '', prio2: '', editingPrio: false, histOpen: false };
 
   readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
-  readPlan() { return Object.assign({ checked: {}, meta: {}, history: [] }, this.readJSON(this.PKEY, {}) || {}); }
-  writePlan(patch) { const cur = this.readJSON(this.PKEY, { v: 2, checked: {}, meta: {}, history: [] }) || {}; Object.assign(cur, patch); try { localStorage.setItem(this.PKEY, JSON.stringify(cur)); } catch (e) {} }
   readW() {
     const w = Object.assign({ priorities: {}, prioDone: {}, reviews: {}, steps: {}, answers: {} },
                             this.readJSON(this.WKEY, {}) || {});
@@ -471,14 +469,7 @@ class Component extends DCLogic {
     : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
   toggle(id) {
-    const plan = this.readPlan();
-    const checked = Object.assign({}, plan.checked);
-    const meta = Object.assign({}, plan.meta);
-    const m = Object.assign({}, meta[id] || {});
-    if (checked[id]) { delete checked[id]; delete m.completedAt; } else { checked[id] = 1; m.completedAt = Date.now(); }
-    meta[id] = m;
-    const hist = (plan.history || []).concat([{ id, ts: Date.now(), a: checked[id] ? 1 : 0 }]).slice(-2000);
-    this.writePlan({ checked, meta, history: hist });
+    if (window.PlanV2) window.PlanV2.toggleDone(id);
     this.bump();
   }
   setStep(key) { const w = this.readW(); const wk = this.reviewWeekKey(new Date()); const steps = Object.assign({}, w.steps); const s = Object.assign({}, steps[wk] || {}); s[key] = s[key] ? 0 : 1; steps[wk] = s; this.writeW({ steps }); this.bump(); }
@@ -520,51 +511,41 @@ class Component extends DCLogic {
 
   renderVals() {
     this.state.tick;
-    const data = window.HUB_DATA;
+    const V = window.PlanV2;
     const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const now = new Date(); const nowMs = now.getTime();
     const todayLabel = DAYS[now.getDay()] + ' · ' + MON[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
     const dowLabel = DAYS[now.getDay()];
-    if (!data) return { todayLabel, dowLabel, ritualDone: 0, todayItems: [], wins: [], loops: [], people: [], prioRows: [], staleRows: [], questions: [], answeredN: 0, saveReflect: () => {}, reflectMsg: '',
+    if (!V) return { todayLabel, dowLabel, ritualDone: 0, todayItems: [], wins: [], loops: [], people: [], prioRows: [], staleRows: [], questions: [], answeredN: 0, saveReflect: () => {}, reflectMsg: '',
       hasTrend: false, trendText: '', hasTrendWait: false, trendWait: '',
       histOpen: false, hasHistory: false, history5: [], histLabel: '', toggleHist: () => {} };
 
-    const plan = this.readPlan();
     const w = this.readW();
     const wk = this.reviewWeekKey(now);        // the week under review
     const workWk = this.workWeekKey(now);      // the week being lived
     const planWk = this.planWeekKey(now);      // the week being planned
     const steps = w.steps[wk] || {};
-    const checked = plan.checked, meta = plan.meta, history = plan.history || [];
-    const isChecked = id => !!checked[id];
-    const isKilled = id => !!(meta[id] && meta[id].killed);
-    const itemById = {}; data.items.forEach(it => itemById[it.id] = it);
-    const bMap = {}; data.branches.forEach(b => bMap[b.id] = b);
-    const byBranch = {}; data.items.forEach(it => { (byBranch[it.branchId] = byBranch[it.branchId] || []).push(it); });
 
-    // ---- wins: checked in last 7d ----
-    const weekAgo = nowMs - 7 * 86400000;
-    const winMap = {};
-    history.forEach(h => { if (h.a && h.ts >= weekAgo && itemById[h.id]) winMap[h.id] = h.ts; });
-    const wins = Object.keys(winMap).map(id => ({ id, label: itemById[id].label, ts: winMap[id] }))
-      .sort((a, b) => b.ts - a.ts)
-      .map(x => ({ label: x.label, when: DAYS[new Date(x.ts).getDay()].slice(0, 3) }));
+    /* Wins and loops came off v1's 371-item inventory and v1's store, so the
+       Sunday ritual reviewed a plan the recalibration had already replaced —
+       and a move closed on the Plan page never showed up here as a win.
+       Both now read v2, which is also what the toggle below writes. */
+
+    // ---- wins: closed in the last 7 days ----
+    const wins = V.winsSince(7)
+      .filter(x => x.known)
+      .map(x => ({ label: x.label, when: DAYS[new Date(x.when + 'T12:00:00').getDay()].slice(0, 3) }));
     const winsEmpty = wins.length === 0;
-    const winsCountText = wins.length + ' move' + (wins.length === 1 ? '' : 's') + ' checked in the last 7 days.';
+    const winsCountText = wins.length + ' move' + (wins.length === 1 ? '' : 's') + ' closed in the last 7 days.';
 
-    // ---- open loops: nearest unchecked in priority order ----
-    const loops = [];
-    for (const bid of (data.priority || data.branches.map(b => b.id))) {
-      for (const it of (byBranch[bid] || [])) {
-        if (!isChecked(it.id) && !isKilled(it.id)) {
-          const b = bMap[bid];
-          loops.push({ id: it.id, label: it.label, branch: b ? b.title : '', color: b ? b.color : '#993C1D', checked: false, toggle: () => this.toggle(it.id) });
-          if (loops.length >= 6) break;
-        }
-      }
-      if (loops.length >= 6) break;
-    }
+    // ---- open loops: the live phase's open moves, soonest deadline first ----
+    const loops = V.moves(6).map(m => ({
+      id: m.id, label: m.label,
+      branch: m.due ? V.fmtDate(m.due).replace(/ \d{4}$/, '') : (m.tag || m.phase),
+      color: m.color || '#993C1D',
+      checked: false, toggle: () => this.toggle(m.id)
+    }));
 
     // ---- people owed ----
     const contacts = (this.readJSON(this.NKEY, []) || []).filter(c => c && c.type !== 'you');

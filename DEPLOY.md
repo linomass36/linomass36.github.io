@@ -976,6 +976,47 @@ live page can be walked back to the front door. The second one immediately
 found three links nobody knew about — Today and Mission Control still
 pointing into the v1 plan and the retired sprint.
 
+### Two plans, and the daily pages were reading the retired one
+
+`plan-v2-data.js` opens by saying it supersedes the v1 content in
+`hub-data.js` and that "nothing reads it as current any more". That was not
+true of the three pages actually opened every day:
+
+```
+Standing.html          "Do these next"      <- HUB_DATA, v1's 371 items
+Today.dc.html          next steps           <- HUB_DATA, one per v1 branch
+Weekly Review.dc.html  wins and open loops  <- HUB_DATA + v1's store
+systems.js             the board's first tile — sort 0, top of the Standing
+                       every morning — linked to Plan.html and reported v1's
+                       percentage
+```
+
+Two plans, two stores, no connection between them. The store names are their
+own trap: `ct-master-plan-v2` is **v1's** store; v2's is `plan_v2_state_v1`.
+So a move closed on the Plan page never appeared as a win in the Sunday
+review, and the Standing spent every morning naming work the recalibration
+had explicitly abandoned — the capital engine, the research spine, thirteen
+branches of it.
+
+Nothing could catch this. Both files were valid, every link resolved, the
+site-map tripwires passed, and the wrong number is a perfectly plausible
+number: 371 steps at 34% looks like a plan being worked.
+
+`PlanV2` now answers the question once, for everyone — `moves()`, `counts()`
+and `winsSince()` over the **live phase**, which is the point of v2: a
+percentage of 371 items dated years out never moves and tells you nothing,
+whereas `0 of 10 — close out the summer` does. Moves are ordered by deadline,
+because everything live serves one date.
+
+`tools/plan-source.test.js` pins both halves: the reader's behaviour, and —
+structurally — that the daily surfaces load the v2 plan and read neither
+`HUB_DATA` nor v1's store. That second half is the tripwire that would have
+caught this in the first place. Comments may name v1; code may not read it.
+
+Still on v1, correctly: the archived v1 documents. Still on v1 and worth a
+later pass: `Dossiers`, `Life Log` and `Examiner` use `HUB_DATA` for contacts
+and extras rather than for "what do I do next".
+
 ### The corrector was correcting the drawer
 
 `upbar.js` rewrites a back link still pointing at `Hub.dc.html`, the retired
@@ -1085,6 +1126,8 @@ reading eight weeks in the past.
 - `sitemap.js` — the only declaration of what pages exist: name, drawer group, owning parent, and what each page's back control does now. Read by `nav.js`, the Standing's directory and `upbar.js`.
 - `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px. Skips the injected chrome, whose links are a site directory rather than this page's back control. See **The corrector was correcting the drawer** above.
 - `tools/upbar.test.js` — the corrector fixes the page's own stale back link and leaves the drawer's Workshop entry alone.
+- `plan-v2.js` — also `moves()`, `counts()` and `winsSince()`: the one reader for "what is next", over the live phase. See **Two plans** above.
+- `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
 - `calendar.js` + `Week.html` — next week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
 - `tools/calendar.test.js` — the named calendar is the one read, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.

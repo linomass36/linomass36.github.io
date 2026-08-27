@@ -254,34 +254,29 @@
   }
 
   /* ── the master plan ────────────────────────────────────────────────────
-     371 steps is an inventory, not a plan. The branches already carry a
-     timeframe, so they already say which of them is live now, which stands
-     all year and which is years out; `horizon` on each branch just makes that
-     machine-readable. Nothing is hidden and nothing is deleted — the count
-     you are shown is the one you can act on this term, and the whole number
-     is right beside it. */
+     The tile's href was pointed at the v2 plan in an earlier pass, but its
+     NUMBERS were still counted off v1's 371-step inventory and v1's store.
+     So the first tile on the Standing every morning linked to one plan and
+     reported another's progress.
+
+     The count now comes from PlanV2, over the live phase — which is the
+     whole point of the recalibration: a percentage of 371 items dated years
+     out never moves and tells you nothing. The v1 shape is kept so callers
+     read the same keys.  */
   function planCounts() {
-    var data = w.HUB_DATA || {};
-    var items = data.items || [];
-    var branches = data.branches || [];
-    var horizonOf = {};
-    branches.forEach(function (b) { horizonOf[b.id] = b.horizon || 'later'; });
-    var plan = readJSON('ct-master-plan-v2', {}) || {};
-    var checked = plan.checked || {};
-    var out = { now: 0, nowDone: 0, standing: 0, standingDone: 0, later: 0, laterDone: 0,
-                total: items.length, totalDone: 0 };
-    items.forEach(function (it) {
-      var h = horizonOf[it.branchId] || 'later';
-      var done = !!checked[it.id];
-      out[h] += 1;
-      out[h + 'Done'] += done ? 1 : 0;
-      out.totalDone += done ? 1 : 0;
-    });
-    out.live = out.now + out.standing;
-    out.liveDone = out.nowDone + out.standingDone;
-    out.pct = out.live ? Math.round(out.liveDone / out.live * 100) : 0;
-    out.pctAll = out.total ? Math.round(out.totalDone / out.total * 100) : 0;
-    return out;
+    var V = w.PlanV2;
+    if (V && typeof V.counts === 'function') {
+      var c = V.counts();
+      return { now: c.live, nowDone: c.liveDone, standing: 0, standingDone: 0,
+               later: c.later, laterDone: 0,
+               live: c.live, liveDone: c.liveDone,
+               total: c.total, totalDone: c.totalDone,
+               pct: c.pct, pctAll: c.pctAll,
+               phase: c.phase, phaseLabel: c.phaseLabel };
+    }
+    return { now: 0, nowDone: 0, standing: 0, standingDone: 0, later: 0, laterDone: 0,
+             live: 0, liveDone: 0, total: 0, totalDone: 0, pct: 0, pctAll: 0,
+             phase: null, phaseLabel: '' };
   }
 
   function plan() {
@@ -290,8 +285,10 @@
        Standing every morning — was still opening the v1 master plan that the
        v2 recalibration replaced wholesale. */
     return { id: 'plan', name: 'The plan', href: 'Plan.html', sort: 0,
-      big: c.pct + '%', unit: 'this term', tone: '',
-      line: c.liveDone + ' of ' + c.live + ' live steps · ' + c.later + ' more further out',
+      big: c.pct + '%', unit: 'this phase', tone: '',
+      line: c.live
+        ? c.liveDone + ' of ' + c.live + ' — ' + (c.phaseLabel || 'the live phase').toLowerCase()
+        : 'no phase is live right now',
       counts: c };
   }
 

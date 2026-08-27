@@ -10,7 +10,8 @@
 <script src="./anatomy-data.js"></script>
 <script src="./anatomy-core.js"></script>
 <script src="./reading-data.js"></script>
-<script src="./hub-data.js"></script>
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
 <script src="./conditions.js"></script>
 <script src="./sitemap.js"></script>
 <script src="./systems.js"></script>
@@ -619,7 +620,7 @@ footer {
   </section>
 
   <section id="acts-sec">
-    <div class="kicker">Do these next <span class="note">from the master plan &middot; tap to close one</span></div>
+    <div class="kicker">Do these next <span class="note" id="acts-note">tap to close one</span></div>
     <ul class="acts" id="acts"></ul>
   </section>
   <section id="acts-folded" hidden>
@@ -700,7 +701,6 @@ footer {
                'Six things','Seven things','Eight things','Nine things','Ten things'];
   function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
 
-  var PKEY = 'ct-master-plan-v2';   // the master plan's own store, shared with Mission Control
   var FKEY = 'ct_floor_v1';         // which floor days have been met
   /* Which floor days you asked to see the numbers on. Per-day rather than
      sticky: the fold is the right default every morning, and wanting the
@@ -736,38 +736,36 @@ footer {
   }
   function C() { return window.Conditions; }
 
-  /* ── the master plan's next open moves ───────────────────────
-     Same store and same priority order Mission Control uses, so
-     closing one here closes it there. */
+  /* ── the plan's next open moves ──────────────────────────────
+     These came off HUB_DATA — v1's 371-step inventory and v1's store —
+     while the tile above them linked to the v2 plan. So the Standing spent
+     every morning naming work the recalibration had already abandoned.
+
+     PlanV2.moves() is the one reader now: the live phase's open items,
+     soonest deadline first. Closing one here writes v2's store, which is
+     what the Plan page reads, so a move closed on the phone is closed at
+     the desk. */
   function nextActions(limit) {
-    var D = window.HUB_DATA;
-    if (!D || !D.items) return [];
-    var plan = lsJson(PKEY, null) || {};
-    var checked = plan.checked || {};
-    if (!plan.checked && D.defaultChecked) {
-      D.defaultChecked.forEach(function (id) { checked[id] = 1; });
-    }
-    var bMap = {}; (D.branches || []).forEach(function (b) { bMap[b.id] = b; });
-    var byBranch = {};
-    D.items.forEach(function (it) { (byBranch[it.branchId] = byBranch[it.branchId] || []).push(it); });
-    var out = [];
-    (D.priority || []).forEach(function (bid) {
-      (byBranch[bid] || []).forEach(function (it) {
-        if (out.length >= limit || checked[it.id]) return;
-        var b = bMap[bid];
-        out.push({ id: it.id, label: it.label, tag: b ? b.title : '' });
-      });
+    var V = window.PlanV2;
+    if (!V || typeof V.moves !== 'function') return [];
+    return V.moves(limit).map(function (m) {
+      return { id: m.id, label: m.label, tag: dueTag(m) };
     });
-    return out;
+  }
+
+  /* A date beats a label: "Sep 7" is the reason the item is first. */
+  function dueTag(m) {
+    if (!m.due) return m.tag || '';
+    var left = window.PlanV2.daysUntil(m.due);
+    var when = window.PlanV2.fmtDate(m.due).replace(/ \d{4}$/, '');
+    if (left === null) return when;
+    if (left < 0) return when + ' · overdue';
+    if (left === 0) return when + ' · today';
+    return when + ' · ' + left + 'd';
   }
 
   function closeAction(id) {
-    var plan = lsJson(PKEY, null) || {};
-    plan.checked = plan.checked || {};
-    plan.history = plan.history || [];
-    plan.checked[id] = 1;
-    plan.history.push({ id: id, a: 1, ts: Date.now() });   // the shape Mission Control writes
-    lsSet(PKEY, plan);
+    if (window.PlanV2) window.PlanV2.setDone(id, true);
   }
 
   // Whether today's floor ask has been met.
@@ -1136,6 +1134,13 @@ footer {
     /* Folded, not deleted. "They will keep" is the message; hiding them
        outright would move the dread somewhere you cannot see it. */
     var acts = nextActions(6);
+    /* Name the phase the moves come from, so it is obvious which plan is
+       talking. v1 said "from the master plan" and meant the wrong one. */
+    var an = $('#acts-note');
+    if (an && window.PlanV2) {
+      var ph = window.PlanV2.counts();
+      an.textContent = (ph.phaseLabel ? ph.phaseLabel.toLowerCase() + ' · ' : '') + 'tap to close one';
+    }
     $('#acts-sec').hidden = floorDay;
     $('#acts-folded').hidden = !floorDay;
     $('#acts-fold-label').innerHTML = '<b>' + (COUNT[acts.length] || acts.length) +
