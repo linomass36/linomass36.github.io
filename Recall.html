@@ -65,7 +65,9 @@ h1 { font-family:var(--serif); font-weight:500; font-size:34px; line-height:1.08
   color:inherit; min-height:64px; }
 .q:hover { border-color:var(--rust); }
 .q .dot { width:9px; height:9px; border-radius:50%; flex:none; }
-.q .body { flex:1; min-width:0; }
+.q .body { flex:1; min-width:0; display:flex; flex-direction:column;
+  /* Inline spans put the name and its line on one run of text, so a queue
+     that has something to explain read "Ankinot linked — run the Mac sync". */ }
 .q .nm { font-size:15.5px; color:var(--ink); font-weight:500; }
 .q .sub { font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:3px;
   overflow:hidden; text-overflow:ellipsis; }
