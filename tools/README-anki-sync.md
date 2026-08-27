@@ -18,6 +18,35 @@ phone.
 It never writes to your collection. It copies the database to a temp file,
 reads the copy, and deletes it.
 
+## Backfilling the history
+
+The hub could never draw an Anki chart, because `ct_anki_v1` holds a single
+reading and is overwritten on every sync — the series began the day the site
+started keeping it and nothing before that could be recovered.
+
+It could always be recovered from here. `revlog` is append-only and holds
+every review you have ever answered, with a millisecond timestamp on each.
+Run this once:
+
+```
+python3 tools/anki_sync.py --backfill --open
+```
+
+That sends a year of daily reps, distinct cards, Again presses and seconds
+alongside the usual reading, and the hub unpacks it onto the days it belongs
+to. Recall stops saying "not enough kept yet" and draws the whole year.
+
+`--history N` sets the window if you want something other than 365, and
+`--history 0` sends none. A routine sync sends none by default — there is no
+reason to resend a year every thirty minutes.
+
+**What cannot be backfilled** is the queue depth on a past day. How many cards
+were waiting on 3 March is not a fact the revlog records; it was derived from
+the collection's state at the time and thrown away. Reps, cards, Again and
+time are facts. The queue is only ever known live, which is why the Recall
+chart draws a long reps line against a short queue line — both on one date
+axis, so today is today on both.
+
 ## Why not AnkiConnect
 
 AnkiConnect serves `http://localhost:8765`. The hub is HTTPS on GitHub Pages, so

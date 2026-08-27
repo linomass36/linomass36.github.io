@@ -273,8 +273,11 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       $('#hist-note').textContent = reps.length + 'd kept';
       return;
     }
-    $('#hist-note').textContent = reps.length + ' days kept';
+    $('#hist-note').textContent = axisNote(reps, queue);
 
+    function axisNote(r, q) {
+      return r.length + ' days of reps' + (q.length ? ' · queue known for ' + q.length : '');
+    }
     var lg = el('div', 'legend');
     [['Reps/day', 'var(--s1)'], ['Queue waiting', 'var(--s2)']].forEach(function (p) {
       var s = el('span'); var i = el('i'); i.style.background = p[1];
@@ -284,12 +287,26 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 
     var wrap = el('div', 'chart');
     var W = 640, H = 150, PL = 6, PR = 6, PT = 14, PB = 20;
+
+    /* One axis for both series, built from the days themselves. Scaling each
+       series across the full width independently would put a 365-day reps
+       line and a 3-day queue line on the same span — the queue can only ever
+       be known live, so it is always the shorter of the two, and drawing them
+       on separate scales would make today look like eight weeks ago. */
+    var axis = [];
+    var seenDay = {};
+    reps.concat(queue).forEach(function (p) {
+      if (seenDay[p.day]) return;
+      seenDay[p.day] = 1; axis.push(p.day);
+    });
+    axis.sort();
+    var at = {};
+    axis.forEach(function (d, i) { at[d] = i; });
+
     var all = reps.map(function (r) { return r.v; })
       .concat(queue.map(function (q) { return q.v; }));
     var hi = Math.max.apply(null, all) || 1;
-    var byDay = {};
-    queue.forEach(function (q) { byDay[q.day] = q.v; });
-    var x = function (i, n) { return PL + (n < 2 ? 0 : (i / (n - 1)) * (W - PL - PR)); };
+    var x = function (i, n) { return PL + (axis.length < 2 ? 0 : (i / (axis.length - 1)) * (W - PL - PR)); };
     var y = function (v) { return PT + (1 - v / hi) * (H - PT - PB); };
     var ns = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(ns, 'svg');
@@ -306,12 +323,19 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     });
     function line(pts, colour, fill) {
       if (pts.length < 2) return;
-      var d = '';
-      pts.forEach(function (p, i) { d += (i ? 'L' : 'M') + x(i, pts.length).toFixed(1) + ',' + y(p.v).toFixed(1); });
+      var d = '', first = null, last = null;
+      pts.forEach(function (p) {
+        var i = at[p.day];
+        if (i == null) return;
+        if (first === null) first = i;
+        last = i;
+        d += (d ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(p.v).toFixed(1);
+      });
+      if (!d || first === null) return;
       if (fill) {
         var ap = document.createElementNS(ns, 'path');
-        ap.setAttribute('d', d + 'L' + x(pts.length - 1, pts.length).toFixed(1) + ',' + (H - PB) +
-                             'L' + x(0, pts.length).toFixed(1) + ',' + (H - PB) + 'Z');
+        ap.setAttribute('d', d + 'L' + x(last).toFixed(1) + ',' + (H - PB) +
+                             'L' + x(first).toFixed(1) + ',' + (H - PB) + 'Z');
         ap.setAttribute('fill', colour); ap.setAttribute('opacity', '.12');
         svg.appendChild(ap);
       }
@@ -320,9 +344,9 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       ln.setAttribute('stroke', colour); ln.setAttribute('stroke-width', '2');
       ln.setAttribute('stroke-linejoin', 'round');
       svg.appendChild(ln);
-      var last = pts[pts.length - 1];
+      var lastPt = pts[pts.length - 1];
       var c = document.createElementNS(ns, 'circle');
-      c.setAttribute('cx', x(pts.length - 1, pts.length)); c.setAttribute('cy', y(last.v));
+      c.setAttribute('cx', x(at[lastPt.day])); c.setAttribute('cy', y(lastPt.v));
       c.setAttribute('r', '3.5'); c.setAttribute('fill', colour);
       c.setAttribute('stroke', 'var(--card)'); c.setAttribute('stroke-width', '2');
       svg.appendChild(c);
@@ -338,14 +362,14 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       t.setAttribute('fill', fill || 'var(--faint)');
       t.textContent = s; svg.appendChild(t);
     }
-    txt(x(reps.length - 1, reps.length) - 6, y(reps[reps.length - 1].v) - 9,
-        reps[reps.length - 1].v + ' reps', 'end', 'var(--s1)');
+    var lastRep = reps[reps.length - 1];
+    txt(x(at[lastRep.day]) - 6, y(lastRep.v) - 9, lastRep.v + ' reps', 'end', 'var(--s1)');
     if (queue.length) {
-      txt(x(queue.length - 1, queue.length) - 6, y(queue[queue.length - 1].v) - 9,
-          queue[queue.length - 1].v + ' waiting', 'end', 'var(--s2)');
+      var lq = queue[queue.length - 1];
+      txt(x(at[lq.day]) - 6, y(lq.v) - 9, lq.v + ' waiting', 'end', 'var(--s2)');
     }
-    txt(PL, H - 5, reps[0].day);
-    txt(W - PR, H - 5, reps[reps.length - 1].day, 'end');
+    txt(PL, H - 5, axis[0]);
+    txt(W - PR, H - 5, axis[axis.length - 1], 'end');
     wrap.appendChild(svg);
     var cap = el('p', 'cap');
     cap.innerHTML = 'The rate that holds the queue flat is the number worth knowing, and a ' +

@@ -141,19 +141,75 @@
     return out;
   }
 
+  /* The closure log. A "closure" is one syllabus BLOCK closed out — a named
+     region of anatomy (nk1, tx10) whose gate test scored 80 or better on
+     both the innervation and the topography halves. Not a card, not a
+     session: a piece of the body you can now derive rather than recite.
+
+     Closures therefore come from `blocks`, not from `days` — a day record
+     holds how the day ran (tier, minutes read, minutes drawn, cards made),
+     and counting its keys, as this once did, counted the SHAPE of the record
+     rather than anything that happened: twelve, every single day. */
   function fromAnatomy() {
     var out = {};
     var d = readJSON('ct_anatomy_v1', {}) || {};
+
+    var blocks = d.blocks || {};
+    Object.keys(blocks).forEach(function (id) {
+      var b = blocks[id] || {};
+      if (!(num(b.inv) >= 80 && num(b.topo) >= 80)) return;   // the closure rule
+      var when = String(b.gate || b.studied || '').slice(0, 10);
+      if (!isDay(when)) return;
+      var row = out[when] || (out[when] = {});
+      row.closures = (row.closures || 0) + 1;
+    });
+
+    /* The day record's own numbers are worth having as columns in their own
+       right — minutes read and drawn are the effort behind a closure. */
     var days = d.days || {};
     Object.keys(days).forEach(function (k) {
       if (!isDay(k)) return;
-      var dy = days[k];
-      var n = Array.isArray(dy) ? dy.length
-            : (dy && typeof dy === 'object')
-              ? (Array.isArray(dy.closed) ? dy.closed.length : Object.keys(dy).length)
-              : null;
-      if (n != null) out[k] = { closures: n };
+      var dy = days[k] || {}, row = out[k] || {};
+      if (num(dy.minRead) != null) row.anatRead = num(dy.minRead);
+      if (num(dy.minDraw) != null) row.anatDraw = num(dy.minDraw);
+      var made = (num(dy.cardsNew) || 0) + (num(dy.cardsFixed) || 0);
+      if (num(dy.cardsNew) != null || num(dy.cardsFixed) != null) row.cardsMade = made;
+      if (Object.keys(row).length) out[k] = row;
     });
+    return out;
+  }
+
+  /* The Anki history the Mac script now sends.
+
+     ct_anki_v1 holds one reading and is overwritten on every sync, so the
+     hub's own series could only ever start the day it began keeping it. The
+     revlog on the Mac is append-only and has held every review all along —
+     anki_sync.py --backfill sends it as parallel arrays, and this unpacks
+     them onto the days they belong to.
+
+     Queue depth is absent on purpose: how many cards were waiting on a past
+     day is not recorded anywhere, it was derived and thrown away. Reps,
+     cards, Again and time are facts; the queue is only ever known live. */
+  function fromAnkiHistory() {
+    var out = {};
+    var a = readJSON('ct_anki_v1', null);
+    var h = a && a.history;
+    if (!h || !h.from || !Array.isArray(h.reps)) return out;
+    var start = new Date(String(h.from).slice(0, 10) + 'T12:00:00');
+    if (isNaN(start)) return out;
+    var n = Math.min(h.reps.length, h.days || h.reps.length);
+    for (var i = 0; i < n; i++) {
+      var d = new Date(start.getTime());
+      d.setDate(d.getDate() + i);
+      var k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+      var row = {};
+      if (num(h.reps[i]) != null) row.ankiReps = num(h.reps[i]);
+      if (h.cards && num(h.cards[i]) != null) row.ankiCards = num(h.cards[i]);
+      if (h.again && num(h.again[i]) != null) row.ankiAgain = num(h.again[i]);
+      if (h.secs && num(h.secs[i]) != null) row.ankiMins = Math.round(num(h.secs[i]) / 60 * 10) / 10;
+      if (Object.keys(row).length) out[k] = row;
+    }
     return out;
   }
 
@@ -201,6 +257,7 @@
       } catch (e) {}
     }
     fold(fromLifeLog); fold(fromHealth); fold(fromAnatomy); fold(fromWeekly);
+    fold(fromAnkiHistory);   // a year of reps, straight off the revlog
     fold(fromWeekPlan);   // after the Life Log: a dated session beats a day flag
     var saved = store().days;
     Object.keys(saved).forEach(function (k) {
