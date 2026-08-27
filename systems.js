@@ -485,7 +485,78 @@
              ready: paired.length >= CORR_MIN };
   }
 
-  var BUILDERS = [plan, anatomy, grind, study, anki, reading, research, record, journal, weekly, vault];
+  /* ── recall: one tile, three queues ────────────────────────────────────
+     Anki and the Study Engine each held a tile and each opened Recall.html,
+     so the board asked "what do I owe my memory today?" twice and answered
+     it in two places. The prototype's rule: one tile, one number, the
+     sources named inside it.  */
+  function recall() {
+    var base = { id: 'recall', name: 'Recall', href: 'Recall.html', sort: 3 };
+    var a = anki(), st = study();
+    var parts = [], due = 0, known = false;
+
+    var aDue = parseInt(a.big, 10);
+    if (!isNaN(aDue)) { due += aDue; known = true; parts.push('anki ' + aDue); }
+    var sDue = parseInt(st.big, 10);
+    if (!isNaN(sDue)) { due += sDue; known = true; if (sDue) parts.push('error cards ' + sDue); }
+
+    var r = readJSON('ct_resurface_v1', null);
+    var rDue = (r && r.queue && r.queue.length) ? 1 : 0;
+    if (rDue) { due += rDue; known = true; parts.push('resurfaced ' + rDue); }
+
+    if (!known) return Object.assign(base, { big: '—', unit: 'not linked', tone: '',
+      line: 'run the Mac sync, or type a reading in' });
+    return Object.assign(base, {
+      big: String(due), unit: due === 1 ? 'due' : 'due',
+      tone: due ? 'go' : 'ok',
+      line: due ? parts.join(' · ') : 'all three queues are clear'
+    });
+  }
+
+  /* ── the week ──────────────────────────────────────────────────────────
+     Week.html shipped and nothing on the board pointed at it, so the only
+     way in was a thirty-item drawer. The Grind tile keeps its own page. */
+  function week() {
+    var base = { id: 'week', name: 'The Week', href: 'Week.html', sort: 2.5 };
+    var wk = readJSON('ct_week_v1', null);
+    var days = (wk && wk.days && typeof wk.days === 'object') ? wk.days : null;
+    var keys = days ? Object.keys(days) : [];
+    if (!keys.length) return Object.assign(base, { big: '—', unit: 'not pulled', tone: '',
+      line: 'read the calendar and the week lays itself out' });
+    var placed = 0, done = 0, free = 0;
+    keys.forEach(function (k) {
+      var d = days[k] || {};
+      if (d.session) placed++;
+      if (d.done) done++;
+      free += parseFloat(d.free) || 0;
+    });
+    if (!placed) return Object.assign(base, { big: String(Math.round(free)), unit: 'free hours',
+      tone: 'go', line: 'the week is read — nothing laid into it yet' });
+    return Object.assign(base, {
+      big: done + '/' + placed, unit: 'sessions', tone: done >= placed ? 'ok' : 'go',
+      line: done >= placed ? 'the week is done' : 'in ' + Math.round(free) + ' free hours'
+    });
+  }
+
+  /* ── trends ────────────────────────────────────────────────────────────
+     Same problem: the page exists and the board never named it. The number
+     is days in the daily table, because that is what gates every answer it
+     can give. */
+  function trends() {
+    var base = { id: 'trends', name: 'Trends', href: 'Trends.html', sort: 6.5 };
+    var F = w.Facts;
+    var n = 0;
+    try { n = F && typeof F.all === 'function' ? Object.keys(F.all() || {}).length : 0; } catch (e) {}
+    var MIN = 8;
+    if (!n) return Object.assign(base, { big: '0', unit: 'days', tone: '',
+      line: 'log a day, or import a health export' });
+    if (n < MIN) return Object.assign(base, { big: String(n), unit: 'of ' + MIN + ' days', tone: '',
+      line: (MIN - n) + ' more and the matrix starts answering' });
+    return Object.assign(base, { big: String(n), unit: 'days paired', tone: 'ok',
+      line: 'every pair, put through four tests' });
+  }
+
+  var BUILDERS = [plan, anatomy, grind, week, recall, reading, research, record, trends, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
      is dropped rather than allowed to take the page with it — one broken

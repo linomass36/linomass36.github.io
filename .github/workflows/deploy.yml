@@ -101,6 +101,7 @@ jobs:
           node tools/sitemap.test.js
           node tools/upbar.test.js
           node tools/plan-source.test.js
+          node tools/board.test.js
           node tools/weekly-review.test.js
           node tools/health-import.test.js
           node tools/facts.test.js

@@ -402,8 +402,18 @@ h1.floor em { color: var(--held); }
 .onething .did[aria-pressed="true"] { background: var(--ok); }
 .onething .alt { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 
-/* ── 2 · what is owed ── */
-.owed-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); }
+/* ── 2 · every system ──
+   Two columns at every width. The board is meant to be one glance, and a
+   single column of 150px cards fits one and a half systems on a phone —
+   which is a list you scroll, not a board you read. */
+.owed-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* The Plan is what the other eleven serve, so it is not one of twelve. */
+.tile.is-wide { grid-column: 1 / -1; }
+.sys-note { display: flex; gap: 10px; align-items: baseline; }
+.sys-tog { margin-left: auto; font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--faint); background: none; border: 0; padding: 2px 0;
+  cursor: pointer; }
+.sys-tog:hover, .sys-tog:focus-visible { color: var(--rust); }
 .tile {
   display: flex; flex-direction: column; padding: 15px 16px 14px;
   background: var(--card); border: 1px solid var(--owed-ln);
@@ -423,6 +433,23 @@ h1.floor em { color: var(--held); }
    top is the only difference: the ask is smaller today, the number is not
    a smaller number. */
 .tile.is-eased { border-left-color: var(--held); }
+
+/* Tone, not alarm. Only what is owed gets the red rail; a system that is
+   handled says so in green, and one with nothing to report stays quiet.
+   Every one of them is on the board either way. */
+.tile.t-ok { border-color: var(--rule); border-left-color: var(--ok); }
+.tile.t-ok .name { color: var(--ok); }
+.tile.t-ok .go-to { color: var(--ok); }
+.tile.t-none { border-color: var(--rule); border-left-color: var(--rule); }
+.tile.t-none .name { color: var(--faint); }
+.tile.t-none .big { color: var(--mid); }
+.tile.t-none .go-to { color: var(--faint); }
+/* A tile that says done does not need the room of one that says DUE. */
+.tile.is-quiet { padding: 12px 13px 11px; }
+.tile.is-quiet .big { font-size: 22px; }
+.tile.is-quiet .fig { margin-top: 6px; }
+.tile.is-quiet .line { margin-top: 6px; font-size: 12px; }
+.tile.is-quiet .go-to { display: none; }
 .tile.is-eased .name { color: var(--held); }
 .tile .mark {
   align-self: flex-start; margin-top: 10px; padding: 2px 8px; border-radius: 9px;
@@ -561,7 +588,6 @@ footer {
   <section class="standing">
     <h1 id="verdict">&mdash;</h1>
     <p id="verdict-sub">&mdash;</p>
-    <nav class="board" id="board" aria-label="Every system"></nav>
     <div class="drift" id="drift" hidden>
       <span class="lab">Drift</span>
       <span class="txt" id="drift-txt"></span>
@@ -599,7 +625,10 @@ footer {
   </section>
 
   <section id="owed-sec">
-    <div class="kicker">Wants you today <span class="note" id="owed-note"></span></div>
+    <div class="kicker sys-note">
+      <span>Every system <span class="note" id="owed-note"></span></span>
+      <button class="sys-tog" id="sys-tog" type="button" aria-pressed="false">show live only</button>
+    </div>
     <div class="owed-grid" id="owed-grid"></div>
   </section>
 
@@ -981,11 +1010,22 @@ footer {
     if (!pick.classList.contains('open')) { draft = null; buildPanel(); }
   });
 
+  /* `live` narrows the board to what is owed. Off by default: the whole
+     point of the board is that you can see the systems that are fine. */
+  var _tog = document.getElementById('sys-tog');
+  if (_tog) _tog.addEventListener('click', function () {
+    var on = this.getAttribute('aria-pressed') === 'true';
+    this.setAttribute('aria-pressed', String(!on));
+    /* Name the destination, not the state — a lone word "live" beside a
+       full board reads as a claim about the board. */
+    this.textContent = !on ? 'show all' : 'show live only';
+    paint();
+  });
+
   /* ── the page ──────────────────────────────────────────────── */
   function paint() {
     var all  = systems();
     paintConditions(all);
-    paintBoard(all);
     paintQuote();
     var owed = all.filter(function (s) { return s.tone === 'go'; });
     var held = all.filter(function (s) { return s.tone === 'held'; });
@@ -1091,25 +1131,46 @@ footer {
        a way back. Asking for the numbers is one tap, the answer is
        remembered for the day, and what comes back is the ordinary board
        rather than a censored one. */
-    $('#owed-sec').hidden = !showOwed || owed.length === 0;
-    $('#owed-note').textContent = owed.length
-      ? (floorDay ? 'shown because you asked — none of it is accruing today'
-                  : (easeDay ? 'the real numbers · the ask is smaller, the standing is not'
-                             : 'the ones with something owed'))
-      : '';
+    $('#owed-sec').hidden = false;
+    $('#owed-note').textContent = floorDay
+      ? 'a floor day — none of it is accruing'
+      : easeDay ? 'the real numbers · the ask is smaller, the standing is not'
+      : owed.length ? owed.length + ' of ' + all.length + ' want you'
+      : 'all ' + all.length + ' current';
+    /* Every system, not only the ones shouting.
+
+       The board listed what was owed, which meant The Plan — the thing the
+       other eleven serve — never appeared on it at all, because a plan on
+       track owes nothing. It also meant there was no state in which the
+       board looked calm, and no way to check a system that was behaving.
+
+       So: all of them, the Plan pinned across the top, tone carried by the
+       rail rather than by presence. `live` narrows to what is owed for the
+       days you only want the short version. */
     var grid = $('#owed-grid'); grid.innerHTML = '';
-    if (showOwed) owed.forEach(function (s) {
-      var a = el('a', 'tile' + (s.eased ? ' is-eased' : '')); a.href = s.href;
-      a.appendChild(el('div', 'name', s.name));
-      var fig = el('div', 'fig');
-      fig.appendChild(el('span', 'big', s.big));
-      fig.appendChild(el('span', 'unit', s.unit));
-      a.appendChild(fig);
-      a.appendChild(el('div', 'line', s.line));
-      if (s.eased) a.appendChild(el('div', 'mark', 'eased today'));
-      a.appendChild(el('div', 'go-to', 'open ' + s.name.toLowerCase() + ' →'));
-      grid.appendChild(a);
-    });
+    var liveOnly = $('#sys-tog').getAttribute('aria-pressed') === 'true';
+    var shown = (!showOwed || liveOnly) ? owed.concat(held) : all;
+    if (!showOwed && !liveOnly) shown = all;
+    shown.slice().sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); })
+      .forEach(function (s) {
+        var tone = s.tone === 'go' ? 't-go' : s.tone === 'ok' ? 't-ok' : 't-none';
+        /* The Plan is never the small one: it is the thing the rest serve,
+           and a neutral tone on it means "on track", not "unimportant". */
+        var quiet = s.id !== 'plan' && (s.tone === 'ok' || s.tone === 'held' || !s.tone);
+        var a = el('a', ['tile', tone, s.eased ? 'is-eased' : '',
+                         quiet ? 'is-quiet' : '', s.id === 'plan' ? 'is-wide' : '']
+                        .filter(Boolean).join(' '));
+        a.href = s.href;
+        a.appendChild(el('div', 'name', s.name));
+        var fig = el('div', 'fig');
+        fig.appendChild(el('span', 'big', s.big));
+        fig.appendChild(el('span', 'unit', s.unit));
+        a.appendChild(fig);
+        a.appendChild(el('div', 'line', s.line));
+        if (s.eased) a.appendChild(el('div', 'mark', 'eased today'));
+        a.appendChild(el('div', 'go-to', 'open ' + s.name.toLowerCase() + ' \u2192'));
+        grid.appendChild(a);
+      });
 
     var rv = $('#reveal');
     rv.hidden = !floorDay || owed.length === 0;
@@ -1391,25 +1452,6 @@ footer {
     reading: 'READ', research: 'RSRCH', record: 'LOG', journal: 'JRNL',
     weekly: 'REVIEW', vault: 'VAULT'
   };
-  function paintBoard(list) {
-    var b = $('#board');
-    if (!b) return;
-    b.innerHTML = '';
-    list.forEach(function (x) {
-      var a = document.createElement('a');
-      a.className = ('bar ' + (x.tone || '')).trim();
-      a.href = x.href;
-      a.title = x.name + ' \u2014 ' + x.big + ' ' + x.unit + ' \u00b7 ' + x.line;
-      var slot = document.createElement('span');
-      slot.className = 'slot';
-      slot.appendChild(document.createElement('i'));
-      var lab = document.createElement('b');
-      lab.textContent = CODE[x.id] || x.name.slice(0, 5).toUpperCase();
-      a.appendChild(slot); a.appendChild(lab);
-      b.appendChild(a);
-    });
-  }
-
   function paintAnki() {
     var d = ankiRead();
     var row = $('#anki-read'), note = $('#anki-note');

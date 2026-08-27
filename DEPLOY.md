@@ -976,6 +976,41 @@ live page can be walked back to the front door. The second one immediately
 found three links nobody knew about — Today and Mission Control still
 pointing into the v1 plan and the retired sprint.
 
+### Trends and The Week were published and unreachable
+
+Both pages shipped, deployed and sat in the build artifact. Neither was on
+the Standing's board. The board had eleven tiles and named neither, and the
+Grind tile still opened `Grind.dc.html` — the fixed nine-week grid the
+elastic week replaced. From the front door the two pages did not exist; the
+only way in was a thirty-item drawer.
+
+The board also listed only what was **owed**, which had two consequences
+nobody chose:
+
+- **The Plan was never on it.** A plan on track owes nothing, so the thing
+  the other eleven systems serve was absent from the board every day it was
+  going well.
+- **There was no calm state.** The board could show alarms or nothing. You
+  could not check a system that was behaving.
+
+It was also a single column of ~150px cards, which fits one and a half
+systems on a phone — a list you scroll, not a board you read — under a strip
+of eleven bars with four-letter labels (`ANAT`, `RSRCH`, `JRNL`) restating
+the cards directly beneath it, seven of them solid red.
+
+Now: every system, two columns at every width, The Plan pinned across the
+top, and tone carried by the rail rather than by presence — red for owed,
+green for handled, quiet for nothing to report. A tile that says done takes
+less room than one that says DUE. `show live only` narrows to what is owed
+for the days you want the short version. Anki and the Study Engine were two
+tiles opening the same page and asking the same question twice; they are one
+Recall tile that names its three sources.
+
+`tools/board.test.js` checks reachability rather than layout: every live
+page a tile should open is opened by one, every tile's destination exists,
+and the board carries more than one tone. It fails eight assertions against
+the old board.
+
 ### Two plans, and the daily pages were reading the retired one
 
 `plan-v2-data.js` opens by saying it supersedes the v1 content in
@@ -1128,6 +1163,7 @@ reading eight weeks in the past.
 - `tools/upbar.test.js` — the corrector fixes the page's own stale back link and leaves the drawer's Workshop entry alone.
 - `plan-v2.js` — also `moves()`, `counts()` and `winsSince()`: the one reader for "what is next", over the live phase. See **Two plans** above.
 - `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
+- `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
 - `calendar.js` + `Week.html` — next week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
 - `tools/calendar.test.js` — the named calendar is the one read, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
