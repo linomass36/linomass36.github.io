@@ -976,6 +976,37 @@ live page can be walked back to the front door. The second one immediately
 found three links nobody knew about — Today and Mission Control still
 pointing into the v1 plan and the retired sprint.
 
+### The corrector was correcting the drawer
+
+`upbar.js` rewrites a back link still pointing at `Hub.dc.html`, the retired
+front door. It found them with one document-wide scan for `a[href]` — and by
+the time it ran, `nav.js` had already appended the drawer, whose page list
+contains a perfectly legitimate link to `Hub.dc.html`: **the Workshop**, which
+is live, not archived.
+
+So the scan hit the drawer. On every page carrying one, the Workshop entry was
+rewritten to that page's own parent:
+
+```
+on Day Budget   "The Workshop"  ->  "← The Plan"      ->  Plan.html
+on The Body     "The Workshop"  ->  "← Today"         ->  Today.dc.html
+on Conditions   "The Workshop"  ->  "← The Standing"  ->  Standing.html
+```
+
+Two failures out of one line. The Workshop became unreachable from the drawer
+anywhere on the site, and the drawer grew a second back link that changed its
+name depending on where you opened it — two arrows in view at once, pointing
+different places. A quieter third: a page declared `back: 'none'` only gets a
+link injected when the scan finds nothing to correct, and the drawer's
+Workshop link counted as a find, so the injection never happened.
+
+The three site-map tripwires could not see any of it. Every declaration was
+correct; the damage was done to the DOM at runtime, after the page loaded. The
+fix is that the corrector now skips `#hbnav`, `#hb-tabs` and `#hb-up` — the
+chrome is a directory of the whole site, not this page's back control — and
+`tools/upbar.test.js` runs it against a stub DOM built the way the browser has
+it at that moment: the page's own header, plus the drawer already appended.
+
 ### Health days follow the reading, not the reader
 
 A sample stamped `2026-08-21 16:00:00 -0700` is already local time where it
@@ -1052,7 +1083,8 @@ reading eight weeks in the past.
 - `contact.js` — one person a day to reach out to, ranked over the Network Map's own tiers and touch dates. Logging a touch writes to `ct_dossier_v1`, which is what the ranking reads. See **One person a day** above.
 - `quotes.js` — the daily line, and `CTQuote.today()`, the one place that decides which one. The bank is kept coprime with 7 so nothing is welded to a weekday.
 - `sitemap.js` — the only declaration of what pages exist: name, drawer group, owning parent, and what each page's back control does now. Read by `nav.js`, the Standing's directory and `upbar.js`.
-- `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px.
+- `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px. Skips the injected chrome, whose links are a site directory rather than this page's back control. See **The corrector was correcting the drawer** above.
+- `tools/upbar.test.js` — the corrector fixes the page's own stale back link and leaves the drawer's Workshop entry alone.
 - `calendar.js` + `Week.html` — next week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
 - `tools/calendar.test.js` — the named calendar is the one read, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
