@@ -1,4 +1,16 @@
-/* Daily quote bank — surgeons, physicians, and the craft. One per day, rotated by date. */
+/* Daily quote bank — surgeons, physicians, and the craft. One per day.
+
+   ROTATION. Every consumer used to compute `quotes[dayOfYear % quotes.length]`
+   for itself. With 42 quotes that is a bug twice over: 42 is 6 x 7, so
+   dayOfYear % 42 moves in lockstep with the weekday and each quote is welded
+   to one day of the week — nine appearances a year, always a Thursday — and
+   dayOfYear resets to 1 on the 1st of January, jumping the cycle mid-stride.
+
+   CTQuote.today() is the one place that decides. It counts from the epoch
+   rather than the year, so there is no reset, and steps by a number coprime
+   with the bank so the full cycle is walked. The bank itself is kept coprime
+   with 7 — a stride cannot undo a period that is a multiple of a week.
+   Pass a Date to ask about another day. */
 window.CT_QUOTES = [
   { q: "The good physician treats the disease; the great physician treats the patient who has the disease.", by: "Sir William Osler", sub: "father of modern medicine" },
   { q: "It is infinitely better to transplant a heart than to bury it to be devoured by worms.", by: "Christiaan Barnard", sub: "performed the first human heart transplant, 1967" },
@@ -41,5 +53,31 @@ window.CT_QUOTES = [
   { q: "Great cases make great surgeons only when small cases were done greatly.", by: "Residency maxim", sub: "on the boring fundamentals" },
   { q: "Fortune favours the prepared mind.", by: "Louis Pasteur", sub: "founder of germ theory" },
   { q: "Rest is not idleness — the muscle that never relaxes ends in tremor.", by: "Physiology maxim", sub: "an argument for sleep" },
-  { q: "Write it down. The faintest ink outlasts the strongest memory.", by: "Chinese proverb", sub: "the case for a daily log" }
+  { q: "Write it down. The faintest ink outlasts the strongest memory.", by: "Chinese proverb", sub: "the case for a daily log" },
+  /* The forty-third. The bank was 42 = 6 x 7, so every quote recurred on a
+     six-week cycle and was therefore welded to one weekday no matter what
+     order they were walked in. Keeping the count coprime with 7 is the whole
+     fix — if you add another, make it 44 rather than 45. */
+  { q: "Healing is a matter of time, but it is sometimes also a matter of opportunity.", by: "Hippocrates", sub: "Precepts, on the moment to act" }
 ];
+
+(function (w) {
+  'use strict';
+  var STRIDE = 17;   // coprime with 43; the guard below keeps that true if the bank grows
+  function pick(when) {
+    var list = w.CT_QUOTES || [];
+    if (!list.length) return { q: '', by: '', sub: '' };
+    var t = (when instanceof Date) ? when.getTime() : (typeof when === 'number' ? when : Date.now());
+    /* Local midnights, not UTC ones: the quote should turn over with the
+       reader's day. Math.floor over a negative is still the day before. */
+    var d = new Date(t);
+    var day = Math.floor((t - d.getTimezoneOffset() * 60000) / 86400000);
+    var stride = STRIDE;
+    // If the stride ever shares a factor with the bank, walk up until it does not.
+    function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+    while (stride > 1 && gcd(stride, list.length) !== 1) stride++;
+    var i = ((day * stride) % list.length + list.length) % list.length;
+    return list[i];
+  }
+  w.CTQuote = { today: pick, stride: STRIDE };
+})(typeof window !== 'undefined' ? window : this);

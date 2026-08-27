@@ -92,7 +92,28 @@
     respiratoryrate:    { field: 'respRate',  agg: 'avg',               label: 'respiratory rate' },
     bloodoxygen:        { field: 'spo2',      agg: 'avg',               label: 'blood oxygen' },
     vo2max:             { field: 'vo2',       agg: 'last',              label: 'VO₂ max' },
-    mindfulminutes:     { field: 'mindfulMin', agg: 'sum',              label: 'mindful minutes' }
+    mindfulminutes:     { field: 'mindfulMin', agg: 'sum',              label: 'mindful minutes' },
+
+    /* Everything Health Auto Export sends that was previously landing in
+       `unknown` and being discarded. Heart rate matters most: its samples
+       carry avg/min/max rather than qty, which the reader below already
+       handles — it was only ever missing a home. */
+    heartrate:            { field: 'hr',        agg: 'avg',  label: 'heart rate' },
+    walkingheartrateaverage: { field: 'walkHr', agg: 'avg',  label: 'walking HR' },
+    bloodoxygensaturation:{ field: 'spo2',      agg: 'avg',  label: 'blood oxygen' },
+    applesleepingwristtemperature: { field: 'wristTemp', agg: 'avg', label: 'wrist temperature' },
+    basalenergyburned:    { field: 'basalKcal', agg: 'sum',  label: 'basal energy' },
+    applestandtime:       { field: 'standMin',  agg: 'sum',  label: 'stand minutes' },
+    applestandhour:       { field: 'standHours',agg: 'sum',  label: 'stand hours' },
+    flightsclimbed:       { field: 'flights',   agg: 'sum',  label: 'flights climbed' },
+    walkingrunningdistance: { field: 'distanceKm', agg: 'sum', label: 'distance' },
+    cyclingdistance:      { field: 'cyclingKm', agg: 'sum',  label: 'cycling distance' },
+    timeindaylight:       { field: 'daylightMin', agg: 'sum', label: 'daylight' },
+    physicaleffort:       { field: 'effort',    agg: 'avg',  label: 'physical effort' },
+    environmentalaudioexposure: { field: 'envDb',   agg: 'avg', label: 'ambient noise' },
+    headphoneaudioexposure:     { field: 'phoneDb', agg: 'avg', label: 'headphone volume' },
+    walkingspeed:         { field: 'walkSpeed', agg: 'avg',  label: 'walking speed' },
+    breathingdisturbances:{ field: 'breathDist', agg: 'sum', label: 'breathing disturbances' }
   };
 
   function slug(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
@@ -120,7 +141,38 @@
   // The day a timestamp belongs to. Local, because a day is a thing you live
   // in, not a UTC window — and it ends at 05:00, so a reading taken at two in
   // the morning lands on the evening it belongs to. See day.js.
+  /* The day a SAMPLE belongs to, taken from the stamp's own local time.
+
+     "2026-08-21 16:00:00 -0700" is already local time where it was recorded:
+     the date written on it is the date it happened, whatever timezone the
+     browser reading it is in. Going through dayOf() converts to the VIEWER's
+     local day instead, so an afternoon reading taken in Arizona lands on the
+     following day once you are back in Poland, and a run of days silently
+     shifts when you travel — the kind of error that shows up only as a
+     correlation quietly getting worse.
+
+     The hub's rollover still applies, so a reading at 02:00 belongs to the
+     evening before. Falls back to dayOf() for stamps carrying no written
+     local time (epoch numbers, or a bare Z). */
+  function dayOfStamp(st) {
+    var m = TS_RE.exec(String(st || '').trim());
+    if (!m || !m[4] || m[7] === 'Z') return dayOf(parseTs(st));
+    var y = +m[1], mo = +m[2], d = +m[3], h = +m[4];
+    var roll = (w.CTDay && typeof w.CTDay.rollover === 'function') ? w.CTDay.rollover() : 5;
+    if (h < roll) {
+      var back = new Date(Date.UTC(y, mo - 1, d));
+      back.setUTCDate(back.getUTCDate() - 1);
+      y = back.getUTCFullYear(); mo = back.getUTCMonth() + 1; d = back.getUTCDate();
+    }
+    return y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  }
+
   function dayOf(ms) {
+    /* new Date(null) is the epoch, not Invalid Date, so a sample whose
+       timestamp failed to parse used to land on 1970-01-01 — and because a
+       whole export shares the failure, a week of readings collapsed into one
+       bogus day rather than reporting that anything was wrong. */
+    if (ms == null || !isFinite(ms)) return null;
     var d = new Date(ms);
     if (isNaN(d)) return null;
     if (w.CTDay) return w.CTDay.key(ms);
@@ -205,33 +257,45 @@
     }
 
     var nutrition = [];   // for clustering into meals
+    var sleepBy  = {};    // night key -> summed sleep segments
 
     metrics.forEach(function (m) {
       var name = slug(m && m.name);
       var pts = (m && Array.isArray(m.data)) ? m.data : [];
 
       if (name === 'sleepanalysis') {
+        /* Health Auto Export writes sleep as HOURLY SEGMENTS, not one row a
+           night: a dozen records each holding the core/deep/rem minutes of a
+           single hour, with `asleep`, `totalSleep` and `inBed` left at 0. The
+           old code assigned dd.sleep per record, so the last hour of the night
+           overwrote the rest and a night read as a few minutes of one stage.
+           Segments are accumulated instead, and `asleep` is derived from the
+           stages when the export does not state it.
+
+           Grouping is by dayOf(start) — the hub's 05:00 boundary — so the
+           23:00 segment and the 02:00 one belong to the same night rather
+           than being split across midnight by a calendar date. */
         pts.forEach(function (p) {
-          var k = (typeof p.date === 'string' && p.date.length >= 10) ? p.date.slice(0, 10) : dayOf(parseTs(p.date));
-          var dd = day(k);
-          if (!dd) return;
-          var start = parseTs(p.sleepStart || p.inBedStart);
-          var end   = parseTs(p.sleepEnd || p.inBedEnd);
-          dd.sleep = {
-            asleep: num(p.asleep) != null ? num(p.asleep) : num(p.totalSleep),
-            total: num(p.totalSleep), inBed: num(p.inBed),
-            core: num(p.core), deep: num(p.deep), rem: num(p.rem), awake: num(p.awake),
-            start: start, end: end
-          };
-          /* A night is an event as well as a rollup: "how long ago did you
-             get up" is antecedent to everything that happens after it. */
-          if (end) pushEvent(store, {
-            id: 'sleep|' + k, ts: end, kind: 'sleep', name: 'woke',
-            dur: dd.sleep.asleep != null ? dd.sleep.asleep * 60 : null,
-            v: { asleep: dd.sleep.asleep, deep: dd.sleep.deep, rem: dd.sleep.rem, start: start },
-            src: src || 'import'
-          }, rep);
-          return;
+          var stamp = p.date != null ? p.date : p.start;
+          var k = dayOfStamp(stamp);
+          if (!k && typeof stamp === 'string' && stamp.length >= 10) k = stamp.slice(0, 10);
+          if (!k) return;
+          var b = (sleepBy[k] = sleepBy[k] || {
+            asleep: 0, total: 0, inBed: 0, core: 0, deep: 0, rem: 0, awake: 0,
+            start: null, end: null, n: 0
+          });
+          b.n++;
+          b.asleep += num(p.asleep) || 0;
+          b.total  += num(p.totalSleep) || 0;
+          b.inBed  += num(p.inBed) || 0;
+          b.core   += num(p.core) || 0;
+          b.deep   += num(p.deep) || 0;
+          b.rem    += num(p.rem) || 0;
+          b.awake  += num(p.awake) || 0;
+          var st = parseTs(p.sleepStart != null ? p.sleepStart : (p.inBedStart != null ? p.inBedStart : p.start));
+          var en = parseTs(p.sleepEnd   != null ? p.sleepEnd   : (p.inBedEnd   != null ? p.inBedEnd   : p.end));
+          if (st != null && (b.start == null || st < b.start)) b.start = st;
+          if (en != null && (b.end   == null || en > b.end))   b.end   = en;
         });
         return;
       }
@@ -242,9 +306,18 @@
         return;
       }
       pts.forEach(function (p) {
-        var ts = parseTs(p.date), v = num(p.qty != null ? p.qty : p.Avg != null ? p.Avg : p.avg);
+        /* Health Auto Export stamps each sample with `start` and `end`.
+           There is no `date` field, so reading one produced null on every
+           sample of every mapped metric and the whole import was dropped in
+           silence — the parser below was right, it was never given anything
+           to parse. `date` is kept first for the Shortcut payload, which
+           does send it. */
+        var stamp = p.date != null ? p.date : (p.start != null ? p.start : p.end);
+        var ts = parseTs(stamp);
+        var v = num(p.qty != null ? p.qty : p.Avg != null ? p.Avg : p.avg);
         if (ts == null || v == null) return;
-        var k = dayOf(ts);
+        var k = dayOfStamp(stamp);
+        if (!k) return;
         day(k);
         collect(k, def.field, v, def.agg);
         if (m.units && !store.meta.units) store.meta.units = {};
@@ -255,6 +328,30 @@
           name: def.label, v: { qty: v, units: m.units || '' }, src: src || 'import'
         }, rep);
       });
+    });
+
+    // Each night, once its segments have all been counted.
+    Object.keys(sleepBy).forEach(function (k) {
+      var b = sleepBy[k], dd = day(k);
+      if (!dd) return;
+      var stages = b.core + b.deep + b.rem;
+      /* Only round the values the export actually gave; a night with no
+         `asleep` figure gets one from its stages rather than reading 0. */
+      var r1 = function (v) { return Math.round(v * 100) / 100; };
+      dd.sleep = {
+        asleep: r1(b.asleep > 0 ? b.asleep : (b.total > 0 ? b.total : stages)),
+        total: r1(b.total > 0 ? b.total : stages),
+        inBed: b.inBed > 0 ? r1(b.inBed) : null,
+        core: r1(b.core), deep: r1(b.deep), rem: r1(b.rem),
+        awake: b.awake > 0 ? r1(b.awake) : null,
+        start: b.start, end: b.end, segments: b.n
+      };
+      if (b.end) pushEvent(store, {
+        id: 'sleep|' + k, ts: b.end, kind: 'sleep', name: 'woke',
+        dur: dd.sleep.asleep != null ? Math.round(dd.sleep.asleep * 60) : null,
+        v: { asleep: dd.sleep.asleep, deep: dd.sleep.deep, rem: dd.sleep.rem, start: b.start },
+        src: src || 'import'
+      }, rep);
     });
 
     // Apply the day aggregates.
@@ -354,6 +451,21 @@
     rep.days = Object.keys(touched).length;
     rep.ok = write(store);
     if (!rep.ok) rep.error = 'the browser refused to store that — the file may be too large';
+
+    /* A file full of samples that yields no days is the failure this importer
+       is worst at showing: it used to report "0 days · 0 new events" in the
+       success colour and look like nothing had been clicked. Say what
+       happened instead — an unreadable timestamp is the usual cause, and
+       naming the metrics that were skipped is the fastest way to find it. */
+    if (rep.ok && !rep.days && (metrics.length || workouts.length)) {
+      rep.ok = false;
+      rep.error = rep.unknown.length === metrics.length
+        ? 'nothing landed — none of these ' + metrics.length +
+          ' metrics has a home yet: ' + rep.unknown.slice(0, 6).join(', ') +
+          (rep.unknown.length > 6 ? '…' : '')
+        : 'nothing landed — the samples carried no readable date. ' +
+          'Health Auto Export stamps them "start"; a Shortcut stamps them "date".';
+    }
     return rep;
   }
 

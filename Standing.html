@@ -12,7 +12,10 @@
 <script src="./reading-data.js"></script>
 <script src="./hub-data.js"></script>
 <script src="./conditions.js"></script>
+<script src="./sitemap.js"></script>
 <script src="./systems.js"></script>
+<script src="./facts.js"></script>
+<script src="./contact.js"></script>
 <style>
 /* ─────────────────────────────────────────────────────────────
    The Standing — the home menu for the CT Hub.
@@ -174,6 +177,41 @@ button, input { font: inherit; color: inherit; }
 .bar.held b  { color: var(--held); }
 .bar:hover i { filter: brightness(1.08); }
 .bar:hover b { color: var(--rust); }
+.reach { border: 1px solid var(--rule); background: var(--card); border-radius: 13px;
+  padding: 15px 16px; box-shadow: var(--shadow); }
+.reach .who { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.reach .nm { font-family: var(--serif); font-size: 21px; line-height: 1.15; color: var(--ink); }
+.reach .rl { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.reach .why { font-size: 13px; color: var(--mid); line-height: 1.5; margin-top: 7px; }
+.reach .cad { display: flex; align-items: center; gap: 8px; margin-top: 11px;
+  font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+.reach .cad i { flex: 1; height: 4px; border-radius: 2px; background: var(--rule);
+  position: relative; overflow: hidden; }
+.reach .cad i b { position: absolute; inset: 0 auto 0 0; background: var(--rust); border-radius: 2px; }
+.reach.is-overdue .cad i b { background: var(--owed); }
+.reach .opener { font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--ink);
+  border-left: 2px solid var(--rust); padding: 5px 0 5px 11px; margin-top: 11px; line-height: 1.5; }
+.reach .acts { display: flex; gap: 7px; margin-top: 13px; flex-wrap: wrap; }
+.reach .acts button, .reach .acts .file { flex: 1; min-width: 92px; min-height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule); background: var(--raise); color: var(--mid);
+  border-radius: 9px; font-family: var(--mono); font-size: 11px; cursor: pointer;
+  text-decoration: none; padding: 0 10px; }
+.reach .acts .pri { background: var(--rust); border-color: var(--rust); color: #fff; }
+.reach .acts button:hover, .reach .acts .file:hover { border-color: var(--rust); }
+.reach .acts .pri:hover { background: var(--ink); border-color: var(--ink); }
+
+/* The daily quote, moved off Mission Control — which is opened on a Sunday
+   at most, so a quote that turns over daily rotated through five unseen
+   faces per viewing. It sits under the board rather than above it: the front
+   door answers what today wants first. On a floor day the page collapses to
+   one ask and this rises to just under the fold, which is the day it is
+   most worth reading. */
+.quote { margin: 22px 0 8px; padding-top: 18px; border-top: 1px solid var(--rule); }
+.quote .q { font-family: var(--serif); font-style: italic; font-size: 17px;
+  line-height: 1.5; color: var(--ink); max-width: 54ch; }
+.quote .by { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 8px; }
+.quote .by b { color: var(--rust); font-weight: 600; }
 @media (max-width: 560px) { .bar { flex: 1 1 40px; min-width: 40px; } .bar b { font-size: 7.5px; letter-spacing: .05em; } }
 main { max-width: 940px; margin: 0 auto; padding: 0 20px 88px; }
 section { margin-top: 32px; }
@@ -495,6 +533,7 @@ footer {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 </style>
+<script src="./quotes.js"></script>
 <script src="./day.js"></script>
 </head>
 <body>
@@ -537,6 +576,23 @@ footer {
       <div class="row2">
         <button class="did" id="one-did" aria-pressed="false"><span id="one-did-t">that&#39;s the day</span></button>
         <span class="alt" id="one-alt"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- One person a day. The board reported "5 owed a touch"; a number is not
+       a thing you do, and a name is. -->
+  <section id="reach-sec" hidden>
+    <div class="kicker">Reach out today <span class="note" id="reach-note"></span></div>
+    <div class="reach" id="reach">
+      <div class="who"><span class="nm" id="reach-name"></span><span class="rl" id="reach-role"></span></div>
+      <div class="why" id="reach-why"></div>
+      <div class="cad"><span id="reach-since"></span><i><b id="reach-bar"></b></i><span id="reach-cad"></span></div>
+      <div class="opener" id="reach-opener"></div>
+      <div class="acts">
+        <button class="pri" id="reach-did" type="button">Log a touch</button>
+        <button id="reach-skip" type="button">Not today</button>
+        <a class="file" id="reach-file">Open file</a>
       </div>
     </div>
   </section>
@@ -604,10 +660,14 @@ footer {
     <p class="empty" id="dir-empty" hidden>Nothing here goes by that name.</p>
   </section>
 
-  <footer>
+  <footer id="foot">
     <span>The Standing</span>
-    <span>a condition is a fact, not a failure</span>
+    <span id="foot-line">a condition is a fact, not a failure</span>
   </footer>
+  <div class="quote" id="quote" hidden>
+    <div class="q" id="quote-q"></div>
+    <div class="by" id="quote-by"></div>
+  </div>
 
 </main>
 <script>
@@ -652,21 +712,15 @@ footer {
      they sit behind Archive, which says what each one was and what replaced
      it. Listing an archived plan next to a live one is exactly how the two
      drifted portfolios went unnoticed for eight months. */
-  var GROUPS = [
-    ['Every day',      [['Standing.html','The Standing'], ['Today.dc.html','Today'],
-                        ['Plan.html','The Plan'], ['Hub.dc.html','The workshop']]],
-    ['Study',          [['Anatomy.dc.html','Anatomy'], ['Study Engine.dc.html','Study Engine'], ['Reading List.dc.html','Reading List']]],
-    ['Body',           [['Grind.dc.html','Grind board'], ['Life Log.dc.html','Life Log'],
-                        ['Health.html','The Body']]],
-    ['The plan',       [['Plan.html','The Plan'], ['Campaign.html','The Campaign'],
-                        ['Verify.html','Verify'], ['Debt.html','The Debt'],
-                        ['Ledger.html','The Ledger'], ['Day Budget.html','The Day Budget'],
-                        ['Conditions.html','Conditions']]],
-    ['Research',       [['Pipeline.html','Pipeline'], ['Conference Radar.dc.html','Conference Radar']]],
-    ['People & money', [['Network Map.dc.html','Network Map'], ['Dossiers.dc.html','Dossiers'], ['Vault.dc.html','Vault']]],
-    ['Looking back',   [['Weekly Review.dc.html','Weekly Review'], ['Journal.dc.html','Journal'], ['Examiner.dc.html','Examiner']]],
-    ['Plan upkeep',    [['Settings.html','Recalibrate'], ['Archive.html','Archive · v1']]]
-  ];
+  /* The directory. Read from sitemap.js, which is now the only declaration
+     of what pages exist — this list used to be a fourth hand-kept copy, and
+     it had already drifted: it listed the Plan twice, dropped the publication
+     pipeline, and called Hub something the drawer did not. */
+  function GROUPS_() {
+    try { if (window.SITEMAP) return window.SITEMAP.groups(); } catch (e) {}
+    return [['Every day', [['Standing.html', 'The Standing'], ['Today.dc.html', 'Today'],
+                           ['Plan.html', 'The Plan']]]];
+  }
 
   function lsJson(k, f) {
     try { var r = localStorage.getItem(k); if (r) { var v = JSON.parse(r); if (v) return v; } } catch (e) {}
@@ -934,6 +988,7 @@ footer {
     var all  = systems();
     paintConditions(all);
     paintBoard(all);
+    paintQuote();
     var owed = all.filter(function (s) { return s.tone === 'go'; });
     var held = all.filter(function (s) { return s.tone === 'held'; });
     var rest = all.filter(function (s) { return s.tone !== 'go' && s.tone !== 'held'; });
@@ -949,6 +1004,7 @@ footer {
     var floorDay = holding.length > 0 || drift >= 3;
     var easeDay  = !floorDay && easing.length > 0;
     var met = floorMet();
+    paintReach(floorDay);
     var revealed = lsJson(RKEY, {})[C().today()] === 1;
     var showOwed = !floorDay || revealed;
 
@@ -1156,6 +1212,55 @@ footer {
     paint();
   });
 
+  /* The daily quote. CTQuote.today() decides which one, so the Standing, the
+     Workshop and the Journal cannot disagree about the day's line. Silent if
+     quotes.js did not load — a missing epigraph is not worth an empty box. */
+  /* Today's person. CTContact ranks the map's own numbers — tier cadence,
+     days since the last touch, whether a reply is owed — and the pick is
+     fixed for the calendar day. Hidden entirely once the day's touch is
+     logged, and on a floor day, where one ask is the whole page. */
+  function paintReach(floorDay) {
+    var sec = $('#reach-sec');
+    if (!sec) return;
+    var p = null;
+    try { if (window.CTContact && !floorDay) p = window.CTContact.pick(); } catch (e) {}
+    if (!p) { sec.hidden = true; return; }
+    sec.hidden = false;
+    $('#reach-name').textContent = p.name;
+    $('#reach-role').textContent = p.role || p.city || '';
+    $('#reach-why').textContent = p.why;
+    $('#reach-since').textContent = 'last touch ' + p.days + 'd';
+    $('#reach-cad').textContent = 'cadence ' + p.cadence + 'd';
+    $('#reach-bar').style.width = Math.round(p.ratio * 100) + '%';
+    $('#reach-opener').textContent = p.opener;
+    $('#reach-note').textContent = p.owed ? 'a reply is owed' : '';
+    $('#reach-file').href = p.href;
+    $('#reach').className = 'reach' + (p.overdue ? ' is-overdue' : '');
+    $('#reach-did').onclick = function () {
+      try { window.CTContact.done(p.id); } catch (e) {}
+      paint();
+    };
+    $('#reach-skip').onclick = function () {
+      try { window.CTContact.skip(p.id); } catch (e) {}
+      paint();
+    };
+  }
+
+  function paintQuote() {
+    var box = $('#quote');
+    if (!box) return;
+    var q = null;
+    try { if (window.CTQuote) q = window.CTQuote.today(); } catch (e) {}
+    if (!q || !q.q) { box.hidden = true; return; }
+    box.hidden = false;
+    $('#quote-q').textContent = '\u201C' + q.q + '\u201D';
+    var by = $('#quote-by');
+    by.innerHTML = '';
+    var b = el('b', null, '\u2014 ' + q.by);
+    by.appendChild(b);
+    if (q.sub) by.appendChild(document.createTextNode(' \u00B7 ' + q.sub));
+  }
+
   function paintDirectory(q, soften) {
     q = (q || '').trim().toLowerCase();
     var byHref = {};
@@ -1164,7 +1269,7 @@ footer {
     var grid = $('#dir-grid'); grid.innerHTML = '';
     var shown = 0;
 
-    GROUPS.forEach(function (g) {
+    GROUPS_().forEach(function (g) {
       var hits = g[1].filter(function (p) {
         return !q || p[1].toLowerCase().indexOf(q) >= 0 || g[0].toLowerCase().indexOf(q) >= 0;
       });

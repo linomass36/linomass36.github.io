@@ -716,6 +716,186 @@ says how far off it is when there is not enough yet.
 It asks. It does not decide, propose a step or change the plan: the moment it
 starts writing on your behalf is the moment you stop trusting the number.
 
+## v4.0 — the systems start agreeing with each other
+
+Three of these were reported as "it doesn't work" and turned out to be one
+sentence each, in code that was otherwise right.
+
+### A week of health readings landed on one day in 1970
+
+Health Auto Export stamps every sample `start` and `end`. There is no `date`
+field, and `date` is what the importer read — so `parseTs`, written for
+exactly this timestamp format and correct about it, was handed `undefined` on
+every sample of every mapped metric. Nothing threw. The panel reported
+success. `new Date(null)` is the epoch rather than Invalid Date, so `dayOf`
+let it through and a 344 KB export of eight days became a single row dated
+1970-01-01 holding ten minutes of one sleep stage.
+
+Sleep was the other half: it arrives as hourly **segments** with `asleep`,
+`totalSleep` and `inBed` left at 0 and the real minutes in `core`/`deep`/`rem`.
+`dd.sleep` was assigned per record, so the last hour of the night overwrote
+the rest. Segments are summed now, grouped on the hub's 05:00 boundary so the
+23:00 piece and the 02:00 one belong to the same night, and `asleep` is
+derived from the stages when the export does not state it.
+
+Twenty-three of thirty metrics had no mapping and were dropped in silence,
+heart rate among them. The ones worth keeping have a home; the seven left are
+gait micro-metrics and the report names them. An import that yields no days
+now says so and guesses why, instead of reporting "0 days" in the success
+colour.
+
+### The weekly review could not be marked done
+
+Also three bugs, and they compounded.
+
+The board asked `reviews[monday()]` where `monday()` was the Monday of the
+**current** week, so at 00:05 on Monday the key flipped, Sunday's review
+stopped counting, and every surface read DUE for a week that had not happened.
+A retrospective cannot be owed for a week still being lived: the review is for
+the week that **ended**, which on Sunday is the week closing today and the
+rest of the time is the week before.
+
+Worse, `monday()` built that key through `isoDay()`, which routes through the
+05:00 boundary — so midnight on Monday came back as the Sunday before it,
+while the Weekly Review page keys its store off the plain calendar Monday. The
+two never matched. The board could not show a completed review **at all**,
+whatever week it was looking at. A week key is a label for a week rather than
+a stamp on a moment, so it no longer goes through the day boundary.
+
+And next week's three priorities were written under `wkKey(now + 7d)` and read
+under the same expression, so from Monday the page looked one week further
+ahead and found an empty slot. The list you were meant to be working from was
+on disk the whole time. The ritual names three weeks now — the one being
+reviewed, the one being worked, the one being planned — and the page shows the
+middle one as a checklist.
+
+### One row per day
+
+`facts.js` is the table the hub never had. Every question worth asking is
+about two things at once — does clinic cost study hours, does the queue build
+on the weeks you sleep badly — and none could be asked, because the stores did
+not share a coordinate system. The Life Log and the health import are keyed by
+date; `ct_anki_v1` is a single reading overwritten on every sync; the Grind
+board keys sessions `week|slot` and so cannot be dated at all, which is why
+`trends()` reads training from the Life Log and has never been able to see the
+Grind board's own record.
+
+The obvious design is for every system to append its own row, which means
+editing six files and six chances to be wrong. Most of those stores are
+already dated, so `facts.js` derives the row instead — nothing migrates,
+nothing to keep in step, and the history that already exists is there on first
+load. The exception is Anki, which has to be caught as it goes past: `sync()`
+stamps the current reading onto today's row when a page loads, so the series
+starts accumulating that day and cannot be reconstructed for any day before it.
+
+It carries `correlate`, `matrix` and `strongest`, holding the same
+`CORR_MIN = 8` floor the Life Log's Trends panel already applied.
+
+### One person a day
+
+The Network Map knew everything needed for this and said none of it out loud:
+every node carries `type`, `strength`, `lastDays` and `owed`, and the board
+reported "5 owed a touch" — a number you scroll past. `contact.js` picks one
+person, says why it is that one today, and gives it a first line, so the cost
+of acting is a tap rather than twenty minutes of drafting. Overdue-ness is a
+ratio of days-since to what that tier of tie can bear, not a raw count, or the
+dormant contacts would crowd out the live ones forever. Logging the touch
+writes to `ct_dossier_v1`, which is what the ranking reads — so acting on it
+moves tomorrow's pick.
+
+The pick is fixed for the calendar day, and it does not appear on a floor day.
+
+### Smaller things
+
+- **The daily quote moved to the Standing's footer**, taking the slot the
+  static epigraph held. It was on Mission Control, which is opened on a Sunday
+  at most, so a quote that turns over daily rotated through five unseen faces
+  per viewing. It sits under the board rather than above it — the front door
+  answers what today wants first — which means that on a floor day, where the
+  page collapses to one ask, it rises to just under the fold.
+- **The rotation was broken and is now in one place.** Every consumer computed
+  `quotes[dayOfYear % 42]` for itself. 42 is 6 × 7, so each quote was welded to
+  one weekday — nine appearances a year, always a Thursday — and `dayOfYear`
+  resets on 1 January, jumping the cycle mid-stride. `CTQuote.today()` counts
+  from the epoch, and the bank is 43 so its period is coprime with the week. A
+  stride cannot undo a period that is a multiple of a week; only the bank size
+  can.
+- **The board stopped opening archived pages.** `systems.js` gave the `plan`
+  system — sort 0, the first tile on the Standing every morning — an href of
+  `CT Master Plan.html`, and `research` pointed at `Research Plan.dc.html`.
+  Both were retired by the v2 recalibration.
+- **The installed app opened the retired front door.** `manifest.json` still
+  had `start_url: "./Hub.dc.html"` and was named "CT Mission Control", which
+  overrode `config.js` completely on a home-screen launch — the highest-traffic
+  link on the site.
+
+### The rest of it
+
+**`sitemap.js`** is the only declaration of what pages exist. Five files kept
+their own copy — nav.js, the Standing's directory, Mission Control's rooms
+grid, Archive.html, and systems.js's hrefs — and they had drifted: Hub was
+"Mission Control" in one and "The workshop" in another, the directory listed
+the Plan twice and dropped the publication pipeline, and the rooms grid
+promoted three pages the recalibration had archived. A page declares its
+name, its drawer `group`, its `parent`, and what its back control does now.
+
+`group` and `parent` are deliberately different axes. Journal is filed under
+"Looking back" because that is where you would look for it, and belongs to
+Today because that is where you write it.
+
+**`upbar.js` does not add a bar.** An earlier draft injected a global up-bar
+on every page and it was wrong: a phone page already carries four fixed
+controls, and the tab bar already reaches the front door in one tap. It finds
+the back link a page already has and corrects its label and destination.
+Nothing new appears, every page keeps its styling, and the ten pages built
+after the recalibration — which already point at Standing or the Plan — are
+left alone. A page with no back link gets one injected, above 640px only.
+
+So the change is thirteen rewrites and a handful of injections, not
+"fifteen files and a new global control".
+
+**`Recall.html`** is one desk for three queues. Anki, the error cards and
+resurface were three spaced-repetition systems with three stores and two
+different algorithms, each with its own tile showing its own due count —
+three answers to one question and no total anywhere. They keep their stores
+and their schedulers; they stop having three front doors. Anatomy stays out:
+it is a curriculum with an order, not a queue with due dates.
+
+**`Trends.html`** reads the fact table. Rows are the things being explained,
+columns the things that might explain them — the asymmetry keeps it readable
+on a phone, where an N x N grid of everything against everything is a wall.
+Cells below eight paired days are hatched and report nothing.
+
+**`Week.html` and `calendar.js`** make the week elastic. The Grind board is a
+fixed nine-week grid keyed `week|slot` — `3|push` — so a week where clinic
+eats Tuesday cannot be expressed: there is nowhere to put "moved to
+Thursday". That keying is also why training was invisible to the trends
+table. The new week reads what is already committed and lays the sessions
+into what is left, stored **by date**.
+
+Google Calendar works from a static site: the provider the gate already uses
+takes `calendar.readonly` as an extra scope, and the popup result carries a
+real access token the browser can call the API with. Two honest limits —
+Firebase hands the browser no refresh token, so it is one popup per session
+rather than anything automatic; and the scope is sensitive, so the OAuth app
+stays in Testing. An `.ics` file dropped in needs no auth at all. The secret
+`.ics` URL looks easier and is not: Google serves it without CORS headers.
+
+**Three tripwires run in the deploy.** Every `.html` in the repo is declared
+and every declaration exists; no live page links to an archived one; every
+live page can be walked back to the front door. The second one immediately
+found three links nobody knew about — Today and Mission Control still
+pointing into the v1 plan and the retired sprint.
+
+### Health days follow the reading, not the reader
+
+A sample stamped `2026-08-21 16:00:00 -0700` is already local time where it
+was recorded. Keying it through the viewer's timezone put an Arizona
+afternoon on the following day once the site was opened from Poland, and
+silently shifted a run of days whenever you travelled — the kind of error
+that shows up only as a correlation quietly getting worse. The date written
+on the sample is the date it happened.
+
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
 - `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
@@ -724,6 +904,15 @@ starts writing on your behalf is the moment you stop trusting the number.
 - `archive.js` — the hot/cold split: which quarters go in the main document and which go to `hubData/{uid}/archive`, and the rejoin that stops an incoming sync deleting your archive. See **The ceiling, removed** above.
 - `capture.js` — one input on every page that routes a line to a person, a paper, a conference, this week or the journal. Injected beside the drawer.
 - `resurface.js` — one thing a day out of everything you have written, weighted by age and by how long since you last saw it.
+- `facts.js` — one row per day, derived from the stores that are already dated, so two systems can finally be asked about together. Carries `correlate`, `matrix` and `strongest`, at `CORR_MIN = 8`. See **One row per day** above.
+- `contact.js` — one person a day to reach out to, ranked over the Network Map's own tiers and touch dates. Logging a touch writes to `ct_dossier_v1`, which is what the ranking reads. See **One person a day** above.
+- `quotes.js` — the daily line, and `CTQuote.today()`, the one place that decides which one. The bank is kept coprime with 7 so nothing is welded to a weekday.
+- `sitemap.js` — the only declaration of what pages exist: name, drawer group, owning parent, and what each page's back control does now. Read by `nav.js`, the Standing's directory and `upbar.js`.
+- `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px.
+- `calendar.js` + `Week.html` — next week read off Google Calendar (or an `.ics` drop), with the training laid into what is left and stored by date.
+- `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
+- `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`.
+- `tools/sitemap.test.js` — the deploy tripwires: everything declared, nothing live pointing at an archived page, every page walkable home.
 - `systems.js` — every system in one line each: the number, the sentence and whether something is owed today. Read by Today, Mission Control and Reference so the three cannot disagree. See **One glance** above.
 - `Reference.dc.html` — the door to the five documents: what each is and when it is worth opening. The documents themselves are unchanged.
 - `.github/tests/crash.js` — loads every page at both widths and fails on a `renderVals()` throw or a page with almost no text in it. Not deployed (`.github/` is skipped by the build).

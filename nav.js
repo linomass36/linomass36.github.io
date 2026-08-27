@@ -18,79 +18,28 @@
 
   var VERSION = (window.APP_CONFIG && window.APP_CONFIG.version) || '';
 
-  // Every hub page, in reading order. Filenames must match the deploy.
-  /* Nineteen pages in one flat column is a list you scan; seven groups is a
-     list you use. The order is the order of a day: what you do, then what you
-     are building, then who and what it runs on, then the review. */
-  var GROUPS = [
-    ['Every day', [
-      ['Standing.html', 'The Standing'],
-      ['Today.dc.html', 'Today'],
-      ['Plan.html', 'The Plan'],
-      ['Hub.dc.html', 'Mission Control'],
-    ]],
-    ['Study', [
-      ['Anatomy.dc.html', 'Anatomy · closure log'],
-      ['Study Engine.dc.html', 'Study Engine'],
-      ['Reading List.dc.html', 'Reading List'],
-    ]],
-    ['Body', [
-      ['Grind.dc.html', 'Grind board'],
-      ['Life Log.dc.html', 'Life Log'],
-      ['Health.html', 'The Body · health + moments'],
-    ]],
-    /* v2 splits what used to be one "plan" entry into the pages the plan
-       is actually worked on: the campaign that wins 2027, the money that
-       has to be re-checked quarterly, and the assumptions that could each
-       end a phase. The Plan itself sits under Every day, because it is
-       now something you open rather than something you consult. */
-    ['The plan', [
-      ['Campaign.html', 'The Campaign · phases 1–5'],
-      ['Verify.html', 'Verify · assumptions & risk'],
-      ['Debt.html', 'The Debt'],
-      ['Ledger.html', 'The Ledger'],
-      ['Day Budget.html', 'The Day Budget'],
-      ['Conditions.html', 'Conditions'],
-    ]],
-    ['Research', [
-      ['Pipeline.html', 'Pipeline · the board'],
-      ['Publication Pipeline.html', 'Pipeline · the write-up'],
-      ['Conference Radar.dc.html', 'Conference Radar'],
-    ]],
-    ['People &amp; money', [
-      ['Network Map.dc.html', 'Network Map'],
-      ['Dossiers.dc.html', 'Dossiers · the files'],
-      ['Vault.dc.html', 'Vault'],
-    ]],
-    ['Looking back', [
-      ['Weekly Review.dc.html', 'Weekly Review'],
-      ['Journal.dc.html', 'Journal'],
-      ['Examiner.dc.html', 'Examiner'],
-    ]],
-    ['Plan upkeep', [
-      ['Settings.html', 'Recalibrate the plan'],
-      ['Archive.html', 'Archive · v1 documents'],
-    ]],
-  ];
-  /* The v1 documents are still hub pages — they carry the drawer, they get
-     highlighted as current, and they are reachable by URL. They are simply
-     not listed in the drawer any more: they live behind Archive, which says
-     what each one was and what replaced it. Reference is one of them now,
-     since the door it opened has been superseded. */
-  var BEHIND_REFERENCE = [
-    ['CT Master Plan.html', 'CT Master Plan'],
-    ['Summer Sprint.dc.html', 'Summer Sprint'],
-    ['Plan Analysis.dc.html', 'Plan Analysis'],
-    ['Research Plan.dc.html', 'Research Plan'],
-    ['Timeline.dc.html', 'Timeline'],
-    ['Reference.dc.html', 'Reference'],
-  ];
-  var PAGES = GROUPS.reduce(function (a, g) { return a.concat(g[1]); }, []).concat(BEHIND_REFERENCE);
-  function behindReference(file) {
-    for (var i = 0; i < BEHIND_REFERENCE.length; i++) if (BEHIND_REFERENCE[i][0] === file) return true;
-    return false;
-  }
+  /* The map used to live here, and in the Standing's directory, and in
+     Mission Control's rooms grid, and in Archive.html — four hand-kept
+     copies that had already drifted apart. It lives in sitemap.js now and
+     this file reads it. The fallback keeps the drawer working if that file
+     ever fails to load: a hub page with no way out is worse than a stale
+     grouping. */
+  function SM() { return window.SITEMAP || null; }
 
+  var FALLBACK_GROUPS = [
+    ['Every day', [['Standing.html', 'The Standing'], ['Today.dc.html', 'Today'],
+                   ['Plan.html', 'The Plan']]]
+  ];
+
+  function groups() {
+    var m = SM();
+    try { if (m) return m.groups(); } catch (e) {}
+    return FALLBACK_GROUPS;
+  }
+  function behindReference(file) {
+    var m = SM();
+    try { return !!(m && m.isArchived(file)); } catch (e) { return false; }
+  }
 
   var BM_KEY = 'hub_bookmarks_v1';
 
@@ -211,7 +160,7 @@
     root.appendChild(panel);
 
     function render() {
-      var pageLinks = GROUPS.map(function (g) {
+      var pageLinks = groups().map(function (g) {
         var links = g[1].map(function (p) {
           /* Standing on one of the archived v1 documents, the drawer
              highlights the door you came through rather than nothing at
@@ -309,13 +258,14 @@
      drawer, another to find the page. The five things actually used day
      to day sit in a bar along the bottom instead, always visible, with
      the current one lit. The drawer stays for the other thirteen. */
-  var TABS = [
-    ['Standing.html', 'Standing', '◆'],
-    ['Today.dc.html', 'Today', '◷'],
-    ['Reading List.dc.html', 'Reading', '▤'],
-    ['Journal.dc.html', 'Journal', '✎'],
-    ['Weekly Review.dc.html', 'Review', '◈']
-  ];
+  /* The five things actually used day to day, declared in sitemap.js beside
+     everything else. Deliberately not the spine: the spine is an ownership
+     model and this is a usage one. */
+  function tabs() {
+    var m = SM();
+    try { if (m && m.tabs && m.tabs.length) return m.tabs; } catch (e) {}
+    return [['Standing.html', 'Standing', '\u25C6'], ['Today.dc.html', 'Today', '\u25F7']];
+  }
 
   function buildTabs() {
     if (document.getElementById('hb-tabs')) return;
@@ -344,7 +294,7 @@
     var bar = document.createElement('nav');
     bar.id = 'hb-tabs';
     bar.setAttribute('aria-label', 'Main sections');
-    TABS.forEach(function (t) {
+    tabs().forEach(function (t) {
       var a = document.createElement('a');
       a.href = t[0];
       if (t[0] === here) { a.className = 'on'; a.setAttribute('aria-current', 'page'); }
