@@ -69,17 +69,37 @@ h1 { font-family:var(--serif); font-weight:500; font-size:30px; line-height:1.1;
 .card { border:1px solid var(--rule); background:var(--card); border-radius:13px;
   padding:15px 14px 13px; box-shadow:var(--shadow); }
 .tw { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-table.mx { border-collapse:separate; border-spacing:3px; width:100%; min-width:330px; }
+table.mx { border-collapse:separate; border-spacing:2px; width:100%; }
 table.mx th { font-family:var(--mono); font-size:8.5px; letter-spacing:.03em; color:var(--muted);
   font-weight:600; padding:0 0 5px; text-align:center; }
 table.mx th small { display:block; opacity:.7; font-size:8px; font-weight:400; }
-table.mx th.rowh { text-align:right; padding-right:8px; font-size:10px; color:var(--ink);
+table.mx th.rowh { text-align:right; padding-right:7px; font-size:9.5px; color:var(--ink);
   white-space:nowrap; letter-spacing:0; }
-table.mx td { border-radius:5px; text-align:center; padding:8px 3px 6px; min-width:46px; }
+table.mx td { border-radius:5px; text-align:center; padding:8px 2px 6px; min-width:42px; }
 table.mx td .r { font-family:var(--mono); font-size:11.5px; font-weight:600; display:block;
   font-variant-numeric:tabular-nums; }
 table.mx td .n { font-family:var(--mono); font-size:7.5px; display:block; opacity:.7; }
 table.mx td.thin { background:repeating-linear-gradient(45deg,var(--mid0),var(--mid0) 3px,transparent 3px,transparent 6px); }
+.preset { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:9px; }
+.preset button { font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--mid);
+  background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:6px 12px;
+  cursor:pointer; min-height:34px; }
+.preset button:hover { border-color:var(--rust); color:var(--rust); }
+.fields { display:flex; flex-wrap:wrap; gap:6px; }
+.fields button { font-family:var(--mono); font-size:10.5px; color:var(--faint);
+  background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:5px 11px;
+  cursor:pointer; min-height:34px; display:inline-flex; align-items:center; gap:6px; }
+.fields button b { font-weight:600; }
+.fields button small { font-size:8.5px; opacity:.75; }
+.fields button[aria-pressed="true"] { color:#fff; background:var(--rust); border-color:var(--rust); }
+.fields button.thin { border-style:dashed; }
+.fields button.thin[aria-pressed="true"] { background:var(--muted); border-color:var(--muted); }
+.mx td.live { cursor:pointer; }
+.mx td.diag { background:var(--rule); opacity:.35; }
+.mx td.sel { outline:2px solid var(--ink); outline-offset:1px; }
+.pair { margin-top:13px; padding-top:12px; border-top:1px solid var(--rule); }
+.pair .s { font-size:14.5px; color:var(--ink); font-weight:600; line-height:1.4; }
+.pair .d { font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:5px; line-height:1.6; }
 .scale { display:flex; align-items:center; gap:7px; margin-top:12px;
   font-family:var(--mono); font-size:9px; color:var(--faint); }
 .scale .sw { display:flex; flex:1; height:7px; border-radius:4px; overflow:hidden; }
@@ -119,9 +139,14 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   <h1>What moves what.</h1>
   <p class="lede">Every pair from the daily table. Correlation is not cause — this says where to look, not what to do.</p>
 
+  <div class="kicker">Pick what to compare <span class="note" id="pick-note"></span></div>
+  <div class="preset" id="presets"></div>
+  <div class="fields" id="fields"></div>
+
   <div class="kicker">The matrix <span class="note" id="span-note"></span></div>
   <div class="card">
     <div class="tw"><table class="mx" id="mx"></table></div>
+    <div class="pair" id="pair" hidden></div>
     <div class="scale">
       <span>−1.0</span>
       <span class="sw">
@@ -155,28 +180,85 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   var $ = function (s) { return document.querySelector(s); };
   function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
 
-  /* Rows are the things being explained, columns the things that might
-     explain them. The asymmetry is the point: an N x N grid of everything
-     against everything is a wall, and most of it is a measure against itself
-     under another name. */
-  var ROWS = [
-    ['study',    'Study h'],
-    ['ankiReps', 'Anki reps'],
-    ['closures', 'Closures'],
-    ['trained',  'Trained'],
-    ['steps',    'Steps']
+  /* Every column the fact table can hold, with a readable name and a unit.
+     Anything the table has that is not listed still shows up — named by its
+     own key — so a new measure is never invisible just because this list has
+     not caught up. */
+  var KNOWN = [
+    ['sleep',      'Sleep',       'h',    'body'],
+    ['sleepWatch', 'Sleep · watch','h',   'body'],
+    ['rhr',        'Rest HR',     'bpm',  'body'],
+    ['hrv',        'HRV',         'ms',   'body'],
+    ['respRate',   'Resp rate',   '/min', 'body'],
+    ['spo2',       'SpO₂',        '%',    'body'],
+    ['hr',         'Heart rate',  'bpm',  'body'],
+
+    ['screen',     'Screen',      'h',    'day'],
+    ['social',     'Social',      'h',    'day'],
+    ['pickups',    'Pickups',     '',     'day'],
+    ['diet',       'Diet',        '0–3',  'day'],
+    ['work',       'Work',        'h',    'day'],
+    ['free',       'Free',        'h',    'day'],
+    ['daylightMin','Daylight',    'min',  'day'],
+
+    ['study',      'Study',       'h',    'output'],
+    ['ankiReps',   'Anki reps',   '',     'output'],
+    ['ankiCards',  'Anki cards',  '',     'output'],
+    ['ankiMins',   'Anki time',   'min',  'output'],
+    ['ankiAgain',  'Again',       '',     'output'],
+    ['closures',   'Closures',    '',     'output'],
+    ['anatRead',   'Anatomy read','min',  'output'],
+    ['anatDraw',   'Anatomy draw','min',  'output'],
+    ['cardsMade',  'Cards made',  '',     'output'],
+
+    ['trained',    'Trained',     '0/1',  'move'],
+    ['steps',      'Steps',       '',     'move'],
+    ['activeKcal', 'Active kcal', '',     'move'],
+    ['exerciseMin','Exercise',    'min',  'move'],
+    ['distanceKm', 'Distance',    'km',   'move'],
+    ['flights',    'Flights',     '',     'move'],
+    ['standMin',   'Stand',       'min',  'move']
   ];
-  var COLS = [
-    ['sleep',  'Sleep',   'h'],
-    ['social', 'Screen',  'h'],
-    ['diet',   'Diet',    '0–3'],
-    ['rhr',    'Rest HR', 'bpm'],
-    ['hrv',    'HRV',     'ms']
+  var LABEL = {}, UNITS = {}, TAG = {};
+  KNOWN.forEach(function (k) { LABEL[k[0]] = k[1]; UNITS[k[0]] = k[2]; TAG[k[0]] = k[3]; });
+  function labelOf(f) { return LABEL[f] || f; }
+  function unitOf(f) { return UNITS[f] || ''; }
+
+  /* Starting points, not categories. The old page had a fixed set of rows and
+     a fixed set of columns, which meant a question like "does sleep change
+     how much I am on my phone" could not be asked at all — both were on the
+     same side of the grid. The matrix is symmetric now, over whatever is
+     selected. */
+  var PRESETS = [
+    ['Sleep & the phone', ['sleep', 'screen', 'social', 'pickups', 'rhr', 'study']],
+    ['What costs study',  ['study', 'work', 'social', 'sleep', 'free', 'ankiReps']],
+    ['Recall',            ['ankiReps', 'ankiAgain', 'ankiMins', 'sleep', 'study', 'social']],
+    ['Body',              ['sleep', 'rhr', 'hrv', 'trained', 'steps', 'diet']],
+    ['Anatomy',           ['closures', 'anatRead', 'anatDraw', 'cardsMade', 'sleep', 'study']]
   ];
 
-  var LABEL = {};
-  ROWS.concat(COLS).forEach(function (x) { LABEL[x[0]] = x[1]; });
-  var UNITS = { sleep: 'h', social: 'h', study: 'h', rhr: 'bpm', hrv: 'ms', steps: '', diet: '', trained: '', ankiReps: '', closures: '' };
+  /* Pairs that are related by definition rather than by anything you did.
+     Social screen time is part of total screen time; Anki reps, cards and
+     minutes are three views of one session; the watch's sleep and your own
+     are the same night measured twice. They stay in the matrix — seeing
+     r = +0.95 between reps and minutes is a useful sanity check that the
+     import is working — but reporting them as findings is noise dressed as
+     insight. */
+  var TAUTOLOGY = [
+    ['screen', 'social'], ['screen', 'pickups'],
+    ['ankiReps', 'ankiCards'], ['ankiReps', 'ankiMins'], ['ankiCards', 'ankiMins'],
+    ['ankiReps', 'ankiAgain'], ['ankiCards', 'ankiAgain'],
+    ['sleep', 'sleepWatch'],
+    ['work', 'free'],
+    ['steps', 'distanceKm'], ['steps', 'activeKcal'], ['activeKcal', 'exerciseMin'],
+    ['anatRead', 'anatDraw']
+  ];
+  var TAUT = {};
+  TAUTOLOGY.forEach(function (p2) { TAUT[p2.slice().sort().join('|')] = 1; });
+  function tautological(a, b) { return !!TAUT[[a, b].sort().join('|')]; }
+
+  var selected = [];   // the fields currently in the grid
+  var pairSel = null;  // the cell being explained, if any
 
   function F() { return window.CTFacts || null; }
 
@@ -188,44 +270,150 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   }
   function inkFor(r) { return Math.abs(r) >= 0.45 ? '#fff' : 'var(--ink)'; }
 
+  /* What the table actually holds, most-covered first, so the picker offers
+     real measures rather than an aspirational list. */
+  function available() {
+    var f = F(); if (!f) return [];
+    return f.fields().filter(function (x) { return x.n >= 2; });
+  }
+
+  function paintFieldPicker() {
+    var box = $('#fields'); if (!box) return;
+    box.innerHTML = '';
+    var have = available();
+    if (!have.length) {
+      box.appendChild(el('span', 'empty', 'Nothing logged yet — log a day, or import a health export.'));
+      $('#pick-note').textContent = '';
+      return;
+    }
+    var f = F();
+    have.forEach(function (x) {
+      var b = el('button');
+      b.type = 'button';
+      b.className = x.n < f.CORR_MIN ? 'thin' : '';
+      b.setAttribute('aria-pressed', selected.indexOf(x.field) >= 0 ? 'true' : 'false');
+      b.appendChild(el('b', null, labelOf(x.field)));
+      b.appendChild(el('small', null, x.n + 'd'));
+      b.title = x.n < f.CORR_MIN
+        ? x.n + ' days — below the 8-day floor, so its cells stay hatched'
+        : x.n + ' days logged';
+      b.addEventListener('click', function () {
+        var at = selected.indexOf(x.field);
+        if (at >= 0) selected.splice(at, 1);
+        else if (selected.length < 9) selected.push(x.field);
+        pairSel = null;
+        paintFieldPicker(); paintMatrix(); paintFindings();
+      });
+      box.appendChild(b);
+    });
+    $('#pick-note').textContent = selected.length + ' of ' + have.length + ' selected' +
+      (selected.length >= 9 ? ' · nine is the ceiling' : '');
+  }
+
+  function paintPresets() {
+    var box = $('#presets'); if (!box) return;
+    box.innerHTML = '';
+    var have = {};
+    available().forEach(function (x) { have[x.field] = 1; });
+    PRESETS.forEach(function (p) {
+      var usable = p[1].filter(function (f) { return have[f]; });
+      if (usable.length < 3) return;   // two measures is not a view of anything
+      var b = el('button', null, p[0]);
+      b.type = 'button';
+      b.title = usable.map(labelOf).join(' · ');
+      b.addEventListener('click', function () {
+        selected = usable.slice(0, 9);
+        pairSel = null;
+        paintFieldPicker(); paintMatrix(); paintFindings();
+      });
+      box.appendChild(b);
+    });
+    var b2 = el('button', null, 'Everything logged');
+    b2.type = 'button';
+    b2.addEventListener('click', function () {
+      selected = available().slice(0, 9).map(function (x) { return x.field; });
+      pairSel = null;
+      paintFieldPicker(); paintMatrix(); paintFindings();
+    });
+    box.appendChild(b2);
+  }
+
+  /* Symmetric: every selected field against every other. The diagonal is
+     blanked rather than filled with 1.00, which is true and says nothing. */
   function paintMatrix() {
     var t = $('#mx'); t.innerHTML = '';
-    var f = F();
-    if (!f) return;
+    var f = F(); if (!f) return;
+    if (selected.length < 2) {
+      $('#span-note').textContent = 'pick at least two';
+      $('#pair').hidden = true;
+      return;
+    }
     var thead = el('thead'), hr = el('tr');
     hr.appendChild(el('th'));
-    COLS.forEach(function (c) {
-      var th = el('th'); th.appendChild(document.createTextNode(c[1]));
-      var sm = el('small', null, c[2]); th.appendChild(sm); hr.appendChild(th);
+    selected.forEach(function (c) {
+      var th = el('th');
+      th.appendChild(document.createTextNode(labelOf(c)));
+      if (unitOf(c)) th.appendChild(el('small', null, unitOf(c)));
+      hr.appendChild(th);
     });
     thead.appendChild(hr); t.appendChild(thead);
 
-    var tbody = el('tbody'), any = 0;
-    ROWS.forEach(function (rw) {
+    var tbody = el('tbody'), reported = 0;
+    selected.forEach(function (rw) {
       var tr = el('tr');
-      var th = el('th', 'rowh', rw[1]); tr.appendChild(th);
-      COLS.forEach(function (c) {
-        var res = f.correlate(c[0], rw[0]);
+      tr.appendChild(el('th', 'rowh', labelOf(rw)));
+      selected.forEach(function (c) {
         var td = el('td');
+        if (c === rw) {
+          td.className = 'diag';
+          tr.appendChild(td);
+          return;
+        }
+        var res = f.correlate(c, rw);
         var thin = !res.ready || res.r == null;
-        if (thin) { td.className = 'thin'; }
-        else { td.style.background = armFor(res.r); any++; }
+        if (thin) td.className = 'thin';
+        else { td.className = 'live'; td.style.background = armFor(res.r); reported++; }
         var r = el('span', 'r', thin ? '·' : (res.r > 0 ? '+' : '') + res.r.toFixed(2));
         var n = el('span', 'n', 'n' + res.n);
         r.style.color = thin ? 'var(--faint)' : inkFor(res.r);
         n.style.color = thin ? 'var(--faint)' : inkFor(res.r);
         td.appendChild(r); td.appendChild(n);
-        td.title = rw[1] + ' × ' + c[1] + (thin
-          ? ' — ' + res.n + ' paired days, needs 8'
+        if (pairSel && pairSel.x === c && pairSel.y === rw) td.className += ' sel';
+        td.title = labelOf(rw) + ' × ' + labelOf(c) + (thin
+          ? ' — ' + res.n + ' paired days, needs ' + f.CORR_MIN
           : ' — r ' + (res.r > 0 ? '+' : '') + res.r.toFixed(2) + ' over ' + res.n + ' days');
+        if (!thin) {
+          td.addEventListener('click', function () {
+            pairSel = { x: c, y: rw, r: res.r, n: res.n };
+            paintMatrix(); paintPair();
+          });
+        }
         tr.appendChild(td);
       });
       tbody.appendChild(tr);
     });
     t.appendChild(tbody);
-    var days = Object.keys(f.all()).length;
-    $('#span-note').textContent = days + (days === 1 ? ' day' : ' days') + ' on record' +
-      (any ? '' : ' · nothing reportable yet');
+    /* Each pair appears twice in a symmetric grid, so halve the count. */
+    $('#span-note').textContent = Object.keys(f.all()).length + ' days · ' +
+      (reported / 2) + ' pair' + (reported / 2 === 1 ? '' : 's') + ' reportable';
+    paintPair();
+  }
+
+  function paintPair() {
+    var box = $('#pair');
+    if (!pairSel) { box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = '';
+    box.appendChild(el('div', 's', sentence(pairSel.x, pairSel.y, pairSel.r)));
+    var strength = Math.abs(pairSel.r) >= 0.5 ? 'strong'
+                 : Math.abs(pairSel.r) >= 0.3 ? 'moderate'
+                 : Math.abs(pairSel.r) >= 0.15 ? 'weak' : 'barely there';
+    var tail = tautological(pairSel.x, pairSel.y)
+      ? 'These two measure much the same thing, so this says the data is consistent rather than telling you anything new.'
+      : 'Which one moves the other, this cannot say.';
+    box.appendChild(el('div', 'd',
+      'r = ' + (pairSel.r > 0 ? '+' : '') + pairSel.r.toFixed(2) + ' · ' + strength +
+      ' · ' + pairSel.n + ' days where both were logged. ' + tail));
   }
 
   function sentence(x, y, r) {
@@ -239,27 +427,32 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 
   function paintFindings() {
     var box = $('#findings'); box.innerHTML = '';
-    var f = F();
-    if (!f) return;
-    var rows = ROWS.map(function (r) { return r[0]; });
-    var cols = COLS.map(function (c) { return c[0]; });
-    var out = [];
-    rows.forEach(function (y) {
-      cols.forEach(function (x) {
+    var f = F(); if (!f) return;
+    var out = [], seen = {};
+    selected.forEach(function (y) {
+      selected.forEach(function (x) {
+        if (x === y) return;
+        /* Symmetric, so each pair would otherwise be reported twice. */
+        var key = [x, y].sort().join('|');
+        if (seen[key]) return;
+        if (tautological(x, y)) return;
         var res = f.correlate(x, y);
         if (!res.ready || res.r == null || Math.abs(res.r) < 0.2) return;
+        seen[key] = 1;
         out.push({ x: x, y: y, r: res.r, n: res.n });
       });
     });
     out.sort(function (a, b) { return Math.abs(b.r) - Math.abs(a.r); });
     if (!out.length) {
-      var need = 8 - Math.min(8, Object.keys(f.all()).length);
+      var days = Object.keys(f.all()).length;
+      var need = Math.max(0, f.CORR_MIN - days);
       box.appendChild(el('p', 'empty',
-        need > 0 ? 'Nothing to say yet — ' + need + ' more days before anything is reported.'
-                 : 'Nothing above the noise floor yet. That is an answer too.'));
+        selected.length < 2 ? 'Pick two or more measures above.'
+        : need > 0 ? 'Nothing to say yet — ' + need + ' more days before anything is reported.'
+        : 'Nothing above the noise floor in this selection. That is an answer too.'));
       return;
     }
-    out.slice(0, 4).forEach(function (o) {
+    out.slice(0, 5).forEach(function (o) {
       var d = el('div', 'finding');
       d.appendChild(el('b', null, sentence(o.x, o.y, o.r)));
       d.appendChild(el('span', null,
@@ -272,16 +465,16 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   function paintPicker() {
     var box = $('#pick'); box.innerHTML = '';
     var f = F(); if (!f) return;
-    var have = {};
-    f.fields().forEach(function (x) { have[x.field] = x.n; });
-    var options = ROWS.concat(COLS).filter(function (x) { return have[x[0]] >= 2; });
+    var options = available();
     if (!options.length) { box.appendChild(el('span', 'empty', 'Nothing logged yet.')); return; }
-    if (!sparkField || !have[sparkField]) sparkField = options[0][0];
+    var have = {};
+    options.forEach(function (x) { have[x.field] = x.n; });
+    if (!sparkField || !have[sparkField]) sparkField = options[0].field;
     options.forEach(function (o) {
-      var b = el('button', null, o[1]);
+      var b = el('button', null, labelOf(o.field));
       b.type = 'button';
-      b.setAttribute('aria-pressed', o[0] === sparkField ? 'true' : 'false');
-      b.addEventListener('click', function () { sparkField = o[0]; paintPicker(); paintSpark(); });
+      b.setAttribute('aria-pressed', o.field === sparkField ? 'true' : 'false');
+      b.addEventListener('click', function () { sparkField = o.field; paintPicker(); paintSpark(); });
       box.appendChild(b);
     });
   }
@@ -301,7 +494,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     var svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', (LABEL[sparkField] || sparkField) + ' over the last ' +
+    svg.setAttribute('aria-label', labelOf(sparkField) + ' over the last ' +
       pts.length + ' logged days, from ' + lo + ' to ' + hi + '.');
     [0.5].forEach(function (fr) {
       var g = document.createElementNS(ns, 'line');
@@ -335,7 +528,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       t.setAttribute('font-size', '9'); t.setAttribute('fill', 'var(--faint)');
       t.textContent = s; svg.appendChild(t);
     }
-    var u = UNITS[sparkField] || '';
+    var u = unitOf(sparkField);
     txt(x(pts.length - 1) - 6, y(last.v) - 9, String(last.v) + u, 'end');
     txt(PL, H - 5, pts[0].day);
     txt(W - PR, H - 5, pts[pts.length - 1].day, 'end');
@@ -353,7 +546,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     }
     fs.forEach(function (x) {
       var s = el('span', x.n < f.CORR_MIN ? 'thin' : null);
-      s.appendChild(el('b', null, LABEL[x.field] || x.field));
+      s.appendChild(el('b', null, labelOf(x.field)));
       s.appendChild(document.createTextNode(' ' + x.n + 'd'));
       box.appendChild(s);
     });
@@ -369,7 +562,22 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   }
 
   try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  /* Open on the best available preset rather than an empty grid: the first
+     one whose measures are actually logged. */
+  (function chooseDefault() {
+    var f = F(); if (!f) return;
+    var have = {};
+    available().forEach(function (x) { have[x.field] = x.n; });
+    for (var i = 0; i < PRESETS.length; i++) {
+      var usable = PRESETS[i][1].filter(function (x) { return have[x]; });
+      if (usable.length >= 3) { selected = usable.slice(0, 9); return; }
+    }
+    selected = available().slice(0, 6).map(function (x) { return x.field; });
+  })();
+
   dateline();
+  paintPresets();
+  paintFieldPicker();
   paintMatrix();
   paintFindings();
   paintPicker();
