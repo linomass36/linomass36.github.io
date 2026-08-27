@@ -101,6 +101,8 @@ jobs:
           node tools/sitemap.test.js
           node tools/weekly-review.test.js
           node tools/health-import.test.js
+          node tools/facts.test.js
+          node tools/feeds.test.js
           node tools/day-boundary.test.js
           node tools/anatomy-core.test.js
 

@@ -1473,9 +1473,20 @@ footer {
       var b = m[1].replace(/-/g, '+').replace(/_/g, '/');
       while (b.length % 4) b += '=';
       var payload = JSON.parse(decodeURIComponent(escape(atob(b))));
-      var took = window.Feeds
-        ? window.Feeds.apply({ anki: payload })
-        : (localStorage.setItem('ct_anki_v1', JSON.stringify(payload)), ['anki']);
+      /* Feeds carries the newer-wins rule AND the rule that a reading
+         without a history must not delete the one already stored. The
+         fallback below only runs if feeds.js did not load, so it has to
+         keep that second promise itself. */
+      var took;
+      if (window.Feeds) {
+        took = window.Feeds.apply({ anki: payload });
+      } else {
+        var had = null;
+        try { had = JSON.parse(localStorage.getItem('ct_anki_v1')); } catch (e2) {}
+        if (payload.history == null && had && had.history != null) payload.history = had.history;
+        localStorage.setItem('ct_anki_v1', JSON.stringify(payload));
+        took = ['anki'];
+      }
       history.replaceState(null, '', location.pathname + location.search);
       paintAnki(); paint();
       var n = $('#anki-note');

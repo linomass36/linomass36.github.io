@@ -37,6 +37,27 @@ WHAT IT COMPUTES
                 total time is n x mean and the long tail is real work
     minsToday   how long today's queue should take, at the mean
     minsBacklog how long the whole backlog should take, at the mean
+    history     one row per Anki day, going back a year by default: reps,
+                distinct cards, Again presses and seconds spent
+
+HISTORY
+-------
+The hub could never draw an Anki chart because ct_anki_v1 holds a single
+reading and is overwritten on every sync — so the series began the day the
+site started keeping it, and nothing before that could be recovered.
+
+It could always be recovered from HERE. `revlog` is append-only and holds
+every review ever answered, with a millisecond timestamp on each. The whole
+history was sitting on this machine the entire time; this script simply never
+published it. --history N sends the last N Anki days (365 by default, 0 to
+send none) as parallel arrays keyed off a start date, which is a tenth the
+size of a list of objects and matters because --open carries the payload in a
+URL fragment.
+
+What CANNOT be backfilled is the queue depth on a past day: how many cards
+were waiting on 3 March is not a fact the revlog records, it is a state that
+was derived and thrown away. Reps, cards, Again and time are facts, and those
+are what history carries.
 
 The rollover matters: Anki's day does not start at midnight but at the "next
 day starts at" hour (4am by default), and a review at 1am belongs to the
@@ -46,6 +67,8 @@ doneToday for anyone who studies late — which is the case this is for.
 USAGE
 -----
     python3 anki_sync.py --print                 # look at the numbers, write nothing
+    python3 anki_sync.py --print --history 30    # …with the last 30 days of reps
+    python3 anki_sync.py --backfill              # send a year of history to the hub, once
     python3 anki_sync.py --open                  # open the hub with them attached (no key)
     python3 anki_sync.py --out ~/anki.json       # write a JSON file
     python3 anki_sync.py --firestore creds.json  # publish unattended (needs a key)
@@ -139,7 +162,54 @@ def day_cutoff(con):
     return today_idx, int(end_of_today.timestamp() * 1000), rollover
 
 
-def collect(con):
+def history(con, end_ms, days):
+    """One row per Anki day, back `days` days, from the revlog.
+
+    Bucketing is by Anki day rather than calendar date: a review at 1am
+    belongs to the day before, exactly as it does for the streak. `end_ms` is
+    the end of today, so bucket 0 is today, 1 is yesterday, and the arrays are
+    reversed at the end so index 0 is the OLDEST day — which is what a chart
+    wants and what saves the reader an off-by-one.
+    """
+    if days <= 0:
+        return None
+    span_ms = days * 86400 * 1000
+    start_ms = end_ms - span_ms
+    reps = [0] * days
+    again = [0] * days
+    secs = [0] * days
+    seen = [set() for _ in range(days)]
+    for r in con.execute(
+            "SELECT id, cid, ease, time FROM revlog WHERE id >= ? AND id < ?",
+            (start_ms, end_ms)):
+        idx = (end_ms - 1 - int(r["id"])) // (86400 * 1000)
+        if idx < 0 or idx >= days:
+            continue
+        reps[idx] += 1
+        seen[idx].add(r["cid"])
+        if r["ease"] == 1:
+            again[idx] += 1
+        t = int(r["time"] or 0)
+        if t > 0:
+            secs[idx] += t
+    cards = [len(s) for s in seen]
+
+    # Index 0 is today; flip so index 0 is the oldest day in the window.
+    reps.reverse(); again.reverse(); secs.reverse(); cards.reverse()
+    first = datetime.fromtimestamp(end_ms / 1000.0) - timedelta(days=days - 1)
+    return {
+        "from": first.strftime("%Y-%m-%d"),
+        "days": days,
+        "reps": reps,
+        "cards": cards,
+        "again": again,
+        # Seconds, rounded — milliseconds in an array this long is noise that
+        # doubles the payload.
+        "secs": [round(x / 1000.0) for x in secs],
+    }
+
+
+def collect(con, hist_days=0):
     today, end_ms, rollover = day_cutoff(con)
 
     # queue: 0 new, 1 learning, 2 review, 3 day-learn; negative = suspended/buried.
@@ -242,7 +312,8 @@ def collect(con):
         i += 1
 
     due_now = due_total + learning
-    return {
+    hist = history(con, end_ms, hist_days)
+    payload = {
         "due": due_now,                    # scheduled for today
         "backlog": backlog,                # overdue from before
         # Anki's deck list merges these two into one Due column. Publishing
@@ -268,6 +339,9 @@ def collect(con):
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": "mac",
     }
+    if hist:
+        payload["history"] = hist
+    return payload
 
 
 def hub_url(payload, base):
@@ -325,12 +399,27 @@ def main():
     ap.add_argument("--hub", default="https://linomass36.github.io/Standing.html",
                     help="hub page to open")
     ap.add_argument("--uid", help="Firebase uid to publish under")
+    ap.add_argument("--history", type=int, default=None, metavar="N",
+                    help="include the last N Anki days of reps/cards/again/time "
+                         "(default: none for a routine sync, 365 with --backfill)")
+    ap.add_argument("--backfill", action="store_true",
+                    help="send a year of history — run once to give the hub "
+                         "everything the revlog already knows")
     args = ap.parse_args()
+
+    # A routine sync every 30 minutes does not need to resend a year each time;
+    # a backfill is the one-off that hands the hub the whole revlog.
+    hist_days = args.history if args.history is not None else (365 if args.backfill else 0)
+    if hist_days and args.open_hub and hist_days > 200:
+        # --open carries the payload in a URL fragment. A year of four arrays
+        # is about 8 KB of base64, which every current browser accepts, but
+        # there is no reason to sail close to it on a routine open.
+        print(f"note: sending {hist_days} days in a URL fragment", file=sys.stderr)
 
     path = find_collection(args.profile)
     con, tmpdir = open_snapshot(path)
     try:
-        payload = collect(con)
+        payload = collect(con, hist_days=hist_days)
     finally:
         con.close()
         shutil.rmtree(tmpdir, ignore_errors=True)

@@ -896,6 +896,61 @@ silently shifted a run of days whenever you travelled — the kind of error
 that shows up only as a correlation quietly getting worse. The date written
 on the sample is the date it happened.
 
+### The matrix asks any pair, and a closure is a block
+
+The Trends matrix had a fixed set of rows and a fixed set of columns, which
+meant a whole class of question could not be asked at all: "does sleeping
+badly put me on my phone more" has sleep and screen time on the *same side*
+of the grid. It is symmetric now, over whatever you select — twenty-eight
+measures on offer, up to nine at a time, with the diagonal blanked rather
+than filled with 1.00. Tap a cell for the pair in a sentence.
+
+Presets are starting points rather than categories, and only appear when
+three of their measures are actually logged. Pairs that are related by
+definition — social screen time inside total screen time, Anki reps against
+Anki minutes, the watch's sleep against your own — stay in the grid, where
+seeing r = +0.95 is a useful check that the import works, but are kept out of
+the findings, where they are noise dressed as insight.
+
+**A closure was being counted wrong**, and the fix is worth naming because
+the number looked plausible. A closure is one syllabus BLOCK closed out — a
+named region (nk1, tx10) whose gate test scored 80 or better on both the
+innervation and the topography halves. It comes from `blocks`, on the date of
+its gate. `facts.js` was reading `days`, and a day record is
+`{tier, p0, pick, rand, minRead, minDraw, cardsNew, …}` — so counting its
+keys counted the *shape of the record*: twelve, every single day. The day
+record's own numbers are now columns in their own right, which is what it
+was always good for.
+
+### The Anki history was on the Mac the whole time
+
+`ct_anki_v1` holds a single reading and is overwritten on every sync, so the
+hub's series could only ever begin the day it started keeping it. But
+`revlog` is append-only and holds every review ever answered, with a
+millisecond timestamp on each — the history was sitting on the Mac all along
+and the script simply never published it.
+
+    python3 tools/anki_sync.py --backfill --open
+
+sends a year of daily reps, distinct cards, Again presses and seconds, as
+parallel arrays keyed off a start date — about 5 KB, which matters because
+`--open` carries the payload in a URL fragment. A routine sync sends none;
+there is no reason to resend a year every thirty minutes.
+
+**A routine sync used to delete it again.** `Feeds.apply` replaced the whole
+stored reading with the incoming one, and a routine sync carries no history —
+so thirty minutes after backfilling, the launchd job ran and the year was
+gone. Silently, and recoverable only by backfilling again, which would look
+like the feature had never worked. Newer still wins for everything a reading
+measures; a key the newcomer does not carry is now kept rather than dropped.
+
+What cannot be backfilled is the queue depth on a past day: how many cards
+were waiting on 3 March was derived from the collection's state and thrown
+away. Reps, cards, Again and time are facts. So Recall draws a long reps line
+against a short queue line — on **one shared date axis**, because scaling
+each series across the full width independently would have put today's queue
+reading eight weeks in the past.
+
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
 - `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
@@ -912,6 +967,8 @@ on the sample is the date it happened.
 - `calendar.js` + `Week.html` — next week read off Google Calendar (or an `.ics` drop), with the training laid into what is left and stored by date.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`.
+- `tools/feeds.test.js` — a newer reading wins, but does not delete the history it does not carry.
+- `tools/facts.test.js` — the daily table joins the right things to the right days: a closure is a block gated, and the Anki history lands on the day it happened.
 - `tools/sitemap.test.js` — the deploy tripwires: everything declared, nothing live pointing at an archived page, every page walkable home.
 - `systems.js` — every system in one line each: the number, the sentence and whether something is owed today. Read by Today, Mission Control and Reference so the three cannot disagree. See **One glance** above.
 - `Reference.dc.html` — the door to the five documents: what each is and when it is worth opening. The documents themselves are unchanged.
