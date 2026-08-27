@@ -38,6 +38,33 @@
     try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
   }
 
+  /* Fields a newer reading may not carry, and must not therefore delete.
+
+     A reading is a snapshot: due, backlog, streak, reps today. History is
+     not — it is a year of daily rows, sent once by `anki_sync.py --backfill`
+     because the revlog is the only place it exists. A routine sync sends no
+     history at all, and replacing the whole stored object with it wiped the
+     backfill on the very next run of the launchd job, thirty minutes later.
+     The whole year, gone, silently, and recoverable only by backfilling
+     again — which would look like it had never worked.
+
+     So: newer still wins for everything the reading measures, but a key the
+     newcomer does not carry is kept rather than dropped. */
+  var KEEP = ['history'];
+
+  function merge(incoming, mine) {
+    if (!mine || typeof mine !== 'object') return incoming;
+    var out = incoming;
+    KEEP.forEach(function (k) {
+      if (out[k] == null && mine[k] != null) {
+        /* Copy rather than mutate the incoming object: it is the caller's. */
+        if (out === incoming) out = Object.assign({}, incoming);
+        out[k] = mine[k];
+      }
+    });
+    return out;
+  }
+
   /* Returns what changed, so a page can say "Anki updated" rather than
      silently redrawing and leaving you wondering whether it worked. */
   function apply(doc) {
@@ -50,7 +77,7 @@
       var mine = readLocal(key);
       if (stamp(incoming) <= stamp(mine)) return;   // ours is newer, or the same
       try {
-        localStorage.setItem(key, JSON.stringify(incoming));
+        localStorage.setItem(key, JSON.stringify(merge(incoming, mine)));
         changed.push(field);
       } catch (e) {}
     });

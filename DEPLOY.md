@@ -937,6 +937,13 @@ parallel arrays keyed off a start date — about 5 KB, which matters because
 `--open` carries the payload in a URL fragment. A routine sync sends none;
 there is no reason to resend a year every thirty minutes.
 
+**A routine sync used to delete it again.** `Feeds.apply` replaced the whole
+stored reading with the incoming one, and a routine sync carries no history —
+so thirty minutes after backfilling, the launchd job ran and the year was
+gone. Silently, and recoverable only by backfilling again, which would look
+like the feature had never worked. Newer still wins for everything a reading
+measures; a key the newcomer does not carry is now kept rather than dropped.
+
 What cannot be backfilled is the queue depth on a past day: how many cards
 were waiting on 3 March was derived from the collection's state and thrown
 away. Reps, cards, Again and time are facts. So Recall draws a long reps line
@@ -960,6 +967,7 @@ reading eight weeks in the past.
 - `calendar.js` + `Week.html` — next week read off Google Calendar (or an `.ics` drop), with the training laid into what is left and stored by date.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`.
+- `tools/feeds.test.js` — a newer reading wins, but does not delete the history it does not carry.
 - `tools/facts.test.js` — the daily table joins the right things to the right days: a closure is a block gated, and the Anki history lands on the day it happened.
 - `tools/sitemap.test.js` — the deploy tripwires: everything declared, nothing live pointing at an archived page, every page walkable home.
 - `systems.js` — every system in one line each: the number, the sentence and whether something is owed today. Read by Today, Mission Control and Reference so the three cannot disagree. See **One glance** above.
