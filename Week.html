@@ -117,7 +117,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   <h1 id="h1">The week ahead.</h1>
   <p class="lede">Your week changes shape every week. Read what is already committed, then lay the training into what is left — rather than against a fixed grid that cannot express “clinic ate Tuesday”.</p>
 
-  <div class="kicker">Pull the week <span class="note">Sunday ritual</span></div>
+  <div class="kicker">Pull the week <span class="note" id="how"></span></div>
   <div class="pull">
     <button id="pull" type="button">⟳ Read my Google Calendar</button>
     <span class="alt">
@@ -241,6 +241,17 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   $('#pull').addEventListener('click', function () {
     var btn = this;
     btn.disabled = true;
+    /* If the key path is available there is nothing to sign into — pressing
+       the button should just re-read, not open a popup for no reason. */
+    if (C.canAuto()) {
+      say('Reading the calendar…');
+      var rr = C.nextWeekRange();
+      return C.autoRead(rr.start, rr.end, function (e0, events) {
+        btn.disabled = false;
+        if (e0) return say(e0.message, 'bad');
+        apply(events, 'your calendar');
+      });
+    }
     say('Opening Google…');
     C.connect(function (err, token) {
       if (err) { btn.disabled = false; return say(err.message, 'bad'); }
@@ -310,9 +321,34 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     $('#dateline').textContent = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
   }
 
+  /* Automatic, when the calendar is public and an API key is configured:
+     read on load, silently, and only say anything if it fails or if it
+     changed what was already showing. Pressing the button still works and
+     still forces a fresh read. */
+  function auto() {
+    if (!C.canAuto()) {
+      $('#how').textContent = 'press to read · Sunday ritual';
+      return;
+    }
+    $('#how').textContent = 'reads itself';
+    $('#pull').textContent = '⟳ Refresh now';
+    say('Reading the calendar…');
+    var r = C.nextWeekRange();
+    C.autoRead(r.start, r.end, function (err, events) {
+      if (err) {
+        /* An automatic read that fails must not look like an empty week.
+           Say what went wrong and leave the other two paths in reach. */
+        say(err.message + ' — the button and the .ics drop still work.', 'bad');
+        return;
+      }
+      apply(events, 'your calendar, automatically');
+    });
+  }
+
   try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
   dateline();
   restore();
+  auto();
 })();
 </script>
 </body>

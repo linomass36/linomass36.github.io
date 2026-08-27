@@ -103,6 +103,7 @@ jobs:
           node tools/health-import.test.js
           node tools/facts.test.js
           node tools/feeds.test.js
+          node tools/calendar.test.js
           node tools/day-boundary.test.js
           node tools/anatomy-core.test.js
 
