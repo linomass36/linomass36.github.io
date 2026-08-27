@@ -300,6 +300,30 @@
       </div>
     </div>
 
+    <!-- THIS WEEK'S THREE — set last Sunday, ticked through the week.
+         Written under the work week's key all along; the page simply never
+         asked for it, because it only ever read one week further ahead. -->
+    <sc-if value="{{ hasThis }}">
+      <div style="border: 1px solid #E4E2DD; border-left: 3px solid #993C1D; border-radius: 14px; background: #FFFFFF; padding: 18px 22px; margin-top: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #993C1D;">This week &middot; set last Sunday</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 500; margin-top: 3px;">The three you are working from</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A6A79F;">{{ thisWeekLabel }} &middot; {{ thisCount }}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 10px;">
+          <sc-for list="{{ thisRows }}" as="r" hint-placeholder-count="3">
+            <button onClick="{{ r.toggle }}" style="display: flex; align-items: flex-start; gap: 11px; text-align: left; width: 100%; min-height: 44px; padding: 10px 2px; background: none; border: none; border-bottom: 1px solid #F2F0EB; cursor: pointer;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #993C1D; flex: none; margin-top: 2px;">{{ r.num }}</span>
+              <span style="flex: 1; font-size: 14px; line-height: 1.45; color: {{ r.textColor }}; text-decoration: {{ r.strike }};">{{ r.text }}</span>
+              <sc-if value="{{ r.done }}"><span style="font-size: 13px; color: #0F6E56; flex: none;">&#10003;</span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
     <!-- STEP 5 · NEXT WEEK -->
     <div style="border: 1px solid #E4E2DD; border-left: 3px solid #b0741a; border-radius: 14px; background: #FFFFFF; padding: 18px 22px; margin-top: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: baseline;">
@@ -421,6 +445,27 @@ class Component extends DCLogic {
   bump() { this.setState(s => ({ tick: s.tick + 1 })); }
 
   mondayOf(d) { const x = new Date(d); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day); x.setHours(0, 0, 0, 0); return x; }
+
+  /* This page has one notion of "the week" and the ritual has three, which
+     is the whole of two bugs.
+
+       reviewWeek — the week that ENDED and is being looked back at. On
+                    Sunday that is the week closing today; Mon–Sat it is the
+                    week before, so a review done on Sunday still counts on
+                    Wednesday instead of the board flipping to DUE at 00:05
+                    on Monday for a week that has not happened.
+       workWeek   — the week being lived. Its three priorities are the ones
+                    to tick. They were written on Sunday under this key and
+                    then never read again, because the page only ever looked
+                    at now + 7 days — one week further on.
+       planWeek   — the week being planned, which is the one after the week
+                    being worked. Only set during the Sunday review.        */
+  reviewWeekKey(now) {
+    const d = new Date(now);
+    return d.getDay() === 0 ? this.wkKey(d) : this.wkKey(new Date(d.getTime() - 7 * 86400000));
+  }
+  workWeekKey(now) { return this.wkKey(new Date(now)); }
+  planWeekKey(now) { return this.wkKey(new Date(new Date(now).getTime() + 7 * 86400000)); }
   wkKey(d) { const m = this.mondayOf(d); return m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0') + '-' + String(m.getDate()).padStart(2, '0'); }
   isoDay(d) { return window.CTDay ? window.CTDay.key(d.getTime())
     : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -436,7 +481,7 @@ class Component extends DCLogic {
     this.writePlan({ checked, meta, history: hist });
     this.bump();
   }
-  setStep(key) { const w = this.readW(); const wk = this.wkKey(new Date()); const steps = Object.assign({}, w.steps); const s = Object.assign({}, steps[wk] || {}); s[key] = s[key] ? 0 : 1; steps[wk] = s; this.writeW({ steps }); this.bump(); }
+  setStep(key) { const w = this.readW(); const wk = this.reviewWeekKey(new Date()); const steps = Object.assign({}, w.steps); const s = Object.assign({}, steps[wk] || {}); s[key] = s[key] ? 0 : 1; steps[wk] = s; this.writeW({ steps }); this.bump(); }
 
   /* ── the closure system's week ─────────────────────────────────────────
      Read through anatomy-core.js, so the tripwires here are the same ones the
@@ -487,7 +532,9 @@ class Component extends DCLogic {
 
     const plan = this.readPlan();
     const w = this.readW();
-    const wk = this.wkKey(now);
+    const wk = this.reviewWeekKey(now);        // the week under review
+    const workWk = this.workWeekKey(now);      // the week being lived
+    const planWk = this.planWeekKey(now);      // the week being planned
     const steps = w.steps[wk] || {};
     const checked = plan.checked, meta = plan.meta, history = plan.history || [];
     const isChecked = id => !!checked[id];
@@ -644,8 +691,13 @@ class Component extends DCLogic {
       setTimeout(() => this.setState({ reflectMsg: '' }), 3200);
     };
 
-    // ---- next week priorities ----
-    const nextWk = this.wkKey(new Date(nowMs + 7 * 86400000));
+    /* ---- priorities ----
+       Two different weeks. `thisWeeksThree` is what was set last Sunday and
+       is ticked through the week; `planWk` is what this Sunday's review
+       writes. Reading and writing through one key meant the list you were
+       meant to be working from was stored and never shown again. */
+    const thisWeeksThree = w.priorities[workWk] || null;
+    const nextWk = planWk;
     const savedPrio = w.priorities[nextWk] || null;
     const prioEditing = this.state.editingPrio || !savedPrio;
     const prioSet = !prioEditing && !!savedPrio;
@@ -661,6 +713,18 @@ class Component extends DCLogic {
       this.setState({ editingPrio: false, prio0: '', prio1: '', prio2: '', tick: this.state.tick + 1 });
     };
     const editPrio = () => { const p = savedPrio || []; this.setState({ editingPrio: true, prio0: p[0] || '', prio1: p[1] || '', prio2: p[2] || '' }); };
+    const thisRows = (thisWeeksThree || []).map((t, i) => {
+      const doneKey = workWk + ':' + i;
+      const done = !!w.prioDone[doneKey];
+      return { num: (i + 1), text: t, done, textColor: done ? '#9a9b93' : '#26271F', strike: done ? 'line-through' : 'none',
+        toggle: () => { const pd = Object.assign({}, this.readW().prioDone); pd[doneKey] = pd[doneKey] ? 0 : 1; this.writeW({ prioDone: pd }); this.bump(); } };
+    });
+    const thisDone = thisRows.filter(r => r.done).length;
+    const hasThis = thisRows.length > 0;
+    const d0 = new Date(this.mondayOf(new Date(nowMs)));
+    const thisWeekLabel = 'wk of ' + MON[d0.getMonth()] + ' ' + d0.getDate();
+    const thisCount = hasThis ? thisDone + ' of ' + thisRows.length + ' done' : '';
+
     const prioRows = (savedPrio || []).map((t, i) => {
       const doneKey = nextWk + ':' + i;
       const done = !!w.prioDone[doneKey];
@@ -669,6 +733,12 @@ class Component extends DCLogic {
     });
     const d2 = new Date(this.mondayOf(new Date(nowMs + 7 * 86400000)));
     const prioWeekLabel = 'wk of ' + MON[d2.getMonth()] + ' ' + d2.getDate();
+    /* Say which week is on the page. The review never named its subject, so
+       "this week isn't done" was indistinguishable from "last week isn't". */
+    const dR = new Date(wk + 'T12:00:00');
+    const dRe = new Date(dR.getTime() + 6 * 86400000);
+    const reviewWeekLabel = MON[dR.getMonth()] + ' ' + dR.getDate() + ' – ' +
+                            MON[dRe.getMonth()] + ' ' + dRe.getDate();
 
     // ---- stale check ----
     const branchLast = {};
@@ -726,6 +796,7 @@ class Component extends DCLogic {
       histLabel: (histOpen ? 'hide' : 'show') + ' the ' + history5.length + ' week' + (history5.length === 1 ? '' : 's') + ' behind you',
       toggleHist: () => this.setState(st => ({ histOpen: !st.histOpen })),
       prioEditing, prioSet, prioWeekLabel, prio0: this.state.prio0, prio1: this.state.prio1, prio2: this.state.prio2,
+      thisRows, hasThis, thisWeekLabel, thisCount, reviewWeekLabel,
       setPrio0, setPrio1, setPrio2, savePrio, editPrio, prioRows,
       staleRows, staleEmpty, backupText, backupColor,
       completeReview, completeLabel, completeBg,

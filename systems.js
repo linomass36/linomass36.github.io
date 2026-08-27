@@ -46,13 +46,41 @@
            String(d.getDate()).padStart(2, '0');
   }
 
-  // The Monday of the current week, which is how the weekly review keys itself.
-  function monday() {
+  /* The Monday of a week, as a week key. Offset is in weeks: -1 is last week.
+
+     NOT isoDay(). A week key is a label for a week, not a stamp on a moment,
+     and isoDay() routes through the hub's 05:00 boundary — so midnight on
+     Monday came back as the Sunday before it. The Weekly Review page keys its
+     store off the plain calendar Monday, so `reviews[monday()]` was reading a
+     key that page never writes and the board could not show a completed
+     review at all, whatever week it was looking at.
+
+     Noon, so a daylight-saving shift cannot move the date either. */
+  function monday(offsetWeeks) {
     var x = new Date();
-    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
-    x.setHours(0, 0, 0, 0);
-    return isoDay(x);
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7) + (offsetWeeks || 0) * 7);
+    x.setHours(12, 0, 0, 0);
+    return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' +
+           String(x.getDate()).padStart(2, '0');
   }
+
+  /* Which week the weekly review is FOR.
+
+     A retrospective cannot be owed for a week still being lived, but the
+     review keyed itself to the Monday of the current week — so at 00:05 on
+     Monday the key flipped, Sunday's review stopped counting, and every
+     surface read DUE for a week that had not happened yet.
+
+     The week under review is the one that has ended: on Sunday that is the
+     week closing today, and on Monday through Saturday it is the week
+     before. So a review done on Sunday still reads as done on Wednesday,
+     and the next one is not owed until this week is over. */
+  function reviewWeek() {
+    return new Date().getDay() === 0 ? monday(0) : monday(-1);
+  }
+
+  // The week being worked right now — what this week's three priorities are for.
+  function workWeek() { return monday(0); }
 
   /* The Life Log keys its days by the UTC date and filters sessions the same
      way. Anything reading that store has to use its convention, not the
@@ -258,7 +286,10 @@
 
   function plan() {
     var c = planCounts();
-    return { id: 'plan', name: 'The plan', href: 'CT Master Plan.html', sort: 0,
+    /* Plan.html. The board's first tile — sort 0, the one at the top of the
+       Standing every morning — was still opening the v1 master plan that the
+       v2 recalibration replaced wholesale. */
+    return { id: 'plan', name: 'The plan', href: 'Plan.html', sort: 0,
       big: c.pct + '%', unit: 'this term', tone: '',
       line: c.liveDone + ' of ' + c.live + ' live steps · ' + c.later + ' more further out',
       counts: c };
@@ -266,7 +297,8 @@
 
   // ── the research portfolio ─────────────────────────────────────────────
   function research() {
-    var base = { id: 'research', name: 'Research plan', href: 'Research Plan.dc.html', sort: 5 };
+    // Pipeline.html — the v1 research document is archived; this tile still opened it.
+    var base = { id: 'research', name: 'Research plan', href: 'Pipeline.html', sort: 5 };
     var d = readJSON('ct_research_v1', null);
     var done = (d && d.done && typeof d.done === 'object') ? Object.keys(d.done).length : 0;
     var gates = (d && d.gates && typeof d.gates === 'object') ? Object.keys(d.gates).length : 0;
@@ -282,12 +314,24 @@
     var base = { id: 'weekly', name: 'Weekly review', href: 'Weekly Review.dc.html', sort: 8 };
     var d = readJSON('ct_weekly_v1', {}) || {};
     var reviews = d.reviews || {};
-    var doneThis = !!reviews[monday()];
+    var wk = reviewWeek();
+    var done = !!reviews[wk];
     var n = Object.keys(reviews).length;
+    /* Name the week either way. "✓ this week" on a Wednesday was the thing
+       that read as wrong even when the flag was right. */
+    var isSunday = new Date().getDay() === 0;
+    var label = isSunday ? 'this week' : 'last week';
+    var pretty = (function () {
+      var p = String(wk).split('-');
+      var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return p.length === 3 ? MON[(+p[1]) - 1] + ' ' + (+p[2]) : wk;
+    })();
     return Object.assign(base, {
-      big: doneThis ? '✓' : 'DUE', unit: doneThis ? 'this week' : 'this week', tone: doneThis ? 'ok' : 'go',
-      line: doneThis ? 'reviewed — the plan lives on this cadence'
-                     : (n ? n + ' reviews behind you' : 'the plan lives on this cadence'),
+      big: done ? '✓' : 'DUE', unit: label, tone: done ? 'ok' : 'go',
+      line: done ? 'reviewed — week of ' + pretty
+                 : (isSunday ? 'the week closes today · week of ' + pretty
+                             : 'week of ' + pretty + ' is unreviewed'
+                               + (n ? ' · ' + n + ' behind you' : '')),
     });
   }
 
@@ -557,5 +601,6 @@
 
   w.Systems = { all: all, owed: owed, held: held, eased: eased, drift: drift, floorDay: floorDay,
                 planCounts: planCounts, isoDay: isoDay, monday: monday,
+                reviewWeek: reviewWeek, workWeek: workWeek,
                 trends: trends, pearson: pearson, CORR_MIN: CORR_MIN };
 })(window);
