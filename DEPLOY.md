@@ -873,13 +873,41 @@ Thursday". That keying is also why training was invisible to the trends
 table. The new week reads what is already committed and lays the sessions
 into what is left, stored **by date**.
 
-Google Calendar works from a static site: the provider the gate already uses
-takes `calendar.readonly` as an extra scope, and the popup result carries a
-real access token the browser can call the API with. Two honest limits —
-Firebase hands the browser no refresh token, so it is one popup per session
-rather than anything automatic; and the scope is sensitive, so the OAuth app
-stays in Testing. An `.ics` file dropped in needs no auth at all. The secret
-`.ics` URL looks easier and is not: Google serves it without CORS headers.
+Google Calendar reaches a static site three ways, and they differ in whether
+the week arrives on its own.
+
+**Automatic.** The Calendar API on `www.googleapis.com` sends CORS headers, so
+a browser holding an API key can read a *public* calendar directly — no popup,
+no token to expire, and it works on the phone. Set `calendar.id` and
+`calendar.apiKey` in `config.js` and the Week page reads itself on load. An API
+key is a public credential, the same kind as the Firebase one beside it, so
+restrict it by HTTP referrer to this site and to the Calendar API only.
+
+The cost is the word *public*: a calendar shared publicly is readable by anyone
+holding its id, and for a clinical schedule that is a decision rather than a
+formality. Google's **"See only free/busy (hide details)"** is the middle
+ground — the hours stay visible, the titles do not, and the planner only ever
+needed the hours. Events come back titled "Busy", which is enough to lay
+training into what is left.
+
+**On request.** Leave `apiKey` empty and press the button. The provider the
+gate already uses takes `calendar.readonly` as an extra scope, and the popup
+result carries a real access token. The calendar stays private. Two honest
+limits: Firebase hands the browser no refresh token, so it is one popup per
+session; and the scope is sensitive, so the OAuth app stays in Testing.
+
+**Offline.** An `.ics` export dropped in needs no credential at all. The secret
+`.ics` *URL* looks easier and is not — Google serves it without CORS headers.
+
+`calendar.id` is not `primary`. A subscribed or imported timetable has its own
+id ending `@import.calendar.google.com` or `@group.calendar.google.com`, and
+reading `primary` returns a blank week that looks like it worked. Calendar →
+the calendar → Settings → **Calendar ID**.
+
+To turn automatic on: Google Cloud Console → enable the **Google Calendar
+API** → Credentials → **Create API key** → restrict it to that API and to
+`linomass36.github.io/*` → in Google Calendar, set the calendar's sharing to
+public (details, or free/busy only) → paste the key into `config.js`.
 
 **Three tripwires run in the deploy.** Every `.html` in the repo is declared
 and every declaration exists; no live page links to an archived one; every
@@ -964,7 +992,8 @@ reading eight weeks in the past.
 - `quotes.js` — the daily line, and `CTQuote.today()`, the one place that decides which one. The bank is kept coprime with 7 so nothing is welded to a weekday.
 - `sitemap.js` — the only declaration of what pages exist: name, drawer group, owning parent, and what each page's back control does now. Read by `nav.js`, the Standing's directory and `upbar.js`.
 - `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px.
-- `calendar.js` + `Week.html` — next week read off Google Calendar (or an `.ics` drop), with the training laid into what is left and stored by date.
+- `calendar.js` + `Week.html` — next week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
+- `tools/calendar.test.js` — the named calendar is the one read, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`.
 - `tools/feeds.test.js` — a newer reading wins, but does not delete the history it does not carry.

@@ -9,33 +9,61 @@
    scribe shift arriving as a new variable, needs a calendar rather than a
    grid.
 
-   WHAT ACTUALLY WORKS FROM A STATIC SITE. The site already signs in with
-   firebase.auth.GoogleAuthProvider, and that provider takes extra scopes;
-   the popup result carries a real OAuth access token, and Google's Calendar
-   API sends CORS headers, so the browser can call it directly. No server, no
-   proxy.
+   THREE WAYS IN, and they differ in whether you have to press anything.
 
-   Two things this cannot do, and does not pretend to:
+   1 · AUTOMATIC — an API key against a PUBLIC calendar. www.googleapis.com
+       sends CORS headers, so the browser fetches it on page load: no popup,
+       no token to expire, identical on a phone. An API key is a public
+       credential, restricted by HTTP referrer — the same shape as the
+       Firebase key this site already ships.
 
-     * Firebase hands the browser NO refresh token, so the access token lives
-       about an hour. This is one popup per session — right for a Sunday
-       ritual, wrong for anything automatic. It does not poll.
-     * calendar.readonly is a sensitive scope. Kept in Testing with yourself
-       as the test user it works indefinitely; publishing would need Google's
-       verification.
+       This is the ONLY genuinely automatic path, and its cost is that the
+       calendar is world-readable by anyone holding its id. Google's "see
+       only free/busy" setting is the middle ground: hours visible, titles
+       hidden, and the planner only needs the hours — an untitled block is
+       still a block it has to work around.
 
-   The secret .ics URL looks easier and is not — Google serves it without
-   CORS headers, so a browser fetch fails and it would need a proxy. An .ics
-   FILE, dropped in, needs no auth at all and is the offline path.
+   2 · ON REQUEST — OAuth through the Google provider the gate already uses,
+       with calendar.readonly added. The calendar stays private. It cannot be
+       made automatic: Firebase hands the browser NO refresh token, so the
+       access token lives about an hour and renewing it means showing the
+       popup again. calendar.readonly is also a sensitive scope, so the app
+       stays in Testing with you as the test user.
+
+   3 · OFFLINE — an .ics FILE dropped in. No credential, no network.
+
+   The secret .ics URL is NOT one of these, though it looks like the easiest:
+   Google serves calendar.google.com/calendar/ical/… without CORS headers, so
+   a browser fetch of it fails and it would need a proxy. The API on
+   www.googleapis.com is the one that answers a browser.
+
+   WHICH CALENDAR. Not `primary`. A subscribed or imported timetable — the
+   kind whose id ends @import.calendar.google.com — is its own calendar, and
+   asking for `primary` returns the empty one you never put anything in: a
+   blank week that looks like it worked.
    ───────────────────────────────────────────────────────────── */
 (function (w) {
   'use strict';
 
   var SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
-  var API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+  var V3 = 'https://www.googleapis.com/calendar/v3';
   var TOKKEY = '__cal_tok';        // sessionStorage: dies with the tab, never synced
 
   function cfg() { return (w.APP_CONFIG && w.APP_CONFIG.firebase) || null; }
+  function calCfg() { return (w.APP_CONFIG && w.APP_CONFIG.calendar) || {}; }
+
+  /* Which calendar to read. NOT 'primary': a subscribed or imported
+     timetable — the kind whose id ends @import.calendar.google.com — is a
+     separate calendar, and asking for `primary` returns the empty one you
+     never put anything in. That is a silent failure: the page would draw a
+     blank week and look like it had worked. */
+  function calId() {
+    var id = String(calCfg().id || '').trim();
+    return id || 'primary';
+  }
+  function eventsUrl(id) {
+    return V3 + '/calendars/' + encodeURIComponent(id) + '/events';
+  }
 
   function tok() {
     try { var raw = sessionStorage.getItem(TOKKEY); if (!raw) return null;
@@ -88,6 +116,69 @@
 
   function iso(d) { return new Date(d).toISOString(); }
 
+  /* ── automatic, with no popup ───────────────────────────────────────
+     An API key reads a PUBLIC calendar without any sign-in at all, and
+     www.googleapis.com sends CORS headers, so the browser does it directly.
+     No token to expire, nothing to press, and it works the same on a phone.
+
+     This is the only path that is genuinely automatic. The OAuth path below
+     cannot be: Firebase hands the browser no refresh token, so its token
+     lives about an hour and there is no way to renew it without showing the
+     popup again.
+
+     The trade is that the calendar has to be public, which means anyone
+     holding its id can read it. Setting it to "see only free/busy" keeps
+     the hours and hides the titles, and the planner only needs the hours —
+     an untitled block is still a block it must work around. */
+  function canAuto() { return !!(String(calCfg().apiKey || '').trim() && calId()); }
+
+  function autoRead(start, end, done) {
+    var key = String(calCfg().apiKey || '').trim();
+    if (!key) return done(new Error('no API key set — see calendar.apiKey in config.js'));
+    var url = eventsUrl(calId()) +
+      '?singleEvents=true&orderBy=startTime&maxResults=250' +
+      '&key=' + encodeURIComponent(key) +
+      '&timeMin=' + encodeURIComponent(iso(start)) +
+      '&timeMax=' + encodeURIComponent(iso(end));
+    fetch(url)
+      .then(function (r) {
+        if (r.status === 404) {
+          throw new Error('that calendar id is not readable — check it is set to public');
+        }
+        if (r.status === 403) {
+          /* Two very different causes, and the distinction is the whole
+             difference between "fix the key" and "fix the calendar". */
+          return r.json().then(function (j) {
+            var reason = (((j.error || {}).errors || [])[0] || {}).reason || '';
+            throw new Error(reason === 'dailyLimitExceededUnreg' || /key/i.test(reason)
+              ? 'the API key was refused — check the Calendar API is enabled and the referrer allows this site'
+              : 'the calendar refused the read — it is probably not public');
+          }, function () { throw new Error('the calendar refused the read (403)'); });
+        }
+        if (!r.ok) throw new Error('Calendar said ' + r.status);
+        return r.json();
+      })
+      .then(function (j) { done(null, (j.items || []).map(normalise).filter(Boolean)); })
+      .catch(function (e) { done(e); });
+  }
+
+  /* Every calendar the signed-in account can see, so the right one can be
+     picked rather than guessed. OAuth only — an API key cannot enumerate. */
+  function listCalendars(token, done) {
+    fetch(V3 + '/users/me/calendarList?minAccessRole=reader&maxResults=250',
+          { headers: { Authorization: 'Bearer ' + token } })
+      .then(function (r) {
+        if (!r.ok) throw new Error('could not list calendars (' + r.status + ')');
+        return r.json();
+      })
+      .then(function (j) {
+        done(null, (j.items || []).map(function (c) {
+          return { id: c.id, name: c.summary || c.id, primary: !!c.primary };
+        }));
+      })
+      .catch(function (e) { done(e); });
+  }
+
   /* Monday 00:00 to Sunday 23:59 of the week after the one containing `from`. */
   function nextWeekRange(from) {
     var d = new Date(from || Date.now());
@@ -99,8 +190,9 @@
     return { start: mon, end: end };
   }
 
-  function fetchRange(token, start, end, done) {
-    var url = API + '?singleEvents=true&orderBy=startTime&maxResults=250' +
+  function fetchRange(token, start, end, done, id) {
+    var url = eventsUrl(id || calId()) +
+      '?singleEvents=true&orderBy=startTime&maxResults=250' +
       '&timeMin=' + encodeURIComponent(iso(start)) +
       '&timeMax=' + encodeURIComponent(iso(end));
     fetch(url, { headers: { Authorization: 'Bearer ' + token } })
@@ -128,6 +220,15 @@
     if (me && me.responseStatus === 'declined') return null;
     return {
       title: ev.summary || '(untitled)', start: start, end: end, allDay: allDay,
+      /* The DATE the event happens on, taken from the stamp's own offset
+         rather than from the viewer's clock. Google sends
+         "2026-09-01T17:00:00-07:00" — that date is the date it happens,
+         wherever the page is being read. Bucketing by subtracting the week's
+         local midnight instead put an Arizona evening shift on the following
+         day when read from anywhere east of it, which is the same error the
+         health import had and just as quiet: the week still renders, the
+         session just moves to the wrong day. */
+      day: String(s.dateTime || s.date || '').slice(0, 10),
       hours: Math.max(0, (end - start) / 3600000),
       kind: classify(ev.summary || '')
     };
@@ -160,6 +261,11 @@
           out.push({
             title: cur.title || '(untitled)', start: cur.start, end: cur.end,
             allDay: !!cur.allDay,
+            /* An .ics DTSTART is parsed into a local Date above, so its own
+               calendar date is the one to key on. */
+            day: cur.start.getFullYear() + '-' +
+                 String(cur.start.getMonth() + 1).padStart(2, '0') + '-' +
+                 String(cur.start.getDate()).padStart(2, '0'),
             hours: Math.max(0, (cur.end - cur.start) / 3600000),
             kind: classify(cur.title || '')
           });
@@ -212,8 +318,14 @@
         committed: 0, blocks: [], session: null
       });
     }
+    var byKey = {};
+    days.forEach(function (d, n) { byKey[d.key] = n; });
     (events || []).forEach(function (ev) {
-      var i = Math.floor((ev.start - range.start) / 86400000);
+      /* Match on the event's own date. Falling back to the subtraction only
+         for an event that somehow carries no date string at all. */
+      var i = ev.day != null && byKey[ev.day] != null
+        ? byKey[ev.day]
+        : Math.floor((ev.start - range.start) / 86400000);
       if (i < 0 || i > 6) return;
       var day = days[i];
       day.blocks.push(ev);
@@ -279,6 +391,7 @@
 
   w.CTCalendar = {
     connect: connect, fetchRange: fetchRange, nextWeekRange: nextWeekRange,
+    autoRead: autoRead, canAuto: canAuto, listCalendars: listCalendars, calId: calId,
     parseICS: parseICS, classify: classify, planWeek: planWeek,
     saveWeek: saveWeek, readWeek: readWeek, markDone: markDone,
     hasToken: function () { return !!tok(); }, SCOPE: SCOPE, KEY: WKEY
