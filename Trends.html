@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trends · CT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<style>
+:root {
+  --ground:#F7F5F1; --card:#FFFDF8; --raise:#FFFFFF;
+  --ink:#1A1B1A; --mid:#55564F; --muted:#8A8B82; --faint:#B4B2A9;
+  --rule:#E4E2DD; --rust:#993C1D; --rust-dim:#FBF2EE;
+  --owed:#A32E27; --ok:#0F6E56;
+  /* Diverging pair for correlation: one hue each side of a neutral grey.
+     Never a rainbow, and never a hue at the midpoint — nothing is "nothing"
+     if zero is coloured. Validated against this surface for CVD. */
+  --pos1:#cde2fb; --pos2:#86b6ef; --pos3:#2a78d6;
+  --neg1:#f8dcdc; --neg2:#eb9a9a; --neg3:#d03b3b;
+  --mid0:#f0efec;
+  --s1:#2a78d6;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
+  --serif:"Newsreader",Georgia,serif;
+  --shadow:0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131315; --card:#1B1B1D; --raise:#212124;
+    --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+    --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+    --owed:#E8776D; --ok:#5FBF9B;
+    --pos1:#104281; --pos2:#1c5cab; --pos3:#3987e5;
+    --neg1:#4a1f1f; --neg2:#8f3535; --neg3:#e66767;
+    --mid0:#383835; --s1:#3987e5;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+html.hb-dark {
+  --ground:#131315; --card:#1B1B1D; --raise:#212124;
+  --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+  --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+  --owed:#E8776D; --ok:#5FBF9B;
+  --pos1:#104281; --pos2:#1c5cab; --pos3:#3987e5;
+  --neg1:#4a1f1f; --neg2:#8f3535; --neg3:#e66767;
+  --mid0:#383835; --s1:#3987e5;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+a { color:var(--rust); }
+main { max-width:760px; margin:0 auto; padding:0 20px 90px; }
+.top { display:flex; align-items:center; gap:10px; padding:14px 20px 12px;
+  border-bottom:1px solid var(--rule); max-width:760px; margin:0 auto; }
+.mark { font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); }
+.dateline { font-family:var(--mono); font-size:10.5px; color:var(--faint); }
+.sp { flex:1; }
+h1 { font-family:var(--serif); font-weight:500; font-size:30px; line-height:1.1;
+  margin:24px 0 8px; letter-spacing:-.01em; }
+.lede { color:var(--mid); font-size:15px; margin:0 0 4px; max-width:56ch; }
+.kicker { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--rust); margin:30px 0 10px; display:flex;
+  align-items:baseline; gap:8px; }
+.kicker .note { flex:1; font-weight:400; letter-spacing:.04em; text-transform:none;
+  color:var(--faint); font-size:10px; text-align:right; }
+.card { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  padding:15px 14px 13px; box-shadow:var(--shadow); }
+.tw { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table.mx { border-collapse:separate; border-spacing:3px; width:100%; min-width:330px; }
+table.mx th { font-family:var(--mono); font-size:8.5px; letter-spacing:.03em; color:var(--muted);
+  font-weight:600; padding:0 0 5px; text-align:center; }
+table.mx th small { display:block; opacity:.7; font-size:8px; font-weight:400; }
+table.mx th.rowh { text-align:right; padding-right:8px; font-size:10px; color:var(--ink);
+  white-space:nowrap; letter-spacing:0; }
+table.mx td { border-radius:5px; text-align:center; padding:8px 3px 6px; min-width:46px; }
+table.mx td .r { font-family:var(--mono); font-size:11.5px; font-weight:600; display:block;
+  font-variant-numeric:tabular-nums; }
+table.mx td .n { font-family:var(--mono); font-size:7.5px; display:block; opacity:.7; }
+table.mx td.thin { background:repeating-linear-gradient(45deg,var(--mid0),var(--mid0) 3px,transparent 3px,transparent 6px); }
+.scale { display:flex; align-items:center; gap:7px; margin-top:12px;
+  font-family:var(--mono); font-size:9px; color:var(--faint); }
+.scale .sw { display:flex; flex:1; height:7px; border-radius:4px; overflow:hidden; }
+.scale .sw i { flex:1; display:block; }
+.cap { font-family:var(--mono); font-size:10px; color:var(--faint); line-height:1.65; margin-top:11px; }
+.cap b { color:var(--mid); }
+.finding { border-left:2px solid var(--rust); padding:3px 0 3px 12px; margin-bottom:14px; }
+.finding b { display:block; font-size:14.5px; color:var(--ink); font-weight:600; line-height:1.4; }
+.finding span { font-family:var(--mono); font-size:10.5px; color:var(--muted); display:block; margin-top:4px; }
+.empty { color:var(--faint); font-style:italic; font-size:14px; }
+.cov { display:flex; flex-wrap:wrap; gap:6px; }
+.cov span { font-family:var(--mono); font-size:10px; color:var(--mid); background:var(--card);
+  border:1px solid var(--rule); border-radius:14px; padding:4px 10px; }
+.cov span b { color:var(--ink); font-weight:600; }
+.cov span.thin { color:var(--faint); border-style:dashed; }
+.spark { margin-top:6px; }
+.spark svg { display:block; width:100%; height:auto; }
+.pick { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.pick button { font-family:var(--mono); font-size:10.5px; color:var(--mid); background:var(--card);
+  border:1px solid var(--rule); border-radius:14px; padding:6px 12px; cursor:pointer; min-height:34px; }
+.pick button[aria-pressed="true"] { background:var(--rust); border-color:var(--rust); color:#fff; }
+footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
+  padding-top:16px; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:10px; color:var(--faint); }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
+</style>
+<script src="./day.js"></script>
+<script src="./facts.js"></script>
+</head>
+<body>
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span class="dateline" id="dateline"></span>
+  <span class="sp"></span>
+</header>
+<main>
+  <h1>What moves what.</h1>
+  <p class="lede">Every pair from the daily table. Correlation is not cause — this says where to look, not what to do.</p>
+
+  <div class="kicker">The matrix <span class="note" id="span-note"></span></div>
+  <div class="card">
+    <div class="tw"><table class="mx" id="mx"></table></div>
+    <div class="scale">
+      <span>−1.0</span>
+      <span class="sw">
+        <i style="background:var(--neg3)"></i><i style="background:var(--neg2)"></i><i style="background:var(--neg1)"></i>
+        <i style="background:var(--mid0)"></i>
+        <i style="background:var(--pos1)"></i><i style="background:var(--pos2)"></i><i style="background:var(--pos3)"></i>
+      </span>
+      <span>+1.0</span>
+    </div>
+    <p class="cap">Hatched cells have fewer than eight paired days — <b>CORR_MIN</b>, the same floor the Life Log's Trends panel already applied. They report nothing rather than a shape drawn from five points.</p>
+  </div>
+
+  <div class="kicker">What the table says</div>
+  <div id="findings"></div>
+
+  <div class="kicker">One series <span class="note">last 8 weeks</span></div>
+  <div class="pick" id="pick"></div>
+  <div class="card spark"><div id="spark"></div></div>
+
+  <div class="kicker">What is being collected <span class="note" id="cov-note"></span></div>
+  <div class="cov" id="cov"></div>
+
+  <footer>
+    <span>Trends</span>
+    <span>correlation is not cause</span>
+  </footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+
+  /* Rows are the things being explained, columns the things that might
+     explain them. The asymmetry is the point: an N x N grid of everything
+     against everything is a wall, and most of it is a measure against itself
+     under another name. */
+  var ROWS = [
+    ['study',    'Study h'],
+    ['ankiReps', 'Anki reps'],
+    ['closures', 'Closures'],
+    ['trained',  'Trained'],
+    ['steps',    'Steps']
+  ];
+  var COLS = [
+    ['sleep',  'Sleep',   'h'],
+    ['social', 'Screen',  'h'],
+    ['diet',   'Diet',    '0–3'],
+    ['rhr',    'Rest HR', 'bpm'],
+    ['hrv',    'HRV',     'ms']
+  ];
+
+  var LABEL = {};
+  ROWS.concat(COLS).forEach(function (x) { LABEL[x[0]] = x[1]; });
+  var UNITS = { sleep: 'h', social: 'h', study: 'h', rhr: 'bpm', hrv: 'ms', steps: '', diet: '', trained: '', ankiReps: '', closures: '' };
+
+  function F() { return window.CTFacts || null; }
+
+  function armFor(r) {
+    var a = Math.abs(r);
+    if (a < 0.15) return 'var(--mid0)';
+    var arm = r > 0 ? 'pos' : 'neg';
+    return 'var(--' + arm + (a >= 0.45 ? '3' : a >= 0.28 ? '2' : '1') + ')';
+  }
+  function inkFor(r) { return Math.abs(r) >= 0.45 ? '#fff' : 'var(--ink)'; }
+
+  function paintMatrix() {
+    var t = $('#mx'); t.innerHTML = '';
+    var f = F();
+    if (!f) return;
+    var thead = el('thead'), hr = el('tr');
+    hr.appendChild(el('th'));
+    COLS.forEach(function (c) {
+      var th = el('th'); th.appendChild(document.createTextNode(c[1]));
+      var sm = el('small', null, c[2]); th.appendChild(sm); hr.appendChild(th);
+    });
+    thead.appendChild(hr); t.appendChild(thead);
+
+    var tbody = el('tbody'), any = 0;
+    ROWS.forEach(function (rw) {
+      var tr = el('tr');
+      var th = el('th', 'rowh', rw[1]); tr.appendChild(th);
+      COLS.forEach(function (c) {
+        var res = f.correlate(c[0], rw[0]);
+        var td = el('td');
+        var thin = !res.ready || res.r == null;
+        if (thin) { td.className = 'thin'; }
+        else { td.style.background = armFor(res.r); any++; }
+        var r = el('span', 'r', thin ? '·' : (res.r > 0 ? '+' : '') + res.r.toFixed(2));
+        var n = el('span', 'n', 'n' + res.n);
+        r.style.color = thin ? 'var(--faint)' : inkFor(res.r);
+        n.style.color = thin ? 'var(--faint)' : inkFor(res.r);
+        td.appendChild(r); td.appendChild(n);
+        td.title = rw[1] + ' × ' + c[1] + (thin
+          ? ' — ' + res.n + ' paired days, needs 8'
+          : ' — r ' + (res.r > 0 ? '+' : '') + res.r.toFixed(2) + ' over ' + res.n + ' days');
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    var days = Object.keys(f.all()).length;
+    $('#span-note').textContent = days + (days === 1 ? ' day' : ' days') + ' on record' +
+      (any ? '' : ' · nothing reportable yet');
+  }
+
+  function sentence(x, y, r) {
+    var a = LABEL[y] || y, b = LABEL[x] || x;
+    /* Lowercase an ordinary word mid-sentence, but leave an acronym or a
+       two-word label alone — "rises with hrv" reads as a typo. */
+    if (/^[A-Z][a-z]+$/.test(b)) b = b.toLowerCase();
+    return r > 0 ? a + ' rises with ' + b + '.'
+                 : a + ' falls as ' + b + ' goes up.';
+  }
+
+  function paintFindings() {
+    var box = $('#findings'); box.innerHTML = '';
+    var f = F();
+    if (!f) return;
+    var rows = ROWS.map(function (r) { return r[0]; });
+    var cols = COLS.map(function (c) { return c[0]; });
+    var out = [];
+    rows.forEach(function (y) {
+      cols.forEach(function (x) {
+        var res = f.correlate(x, y);
+        if (!res.ready || res.r == null || Math.abs(res.r) < 0.2) return;
+        out.push({ x: x, y: y, r: res.r, n: res.n });
+      });
+    });
+    out.sort(function (a, b) { return Math.abs(b.r) - Math.abs(a.r); });
+    if (!out.length) {
+      var need = 8 - Math.min(8, Object.keys(f.all()).length);
+      box.appendChild(el('p', 'empty',
+        need > 0 ? 'Nothing to say yet — ' + need + ' more days before anything is reported.'
+                 : 'Nothing above the noise floor yet. That is an answer too.'));
+      return;
+    }
+    out.slice(0, 4).forEach(function (o) {
+      var d = el('div', 'finding');
+      d.appendChild(el('b', null, sentence(o.x, o.y, o.r)));
+      d.appendChild(el('span', null,
+        'r = ' + (o.r > 0 ? '+' : '') + o.r.toFixed(2) + ' over ' + o.n + ' paired days'));
+      box.appendChild(d);
+    });
+  }
+
+  var sparkField = null;
+  function paintPicker() {
+    var box = $('#pick'); box.innerHTML = '';
+    var f = F(); if (!f) return;
+    var have = {};
+    f.fields().forEach(function (x) { have[x.field] = x.n; });
+    var options = ROWS.concat(COLS).filter(function (x) { return have[x[0]] >= 2; });
+    if (!options.length) { box.appendChild(el('span', 'empty', 'Nothing logged yet.')); return; }
+    if (!sparkField || !have[sparkField]) sparkField = options[0][0];
+    options.forEach(function (o) {
+      var b = el('button', null, o[1]);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', o[0] === sparkField ? 'true' : 'false');
+      b.addEventListener('click', function () { sparkField = o[0]; paintPicker(); paintSpark(); });
+      box.appendChild(b);
+    });
+  }
+
+  function paintSpark() {
+    var box = $('#spark'); box.innerHTML = '';
+    var f = F(); if (!f || !sparkField) return;
+    var pts = f.series(sparkField).slice(-56);
+    if (pts.length < 2) { box.appendChild(el('p', 'empty', 'Not enough of this logged to draw yet.')); return; }
+    var W = 640, H = 120, PL = 6, PR = 6, PT = 12, PB = 20;
+    var vals = pts.map(function (p) { return p.v; });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if (hi === lo) { hi = lo + 1; }
+    var x = function (i) { return PL + (i / (pts.length - 1)) * (W - PL - PR); };
+    var y = function (v) { return PT + (1 - (v - lo) / (hi - lo)) * (H - PT - PB); };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', (LABEL[sparkField] || sparkField) + ' over the last ' +
+      pts.length + ' logged days, from ' + lo + ' to ' + hi + '.');
+    [0.5].forEach(function (fr) {
+      var g = document.createElementNS(ns, 'line');
+      g.setAttribute('x1', PL); g.setAttribute('x2', W - PR);
+      g.setAttribute('y1', y(lo + (hi - lo) * fr)); g.setAttribute('y2', y(lo + (hi - lo) * fr));
+      g.setAttribute('stroke', 'var(--rule)'); g.setAttribute('stroke-width', '1');
+      svg.appendChild(g);
+    });
+    var d = '', area = '';
+    pts.forEach(function (p, i) { d += (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(p.v).toFixed(1); });
+    area = d + 'L' + x(pts.length - 1).toFixed(1) + ',' + (H - PB) + 'L' + x(0).toFixed(1) + ',' + (H - PB) + 'Z';
+    var ap = document.createElementNS(ns, 'path');
+    ap.setAttribute('d', area); ap.setAttribute('fill', 'var(--s1)'); ap.setAttribute('opacity', '.12');
+    svg.appendChild(ap);
+    var ln = document.createElementNS(ns, 'path');
+    ln.setAttribute('d', d); ln.setAttribute('fill', 'none');
+    ln.setAttribute('stroke', 'var(--s1)'); ln.setAttribute('stroke-width', '2');
+    ln.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(ln);
+    var last = pts[pts.length - 1];
+    var dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', x(pts.length - 1)); dot.setAttribute('cy', y(last.v));
+    dot.setAttribute('r', '3.5'); dot.setAttribute('fill', 'var(--s1)');
+    dot.setAttribute('stroke', 'var(--card)'); dot.setAttribute('stroke-width', '2');
+    svg.appendChild(dot);
+    function txt(tx, ty, s, anchor) {
+      var t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', tx); t.setAttribute('y', ty);
+      t.setAttribute('text-anchor', anchor || 'start');
+      t.setAttribute('font-family', 'IBM Plex Mono, monospace');
+      t.setAttribute('font-size', '9'); t.setAttribute('fill', 'var(--faint)');
+      t.textContent = s; svg.appendChild(t);
+    }
+    var u = UNITS[sparkField] || '';
+    txt(x(pts.length - 1) - 6, y(last.v) - 9, String(last.v) + u, 'end');
+    txt(PL, H - 5, pts[0].day);
+    txt(W - PR, H - 5, pts[pts.length - 1].day, 'end');
+    box.appendChild(svg);
+  }
+
+  function paintCoverage() {
+    var box = $('#cov'); box.innerHTML = '';
+    var f = F(); if (!f) return;
+    var fs = f.fields();
+    if (!fs.length) {
+      box.appendChild(el('span', 'thin', 'nothing yet — log a day, or import a health export'));
+      $('#cov-note').textContent = '';
+      return;
+    }
+    fs.forEach(function (x) {
+      var s = el('span', x.n < f.CORR_MIN ? 'thin' : null);
+      s.appendChild(el('b', null, LABEL[x.field] || x.field));
+      s.appendChild(document.createTextNode(' ' + x.n + 'd'));
+      box.appendChild(s);
+    });
+    var ready = fs.filter(function (x) { return x.n >= f.CORR_MIN; }).length;
+    $('#cov-note').textContent = ready + ' of ' + fs.length + ' past the 8-day floor';
+  }
+
+  function dateline() {
+    var d = new Date();
+    var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    $('#dateline').textContent = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+  }
+
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  dateline();
+  paintMatrix();
+  paintFindings();
+  paintPicker();
+  paintSpark();
+  paintCoverage();
+})();
+</script>
+</body>
+</html>

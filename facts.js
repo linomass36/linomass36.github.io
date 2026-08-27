@@ -157,6 +157,26 @@
     return out;
   }
 
+  /* The dated training week. This is the store that fixes the Grind board's
+     week|slot keying: a session done on the 3rd is a fact about the 3rd, so
+     `trained` becomes a column the correlations can actually read. It wins
+     over the Life Log's self-reported flag, being the more specific record. */
+  function fromWeekPlan() {
+    var out = {};
+    var d = readJSON('ct_week_v1', {}) || {};
+    var days = d.days || {};
+    Object.keys(days).forEach(function (k) {
+      if (!isDay(k)) return;
+      var dy = days[k] || {};
+      var row = {};
+      if (dy.session) row.trained = dy.done ? 1 : 0;
+      if (num(dy.committed) != null) row.work = num(dy.committed);
+      if (num(dy.free) != null) row.free = num(dy.free);
+      if (Object.keys(row).length) out[k] = row;
+    });
+    return out;
+  }
+
   function fromWeekly() {
     /* Whether the week was reviewed, stamped on its Monday. Not a daily
        measure, but it is the only record of the cadence holding. */
@@ -181,6 +201,7 @@
       } catch (e) {}
     }
     fold(fromLifeLog); fold(fromHealth); fold(fromAnatomy); fold(fromWeekly);
+    fold(fromWeekPlan);   // after the Life Log: a dated session beats a day flag
     var saved = store().days;
     Object.keys(saved).forEach(function (k) {
       if (!isDay(k)) return;

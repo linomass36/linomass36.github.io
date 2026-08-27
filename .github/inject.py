@@ -44,9 +44,12 @@ SHIM = (
     '<script src="./feeds.js"></script>\n'
     '<script src="./archive.js"></script>\n'
     '<script src="./sync.js"></script>\n'
+    '<script src="./sitemap.js"></script>\n'
     '<script src="./facts.js"></script>\n'
     '<script src="./contact.js"></script>\n'
+    '<script src="./calendar.js"></script>\n'
     '<script src="./nav.js"></script>\n'
+    '<script src="./upbar.js"></script>\n'
     '<script src="./capture.js"></script>\n'
 )
 
@@ -186,9 +189,12 @@ BUNDLER_HEAD = (
     '<script src="./config.js?v=__APP_VERSION__"></script>\n'
     '<script src="./archive.js?v=__APP_VERSION__"></script>\n'
     '<script src="./sync.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./sitemap.js?v=__APP_VERSION__"></script>\n'
     '<script src="./facts.js?v=__APP_VERSION__"></script>\n'
     '<script src="./contact.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./calendar.js?v=__APP_VERSION__"></script>\n'
     '<script src="./nav.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./upbar.js?v=__APP_VERSION__"></script>\n'
     '<script src="./capture.js?v=__APP_VERSION__"></script>\n'
 )
 

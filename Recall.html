@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recall · CT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<style>
+:root {
+  --ground:#F7F5F1; --card:#FFFDF8; --raise:#FFFFFF;
+  --ink:#1A1B1A; --mid:#55564F; --muted:#8A8B82; --faint:#B4B2A9;
+  --rule:#E4E2DD; --rust:#993C1D; --rust-dim:#FBF2EE;
+  --owed:#A32E27; --owed-bg:#FBEDE8; --owed-ln:#E8C4B6;
+  --ok:#0F6E56; --ok-bg:#EEF5F1;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
+  --serif:"Newsreader",Georgia,serif;
+  --shadow:0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131315; --card:#1B1B1D; --raise:#212124;
+    --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+    --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+    --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+    --ok:#5FBF9B; --ok-bg:#14231E;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+html.hb-dark {
+  --ground:#131315; --card:#1B1B1D; --raise:#212124;
+  --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+  --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+  --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+  --ok:#5FBF9B; --ok-bg:#14231E;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+a { color:var(--rust); text-decoration:none; }
+main { max-width:720px; margin:0 auto; padding:0 20px 90px; }
+.top { display:flex; align-items:center; gap:10px; padding:14px 20px 12px;
+  border-bottom:1px solid var(--rule); max-width:720px; margin:0 auto; }
+.mark { font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); }
+.dateline { font-family:var(--mono); font-size:10.5px; color:var(--faint); }
+.sp { flex:1; }
+h1 { font-family:var(--serif); font-weight:500; font-size:34px; line-height:1.08;
+  margin:24px 0 8px; letter-spacing:-.015em; }
+.lede { color:var(--mid); font-size:15px; margin:0; max-width:56ch; }
+.kicker { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--rust); margin:30px 0 10px; display:flex;
+  align-items:baseline; gap:8px; }
+.kicker .note { flex:1; font-weight:400; letter-spacing:.04em; text-transform:none;
+  color:var(--faint); font-size:10px; text-align:right; }
+.queue { display:flex; flex-direction:column; gap:9px; }
+.q { display:flex; align-items:center; gap:12px; border:1px solid var(--rule);
+  background:var(--card); border-radius:13px; padding:14px 15px; box-shadow:var(--shadow);
+  color:inherit; min-height:64px; }
+.q:hover { border-color:var(--rust); }
+.q .dot { width:9px; height:9px; border-radius:50%; flex:none; }
+.q .body { flex:1; min-width:0; }
+.q .nm { font-size:15.5px; color:var(--ink); font-weight:500; }
+.q .sub { font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:3px;
+  overflow:hidden; text-overflow:ellipsis; }
+.q .big { font-family:var(--serif); font-size:25px; line-height:1; color:var(--ink); flex:none;
+  font-variant-numeric:tabular-nums; }
+.q .big small { font-family:var(--mono); font-size:9.5px; color:var(--muted); margin-left:4px; }
+.q.is-due { background:var(--owed-bg); border-color:var(--owed-ln); }
+.q.is-due .big { color:var(--owed); }
+.q.is-clear { background:var(--ok-bg); }
+.q.is-stale { border-style:dashed; }
+.total { border:1px solid var(--rule); background:var(--card); border-radius:14px;
+  padding:18px 18px 16px; box-shadow:var(--shadow); text-align:center; }
+.total .n { font-family:var(--serif); font-size:52px; line-height:1; color:var(--ink);
+  font-variant-numeric:tabular-nums; }
+.total .n.is-due { color:var(--owed); }
+.total .l { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); margin-top:7px; }
+.total .s { font-size:13px; color:var(--mid); margin-top:9px; line-height:1.5; }
+.chart { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  padding:14px 12px 11px; box-shadow:var(--shadow); }
+.chart svg { display:block; width:100%; height:auto; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:9px;
+  font-family:var(--mono); font-size:10px; color:var(--mid); }
+.legend span { display:inline-flex; align-items:center; gap:6px; }
+.legend i { width:12px; height:3px; border-radius:2px; display:block; }
+.cap { font-family:var(--mono); font-size:10px; color:var(--faint); line-height:1.65; margin-top:11px; }
+.cap b { color:var(--mid); }
+.note-box { border:1px dashed var(--rule); border-radius:12px; padding:13px 14px;
+  font-family:var(--mono); font-size:10.5px; color:var(--muted); line-height:1.7; }
+.note-box b { color:var(--rust); }
+.empty { color:var(--faint); font-style:italic; font-size:14px; }
+footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
+  padding-top:16px; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:10px; color:var(--faint); }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
+</style>
+<script src="./day.js"></script>
+<script src="./facts.js"></script>
+</head>
+<body>
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span class="dateline" id="dateline"></span>
+  <span class="sp"></span>
+</header>
+<main>
+  <h1>Three queues, one desk.</h1>
+  <p class="lede">Anki, the error cards and the resurfaced notes are three systems doing spaced repetition with three stores and two different algorithms. They keep their stores. They stop having three front doors.</p>
+
+  <div class="kicker">Owed to your memory <span class="note" id="tot-note"></span></div>
+  <div class="total">
+    <div class="n" id="tot-n">—</div>
+    <div class="l" id="tot-l">due right now</div>
+    <div class="s" id="tot-s"></div>
+  </div>
+
+  <div class="kicker">Where it is <span class="note">tap to work it</span></div>
+  <div class="queue" id="queues"></div>
+
+  <div class="kicker">Anki, eight weeks <span class="note" id="hist-note"></span></div>
+  <div id="hist"></div>
+
+  <div class="kicker">Not a queue</div>
+  <div class="note-box">
+    <b>Anatomy</b> stays separate. It is a curriculum with an order, not a queue with
+    due dates, and folding it in would have made both worse. It shares the daily
+    table, which is the whole integration it needs.
+  </div>
+
+  <footer>
+    <span>Recall</span>
+    <span>the asset is what you can recall and connect</span>
+  </footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function readJSON(k, fb) {
+    try { var r = localStorage.getItem(k); if (r) { var v = JSON.parse(r); if (v != null) return v; } } catch (e) {}
+    return fb;
+  }
+  function isoDay() {
+    if (window.CTDay) return window.CTDay.key(Date.now());
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  /* ── the three queues ────────────────────────────────────────────────
+     Each keeps its own store and its own scheduler. This asks all three
+     what is due and adds it up, which is the only thing that was missing:
+     "what do I owe my memory today" had three answers in three places and
+     no total anywhere. */
+
+  function anki() {
+    var d = readJSON('ct_anki_v1', null);
+    var q = { id: 'anki', name: 'Anki', color: 'var(--s1)', href: null,
+              due: 0, sub: '', stale: false, has: false };
+    if (!d || typeof d !== 'object') {
+      q.sub = 'not linked — run the Mac sync, or type one in on the Standing';
+      q.href = 'Standing.html#anki';
+      return q;
+    }
+    q.has = true;
+    var age = null;
+    if (d.at) {
+      var a = String(d.at).slice(0, 10);
+      age = Math.max(0, Math.round(
+        (new Date(isoDay() + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000));
+    }
+    var due = Math.max(0, parseInt(d.due, 10) || 0);
+    var back = Math.max(0, parseInt(d.backlog, 10) || 0);
+    var waiting = (d.dueTotal != null) ? Math.max(0, parseInt(d.dueTotal, 10) || 0) : due + back;
+    var reps = Math.max(0, parseInt(d.repsToday != null ? d.repsToday : d.doneToday, 10) || 0);
+    var streak = Math.max(0, parseInt(d.streak, 10) || 0);
+    q.due = waiting;
+    q.href = 'Standing.html#anki';
+    if (age !== null && age > 1) {
+      q.stale = true;
+      q.sub = 'last reading ' + age + ' days ago — the sync is not running';
+      return q;
+    }
+    var when = age === 1 ? ' yesterday' : ' today';
+    q.sub = (reps ? reps + ' rep' + (reps === 1 ? '' : 's') + when : 'nothing done' + when) +
+            (streak ? ' · ' + streak + 'd streak' : '');
+    return q;
+  }
+
+  function cards() {
+    var d = readJSON('ct_study_v1', { cards: [] }) || {};
+    var list = Array.isArray(d.cards) ? d.cards : [];
+    var today = isoDay();
+    var due = list.filter(function (c) { return c && c.due && c.due <= today; }).length;
+    return { id: 'study', name: 'Error cards', color: 'var(--s2)', href: 'Study Engine.dc.html',
+             due: due, has: list.length > 0,
+             sub: list.length ? list.length + ' cards · made from what you got wrong'
+                              : 'no error cards yet — they come from what you get wrong' };
+  }
+
+  function resurfaced() {
+    /* resurface.js owns the pick and the responses; this only needs to know
+       whether today's item has been seen. */
+    var s = readJSON('ct_resurface_v1', {}) || {};
+    var seen = s.seen || {};
+    var day = isoDay();
+    var shownToday = Object.keys(seen).some(function (k) {
+      return String(seen[k] && seen[k].day || seen[k]) === day;
+    });
+    return { id: 'resurface', name: 'Resurfaced', color: 'var(--s3)', href: 'Today.dc.html',
+             due: shownToday ? 0 : 1, has: true,
+             sub: shownToday ? 'today’s item has been seen'
+                             : 'one thing a day from everything you have written' };
+  }
+
+  function paintQueues() {
+    var qs = [anki(), cards(), resurfaced()];
+    var box = $('#queues'); box.innerHTML = '';
+    qs.forEach(function (q) {
+      var a = el('a', 'q' + (q.stale ? ' is-stale' : q.due > 0 ? ' is-due' : ' is-clear'));
+      if (q.href) a.href = q.href;
+      var dot = el('span', 'dot'); dot.style.background = q.color; a.appendChild(dot);
+      var body = el('span', 'body');
+      body.appendChild(el('span', 'nm', q.name));
+      body.appendChild(el('span', 'sub', q.sub));
+      a.appendChild(body);
+      var big = el('span', 'big', q.has ? String(q.due) : '—');
+      var sm = el('small', null, q.due === 1 ? 'due' : 'due'); big.appendChild(sm);
+      a.appendChild(big);
+      box.appendChild(a);
+    });
+    var total = qs.reduce(function (t, q) { return t + (q.stale ? 0 : q.due); }, 0);
+    var n = $('#tot-n');
+    n.textContent = String(total);
+    n.className = 'n' + (total > 0 ? ' is-due' : '');
+    $('#tot-l').textContent = total === 0 ? 'nothing owed' : 'due right now';
+    var names = qs.filter(function (q) { return !q.stale && q.due > 0; })
+                  .map(function (q) { return q.name.toLowerCase() + ' ' + q.due; });
+    $('#tot-s').textContent = total === 0
+      ? 'All three queues are clear. That is the whole page.'
+      : names.join(' · ');
+    var stale = qs.filter(function (q) { return q.stale; });
+    $('#tot-note').textContent = stale.length ? stale[0].name.toLowerCase() + ' reading is stale' : '';
+  }
+
+  /* ── the Anki series ────────────────────────────────────────────────
+     ct_anki_v1 holds one reading and is overwritten on every sync, so none
+     of this existed until facts.js started stamping it onto the day. The
+     history therefore begins the day this shipped and cannot be recovered
+     for any day before it. */
+  function paintHistory() {
+    var box = $('#hist'); box.innerHTML = '';
+    var F = window.CTFacts;
+    if (!F) return;
+    var reps = F.series('ankiReps').slice(-56);
+    var queue = F.series('ankiQueue').slice(-56);
+    if (reps.length < 3) {
+      var d = el('div', 'note-box');
+      d.innerHTML = 'Not enough kept yet — <b>' + reps.length + '</b> day' +
+        (reps.length === 1 ? '' : 's') + ' of readings. ' +
+        'The store holds a single reading and is overwritten on every sync, so the ' +
+        'series starts the day this shipped and cannot be reconstructed backwards. ' +
+        'Three days and this becomes a chart.';
+      box.appendChild(d);
+      $('#hist-note').textContent = reps.length + 'd kept';
+      return;
+    }
+    $('#hist-note').textContent = reps.length + ' days kept';
+
+    var lg = el('div', 'legend');
+    [['Reps/day', 'var(--s1)'], ['Queue waiting', 'var(--s2)']].forEach(function (p) {
+      var s = el('span'); var i = el('i'); i.style.background = p[1];
+      s.appendChild(i); s.appendChild(document.createTextNode(p[0])); lg.appendChild(s);
+    });
+    box.appendChild(lg);
+
+    var wrap = el('div', 'chart');
+    var W = 640, H = 150, PL = 6, PR = 6, PT = 14, PB = 20;
+    var all = reps.map(function (r) { return r.v; })
+      .concat(queue.map(function (q) { return q.v; }));
+    var hi = Math.max.apply(null, all) || 1;
+    var byDay = {};
+    queue.forEach(function (q) { byDay[q.day] = q.v; });
+    var x = function (i, n) { return PL + (n < 2 ? 0 : (i / (n - 1)) * (W - PL - PR)); };
+    var y = function (v) { return PT + (1 - v / hi) * (H - PT - PB); };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Anki reps per day and the queue waiting, over the last ' +
+      reps.length + ' recorded days.');
+    [0.33, 0.66].forEach(function (f) {
+      var g = document.createElementNS(ns, 'line');
+      g.setAttribute('x1', PL); g.setAttribute('x2', W - PR);
+      g.setAttribute('y1', y(hi * f)); g.setAttribute('y2', y(hi * f));
+      g.setAttribute('stroke', 'var(--rule)'); g.setAttribute('stroke-width', '1');
+      svg.appendChild(g);
+    });
+    function line(pts, colour, fill) {
+      if (pts.length < 2) return;
+      var d = '';
+      pts.forEach(function (p, i) { d += (i ? 'L' : 'M') + x(i, pts.length).toFixed(1) + ',' + y(p.v).toFixed(1); });
+      if (fill) {
+        var ap = document.createElementNS(ns, 'path');
+        ap.setAttribute('d', d + 'L' + x(pts.length - 1, pts.length).toFixed(1) + ',' + (H - PB) +
+                             'L' + x(0, pts.length).toFixed(1) + ',' + (H - PB) + 'Z');
+        ap.setAttribute('fill', colour); ap.setAttribute('opacity', '.12');
+        svg.appendChild(ap);
+      }
+      var ln = document.createElementNS(ns, 'path');
+      ln.setAttribute('d', d); ln.setAttribute('fill', 'none');
+      ln.setAttribute('stroke', colour); ln.setAttribute('stroke-width', '2');
+      ln.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(ln);
+      var last = pts[pts.length - 1];
+      var c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', x(pts.length - 1, pts.length)); c.setAttribute('cy', y(last.v));
+      c.setAttribute('r', '3.5'); c.setAttribute('fill', colour);
+      c.setAttribute('stroke', 'var(--card)'); c.setAttribute('stroke-width', '2');
+      svg.appendChild(c);
+    }
+    line(reps, 'var(--s1)', true);
+    line(queue, 'var(--s2)', false);
+    function txt(tx, ty, s, anchor, fill) {
+      var t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', tx); t.setAttribute('y', ty);
+      t.setAttribute('text-anchor', anchor || 'start');
+      t.setAttribute('font-family', 'IBM Plex Mono, monospace');
+      t.setAttribute('font-size', '9'); t.setAttribute('font-weight', '600');
+      t.setAttribute('fill', fill || 'var(--faint)');
+      t.textContent = s; svg.appendChild(t);
+    }
+    txt(x(reps.length - 1, reps.length) - 6, y(reps[reps.length - 1].v) - 9,
+        reps[reps.length - 1].v + ' reps', 'end', 'var(--s1)');
+    if (queue.length) {
+      txt(x(queue.length - 1, queue.length) - 6, y(queue[queue.length - 1].v) - 9,
+          queue[queue.length - 1].v + ' waiting', 'end', 'var(--s2)');
+    }
+    txt(PL, H - 5, reps[0].day);
+    txt(W - PR, H - 5, reps[reps.length - 1].day, 'end');
+    wrap.appendChild(svg);
+    var cap = el('p', 'cap');
+    cap.innerHTML = 'The rate that holds the queue flat is the number worth knowing, and a ' +
+      'single overwritten reading could never show it.';
+    wrap.appendChild(cap);
+    box.appendChild(wrap);
+  }
+
+  function dateline() {
+    var d = new Date();
+    var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    $('#dateline').textContent = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+  }
+
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  dateline();
+  paintQueues();
+  paintHistory();
+})();
+</script>
+</body>
+</html>

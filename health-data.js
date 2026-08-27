@@ -141,6 +141,32 @@
   // The day a timestamp belongs to. Local, because a day is a thing you live
   // in, not a UTC window — and it ends at 05:00, so a reading taken at two in
   // the morning lands on the evening it belongs to. See day.js.
+  /* The day a SAMPLE belongs to, taken from the stamp's own local time.
+
+     "2026-08-21 16:00:00 -0700" is already local time where it was recorded:
+     the date written on it is the date it happened, whatever timezone the
+     browser reading it is in. Going through dayOf() converts to the VIEWER's
+     local day instead, so an afternoon reading taken in Arizona lands on the
+     following day once you are back in Poland, and a run of days silently
+     shifts when you travel — the kind of error that shows up only as a
+     correlation quietly getting worse.
+
+     The hub's rollover still applies, so a reading at 02:00 belongs to the
+     evening before. Falls back to dayOf() for stamps carrying no written
+     local time (epoch numbers, or a bare Z). */
+  function dayOfStamp(st) {
+    var m = TS_RE.exec(String(st || '').trim());
+    if (!m || !m[4] || m[7] === 'Z') return dayOf(parseTs(st));
+    var y = +m[1], mo = +m[2], d = +m[3], h = +m[4];
+    var roll = (w.CTDay && typeof w.CTDay.rollover === 'function') ? w.CTDay.rollover() : 5;
+    if (h < roll) {
+      var back = new Date(Date.UTC(y, mo - 1, d));
+      back.setUTCDate(back.getUTCDate() - 1);
+      y = back.getUTCFullYear(); mo = back.getUTCMonth() + 1; d = back.getUTCDate();
+    }
+    return y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  }
+
   function dayOf(ms) {
     /* new Date(null) is the epoch, not Invalid Date, so a sample whose
        timestamp failed to parse used to land on 1970-01-01 — and because a
@@ -251,9 +277,8 @@
            than being split across midnight by a calendar date. */
         pts.forEach(function (p) {
           var stamp = p.date != null ? p.date : p.start;
-          var ts = parseTs(stamp);
-          var k = ts != null ? dayOf(ts)
-                : (typeof stamp === 'string' && stamp.length >= 10 ? stamp.slice(0, 10) : null);
+          var k = dayOfStamp(stamp);
+          if (!k && typeof stamp === 'string' && stamp.length >= 10) k = stamp.slice(0, 10);
           if (!k) return;
           var b = (sleepBy[k] = sleepBy[k] || {
             asleep: 0, total: 0, inBed: 0, core: 0, deep: 0, rem: 0, awake: 0,
@@ -287,10 +312,12 @@
            silence — the parser below was right, it was never given anything
            to parse. `date` is kept first for the Shortcut payload, which
            does send it. */
-        var ts = parseTs(p.date != null ? p.date : (p.start != null ? p.start : p.end));
+        var stamp = p.date != null ? p.date : (p.start != null ? p.start : p.end);
+        var ts = parseTs(stamp);
         var v = num(p.qty != null ? p.qty : p.Avg != null ? p.Avg : p.avg);
         if (ts == null || v == null) return;
-        var k = dayOf(ts);
+        var k = dayOfStamp(stamp);
+        if (!k) return;
         day(k);
         collect(k, def.field, v, def.agg);
         if (m.units && !store.meta.units) store.meta.units = {};

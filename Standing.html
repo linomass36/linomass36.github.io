@@ -12,6 +12,7 @@
 <script src="./reading-data.js"></script>
 <script src="./hub-data.js"></script>
 <script src="./conditions.js"></script>
+<script src="./sitemap.js"></script>
 <script src="./systems.js"></script>
 <script src="./facts.js"></script>
 <script src="./contact.js"></script>
@@ -711,21 +712,15 @@ footer {
      they sit behind Archive, which says what each one was and what replaced
      it. Listing an archived plan next to a live one is exactly how the two
      drifted portfolios went unnoticed for eight months. */
-  var GROUPS = [
-    ['Every day',      [['Standing.html','The Standing'], ['Today.dc.html','Today'],
-                        ['Plan.html','The Plan'], ['Hub.dc.html','The workshop']]],
-    ['Study',          [['Anatomy.dc.html','Anatomy'], ['Study Engine.dc.html','Study Engine'], ['Reading List.dc.html','Reading List']]],
-    ['Body',           [['Grind.dc.html','Grind board'], ['Life Log.dc.html','Life Log'],
-                        ['Health.html','The Body']]],
-    ['The plan',       [['Plan.html','The Plan'], ['Campaign.html','The Campaign'],
-                        ['Verify.html','Verify'], ['Debt.html','The Debt'],
-                        ['Ledger.html','The Ledger'], ['Day Budget.html','The Day Budget'],
-                        ['Conditions.html','Conditions']]],
-    ['Research',       [['Pipeline.html','Pipeline'], ['Conference Radar.dc.html','Conference Radar']]],
-    ['People & money', [['Network Map.dc.html','Network Map'], ['Dossiers.dc.html','Dossiers'], ['Vault.dc.html','Vault']]],
-    ['Looking back',   [['Weekly Review.dc.html','Weekly Review'], ['Journal.dc.html','Journal'], ['Examiner.dc.html','Examiner']]],
-    ['Plan upkeep',    [['Settings.html','Recalibrate'], ['Archive.html','Archive · v1']]]
-  ];
+  /* The directory. Read from sitemap.js, which is now the only declaration
+     of what pages exist — this list used to be a fourth hand-kept copy, and
+     it had already drifted: it listed the Plan twice, dropped the publication
+     pipeline, and called Hub something the drawer did not. */
+  function GROUPS_() {
+    try { if (window.SITEMAP) return window.SITEMAP.groups(); } catch (e) {}
+    return [['Every day', [['Standing.html', 'The Standing'], ['Today.dc.html', 'Today'],
+                           ['Plan.html', 'The Plan']]]];
+  }
 
   function lsJson(k, f) {
     try { var r = localStorage.getItem(k); if (r) { var v = JSON.parse(r); if (v) return v; } } catch (e) {}
@@ -1274,7 +1269,7 @@ footer {
     var grid = $('#dir-grid'); grid.innerHTML = '';
     var shown = 0;
 
-    GROUPS.forEach(function (g) {
+    GROUPS_().forEach(function (g) {
       var hits = g[1].filter(function (p) {
         return !q || p[1].toLowerCase().indexOf(q) >= 0 || g[0].toLowerCase().indexOf(q) >= 0;
       });

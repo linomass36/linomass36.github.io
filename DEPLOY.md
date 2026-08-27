@@ -829,6 +829,73 @@ The pick is fixed for the calendar day, and it does not appear on a floor day.
   overrode `config.js` completely on a home-screen launch — the highest-traffic
   link on the site.
 
+### The rest of it
+
+**`sitemap.js`** is the only declaration of what pages exist. Five files kept
+their own copy — nav.js, the Standing's directory, Mission Control's rooms
+grid, Archive.html, and systems.js's hrefs — and they had drifted: Hub was
+"Mission Control" in one and "The workshop" in another, the directory listed
+the Plan twice and dropped the publication pipeline, and the rooms grid
+promoted three pages the recalibration had archived. A page declares its
+name, its drawer `group`, its `parent`, and what its back control does now.
+
+`group` and `parent` are deliberately different axes. Journal is filed under
+"Looking back" because that is where you would look for it, and belongs to
+Today because that is where you write it.
+
+**`upbar.js` does not add a bar.** An earlier draft injected a global up-bar
+on every page and it was wrong: a phone page already carries four fixed
+controls, and the tab bar already reaches the front door in one tap. It finds
+the back link a page already has and corrects its label and destination.
+Nothing new appears, every page keeps its styling, and the ten pages built
+after the recalibration — which already point at Standing or the Plan — are
+left alone. A page with no back link gets one injected, above 640px only.
+
+So the change is thirteen rewrites and a handful of injections, not
+"fifteen files and a new global control".
+
+**`Recall.html`** is one desk for three queues. Anki, the error cards and
+resurface were three spaced-repetition systems with three stores and two
+different algorithms, each with its own tile showing its own due count —
+three answers to one question and no total anywhere. They keep their stores
+and their schedulers; they stop having three front doors. Anatomy stays out:
+it is a curriculum with an order, not a queue with due dates.
+
+**`Trends.html`** reads the fact table. Rows are the things being explained,
+columns the things that might explain them — the asymmetry keeps it readable
+on a phone, where an N x N grid of everything against everything is a wall.
+Cells below eight paired days are hatched and report nothing.
+
+**`Week.html` and `calendar.js`** make the week elastic. The Grind board is a
+fixed nine-week grid keyed `week|slot` — `3|push` — so a week where clinic
+eats Tuesday cannot be expressed: there is nowhere to put "moved to
+Thursday". That keying is also why training was invisible to the trends
+table. The new week reads what is already committed and lays the sessions
+into what is left, stored **by date**.
+
+Google Calendar works from a static site: the provider the gate already uses
+takes `calendar.readonly` as an extra scope, and the popup result carries a
+real access token the browser can call the API with. Two honest limits —
+Firebase hands the browser no refresh token, so it is one popup per session
+rather than anything automatic; and the scope is sensitive, so the OAuth app
+stays in Testing. An `.ics` file dropped in needs no auth at all. The secret
+`.ics` URL looks easier and is not: Google serves it without CORS headers.
+
+**Three tripwires run in the deploy.** Every `.html` in the repo is declared
+and every declaration exists; no live page links to an archived one; every
+live page can be walked back to the front door. The second one immediately
+found three links nobody knew about — Today and Mission Control still
+pointing into the v1 plan and the retired sprint.
+
+### Health days follow the reading, not the reader
+
+A sample stamped `2026-08-21 16:00:00 -0700` is already local time where it
+was recorded. Keying it through the viewer's timezone put an Arizona
+afternoon on the following day once the site was opened from Poland, and
+silently shifted a run of days whenever you travelled — the kind of error
+that shows up only as a correlation quietly getting worse. The date written
+on the sample is the date it happened.
+
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
 - `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
@@ -840,6 +907,12 @@ The pick is fixed for the calendar day, and it does not appear on a floor day.
 - `facts.js` — one row per day, derived from the stores that are already dated, so two systems can finally be asked about together. Carries `correlate`, `matrix` and `strongest`, at `CORR_MIN = 8`. See **One row per day** above.
 - `contact.js` — one person a day to reach out to, ranked over the Network Map's own tiers and touch dates. Logging a touch writes to `ct_dossier_v1`, which is what the ranking reads. See **One person a day** above.
 - `quotes.js` — the daily line, and `CTQuote.today()`, the one place that decides which one. The bank is kept coprime with 7 so nothing is welded to a weekday.
+- `sitemap.js` — the only declaration of what pages exist: name, drawer group, owning parent, and what each page's back control does now. Read by `nav.js`, the Standing's directory and `upbar.js`.
+- `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px.
+- `calendar.js` + `Week.html` — next week read off Google Calendar (or an `.ics` drop), with the training laid into what is left and stored by date.
+- `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
+- `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`.
+- `tools/sitemap.test.js` — the deploy tripwires: everything declared, nothing live pointing at an archived page, every page walkable home.
 - `systems.js` — every system in one line each: the number, the sentence and whether something is owed today. Read by Today, Mission Control and Reference so the three cannot disagree. See **One glance** above.
 - `Reference.dc.html` — the door to the five documents: what each is and when it is worth opening. The documents themselves are unchanged.
 - `.github/tests/crash.js` — loads every page at both widths and fails on a `renderVals()` throw or a page with almost no text in it. Not deployed (`.github/` is skipped by the build).

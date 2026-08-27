@@ -156,7 +156,7 @@
 
   // ── the study engine ───────────────────────────────────────────────────
   function study() {
-    var base = { id: 'study', name: 'Study Engine', href: 'Study Engine.dc.html', sort: 3 };
+    var base = { id: 'study', name: 'Study Engine', href: 'Recall.html', sort: 3 };
     var d = readJSON('ct_study_v1', null);
     var cards = (d && Array.isArray(d.cards)) ? d.cards : [];
     if (!cards.length) return Object.assign(base, { big: '0', unit: 'cards', tone: '',
@@ -184,7 +184,7 @@
      its debt is the number that produced the debt: the cheapest way to keep
      it alive is to skim, and skimming defers the rest.  */
   function anki() {
-    var base = { id: 'anki', name: 'Anki', href: 'Standing.html#anki', sort: 3.5 };
+    var base = { id: 'anki', name: 'Anki', href: 'Recall.html', sort: 3.5 };
     var d = readJSON('ct_anki_v1', null);
     if (!d || typeof d !== 'object') {
       return Object.assign(base, { big: '—', unit: 'not linked', tone: '',

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Week · CT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<style>
+:root {
+  --ground:#F7F5F1; --card:#FFFDF8; --raise:#FFFFFF;
+  --ink:#1A1B1A; --mid:#55564F; --muted:#8A8B82; --faint:#B4B2A9;
+  --rule:#E4E2DD; --rust:#993C1D; --rust-dim:#FBF2EE;
+  --owed:#A32E27; --owed-bg:#FBEDE8; --owed-ln:#E8C4B6;
+  --ok:#0F6E56; --ok-bg:#EEF5F1; --go:#3B6D11;
+  --work:#7A6A4E; --work-bg:#F4F0E6; --work-ln:#DED4BE;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
+  --serif:"Newsreader",Georgia,serif;
+  --shadow:0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131315; --card:#1B1B1D; --raise:#212124;
+    --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+    --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+    --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+    --ok:#5FBF9B; --ok-bg:#14231E; --go:#7FBF3F;
+    --work:#B9A77E; --work-bg:#23201A; --work-ln:#3C3628;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+html.hb-dark {
+  --ground:#131315; --card:#1B1B1D; --raise:#212124;
+  --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+  --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+  --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+  --ok:#5FBF9B; --ok-bg:#14231E; --go:#7FBF3F;
+  --work:#B9A77E; --work-bg:#23201A; --work-ln:#3C3628;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+a { color:var(--rust); text-decoration:none; }
+main { max-width:720px; margin:0 auto; padding:0 20px 90px; }
+.top { display:flex; align-items:center; gap:10px; padding:14px 20px 12px;
+  border-bottom:1px solid var(--rule); max-width:720px; margin:0 auto; }
+.mark { font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); }
+.dateline { font-family:var(--mono); font-size:10.5px; color:var(--faint); }
+.sp { flex:1; }
+h1 { font-family:var(--serif); font-weight:500; font-size:32px; line-height:1.08;
+  margin:24px 0 8px; letter-spacing:-.015em; }
+.lede { color:var(--mid); font-size:15px; margin:0; max-width:58ch; }
+.kicker { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--rust); margin:28px 0 10px; display:flex;
+  align-items:baseline; gap:8px; }
+.kicker .note { flex:1; font-weight:400; letter-spacing:.04em; text-transform:none;
+  color:var(--faint); font-size:10px; text-align:right; }
+.pull { border:1px dashed var(--rust); background:var(--rust-dim); border-radius:13px;
+  padding:16px; text-align:center; }
+.pull button { min-height:44px; padding:0 20px; border-radius:10px; border:1px solid var(--rust);
+  background:var(--rust); color:#fff; font-family:var(--mono); font-size:12px; cursor:pointer; }
+.pull button:disabled { opacity:.55; cursor:default; }
+.pull .alt { display:block; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+.pull .alt label { color:var(--rust); text-decoration:underline; cursor:pointer; }
+.pull .msg { font-family:var(--mono); font-size:11px; margin-top:11px; line-height:1.6; color:var(--mid); }
+.pull .msg.bad { color:var(--owed); }
+.pull .msg.good { color:var(--go); }
+.day { border:1px solid var(--rule); background:var(--card); border-radius:12px;
+  padding:12px 13px; margin-bottom:8px; box-shadow:var(--shadow); }
+.day.is-full { background:var(--work-bg); border-color:var(--work-ln); }
+.day.is-done { background:var(--ok-bg); }
+.day .hd { display:flex; align-items:baseline; gap:9px; }
+.day .dn { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--ink); width:34px; flex:none; }
+.day .dd { font-family:var(--mono); font-size:9.5px; color:var(--faint); flex:1; }
+.day .free { font-family:var(--mono); font-size:9.5px; color:var(--muted); }
+.day .blocks { margin-top:7px; display:flex; flex-wrap:wrap; gap:5px; }
+.day .b { font-family:var(--mono); font-size:9.5px; border-radius:4px; padding:3px 7px;
+  background:var(--rule); color:var(--mid); }
+.day .b.work { background:var(--work); color:#fff; }
+.day .b.class { background:var(--rust-dim); color:var(--rust); border:1px solid var(--rust-dim); }
+.day .sess { display:flex; align-items:center; gap:9px; margin-top:9px; }
+.day .sess button { min-height:38px; flex:1; border-radius:9px; border:1px solid var(--rule);
+  background:var(--raise); color:var(--ink); font-family:var(--sans); font-size:13px; cursor:pointer;
+  display:flex; align-items:center; justify-content:space-between; padding:0 12px; gap:8px; }
+.day .sess button:hover { border-color:var(--rust); }
+.day.is-done .sess button { border-color:var(--ok); color:var(--ok); }
+.day .sess .tick { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.day .none { font-family:var(--mono); font-size:10px; color:var(--faint); font-style:italic; margin-top:8px; }
+.sum { display:flex; gap:8px; margin-bottom:12px; }
+.sum div { flex:1; border:1px solid var(--rule); background:var(--card); border-radius:11px; padding:10px 11px; }
+.sum .l { font-family:var(--mono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; }
+.sum .v { font-family:var(--serif); font-size:22px; color:var(--ink); display:block; margin-top:2px; font-variant-numeric:tabular-nums; }
+.note-box { border:1px dashed var(--rule); border-radius:12px; padding:13px 14px;
+  font-family:var(--mono); font-size:10.5px; color:var(--muted); line-height:1.7; }
+.note-box b { color:var(--rust); }
+.empty { color:var(--faint); font-style:italic; font-size:14px; }
+footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
+  padding-top:16px; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:10px; color:var(--faint); }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
+</style>
+<script src="./day.js"></script>
+<script src="./config.js"></script>
+<script src="./calendar.js"></script>
+</head>
+<body>
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span class="dateline" id="dateline"></span>
+  <span class="sp"></span>
+</header>
+<main>
+  <h1 id="h1">The week ahead.</h1>
+  <p class="lede">Your week changes shape every week. Read what is already committed, then lay the training into what is left — rather than against a fixed grid that cannot express “clinic ate Tuesday”.</p>
+
+  <div class="kicker">Pull the week <span class="note">Sunday ritual</span></div>
+  <div class="pull">
+    <button id="pull" type="button">⟳ Read my Google Calendar</button>
+    <span class="alt">
+      or <label for="ics">drop an .ics export</label> — no sign-in, works offline
+      <input type="file" id="ics" accept=".ics,text/calendar" hidden>
+    </span>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="kicker">The plan <span class="note" id="plan-note"></span></div>
+  <div class="sum" id="sum" hidden>
+    <div><span class="l">Committed</span><span class="v" id="s-com">—</span></div>
+    <div><span class="l">Free</span><span class="v" id="s-free">—</span></div>
+    <div><span class="l">Sessions</span><span class="v" id="s-sess">—</span></div>
+  </div>
+  <div id="days"></div>
+
+  <div class="kicker">Why this is dated</div>
+  <div class="note-box">
+    The Grind board keys its sessions <b>week|slot</b> — <b>3|push</b> — which cannot
+    be joined to a date, and is why training has never been visible to the trends
+    table. These are stored by date, so a session done on the 3rd is a fact about the
+    3rd, and <b>trained</b> becomes a column the correlations can read.
+  </div>
+
+  <footer>
+    <span>The Week</span>
+    <span>a grid cannot say “moved to Thursday”</span>
+  </footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  var C = window.CTCalendar;
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var lastPlan = null;
+
+  function say(text, cls) {
+    var m = $('#msg');
+    m.className = 'msg' + (cls ? ' ' + cls : '');
+    m.textContent = text || '';
+  }
+
+  function render(plan) {
+    lastPlan = plan;
+    var box = $('#days'); box.innerHTML = '';
+    if (!plan) {
+      box.appendChild(el('p', 'empty', 'Nothing pulled yet. The week appears here once you read the calendar or drop an export.'));
+      $('#sum').hidden = true;
+      $('#plan-note').textContent = '';
+      return;
+    }
+    $('#sum').hidden = false;
+    $('#s-com').textContent = plan.totalCommitted + 'h';
+    $('#s-free').textContent = plan.totalFree + 'h';
+    $('#s-sess').textContent = plan.placed.length + '/' + (plan.placed.length + plan.unplaced.length);
+    var a = plan.range.start, b = new Date(plan.range.end - 1);
+    $('#plan-note').textContent = MON[a.getMonth()] + ' ' + a.getDate() + ' – ' + MON[b.getMonth()] + ' ' + b.getDate();
+
+    var saved = C.readWeek().days || {};
+    plan.days.forEach(function (d) {
+      var st = saved[d.key] || {};
+      var full = d.free < 1.5;
+      var row = el('div', 'day' + (st.done ? ' is-done' : full ? ' is-full' : ''));
+      var hd = el('div', 'hd');
+      hd.appendChild(el('span', 'dn', d.name));
+      hd.appendChild(el('span', 'dd', MON[d.date.getMonth()] + ' ' + d.date.getDate()));
+      hd.appendChild(el('span', 'free', d.free + 'h free'));
+      row.appendChild(hd);
+
+      if (d.blocks.length) {
+        var bl = el('div', 'blocks');
+        d.blocks.forEach(function (b2) {
+          var chip = el('span', 'b ' + (b2.kind === 'work' ? 'work' : b2.kind === 'class' ? 'class' : ''));
+          chip.textContent = (b2.allDay ? '' : b2.from ? '' : '') + b2.title +
+            (b2.allDay ? ' · all day' : ' · ' + b2.hours + 'h');
+          bl.appendChild(chip);
+        });
+        row.appendChild(bl);
+      }
+
+      if (d.session) {
+        var s = el('div', 'sess');
+        var btn = el('button');
+        btn.type = 'button';
+        btn.appendChild(el('span', null, d.session));
+        btn.appendChild(el('span', 'tick', st.done ? 'done ✓' : 'mark done'));
+        btn.addEventListener('click', function () {
+          C.markDone(d.key, !C.readWeek().days[d.key] || !C.readWeek().days[d.key].done);
+          render(lastPlan);
+        });
+        s.appendChild(btn);
+        row.appendChild(s);
+      } else {
+        row.appendChild(el('div', 'none', full ? 'no room — the week took this one' : 'nothing scheduled'));
+      }
+      box.appendChild(row);
+    });
+
+    if (plan.unplaced.length) {
+      var w = el('div', 'note-box');
+      w.innerHTML = '<b>' + plan.unplaced.length + ' session' + (plan.unplaced.length === 1 ? '' : 's') +
+        ' could not be placed:</b> ' + plan.unplaced.join(', ') +
+        '. There were not 1.5 free hours left on any remaining day. That is the week telling you something.';
+      w.style.marginTop = '10px';
+      box.appendChild(w);
+    }
+  }
+
+  function apply(events, how) {
+    var plan = C.planWeek(events);
+    C.saveWeek(plan);
+    render(plan);
+    say('Read ' + events.length + ' event' + (events.length === 1 ? '' : 's') + ' from ' + how +
+        ' · ' + plan.placed.length + ' session' + (plan.placed.length === 1 ? '' : 's') + ' placed in ' +
+        plan.totalFree + ' free hours.', 'good');
+  }
+
+  $('#pull').addEventListener('click', function () {
+    var btn = this;
+    btn.disabled = true;
+    say('Opening Google…');
+    C.connect(function (err, token) {
+      if (err) { btn.disabled = false; return say(err.message, 'bad'); }
+      say('Reading next week…');
+      var r = C.nextWeekRange();
+      C.fetchRange(token, r.start, r.end, function (e2, events) {
+        btn.disabled = false;
+        if (e2) return say(e2.message, 'bad');
+        apply(events, 'Google Calendar');
+      });
+    });
+  });
+
+  $('#ics').addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    this.value = '';
+    if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var all = C.parseICS(String(fr.result));
+      var r = C.nextWeekRange();
+      var wk = all.filter(function (e) { return e.start >= r.start && e.start < r.end; });
+      if (!all.length) return say('No events found in that file.', 'bad');
+      if (!wk.length) return say('That export has ' + all.length + ' events, but none next week.', 'bad');
+      apply(wk, f.name);
+    };
+    fr.onerror = function () { say('Could not read that file.', 'bad'); };
+    fr.readAsText(f);
+  });
+
+  /* A week already pulled is shown again rather than making you re-authorise
+     to look at what you planned. */
+  function restore() {
+    var saved = C.readWeek();
+    var keys = Object.keys(saved.days || {}).sort();
+    if (!keys.length) return render(null);
+    var r = C.nextWeekRange();
+    var start = new Date(keys[0] + 'T00:00:00');
+    var days = keys.map(function (k, i) {
+      var d = saved.days[k];
+      var dt = new Date(k + 'T12:00:00');
+      return { idx: i, name: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(dt.getDay() + 6) % 7],
+               date: dt, key: k, committed: d.committed || 0, free: d.free || 0,
+               session: d.session || null,
+               blocks: (d.blocks || []).map(function (b) {
+                 return { title: b.title, kind: b.kind, hours: b.hours, allDay: b.allDay,
+                          from: b.from, to: b.to,
+                          start: new Date(k + 'T' + (b.from || '00:00') + ':00') };
+               }) };
+    });
+    var end = new Date(keys[keys.length - 1] + 'T00:00:00');
+    end.setDate(end.getDate() + 1);
+    render({ range: { start: start, end: end.getTime() }, days: days,
+             placed: days.filter(function (d) { return d.session; }),
+             unplaced: [],
+             totalFree: Math.round(days.reduce(function (t, d) { return t + d.free; }, 0) * 10) / 10,
+             totalCommitted: Math.round(days.reduce(function (t, d) { return t + d.committed; }, 0) * 10) / 10 });
+    var when = saved.at ? new Date(saved.at) : null;
+    if (when) say('Showing the week pulled ' + MON[when.getMonth()] + ' ' + when.getDate() + '. Pull again to refresh.');
+    if (start > Date.now()) $('#h1').textContent = 'The week ahead.';
+    else $('#h1').textContent = 'This week.';
+  }
+
+  function dateline() {
+    var d = new Date();
+    var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    $('#dateline').textContent = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+  }
+
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  dateline();
+  restore();
+})();
+</script>
+</body>
+</html>
