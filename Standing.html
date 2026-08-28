@@ -450,6 +450,27 @@ h2.vd.calm em{color:var(--ok)}
 .reach .cad i b{position:absolute;inset:0 auto 0 0;width:100%;background:var(--owed);border-radius:2px}
 .reach .op{font-family:var(--serif);font-style:italic;font-size:13px;line-height:1.45;
   color:var(--ink);border-left:2px solid var(--rust);padding:2px 0 2px 10px;margin-top:11px}
+.reach .facts{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.reach .facts span{font-family:var(--mono);font-size:9px;letter-spacing:.05em;
+  padding:2px 6px;border-radius:4px;border:1px solid var(--rule);color:var(--muted);
+  background:var(--raise)}
+.reach .facts span.hot{color:var(--owed);border-color:var(--owed-ln);background:var(--owed-bg)}
+/* the suggestion, rotating */
+.sug{margin-top:11px;border-top:1px dashed var(--rule);padding-top:10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+/* The angle and its counter share a line; the provenance gets its own,
+   because at 390px three things on one row wrap into each other. */
+.sug .hd{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--rust);flex-wrap:wrap}
+.sug .hd .of{margin-left:auto;color:var(--faint);letter-spacing:.06em;flex:none}
+.sug .hd .src{flex-basis:100%;color:var(--faint);text-transform:none;letter-spacing:0;
+  font-size:9px;margin-top:3px}
+.sug .body{font-family:var(--serif);font-style:italic;font-size:13px;line-height:1.5;
+  color:var(--ink);border-left:2px solid var(--rust);padding:2px 0 2px 10px;margin-top:7px;
+  transition:opacity .18s ease}
+.sug.fading .body{opacity:0}
+.sug .hint{font-family:var(--mono);font-size:8.5px;color:var(--faint);margin-top:7px}
+@media (prefers-reduced-motion: reduce){ .sug .body{transition:none} }
 .reach .acts{display:flex;gap:6px;margin-top:12px}
 .reach .acts b,.reach .acts s{flex:1;text-align:center;min-height:38px;display:flex;
   align-items:center;justify-content:center;border-radius:8px;font-family:var(--mono);
@@ -489,7 +510,7 @@ h2.vd.calm em{color:var(--ok)}
 .dots i.on{background:var(--ok)} .dots i.miss{background:var(--owed-ln)}
 
 /* tier 3 — dense rows */
-.rows{display:flex;flex-direction:column;gap:1px;border:1px solid var(--rule);
+.rows{display:flex;flex-direction:column;gap:1px;margin-top:9px;border:1px solid var(--rule);
   border-radius:11px;overflow:hidden;background:var(--rule)}
 .rw{display:flex;align-items:baseline;gap:9px;padding:9px 12px;background:var(--card);
   border-left:3px solid transparent}
@@ -677,24 +698,7 @@ footer {
   <div id="screen"></div>
 
   <details id="extras">
-    <summary>Type in an Anki reading, or find a page</summary>
-  <!-- Anki · the two numbers, never one -->
-  <section id="anki">
-    <div class="kicker">Anki <span class="note" id="anki-note"></span></div>
-    <div class="ankibox">
-      <div class="ankirow" id="anki-read"></div>
-      <div class="ankiform">
-        <label>due<input id="a-due" type="number" min="0" inputmode="numeric"></label>
-        <label>done<input id="a-done" type="number" min="0" inputmode="numeric"></label>
-        <label>behind<input id="a-back" type="number" min="0" inputmode="numeric"></label>
-        <label>streak<input id="a-streak" type="number" min="0" inputmode="numeric"></label>
-        <button id="a-save" type="button">save</button>
-      </div>
-      <div class="ankihint">Typed by hand for now, but the Mac sync writes these same four
-      fields — so nothing entered here is throwaway. A reading older than a day labels
-      itself rather than passing as this morning&rsquo;s.</div>
-    </div>
-  </section>
+    <summary>Find a page</summary>
 
   <section>
     <div class="dir-head">
@@ -709,10 +713,6 @@ footer {
   </section>
   </details>
 
-  <footer id="foot">
-    <span>The Standing</span>
-    <span id="foot-line">a condition is a fact, not a failure</span>
-  </footer>
   <div class="quote" id="quote" hidden>
     <div class="q" id="quote-q"></div>
     <div class="by" id="quote-by"></div>
@@ -1066,6 +1066,66 @@ footer {
       });
   }
 
+  /* ── the suggestion, rotating ───────────────────────────────────────────
+     One template per tier read as wallpaper by the third day. CTContact
+     now returns a list of angles built from what the map knows about this
+     person; this cycles them.
+
+     Tap forward, double-tap back. The two have to be told apart by waiting,
+     so a single tap settles after 240ms — long enough that a double never
+     fires the single first, short enough that the card does not feel slow.
+     The index is kept per person, so a rotation survives a repaint and the
+     day's other traffic. */
+  var SUGKEY = 'ct_reach_angle_v1';
+
+  function sugIndex(p) {
+    var st = lsJson(SUGKEY, {}) || {};
+    var n = (p.angles || []).length || 1;
+    return ((st[p.id] || 0) % n + n) % n;
+  }
+  function setSugIndex(p, i) {
+    var st = lsJson(SUGKEY, {}) || {};
+    st[p.id] = i;
+    lsSet(SUGKEY, st);
+  }
+
+  function sugHtml(p, i) {
+    var list = p.angles || [];
+    if (!list.length) return '<div class="op">' + esc(p.opener || '') + '</div>';
+    var a = list[i];
+    return '<div class="sug" id="sug" role="button" tabindex="0" ' +
+             'aria-label="Suggestion ' + (i + 1) + ' of ' + list.length +
+             '. Tap for another, double-tap to go back.">' +
+             '<div class="hd"><span>' + esc(a.angle) + '</span>' +
+             '<span class="of">' + (i + 1) + '/' + list.length + '</span>' +
+             '<span class="src">' + esc(a.from) + '</span></div>' +
+             '<div class="body">' + esc(a.text) + '</div>' +
+             '<div class="hint">tap for another · double-tap to go back</div>' +
+           '</div>';
+  }
+
+  /* Swap the text under a fade rather than repainting the whole screen —
+     a repaint would scroll the card out from under your thumb. */
+  function rotate(p, step) {
+    var box = document.getElementById('sug');
+    var list = p.angles || [];
+    if (!box || list.length < 2) return;
+    var n = list.length;
+    var i = ((sugIndex(p) + step) % n + n) % n;
+    setSugIndex(p, i);
+    box.classList.add('fading');
+    setTimeout(function () {
+      var a = list[i];
+      box.querySelector('.hd').innerHTML =
+        '<span>' + esc(a.angle) + '</span><span class="of">' + (i + 1) + '/' + n + '</span>' +
+        '<span class="src">' + esc(a.from) + '</span>';
+      box.querySelector('.body').textContent = a.text;
+      box.setAttribute('aria-label', 'Suggestion ' + (i + 1) + ' of ' + n +
+        '. Tap for another, double-tap to go back.');
+      box.classList.remove('fading');
+    }, 180);
+  }
+
   function tile(t, wide, extra) {
     var tone = t.tone === 'go' ? 'go' : t.tone === 'ok' ? 'ok' : '';
     var cls = ['t', tone, wide ? 'wide' : '', (!tone && !wide) ? 'small' : '',
@@ -1140,14 +1200,29 @@ footer {
     if (person && !floorDay) {
       H += '<div class="kick">Reach out today' +
            (person.owed ? '<span class="r">a reply is owed</span>' : '') + '</div>';
+      /* The facts the ranking actually used, so the pick can be argued with
+         rather than taken on faith. */
+      var facts = [];
+      if (person.strength) facts.push([person.strength, false]);
+      if (person.type) facts.push([person.type, false]);
+      if (person.city) facts.push([person.city, false]);
+      if (person.reach != null) facts.push(['reach ' + person.reach + '/3', false]);
+      if (person.ops) facts.push([person.ops + (person.ops === 1 ? ' opening' : ' openings'), false]);
+      if (person.overdue) facts.push([(person.days / (person.cadence || 1)).toFixed(1) +
+        '\u00d7 over cadence', true]);
+
       H += '<div class="reach' + (person.overdue ? ' is-overdue' : '') + '">' +
            '<div><span class="nm">' + esc(person.name) + '</span>' +
            '<span class="rl">' + esc(person.role || '') + '</span></div>' +
+           '<div class="facts">' + facts.map(function (f) {
+             return '<span' + (f[1] ? ' class="hot"' : '') + '>' + esc(f[0]) + '</span>';
+           }).join('') + '</div>' +
            '<div class="why">' + esc(person.why) + '</div>' +
+           (person.met ? '<div class="why">' + esc(person.met) + '</div>' : '') +
            '<div class="cad"><span>last touch ' + esc(person.days) + 'd</span>' +
            '<i><b style="width:' + Math.min(100, Math.round(person.ratio * 100)) + '%"></b></i>' +
            '<span>cadence ' + esc(person.cadence) + 'd</span></div>' +
-           '<div class="op">' + esc(person.opener) + '</div>' +
+           sugHtml(person, sugIndex(person)) +
            '<div class="acts"><button class="pri" id="reach-did" type="button">Log a touch</button>' +
            '<button id="reach-skip" type="button">Not today</button>' +
            '<a class="file" href="' + esc(person.href) + '">Open file</a></div>' +
@@ -1206,9 +1281,17 @@ footer {
 
     /* ── what the record says ── */
     var tr = S.trends ? S.trends() : null;
-    if (tr && tr.sentence && showOwed) {
+    if (tr && tr.best && showOwed) {
+      /* Built from the parts rather than printing one flat string, so the
+         measure and the coefficient carry weight the way they do in the
+         prototype — the sentence is read, the numbers are seen. */
+      var bt = tr.best;
+      var dir = bt.r < 0 ? 'less' : 'more';
+      var rr = (bt.r > 0 ? '+' : '\u2212') + Math.abs(bt.r).toFixed(2);
       H += '<div class="kick">What the record says</div>';
-      H += '<div class="rec"><p>' + esc(tr.sentence) + '</p>' +
+      H += '<div class="rec"><p>Your heavier social-screen days run with <b>' +
+           dir + ' ' + esc(bt.unit) + '</b> \u2014 <b>r = ' + rr + '</b> across ' +
+           bt.n + ' days where both were logged.</p>' +
            '<div class="cv">Which one moves the other, this cannot say.</div></div>';
     }
 
@@ -1217,9 +1300,9 @@ footer {
     try { q = window.CTQuote ? window.CTQuote.today() : null; } catch (e) {}
     if (q) {
       H += '<div class="qz"><div class="lb">The Standing</div>' +
-           '<q>' + esc(q.text || q.q) + '</q>' +
-           '<div class="by">— <b>' + esc(q.who || q.by) + '</b>' +
-           (q.note ? ' · ' + esc(q.note) : '') + '</div></div>';
+           '<q>' + esc(q.q || q.text) + '</q>' +
+           '<div class="by">— <b>' + esc(q.by || q.who) + '</b>' +
+           (q.sub ? ' · ' + esc(q.sub) : '') + '</div></div>';
     }
 
     $('#screen').innerHTML = H;
@@ -1241,6 +1324,26 @@ footer {
       try { window.CTContact.skip(person.id); } catch (e) {}
       paint();
     });
+
+    var sug = document.getElementById('sug'), tapTimer = null;
+    if (sug) {
+      sug.addEventListener('click', function () {
+        if (tapTimer) {                       // the second tap of a double
+          clearTimeout(tapTimer); tapTimer = null;
+          rotate(person, -1);
+          return;
+        }
+        tapTimer = setTimeout(function () {
+          tapTimer = null;
+          rotate(person, 1);
+        }, 240);
+      });
+      sug.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); rotate(person, 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); rotate(person, -1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); rotate(person, 1); }
+      });
+    }
     Array.prototype.forEach.call(document.querySelectorAll('[data-move]'), function (n) {
       n.addEventListener('click', function (ev) {
         ev.preventDefault(); ev.stopPropagation();
@@ -1248,8 +1351,6 @@ footer {
         setTimeout(paint, 180);
       });
     });
-
-    paintAnki();
     paintDirectory($('#filter').value, floorDay && !showOwed);
   }
 
@@ -1374,7 +1475,6 @@ footer {
     var k = dayKey();
     if (!force && k === paintedFor) return;
     paintedFor = k;
-    try { paintAnki(); } catch (e) {}
     paint();
   }
 
@@ -1400,10 +1500,6 @@ footer {
      A first paint now, and one more once the page has settled, so the
      glance is never a frame behind the store. */
   // ── Anki ────────────────────────────────────────────────────────────
-  function ankiRead() {
-    try { var d = JSON.parse(localStorage.getItem('ct_anki_v1')); return (d && typeof d === 'object') ? d : null; }
-    catch (e) { return null; }
-  }
   /* Short codes are declared rather than sliced off the name, so two
      systems can never collide into the same label. */
   var CODE = {
@@ -1411,60 +1507,11 @@ footer {
     reading: 'READ', research: 'RSRCH', record: 'LOG', journal: 'JRNL',
     weekly: 'REVIEW', vault: 'VAULT'
   };
-  function paintAnki() {
-    var d = ankiRead();
-    var row = $('#anki-read'), note = $('#anki-note');
-    if (!d) {
-      row.innerHTML = '<b>&mdash;</b> nothing recorded yet.';
-      note.textContent = 'not linked';
-      return;
-    }
-    [['due', d.due], ['done', d.doneToday], ['back', d.backlog], ['streak', d.streak]]
-      .forEach(function (pair) {
-        var f = $('#a-' + pair[0]);
-        if (f && document.activeElement !== f) f.value = (pair[1] == null ? '' : pair[1]);
-      });
-    /* What is waiting is the live queue, not the queue minus today's reps —
-       a rep is not a card, and a card answered Again is still due. Same
-       reading the tile uses, so the two cannot disagree. */
-    var waiting = (d.dueTotal != null) ? (+d.dueTotal || 0) : ((+d.due || 0) + (+d.backlog || 0));
-    var reps = +(d.repsToday != null ? d.repsToday : d.doneToday) || 0;
-    row.innerHTML = '<b>' + (+d.streak || 0) + 'd</b> streak &middot; <b>' + waiting +
-      '</b> waiting &middot; ' + (reps ? reps + ' reps done today' : 'nothing done today') +
-      (d.minsRemaining ? ' &middot; ~' + d.minsRemaining + ' min to clear' : '');
-    /* The age of the reading belongs next to the reading, not only inside
-       the system row — this panel is where you would come to fix a sync that
-       had stopped. */
-    var age = null;
-    if (d.at) {
-      var t = Date.parse(d.at);
-      if (!isNaN(t)) age = Math.floor((Date.now() - t) / 86400000);
-    }
-    note.textContent = d.at
-      ? (age === 0 ? 'read today' : age === 1 ? 'last reading yesterday'
-         : 'last reading ' + age + ' days ago — the sync is not running')
-        + (d.source ? ' · ' + d.source : '')
-      : '';
-  }
-  $('#a-save').addEventListener('click', function () {
-    var d = ankiRead() || {};
-    d.due = +$('#a-due').value || 0;
-    d.doneToday = +$('#a-done').value || 0;
-    d.backlog = +$('#a-back').value || 0;
-    d.streak = +$('#a-streak').value || 0;
-    if (!d.secPerCard) d.secPerCard = 20;
-    d.at = new Date().toISOString();
-    d.source = 'manual';
-    try { localStorage.setItem('ct_anki_v1', JSON.stringify(d)); } catch (e) {}
-    paintAnki();
-    paint();
-  });
-  paintAnki();
   paintedFor = dayKey();
 
   /* A reading published by the Mac lands here. Repaint rather than reload:
      you may be mid-sentence in the capture box. */
-  if (window.Feeds) window.Feeds.start(function () { paintAnki(); paint(); });
+  if (window.Feeds) window.Feeds.start(function () { paint(); });
 
   /* A reading handed over in the URL fragment, by `anki_sync.py --open`.
      A fragment never reaches the server — browsers strip everything after
@@ -1493,8 +1540,7 @@ footer {
         localStorage.setItem('ct_anki_v1', JSON.stringify(payload));
         took = ['anki'];
       }
-      history.replaceState(null, '', location.pathname + location.search);
-      paintAnki(); paint();
+      history.replaceState(null, '', location.pathname + location.search); paint();
       var n = $('#anki-note');
       if (n) n.textContent = took.length
         ? 'updated from the Mac just now'
