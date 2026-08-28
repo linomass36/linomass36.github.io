@@ -90,6 +90,65 @@ ok(Object.keys(tones).length > 1,
    'tiles carry more than one tone — ' +
    Object.keys(tones).map(k => k + ':' + tones[k]).join(' '));
 
+group('A finished system says so');
+
+/* Every tile could report a problem; almost none could report being done.
+   With every store seeded complete, exactly one tile in twelve showed a
+   check — so "handled" and "no data yet" rendered identically, which is the
+   one distinction a glance-first board has to make. */
+function complete() {
+  const iso = (n) => {
+    const d = new Date(); d.setDate(d.getDate() - (n || 0));
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+           '-' + String(d.getDate()).padStart(2, '0');
+  };
+  const t = iso(0);
+  const plan = {};
+  const seed = board();                       // to read the live phase's ids
+  const V = (() => {
+    const ctx = { console, JSON, Object, Array, String, RegExp, Date, Math, isNaN,
+      parseInt, parseFloat,
+      localStorage: { getItem: () => null, setItem: () => {} },
+      document: { createElement: () => ({}) } };
+    ctx.window = ctx; ctx.globalThis = ctx; ctx.self = ctx;
+    vm.createContext(ctx);
+    ['plan-v2-data.js', 'plan-v2.js'].forEach(f =>
+      vm.runInContext(read(f), ctx, { filename: f }));
+    return ctx;
+  })();
+  V.PLAN_V2.phase0.items.forEach(i => { plan[i.id] = t; });
+
+  return board({
+    plan_v2_state_v1: JSON.stringify({ done: plan }),
+    ct_lifelog_v1: JSON.stringify({ days: { [t]: { screen: { total: '2.1' },
+                                                   sleep: { asleep: 7.8 } } }, sessions: [] }),
+    ct_anki_v1: JSON.stringify({ due: 0, backlog: 0, streak: 20, at: Date.now() }),
+    ct_study_v1: JSON.stringify({ cards: [] }),
+    ct_resurface_v1: JSON.stringify({ queue: [] }),
+    ct_week_v1: JSON.stringify({ days: { [t]: { session: 'Push', done: true, free: 4 } } }),
+    ct_journal_v1: JSON.stringify([{ date: t, text: 'x' }])
+  });
+}
+
+const donebd = complete();
+const checked = donebd.filter(t => String(t.big).indexOf('\u2713') >= 0);
+ok(checked.length >= 5,
+   'a finished system shows a check rather than a number (' + checked.length + ': ' +
+   checked.map(t => t.name).join(', ') + ')');
+ok(checked.every(t => t.tone === 'ok'),
+   'and reads as handled, not as neutral');
+
+const plan = donebd.find(t => t.id === 'plan');
+ok(plan && plan.tone === 'ok',
+   'a phase with every item closed is not the same as a phase with no data');
+
+/* The bug this pins: recall() summed parseInt(anki().big), and anki()'s
+   `big` is the streak — so a cleared queue with a 20-day streak reported
+   "20 due". */
+const rec = donebd.find(t => t.id === 'recall');
+ok(rec && String(rec.big) === '\u2713',
+   'a cleared Recall reads clear, not the Anki streak (' + (rec && rec.big) + ')');
+
 group('The Standing renders all of them, not just the owed ones');
 
 const src = read('Standing.html');

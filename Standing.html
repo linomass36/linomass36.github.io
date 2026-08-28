@@ -627,17 +627,7 @@ h2.vd.calm em{color:var(--ok)}
 .acts .tag { margin-left: auto; font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
 
 /* ── 5 · the directory ── */
-.dir-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-.finder { position: relative; margin-left: auto; }
-.finder input {
-  width: 232px; max-width: 100%; min-height: 38px; padding: 8px 13px 8px 32px;
-  background: var(--raise); border: 1px solid var(--rule); border-radius: 20px; font-size: 13.5px;
-}
-.finder input::placeholder { color: var(--faint); }
-.finder input:focus { border-color: var(--rust); outline: none; }
-.finder .mag { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--faint); font-size: 13px; pointer-events: none; }
 
-.dir-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); }
 .grp { padding: 14px 15px 8px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; }
 .grp h3 { margin: 0 0 6px; font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
 .grp a { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 7px 8px; margin: 0 -8px; border-radius: 8px; font-size: 14px; }
@@ -667,9 +657,7 @@ footer {
   .cond-panel { padding: 14px 14px 13px; }
   .top { padding: 11px 64px 11px 16px; }
   .kicker .note { display: none; }
-  .finder { margin-left: 0; width: 100%; }
-  .finder input { width: 100%; }
-  .spark { margin-left: 0; }
+      .spark { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -697,21 +685,6 @@ footer {
        names are the prototype's; only the data behind them is real. -->
   <div id="screen"></div>
 
-  <details id="extras">
-    <summary>Find a page</summary>
-
-  <section>
-    <div class="dir-head">
-      <div class="kicker" style="margin-bottom:0">Everything</div>
-      <div class="finder">
-        <span class="mag">&#8981;</span>
-        <input id="filter" type="search" placeholder="Type to find a page&hellip;" aria-label="Find a page">
-      </div>
-    </div>
-    <div class="dir-grid" id="dir-grid"></div>
-    <p class="empty" id="dir-empty" hidden>Nothing here goes by that name.</p>
-  </section>
-  </details>
 
   <div class="quote" id="quote" hidden>
     <div class="q" id="quote-q"></div>
@@ -1351,7 +1324,6 @@ footer {
         setTimeout(paint, 180);
       });
     });
-    paintDirectory($('#filter').value, floorDay && !showOwed);
   }
 
 
@@ -1385,40 +1357,6 @@ footer {
     if (q.sub) by.appendChild(document.createTextNode(' \u00B7 ' + q.sub));
   }
 
-  function paintDirectory(q, soften) {
-    q = (q || '').trim().toLowerCase();
-    var byHref = {};
-    systems().forEach(function (s) { byHref[s.href] = s.tone; });
-    var here = decodeURIComponent((location.pathname.split('/').pop() || ''));
-    var grid = $('#dir-grid'); grid.innerHTML = '';
-    var shown = 0;
-
-    GROUPS_().forEach(function (g) {
-      var hits = g[1].filter(function (p) {
-        return !q || p[1].toLowerCase().indexOf(q) >= 0 || g[0].toLowerCase().indexOf(q) >= 0;
-      });
-      if (!hits.length) return;
-      var box = el('div', 'grp');
-      box.appendChild(el('h3', null, g[0]));
-      hits.forEach(function (p) {
-        var tone = byHref[p[0]] || '';
-        // On a floor day an owed page is not shouting, it is waiting.
-        if (soften && tone === 'go') tone = 'wait';
-        var a = el('a', tone === 'go' ? 'go' : (tone === 'held' || tone === 'wait' ? 'held' : (tone === 'ok' ? 'ok' : '')));
-        a.href = p[0];
-        if (p[0] === here) a.setAttribute('aria-current', 'page');
-        a.appendChild(el('span', 'dot'));
-        var lbl = el('span'); lbl.innerHTML = highlight(p[1], q);
-        a.appendChild(lbl);
-        if (tone === 'go')   a.appendChild(el('span', 'via', 'wants you'));
-        if (tone === 'wait') a.appendChild(el('span', 'via', 'waiting'));
-        if (tone === 'held') a.appendChild(el('span', 'via', 'held'));
-        box.appendChild(a); shown++;
-      });
-      grid.appendChild(box);
-    });
-    $('#dir-empty').hidden = shown > 0;
-  }
 
   function highlight(label, q) {
     if (!q) return esc(label);
@@ -1427,25 +1365,6 @@ footer {
     return esc(label.slice(0, i)) + '<mark>' + esc(label.slice(i, i + q.length)) + '</mark>' + esc(label.slice(i + q.length));
   }
 
-  $('#filter').addEventListener('input', function () {
-    paintDirectory(this.value, window.Systems.floorDay());
-  });
-  /* The header chip is gone with the rest of the header furniture. The
-     shortcut stays — but the filter now lives inside a folded section, so
-     opening that fold is part of focusing it. */
-  function focusFilter() {
-    var ex = document.getElementById('extras');
-    if (ex) ex.open = true;
-    var f = $('#filter');
-    f.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    f.focus();
-  }
-  document.addEventListener('keydown', function (e) {
-    var typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
-    if (!typing && e.key === '/') { e.preventDefault(); focusFilter(); }
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); focusFilter(); }
-    if (e.key === 'Escape' && typing) document.activeElement.blur();
-  });
 
   /* ── the day has to be able to turn over ──────────────────────────────
      Everything here was computed once, at load, and never again: the
@@ -1541,10 +1460,6 @@ footer {
         took = ['anki'];
       }
       history.replaceState(null, '', location.pathname + location.search); paint();
-      var n = $('#anki-note');
-      if (n) n.textContent = took.length
-        ? 'updated from the Mac just now'
-        : 'the reading here is already newer';
     } catch (e) {
       history.replaceState(null, '', location.pathname + location.search);
     }

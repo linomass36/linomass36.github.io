@@ -285,7 +285,11 @@
        Standing every morning — was still opening the v1 master plan that the
        v2 recalibration replaced wholesale. */
     return { id: 'plan', name: 'The plan', href: 'Plan.html', sort: 0,
-      big: c.pct + '%', unit: 'this phase', tone: '',
+      /* A phase with every item closed read exactly like a phase with no
+         data: neutral, quiet, no mark. */
+      big: (c.live && c.liveDone >= c.live) ? '\u2713' : c.pct + '%',
+      unit: (c.live && c.liveDone >= c.live) ? 'phase closed' : 'this phase',
+      tone: (c.live && c.liveDone >= c.live) ? 'ok' : '',
       line: c.live
         ? c.liveDone + ' of ' + c.live + ' — ' + (c.phaseLabel || 'the live phase').toLowerCase()
         : 'no phase is live right now',
@@ -341,9 +345,18 @@
     var today = days[k] || {};
     var closed = !!(today.screen && (today.screen.total !== undefined && today.screen.total !== ''));
     var n = Object.keys(days).length;
+    /* The question this tile answers is "is today closed?", and a running
+       count of every day ever logged does not answer it. */
+    var scr = today.screen || {}, slp = today.sleep || {};
+    var detail = [];
+    if (slp.asleep) detail.push(slp.asleep + 'h sleep');
+    if (scr.total) detail.push(scr.total + 'h screen');
     return Object.assign(base, {
-      big: String(n), unit: n === 1 ? 'day logged' : 'days logged', tone: closed ? 'ok' : 'go',
-      line: closed ? 'today is closed' : 'today is not closed yet',
+      big: closed ? '\u2713' : String(n),
+      unit: closed ? 'today' : (n === 1 ? 'day logged' : 'days logged'),
+      tone: closed ? 'ok' : 'go',
+      line: closed ? (detail.join(' \u00b7 ') || 'today is closed')
+                   : 'today is not closed yet \u00b7 ' + n + ' logged',
     });
   }
 
@@ -355,8 +368,11 @@
     var today = isoDay();
     var n = list.filter(function (e) { return e && e.date === today; }).length;
     return Object.assign(base, {
-      big: String(list.length), unit: list.length === 1 ? 'entry' : 'entries', tone: n ? 'ok' : '',
-      line: n ? n + ' written today' : 'nothing written today yet',
+      big: n ? '\u2713' : String(list.length),
+      unit: n ? 'today' : (list.length === 1 ? 'entry' : 'entries'),
+      tone: n ? 'ok' : '',
+      line: n ? n + ' written today \u00b7 ' + list.length + ' in all'
+              : 'nothing written today yet',
     });
   }
 
@@ -492,24 +508,44 @@
      sources named inside it.  */
   function recall() {
     var base = { id: 'recall', name: 'Recall', href: 'Recall.html', sort: 3 };
-    var a = anki(), st = study();
+
+    /* Read the STORES, not the other tiles. The first version summed
+       parseInt(anki().big) — and anki()'s `big` is the streak, so a cleared
+       queue with a 20-day streak reported "20 due". A display string is not
+       a number, and parsing one as though it were is how a board ends up
+       confidently wrong. */
+    var a = readJSON('ct_anki_v1', null);
     var parts = [], due = 0, known = false;
 
-    var aDue = parseInt(a.big, 10);
-    if (!isNaN(aDue)) { due += aDue; known = true; parts.push('anki ' + aDue); }
-    var sDue = parseInt(st.big, 10);
-    if (!isNaN(sDue)) { due += sDue; known = true; if (sDue) parts.push('error cards ' + sDue); }
+    if (a && typeof a === 'object') {
+      var aDue = (a.dueTotal != null)
+        ? Math.max(0, parseInt(a.dueTotal, 10) || 0)
+        : Math.max(0, parseInt(a.due, 10) || 0) + Math.max(0, parseInt(a.backlog, 10) || 0);
+      known = true; due += aDue;
+      if (aDue) parts.push('anki ' + aDue);
+    }
+
+    var st = readJSON('ct_study_v1', null);
+    var cards = (st && Array.isArray(st.cards)) ? st.cards : null;
+    if (cards) {
+      var t = isoDay();
+      var sDue = cards.filter(function (c) { return c && c.due && c.due <= t; }).length;
+      known = true; due += sDue;
+      if (sDue) parts.push('error cards ' + sDue);
+    }
 
     var r = readJSON('ct_resurface_v1', null);
-    var rDue = (r && r.queue && r.queue.length) ? 1 : 0;
-    if (rDue) { due += rDue; known = true; parts.push('resurfaced ' + rDue); }
+    if (r && Array.isArray(r.queue)) {
+      known = true;
+      if (r.queue.length) { due += 1; parts.push('resurfaced 1'); }
+    }
 
-    if (!known) return Object.assign(base, { big: '—', unit: 'not linked', tone: '',
+    if (!known) return Object.assign(base, { big: '\u2014', unit: 'not linked', tone: '',
       line: 'run the Mac sync, or type a reading in' });
+    if (!due) return Object.assign(base, { big: '\u2713', unit: 'clear', tone: 'ok',
+      line: 'all three queues are clear' });
     return Object.assign(base, {
-      big: String(due), unit: due === 1 ? 'due' : 'due',
-      tone: due ? 'go' : 'ok',
-      line: due ? parts.join(' · ') : 'all three queues are clear'
+      big: String(due), unit: 'due now', tone: 'go', line: parts.join(' \u00b7 ')
     });
   }
 
@@ -533,8 +569,11 @@
     if (!placed) return Object.assign(base, { big: String(Math.round(free)), unit: 'free hours',
       tone: 'go', line: 'the week is read — nothing laid into it yet' });
     return Object.assign(base, {
-      big: done + '/' + placed, unit: 'sessions', tone: done >= placed ? 'ok' : 'go',
-      line: done >= placed ? 'the week is done' : 'in ' + Math.round(free) + ' free hours'
+      big: done >= placed ? '\u2713' : done + '/' + placed,
+      unit: done >= placed ? 'week done' : 'sessions',
+      tone: done >= placed ? 'ok' : 'go',
+      line: done >= placed ? 'all ' + placed + ' sessions done'
+                           : 'in ' + Math.round(free) + ' free hours'
     });
   }
 
