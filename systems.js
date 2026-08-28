@@ -542,7 +542,10 @@
      Same problem: the page exists and the board never named it. The number
      is days in the daily table, because that is what gates every answer it
      can give. */
-  function trends() {
+  /* NOT `trends` — that name is already the correlation sentence above, which
+     the Weekly Review reads for `.sentence`. Declaring a second one shadowed
+     it and silently turned that sentence off everywhere. */
+  function trendsTile() {
     var base = { id: 'trends', name: 'Trends', href: 'Trends.html', sort: 6.5 };
     var F = w.Facts;
     var n = 0;
@@ -556,7 +559,62 @@
       line: 'every pair, put through four tests' });
   }
 
-  var BUILDERS = [plan, anatomy, grind, week, recall, reading, research, record, trends, journal, weekly, vault];
+  /* ── how loudly each system reports ────────────────────────────────────
+     Twelve equal cards is a wall; six is half the hub missing. So the board
+     reports every system at a density set by how often that system actually
+     needs you.
+
+       spine     what the rest serve, and what dates the week
+       daily     has a today-state — a number different at 22:00 than 07:00
+       standing  a weekly or monthly heartbeat
+
+     A standing system that goes past its cadence is PROMOTED to a card for
+     the day, which is why the board's silhouette is worth reading: a tall
+     board is a behind week.  */
+  var TIER = {
+    plan: 'spine', weekly: 'spine',
+    anatomy: 'daily', recall: 'daily', week: 'daily', record: 'daily',
+    grind: 'standing', reading: 'standing', research: 'standing',
+    trends: 'standing', journal: 'standing', vault: 'standing'
+  };
+  function tierOf(t) {
+    var base = TIER[t && t.id] || 'standing';
+    if (base === 'standing' && t && t.tone === 'go') return 'daily';   // promoted
+    return base;
+  }
+
+  /* ── the date everything serves ────────────────────────────────────────
+     v2 is built on one external deadline and it appeared nowhere on the
+     page opened every morning. */
+  function forcing() {
+    var P = (w.PlanV2 && w.PlanV2.plan) ? w.PlanV2.plan() : (w.PLAN_V2 || {});
+    var f = P.forcingFunction;
+    if (!f || !f.date) return null;
+    var left = w.PlanV2 ? w.PlanV2.daysUntil(f.date) : null;
+    return { label: f.label, date: f.date, why: f.why, days: left };
+  }
+
+  /* ── the last fourteen days of the log ─────────────────────────────────
+     "0 days logged" is a number you can argue with. Fourteen marks is a
+     pattern you cannot, and a three-day gap shows without the word drift. */
+  function logStreak(n) {
+    n = n || 14;
+    var d = readJSON('ct_lifelog_v1', {}) || {};
+    var days = d.days || {};
+    var out = [];
+    var base = new Date(logDay() + 'T12:00:00');
+    for (var i = n - 1; i >= 0; i--) {
+      var t = new Date(base);
+      t.setDate(t.getDate() - i);
+      var k = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') +
+              '-' + String(t.getDate()).padStart(2, '0');
+      var rec = days[k];
+      out.push(!!(rec && rec.screen && rec.screen.total !== undefined && rec.screen.total !== ''));
+    }
+    return out;
+  }
+
+  var BUILDERS = [plan, anatomy, grind, week, recall, reading, research, record, trendsTile, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
      is dropped rather than allowed to take the page with it — one broken
@@ -670,5 +728,6 @@
   w.Systems = { all: all, owed: owed, held: held, eased: eased, drift: drift, floorDay: floorDay,
                 planCounts: planCounts, isoDay: isoDay, monday: monday,
                 reviewWeek: reviewWeek, workWeek: workWeek,
-                trends: trends, pearson: pearson, CORR_MIN: CORR_MIN };
+                trends: trends, pearson: pearson, CORR_MIN: CORR_MIN,
+                tierOf: tierOf, forcing: forcing, logStreak: logStreak };
 })(window);

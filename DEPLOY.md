@@ -976,6 +976,50 @@ live page can be walked back to the front door. The second one immediately
 found three links nobody knew about — Today and Mission Control still
 pointing into the v1 plan and the retired sprint.
 
+### The front door is the prototype now
+
+`Standing.html` is the One Row Per Day screen, top to bottom:
+
+```
+condition · one line          was a ~250px card holding one sentence
+"Five things want you today."
+  + the systems named         was "everything below is detail"
+171 days · applications close the date every live item serves
+Reach out today               moved above the board
+Every system                  spine · daily · standing
+  The Plan          wide, carrying its own next two moves
+  Weekly Review     wide
+  Anatomy · Grind · The Week · Recall · Reading · Research · Life Log
+  Trends · Journal · Vault      one line each
+What the record says          the matrix, on the day it is worth knowing
+folded: the Anki keypad, the page directory
+the daily quote
+```
+
+**Three densities.** Twelve equal cards is a wall and six is half the hub
+missing, so `systems.js` gives each tile a tier — spine, daily, standing —
+and a standing system past its cadence is **promoted** to a card for that
+day. The silhouette of the board is the state of the week: a tall board is a
+behind week, readable before a word of it is.
+
+**Two sections became one.** "Do these next" duplicated the tile that already
+said `0 of 10`, three screens further down. The moves are inside the Plan
+tile now, so the Sep 7 deadline sits beside the percentage it explains.
+
+**Life Log shows fourteen days.** "0 days logged" is a number you can argue
+with; a row of marks with a gap in it is not.
+
+The page went from **8,724px to ~2,270px** with more on it. Nothing was
+deleted: the Anki keypad and the page directory are folded, because the
+keypad is a desk and Recall is the desk.
+
+Two bugs found while building it. A second `trends()` in `systems.js`
+**shadowed** the correlation-sentence function of the same name, which
+silently turned that sentence off on the Weekly Review as well as here.
+And sorting the board by `sort` alone put the Weekly Review — sort 8 — at
+the foot of the board rather than beside the Plan, which is the pairing the
+whole layout rests on.
+
 ### Trends and The Week were published and unreachable
 
 Both pages shipped, deployed and sat in the build artifact. Neither was on

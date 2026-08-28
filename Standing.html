@@ -228,12 +228,15 @@ section { margin-top: 32px; }
 /* ── conditions ribbon ─────────────────────────────────────────
    Sits above the verdict because it changes what the verdict may
    ask of you. */
+/* One line. It was a bordered card ~250px tall holding one sentence — 30%
+   of the first screen, above the headline, on the most-read page. */
 .cond-bar {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  margin-top: 18px; padding: 10px 15px;
-  background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 11px;
-  font-size: 13.5px; color: var(--held);
+  display: flex; align-items: center; gap: 9px; flex-wrap: nowrap;
+  margin-top: 14px; padding: 6px 12px;
+  background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 8px;
+  font-size: 12px; color: var(--held);
 }
+.cond-bar #cond-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cond-bar.none { background: transparent; border-color: var(--rule); color: var(--muted); }
 .cond-bar .pip { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
 .cond-bar b { font-weight: 600; }
@@ -401,6 +404,58 @@ h1.floor em { color: var(--held); }
 .onething .did:hover { filter: brightness(1.08); }
 .onething .did[aria-pressed="true"] { background: var(--ok); }
 .onething .alt { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
+
+/* ── the date everything serves ──
+   v2 rests on one external deadline and it was nowhere on the front door. */
+.clock { display: flex; align-items: baseline; gap: 9px; margin-top: 14px;
+  padding: 8px 12px; background: var(--rust-dim); border: 1px solid var(--owed-ln);
+  border-radius: 9px; }
+.clock .n { font-family: var(--mono); font-weight: 600; font-size: 15px; color: var(--rust);
+  font-variant-numeric: tabular-nums; }
+.clock .w { font-size: 11.5px; color: var(--mid); line-height: 1.35; }
+.clock .d { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: var(--muted);
+  white-space: nowrap; }
+
+/* ── the record, in the room ── */
+.rec { border-left: 2px solid var(--rust); padding: 2px 0 2px 12px; }
+.rec p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mid); }
+.rec b { font-family: var(--mono); font-size: 12px; color: var(--rust); font-weight: 600; }
+.rec .cv { font-family: var(--mono); font-size: 9.5px; color: var(--faint); margin-top: 5px; }
+
+/* ── the plan's own next moves, inside its tile ──
+   "Do these next" was a separate section three screens down, duplicating the
+   tile that already said 2/10. One place, and the deadline sits beside the
+   percentage it explains. */
+.tile .moves { margin-top: 11px; border-top: 1px dashed var(--owed-ln); padding-top: 10px;
+  display: flex; flex-direction: column; gap: 7px; }
+.tile .mv { display: flex; align-items: baseline; gap: 9px; font-size: 12.5px;
+  color: var(--ink); background: none; border: 0; padding: 0; text-align: left;
+  width: 100%; cursor: pointer; font-family: inherit; }
+.tile .mv .bx { width: 13px; height: 13px; border: 1.4px solid var(--owed); border-radius: 3px;
+  flex: none; }
+.tile .mv .due { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--owed);
+  white-space: nowrap; }
+.tile .mv:hover .bx { background: var(--owed-ln); }
+
+/* ── fourteen days of the log ── */
+.dots { display: flex; gap: 2.5px; margin-top: 9px; }
+.dots i { flex: 1; height: 12px; border-radius: 2px; background: var(--rule); }
+.dots i.on { background: var(--ok); }
+
+/* ── tier 3 · one line each ──
+   A weekly or monthly heartbeat does not earn a 150px card every morning. */
+.rows { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--rule);
+  border-radius: 12px; overflow: hidden; background: var(--rule); margin-top: 9px; }
+.rw { display: flex; align-items: baseline; gap: 10px; padding: 10px 13px;
+  background: var(--card); border-left: 3px solid transparent; color: inherit;
+  text-decoration: none; }
+.rw:hover { background: var(--raise); }
+.rw.t-ok { border-left-color: var(--ok); }
+.rw .nm { font-family: var(--mono); font-size: 9px; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--faint); width: 92px; flex: none; }
+.rw .v { font-family: var(--serif); font-size: 15px; font-variant-numeric: tabular-nums; flex: none; }
+.rw .ln { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
 
 /* ── 2 · every system ──
    Two columns at every width. The board is meant to be one glance, and a
@@ -588,6 +643,13 @@ footer {
   <section class="standing">
     <h1 id="verdict">&mdash;</h1>
     <p id="verdict-sub">&mdash;</p>
+    <!-- The one external date every live item serves. It was in the plan
+         document and nowhere on the page opened every morning. -->
+    <div class="clock" id="clock" hidden>
+      <span class="n" id="clock-n"></span>
+      <span class="w" id="clock-w"></span>
+      <span class="d" id="clock-d"></span>
+    </div>
     <div class="drift" id="drift" hidden>
       <span class="lab">Drift</span>
       <span class="txt" id="drift-txt"></span>
@@ -630,6 +692,17 @@ footer {
       <button class="sys-tog" id="sys-tog" type="button" aria-pressed="false">show live only</button>
     </div>
     <div class="owed-grid" id="owed-grid"></div>
+    <div class="rows" id="sys-rows"></div>
+  </section>
+
+  <!-- What the matrix knows, on the day it is worth knowing rather than on
+       a page you open when curious. It asks; it does not decide. -->
+  <section id="rec-sec" hidden>
+    <div class="kicker">What the record says</div>
+    <div class="rec">
+      <p id="rec-line"></p>
+      <div class="cv">Which one moves the other, this cannot say.</div>
+    </div>
   </section>
 
   <section id="fold-sec">
@@ -648,18 +721,13 @@ footer {
     </div>
   </section>
 
-  <section id="acts-sec">
-    <div class="kicker">Do these next <span class="note" id="acts-note">tap to close one</span></div>
-    <ul class="acts" id="acts"></ul>
-  </section>
-  <section id="acts-folded" hidden>
-    <button class="folded" id="acts-btn" aria-expanded="false">
-      <span class="pip" style="background:var(--faint)"></span>
-      <span id="acts-fold-label"></span><span class="chev">&#9660;</span>
-    </button>
-    <ul class="acts folded-list" id="acts2" style="margin-top:8px"></ul>
-  </section>
 
+  <!-- The mock puts neither of these on the screen: the keypad is a desk and
+       Recall is the desk, and the drawer already lists all twenty-nine pages.
+       Folded rather than deleted — nothing here is lost, it just stops being
+       what you scroll through every morning. -->
+  <details id="extras">
+    <summary>Type in an Anki reading, or find a page</summary>
   <!-- Anki · the two numbers, never one -->
   <section id="anki">
     <div class="kicker">Anki <span class="note" id="anki-note"></span></div>
@@ -689,6 +757,7 @@ footer {
     <div class="dir-grid" id="dir-grid"></div>
     <p class="empty" id="dir-empty" hidden>Nothing here goes by that name.</p>
   </section>
+  </details>
 
   <footer id="foot">
     <span>The Standing</span>
@@ -960,7 +1029,7 @@ footer {
     var cs = C().active(), bar = $('#cond-bar'), txt = $('#cond-text');
     if (!cs.length) {
       bar.className = 'cond-bar none';
-      txt.textContent = 'No conditions declared — the hub is asking for everything.';
+      txt.textContent = 'No condition declared \u00b7 full day';
     } else {
       bar.className = 'cond-bar';
       var parts = cs.map(function (c) {
@@ -1009,6 +1078,31 @@ footer {
     pick.classList.toggle('open');
     if (!pick.classList.contains('open')) { draft = null; buildPanel(); }
   });
+
+  /* Prose from the tiles themselves: up to two named, the rest counted, and
+     the review last because it is the one that dates the week. */
+  function subLine(owed, all) {
+    var named = owed.filter(function (s) { return s.id !== 'weekly'; });
+    var wk = all.filter(function (s) { return s.id === 'weekly'; })[0];
+    var out = '';
+    if (named.length) {
+      var first = named.slice(0, 2).map(function (s) { return s.name.toLowerCase(); });
+      var more = named.length - first.length;
+      /* Commas between the named ones and `and` only before the tail, so
+         three items do not come out as "a and b and two others". */
+      var head = first.length === 2 && !more ? first.join(' and ') : first.join(', ');
+      out = cap(head) +
+        (more ? ' and ' + (COUNT[more] || more) + ' other' + (more === 1 ? '' : 's') : '') +
+        (named.length === 1 ? ' wants you.' : ' want you.');
+    }
+    /* The tile beside this already prints its own line; repeating it here
+       gave "Last week is unreviewed — week of Aug 17 is unreviewed". */
+    if (wk) {
+      out += (out ? ' ' : '') +
+        (wk.tone === 'ok' ? 'Last week is reviewed.' : 'Last week is still unreviewed.');
+    }
+    return out || 'Nothing is owed. Pick the thing you want to move.';
+  }
 
   /* `live` narrows the board to what is owed. Off by default: the whole
      point of the board is that you can see the systems that are fine. */
@@ -1087,8 +1181,30 @@ footer {
       sub.textContent = 'Nothing is owed today. Pick the thing you want to move, not the thing that is shouting.';
     } else {
       h1.innerHTML = (WORDS[owed.length] || owed.length + ' things') + ' <em>want you</em> today.';
-      sub.textContent = 'The rest of the hub is current. Everything below is detail — you have already read the important part.';
+      /* Name them. "Everything below is detail — you have already read the
+         important part" is only true if the headline said WHICH things, and
+         a count never did. */
+      sub.textContent = subLine(owed, all);
     }
+
+    /* The date every live item serves. */
+    var f = (window.Systems && window.Systems.forcing) ? window.Systems.forcing() : null;
+    var ck = $('#clock');
+    ck.hidden = !(f && f.days != null);
+    if (!ck.hidden) {
+      $('#clock-n').textContent = f.days;
+      /* Left as written: the label starts with an acronym, and lowercasing
+         any part of it produced "uS summer research". */
+      $('#clock-w').textContent = 'days until ' + f.label;
+      $('#clock-d').textContent = window.PlanV2 ? window.PlanV2.fmtDate(f.date) : f.date;
+    }
+
+    /* One sentence off the matrix, with the caveat attached. It asks; it
+       does not decide, propose a step, or touch the plan. */
+    var tr = (window.Systems && window.Systems.trends) ? window.Systems.trends() : null;
+    var rs = $('#rec-sec');
+    rs.hidden = !(tr && tr.sentence);
+    if (!rs.hidden) $('#rec-line').textContent = tr.sentence;
 
     var dr = $('#drift');
     dr.hidden = drift < 3;
@@ -1137,40 +1253,97 @@ footer {
       : easeDay ? 'the real numbers · the ask is smaller, the standing is not'
       : owed.length ? owed.length + ' of ' + all.length + ' want you'
       : 'all ' + all.length + ' current';
-    /* Every system, not only the ones shouting.
+    /* Every system, at three densities.
 
-       The board listed what was owed, which meant The Plan — the thing the
-       other eleven serve — never appeared on it at all, because a plan on
-       track owes nothing. It also meant there was no state in which the
-       board looked calm, and no way to check a system that was behaving.
-
-       So: all of them, the Plan pinned across the top, tone carried by the
-       rail rather than by presence. `live` narrows to what is owed for the
-       days you only want the short version. */
+       Twelve equal cards is a wall and six is half the hub missing, so the
+       board reports all of them at a density set by how often each one
+       actually needs you — spine, daily, standing — and a standing system
+       past its cadence is promoted to a card for the day. The silhouette of
+       the board is therefore the state of the week: a tall board is a
+       behind week, and you read that before you read a word. */
     var grid = $('#owed-grid'); grid.innerHTML = '';
+    var rowBox = $('#sys-rows'); rowBox.innerHTML = '';
     var liveOnly = $('#sys-tog').getAttribute('aria-pressed') === 'true';
-    var shown = (!showOwed || liveOnly) ? owed.concat(held) : all;
-    if (!showOwed && !liveOnly) shown = all;
-    shown.slice().sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); })
-      .forEach(function (s) {
-        var tone = s.tone === 'go' ? 't-go' : s.tone === 'ok' ? 't-ok' : 't-none';
-        /* The Plan is never the small one: it is the thing the rest serve,
-           and a neutral tone on it means "on track", not "unimportant". */
-        var quiet = s.id !== 'plan' && (s.tone === 'ok' || s.tone === 'held' || !s.tone);
-        var a = el('a', ['tile', tone, s.eased ? 'is-eased' : '',
-                         quiet ? 'is-quiet' : '', s.id === 'plan' ? 'is-wide' : '']
-                        .filter(Boolean).join(' '));
-        a.href = s.href;
-        a.appendChild(el('div', 'name', s.name));
-        var fig = el('div', 'fig');
-        fig.appendChild(el('span', 'big', s.big));
-        fig.appendChild(el('span', 'unit', s.unit));
-        a.appendChild(fig);
-        a.appendChild(el('div', 'line', s.line));
-        if (s.eased) a.appendChild(el('div', 'mark', 'eased today'));
-        a.appendChild(el('div', 'go-to', 'open ' + s.name.toLowerCase() + ' \u2192'));
-        grid.appendChild(a);
-      });
+    var pool = (!showOwed || liveOnly) ? owed.concat(held) : all;
+    var S = window.Systems;
+
+    var cards = [], lines = [];
+    var RANK = { spine: 0, daily: 1, standing: 2 };
+    pool.slice().map(function (x) {
+      return { s: x, tier: (S && S.tierOf) ? S.tierOf(x) : 'daily' };
+    }).sort(function (a, b) {
+      /* Tier first, then the usual order. Sorting on `sort` alone put the
+         Weekly Review — sort 8 — at the foot of the board rather than beside
+         the Plan, which is the one pairing the whole layout is built on. */
+      var d = RANK[a.tier] - RANK[b.tier];
+      return d !== 0 ? d : (a.s.sort || 0) - (b.s.sort || 0);
+    }).forEach(function (c) {
+      (c.tier === 'standing' ? lines : cards).push(c);
+    });
+
+    cards.forEach(function (c) {
+      var x = c.s;
+      var tone = x.tone === 'go' ? 't-go' : x.tone === 'ok' ? 't-ok' : 't-none';
+      var wide = c.tier === 'spine';
+      var quiet = !wide && (x.tone === 'ok' || x.tone === 'held' || !x.tone);
+      var a = el('a', ['tile', tone, x.eased ? 'is-eased' : '', quiet ? 'is-quiet' : '',
+                       wide ? 'is-wide' : ''].filter(Boolean).join(' '));
+      a.href = x.href;
+      a.appendChild(el('div', 'name', x.name));
+      var fig = el('div', 'fig');
+      fig.appendChild(el('span', 'big', x.big));
+      fig.appendChild(el('span', 'unit', x.unit));
+      a.appendChild(fig);
+      a.appendChild(el('div', 'line', x.line));
+      if (x.eased) a.appendChild(el('div', 'mark', 'eased today'));
+
+      /* The log's fourteen days. "0 days logged" is a number you can argue
+         with; a row of marks with a gap in it is not. */
+      if (x.id === 'record' && S && S.logStreak) {
+        var dots = el('div', 'dots');
+        S.logStreak(14).forEach(function (on) {
+          var i = document.createElement('i');
+          if (on) i.className = 'on';
+          dots.appendChild(i);
+        });
+        a.appendChild(dots);
+      }
+
+      /* The plan carries its own next moves, so the page stops saying the
+         same thing in two places three screens apart. */
+      if (x.id === 'plan') {
+        var moves = nextActions(2);
+        if (moves.length) {
+          var box = el('div', 'moves');
+          moves.forEach(function (mv) {
+            var b = document.createElement('button');
+            b.type = 'button'; b.className = 'mv';
+            b.appendChild(el('span', 'bx'));
+            b.appendChild(el('span', null, mv.label));
+            b.appendChild(el('span', 'due', mv.tag));
+            b.addEventListener('click', function (ev) {
+              ev.preventDefault(); ev.stopPropagation();
+              closeAction(mv.id);
+              setTimeout(paint, 200);
+            });
+            box.appendChild(b);
+          });
+          a.appendChild(box);
+        }
+      }
+      grid.appendChild(a);
+    });
+
+    lines.forEach(function (c) {
+      var x = c.s;
+      var a = el('a', 'rw ' + (x.tone === 'ok' ? 't-ok' : ''));
+      a.href = x.href;
+      a.appendChild(el('span', 'nm', x.name));
+      a.appendChild(el('span', 'v', x.big));
+      a.appendChild(el('span', 'ln', x.line));
+      rowBox.appendChild(a);
+    });
+    rowBox.hidden = lines.length === 0;
 
     var rv = $('#reveal');
     rv.hidden = !floorDay || owed.length === 0;
@@ -1192,23 +1365,6 @@ footer {
         ' current</b>' + (owed.length ? ', nothing owed' : ' — the whole board');
     fill($('#cur-list'), showOwed ? rest : rest.concat(owed), '');
 
-    /* Folded, not deleted. "They will keep" is the message; hiding them
-       outright would move the dread somewhere you cannot see it. */
-    var acts = nextActions(6);
-    /* Name the phase the moves come from, so it is obvious which plan is
-       talking. v1 said "from the master plan" and meant the wrong one. */
-    var an = $('#acts-note');
-    if (an && window.PlanV2) {
-      var ph = window.PlanV2.counts();
-      an.textContent = (ph.phaseLabel ? ph.phaseLabel.toLowerCase() + ' · ' : '') + 'tap to close one';
-    }
-    $('#acts-sec').hidden = floorDay;
-    $('#acts-folded').hidden = !floorDay;
-    $('#acts-fold-label').innerHTML = '<b>' + (COUNT[acts.length] || acts.length) +
-      ' action' + (acts.length === 1 ? '' : 's') + ' waiting</b> — they will keep';
-    buildActs($('#acts'), acts);
-    buildActs($('#acts2'), acts);
-
     paintDirectory($('#filter').value, floorDay && !showOwed);
   }
 
@@ -1229,30 +1385,6 @@ footer {
     });
   }
 
-  function buildActs(node, list) {
-    node.innerHTML = '';
-    if (!list.length) {
-      var li0 = el('li');
-      li0.appendChild(el('div', null, 'Nothing open on the plan.'));
-      li0.firstChild.style.cssText = 'padding:14px 16px;color:var(--muted);font-style:italic';
-      node.appendChild(li0);
-      return;
-    }
-    list.forEach(function (a) {
-      var li = el('li'), b = el('button');
-      b.type = 'button'; b.setAttribute('aria-pressed', 'false');
-      b.appendChild(el('span', 'box'));
-      b.appendChild(el('span', 'label', a.label));
-      b.appendChild(el('span', 'tag', a.tag));
-      b.addEventListener('click', function () {
-        b.setAttribute('aria-pressed', 'true');
-        closeAction(a.id);
-        setTimeout(paint, 220);   // let the tick land before the list re-sorts
-      });
-      li.appendChild(b); node.appendChild(li);
-    });
-  }
-
   function foldToggle(btnSel, listSel) {
     $(btnSel).addEventListener('click', function () {
       var open = this.getAttribute('aria-expanded') === 'true';
@@ -1262,7 +1394,6 @@ footer {
   }
   foldToggle('#held-btn', '#held-list');
   foldToggle('#cur-btn', '#cur-list');
-  foldToggle('#acts-btn', '#acts2');
 
   $('#one-did').addEventListener('click', function () {
     setFloorMet(this.getAttribute('aria-pressed') !== 'true');
