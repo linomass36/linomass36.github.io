@@ -135,6 +135,28 @@ const checked = donebd.filter(t => String(t.big).indexOf('\u2713') >= 0);
 ok(checked.length >= 5,
    'a finished system shows a check rather than a number (' + checked.length + ': ' +
    checked.map(t => t.name).join(', ') + ')');
+
+/* The four with a period rather than a day: a closed programme week, a
+   shelf in use, every gate decided. */
+const period = board({
+  ct_grind_v1: JSON.stringify({ week: 3, runs: { w3: true },
+    sessions: { '3|a': 1, '3|b': 1, '3|c': 1, '3|d': 1, '3|e': 1 } }),
+  ct_reading_v1: JSON.stringify({ status: { b1: 'reading' } }),
+  ct_research_v1: JSON.stringify({ done: { a:1,b:1,c:1,d:1,e:1,f:1,g:1,h:1,i:1 },
+    gates: { g1:1,g2:1,g3:1,g4:1,g5:1 } })
+});
+['grind', 'reading', 'research'].forEach(id => {
+  const t = period.find(x => x.id === id);
+  ok(t && String(t.big).indexOf('\u2713') >= 0 && t.tone === 'ok',
+     id + ' reports its period closed (' + (t && t.big) + ' ' + (t && t.unit) + ')');
+});
+
+/* Half-finished is not finished. Nine steps served with no gate decided
+   showed a check over a line reading "no gate decided yet". */
+const half = board({ ct_research_v1: JSON.stringify({ done: { a:1,b:1,c:1,d:1,e:1,f:1,g:1,h:1,i:1 } }) });
+const hr = half.find(x => x.id === 'research');
+ok(hr && String(hr.big).indexOf('\u2713') < 0,
+   'but nine steps with no gate decided is not a closed plan (' + (hr && hr.big) + ')');
 ok(checked.every(t => t.tone === 'ok'),
    'and reads as handled, not as neutral');
 

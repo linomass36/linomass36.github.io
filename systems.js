@@ -112,7 +112,10 @@
         line: 'rest declared — nothing accrues today' });
     }
     return Object.assign(base, {
-      big: String(sum.openLoops), unit: 'open loops', tone: sum.p0 ? 'ok' : 'go',
+      /* No loops open is the closed state; a bare "0" read as no data. */
+      big: sum.openLoops === 0 ? '\u2713' : String(sum.openLoops),
+      unit: sum.openLoops === 0 ? 'nothing open' : 'open loops',
+      tone: sum.openLoops === 0 ? 'ok' : (sum.p0 ? 'ok' : 'go'),
       line: (sum.p0 ? 'Phase 0 done' : 'Phase 0 still open') + ' · ' +
             sum.dueToday + ' retest' + (sum.dueToday === 1 ? '' : 's') + ' due',
     });
@@ -147,7 +150,9 @@
     var runDone = !!runs['w' + week];
     var done = lifts + (runDone ? 1 : 0), total = liftTotal + 1;
     return Object.assign(base, {
-      big: 'W' + week, unit: done + '/' + total + ' done', tone: done >= total ? 'ok' : 'go',
+      big: done >= total ? '\u2713' : 'W' + week,
+      unit: done >= total ? 'week ' + week + ' done' : done + '/' + total + ' done',
+      tone: done >= total ? 'ok' : 'go',
       line: done >= total
         ? 'week ' + week + ' is complete — it moves when you say so'
         : lifts + ' of ' + liftTotal + ' lifts · ' + (runDone ? 'runs done' : 'no runs yet'),
@@ -248,7 +253,11 @@
     var read = vals.filter(function (v) { return v === 'read'; }).length;
     var now = vals.filter(function (v) { return v === 'reading'; }).length;
     return Object.assign(base, {
-      big: String(now), unit: now === 1 ? 'on the go' : 'on the go', tone: now ? 'ok' : 'go',
+      /* A reading list is a shelf, not a task, so there is no "done" — the
+         question it answers is whether anything is actually being read. */
+      big: now ? '\u2713' : '0',
+      unit: now ? (now === 1 ? 'one on the go' : now + ' on the go') : 'on the go',
+      tone: now ? 'ok' : 'go',
       line: now ? read + ' of ' + total + ' read' : 'nothing in progress — pick one off the shelf',
     });
   }
@@ -304,9 +313,17 @@
     var done = (d && d.done && typeof d.done === 'object') ? Object.keys(d.done).length : 0;
     var gates = (d && d.gates && typeof d.gates === 'object') ? Object.keys(d.gates).length : 0;
     var NINETY = 9, GATES = 5;
+    /* Both, or it is not finished. The ninety-day steps alone showed a check
+       over a line that still read "no gate decided yet" — the tile
+       contradicting itself in the same three lines. */
+    var shut = done >= NINETY && gates >= GATES;
     return Object.assign(base, {
-      big: done + '/' + NINETY, unit: 'ninety days', tone: done >= NINETY ? 'ok' : 'go',
-      line: gates ? gates + ' of ' + GATES + ' gates decided' : 'no gate decided yet — ' + GATES + ' waiting',
+      big: shut ? '\u2713' : done + '/' + NINETY,
+      unit: shut ? 'plan closed' : 'ninety days',
+      tone: shut ? 'ok' : 'go',
+      line: shut ? 'all nine served \u00b7 every gate decided'
+        : (gates ? gates + ' of ' + GATES + ' gates decided'
+                 : 'no gate decided yet \u2014 ' + GATES + ' waiting'),
     });
   }
 
