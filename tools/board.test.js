@@ -96,9 +96,14 @@ const src = read('Standing.html');
 const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 ok(!/id="board"/.test(code),
    'the eleven-bar strip is gone — it restated the tiles beneath it');
-ok(/is-wide/.test(code), 'the plan is pinned across the top');
-ok(/grid-template-columns:\s*repeat\(2/.test(src),
+/* Spelled the prototype's way since the screen was ported from it:
+   `.t.wide` for the spine pair, `.grid` at 1fr 1fr. */
+ok(/wide \? 'wide' : ''|'wide'/.test(code) && /\.t\.wide\{grid-column:1\/-1\}/.test(src),
+   'the plan is pinned across the top');
+ok(/\.grid\{display:grid;grid-template-columns:1fr 1fr/.test(src),
    'the grid is two columns, so the board is a glance rather than a scroll');
+ok(/class="rows"|\.rows\{/.test(src),
+   'and the standing systems are one-line rows beneath it');
 ok(!/\$\('#owed-sec'\)\.hidden = !showOwed/.test(code),
    'the board no longer hides itself when nothing is owed');
 
