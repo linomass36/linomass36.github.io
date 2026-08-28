@@ -10,7 +10,8 @@
 <script src="./anatomy-data.js"></script>
 <script src="./anatomy-core.js"></script>
 <script src="./reading-data.js"></script>
-<script src="./hub-data.js"></script>
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
 <script src="./conditions.js"></script>
 <script src="./sitemap.js"></script>
 <script src="./systems.js"></script>
@@ -118,15 +119,7 @@ button, input { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--rule);
 }
 .mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
-.dateline { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .04em; }
 .top .sp { flex: 1; }
-.chip {
-  display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 5px 13px;
-  border: 1px solid var(--rule); border-radius: 20px; background: var(--raise); cursor: pointer;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--mid);
-}
-.chip:hover { border-color: var(--rust); color: var(--rust); }
-.chip kbd { font-family: var(--mono); font-size: 9.5px; color: var(--faint); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 4px; }
 
 .ankibox { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); padding: 15px 17px; }
 .ankirow { font-size: 14.5px; color: var(--mid); }
@@ -192,6 +185,9 @@ button, input { font: inherit; color: inherit; }
 .reach .opener { font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--ink);
   border-left: 2px solid var(--rust); padding: 5px 0 5px 11px; margin-top: 11px; line-height: 1.5; }
 .reach .acts { display: flex; gap: 7px; margin-top: 13px; flex-wrap: wrap; }
+.pick-why { font-family: var(--mono); font-size: 9.5px; line-height: 1.6; color: var(--faint);
+  margin: 9px 0 0; }
+.pick-why b { font-weight: 500; color: var(--muted); }
 .reach .acts button, .reach .acts .file { flex: 1; min-width: 92px; min-height: 44px;
   display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid var(--rule); background: var(--raise); color: var(--mid);
@@ -214,6 +210,10 @@ button, input { font: inherit; color: inherit; }
 .quote .by b { color: var(--rust); font-weight: 600; }
 @media (max-width: 560px) { .bar { flex: 1 1 40px; min-width: 40px; } .bar b { font-size: 7.5px; letter-spacing: .05em; } }
 main { max-width: 940px; margin: 0 auto; padding: 0 20px 88px; }
+/* nav.js pins its 44px drawer button at top:12px/right:12px. The header used
+   to hold that corner; without it the condition line ran under the button. */
+.cond { margin-top: 14px; margin-right: 60px; }
+@media (min-width: 700px) { .cond { margin-right: 0; } }
 section { margin-top: 32px; }
 
 .kicker {
@@ -227,12 +227,15 @@ section { margin-top: 32px; }
 /* ── conditions ribbon ─────────────────────────────────────────
    Sits above the verdict because it changes what the verdict may
    ask of you. */
+/* One line. It was a bordered card ~250px tall holding one sentence — 30%
+   of the first screen, above the headline, on the most-read page. */
 .cond-bar {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  margin-top: 18px; padding: 10px 15px;
-  background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 11px;
-  font-size: 13.5px; color: var(--held);
+  display: flex; align-items: center; gap: 9px; flex-wrap: nowrap;
+  margin-top: 14px; padding: 6px 12px;
+  background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 8px;
+  font-size: 12px; color: var(--held);
 }
+.cond-bar #cond-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cond-bar.none { background: transparent; border-color: var(--rule); color: var(--muted); }
 .cond-bar .pip { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
 .cond-bar b { font-weight: 600; }
@@ -401,27 +404,166 @@ h1.floor em { color: var(--held); }
 .onething .did[aria-pressed="true"] { background: var(--ok); }
 .onething .alt { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 
-/* ── 2 · what is owed ── */
-.owed-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); }
-.tile {
-  display: flex; flex-direction: column; padding: 15px 16px 14px;
-  background: var(--card); border: 1px solid var(--owed-ln);
-  border-left: 3px solid var(--owed); border-radius: 12px;
-  box-shadow: var(--shadow); transition: transform .16s ease, box-shadow .16s ease;
-}
-.tile:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(26,27,26,.06), 0 14px 32px rgba(26,27,26,.09); }
-.tile .name { font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--owed); }
-.tile .fig { display: flex; align-items: baseline; gap: 8px; margin-top: 9px; }
-.tile .big { font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-.tile .unit { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-.tile .line { margin-top: 9px; font-size: 13px; line-height: 1.45; color: var(--mid); }
-.tile .go-to { margin-top: 12px; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--owed); opacity: 0; transition: opacity .16s ease; }
-.tile:hover .go-to, .tile:focus-visible .go-to { opacity: 1; }
+/* ═══════════ the screen, ported from the prototype ═══════════
+   These rules are the prototype's own, unchanged apart from dropping the
+   device frame it was drawn inside. The tokens were already the site's, so
+   nothing had to be re-tuned; both themes come from :root above. */
+/* condition ribbon — one line */
+.cond{display:flex;align-items:center;gap:8px;padding:6px 11px;margin-bottom:14px;
+  border:1px solid var(--rule);border-radius:8px;font-size:11.5px;color:var(--muted);
+  white-space:nowrap;overflow:hidden}
+.cond .pip{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.cond .ch{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--rust);
+  text-decoration:underline;text-underline-offset:2px;background:none;border:0;
+  padding:0;cursor:pointer;flex:none}
+.cond.on{background:var(--held-bg);border-color:var(--held-ln);color:var(--held)}
+
+h2.vd{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.12;
+  margin:0 0 6px;letter-spacing:-.012em;color:var(--ink)}
+h2.vd em{font-style:normal;color:var(--owed)}
+h2.vd.calm em{color:var(--ok)}
+.vsub{margin:0;font-size:13.5px;line-height:1.5;color:var(--mid)}
+
+/* the forcing-function rail */
+.clock{display:flex;align-items:baseline;gap:8px;margin:13px 0 0;padding:8px 11px;
+  background:var(--rust-dim);border:1px solid #E8C4B6;border-radius:8px}
+.clock .n{font-family:var(--mono);font-weight:600;font-size:15px;color:var(--rust);
+  font-variant-numeric:tabular-nums}
+.clock .cw{font-size:11.5px;color:var(--mid);line-height:1.35}
+.clock .d{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--muted);white-space:nowrap}
+
+.kick{display:flex;align-items:baseline;gap:8px;margin:20px 0 9px;
+  font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--rust)}
+.kick .r{margin-left:auto;color:var(--faint);letter-spacing:.1em}
+.kick .new{border:1px solid var(--ok);color:var(--ok);border-radius:4px;
+  padding:1px 5px;font-size:8.5px;letter-spacing:.1em}
+
+/* reach-out card */
+.reach{border:1px solid var(--rule);background:var(--card);border-radius:12px;padding:13px 14px}
+.reach .nm{font-family:var(--serif);font-size:19px;line-height:1.15}
+.reach .rl{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:7px}
+.reach .why{font-size:12.5px;color:var(--mid);line-height:1.45;margin-top:6px}
+.reach .cad{display:flex;align-items:center;gap:7px;margin-top:10px;
+  font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.reach .cad i{flex:1;height:3px;border-radius:2px;background:var(--rule);position:relative}
+.reach .cad i b{position:absolute;inset:0 auto 0 0;width:100%;background:var(--owed);border-radius:2px}
+.reach .op{font-family:var(--serif);font-style:italic;font-size:13px;line-height:1.45;
+  color:var(--ink);border-left:2px solid var(--rust);padding:2px 0 2px 10px;margin-top:11px}
+.reach .facts{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.reach .facts span{font-family:var(--mono);font-size:9px;letter-spacing:.05em;
+  padding:2px 6px;border-radius:4px;border:1px solid var(--rule);color:var(--muted);
+  background:var(--raise)}
+.reach .facts span.hot{color:var(--owed);border-color:var(--owed-ln);background:var(--owed-bg)}
+/* the suggestion, rotating */
+.sug{margin-top:11px;border-top:1px dashed var(--rule);padding-top:10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+/* The angle and its counter share a line; the provenance gets its own,
+   because at 390px three things on one row wrap into each other. */
+.sug .hd{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--rust);flex-wrap:wrap}
+.sug .hd .of{margin-left:auto;color:var(--faint);letter-spacing:.06em;flex:none}
+.sug .hd .src{flex-basis:100%;color:var(--faint);text-transform:none;letter-spacing:0;
+  font-size:9px;margin-top:3px}
+.sug .body{font-family:var(--serif);font-style:italic;font-size:13px;line-height:1.5;
+  color:var(--ink);border-left:2px solid var(--rust);padding:2px 0 2px 10px;margin-top:7px;
+  transition:opacity .18s ease}
+.sug.fading .body{opacity:0}
+.sug .hint{font-family:var(--mono);font-size:8.5px;color:var(--faint);margin-top:7px}
+@media (prefers-reduced-motion: reduce){ .sug .body{transition:none} }
+.reach .acts{display:flex;gap:6px;margin-top:12px}
+.reach .acts b,.reach .acts s{flex:1;text-align:center;min-height:38px;display:flex;
+  align-items:center;justify-content:center;border-radius:8px;font-family:var(--mono);
+  font-size:10.5px;font-weight:400;text-decoration:none;border:1px solid var(--rule);
+  background:var(--raise);color:var(--mid)}
+.reach .acts b{background:var(--rust);border-color:var(--rust);color:#fff}
+.foot-note{font-family:var(--mono);font-size:9.5px;line-height:1.6;color:var(--faint);margin-top:9px}
+
+/* ── the board ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.t{border:1px solid var(--rule);border-left:3px solid var(--rule);background:var(--card);
+  border-radius:11px;padding:12px 13px;display:flex;flex-direction:column}
+.t.wide{grid-column:1/-1}
+.t.go{border-color:var(--owed-ln);border-left-color:var(--owed);background:var(--owed-bg)}
+.t.ok{border-left-color:var(--ok);background:var(--ok-bg)}
+.t .nm{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:6px}
+.t.go .nm{color:var(--owed)} .t.ok .nm{color:var(--ok)}
+.t .nm .tagx{border:1px solid currentColor;border-radius:3px;padding:0 4px;font-size:8px;letter-spacing:.08em}
+.t .fig{display:flex;align-items:baseline;gap:7px;margin-top:7px}
+.t .big{font-family:var(--serif);font-size:25px;line-height:1;font-variant-numeric:tabular-nums}
+.t.small .big{font-size:20px}
+.t .un{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.t .ln{margin-top:6px;font-size:12px;line-height:1.4;color:var(--mid)}
+
+/* the plan's own next moves, inline */
+.moves{margin-top:10px;border-top:1px dashed var(--owed-ln);padding-top:9px;display:flex;
+  flex-direction:column;gap:6px}
+.moves .mv{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--ink)}
+.moves .mv .bx{width:12px;height:12px;border:1.4px solid var(--owed);border-radius:3px;flex:none}
+.moves .mv .due{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--owed);white-space:nowrap}
+.moves .mv.dim{color:var(--muted)} .moves .mv.dim .due{color:var(--muted)}
+
+/* the 14-day consistency strip */
+.dots{display:flex;gap:2.5px;margin-top:9px}
+.dots i{width:100%;height:12px;border-radius:2px;background:var(--rule)}
+.dots i.on{background:var(--ok)} .dots i.miss{background:var(--owed-ln)}
+
+/* tier 3 — dense rows */
+.rows{display:flex;flex-direction:column;gap:1px;margin-top:9px;border:1px solid var(--rule);
+  border-radius:11px;overflow:hidden;background:var(--rule)}
+.rw{display:flex;align-items:baseline;gap:9px;padding:9px 12px;background:var(--card);
+  border-left:3px solid transparent}
+.rw.go{border-left-color:var(--owed);background:var(--owed-bg)}
+.rw.ok{border-left-color:var(--ok)}
+.rw .nm{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint);width:96px;flex:none}
+.rw.go .nm{color:var(--owed)}
+.rw .v{font-family:var(--serif);font-size:14px;font-variant-numeric:tabular-nums;flex:none}
+.rw .ln{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* the record sentence */
+.rec{border-left:2px solid var(--rust);padding:2px 0 2px 11px;margin-top:6px}
+.rec p{margin:0;font-size:12.5px;line-height:1.45;color:var(--mid)}
+.rec b{font-family:var(--mono);font-size:11.5px;color:var(--rust);font-weight:600}
+.rec .cv{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:4px}
+
+/* floor day */
+.floor{border:1px solid var(--held-ln);background:var(--held-bg);border-radius:12px;padding:15px}
+.floor .lb{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--held)}
+.floor .ask{font-family:var(--serif);font-size:20px;margin-top:7px;line-height:1.2}
+.floor .wy{font-size:12.5px;color:var(--mid);margin-top:7px;line-height:1.45}
+.floor .bt{margin-top:12px;display:inline-flex;align-items:center;min-height:38px;padding:0 16px;
+  border-radius:8px;background:var(--ok);color:#fff;font-family:var(--mono);font-size:10.5px}
+.reveal{margin-top:11px;font-family:var(--mono);font-size:10px;color:var(--muted);
+  text-decoration:underline;text-underline-offset:3px}
+
+/* footer + quote */
+.qz{margin-top:22px;padding-top:14px;border-top:1px solid var(--rule)}
+.qz .lb{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.qz q{display:block;font-family:var(--serif);font-style:italic;font-size:14.5px;
+  line-height:1.45;margin-top:7px;quotes:'“' '”'}
+.qz .by{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:5px}
+.qz .by b{color:var(--rust);font-weight:500}
 
 /* An eased system is owed, so it keeps the owed tile. The band along the
    top is the only difference: the ask is smaller today, the number is not
    a smaller number. */
 .tile.is-eased { border-left-color: var(--held); }
+
+/* Tone, not alarm. Only what is owed gets the red rail; a system that is
+   handled says so in green, and one with nothing to report stays quiet.
+   Every one of them is on the board either way. */
+.tile.t-ok { border-color: var(--rule); border-left-color: var(--ok); }
+.tile.t-ok .name { color: var(--ok); }
+.tile.t-none { border-color: var(--rule); border-left-color: var(--rule); }
+.tile.t-none .name { color: var(--faint); }
+.tile.t-none .big { color: var(--mid); }
+/* A tile that says done does not need the room of one that says DUE. */
+.tile.is-quiet { padding: 12px 13px 11px; }
+.tile.is-quiet .big { font-size: 20px; }
+.tile.is-quiet .fig { margin-top: 6px; }
+.tile.is-quiet .line { margin-top: 6px; font-size: 12px; }
 .tile.is-eased .name { color: var(--held); }
 .tile .mark {
   align-self: flex-start; margin-top: 10px; padding: 2px 8px; border-radius: 9px;
@@ -485,17 +627,7 @@ h1.floor em { color: var(--held); }
 .acts .tag { margin-left: auto; font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
 
 /* ── 5 · the directory ── */
-.dir-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-.finder { position: relative; margin-left: auto; }
-.finder input {
-  width: 232px; max-width: 100%; min-height: 38px; padding: 8px 13px 8px 32px;
-  background: var(--raise); border: 1px solid var(--rule); border-radius: 20px; font-size: 13.5px;
-}
-.finder input::placeholder { color: var(--faint); }
-.finder input:focus { border-color: var(--rust); outline: none; }
-.finder .mag { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--faint); font-size: 13px; pointer-events: none; }
 
-.dir-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); }
 .grp { padding: 14px 15px 8px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; }
 .grp h3 { margin: 0 0 6px; font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
 .grp a { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 7px 8px; margin: 0 -8px; border-radius: 8px; font-size: 14px; }
@@ -525,9 +657,7 @@ footer {
   .cond-panel { padding: 14px 14px 13px; }
   .top { padding: 11px 64px 11px 16px; }
   .kicker .note { display: none; }
-  .finder { margin-left: 0; width: 100%; }
-  .finder input { width: 100%; }
-  .spark { margin-left: 0; }
+      .spark { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -538,132 +668,24 @@ footer {
 </head>
 <body>
 
-<header class="top">
-  <span class="mark">CT Hub</span>
-  <span class="dateline" id="dateline"></span>
-  <span class="sp"></span>
-  <button class="chip" id="btn-find">&#8981; find anything <kbd>/</kbd></button>
-</header>
 
 <main>
 
-  <div class="cond-bar" id="cond-bar">
+  <div class="cond" id="cond-bar">
     <span class="pip"></span>
     <span id="cond-text">&mdash;</span>
-    <button class="edit" id="cond-edit">change</button>
+    <button class="ch" id="cond-edit" type="button">change</button>
   </div>
   <div class="cond-pick" id="cond-pick">
     <div class="cond-row" id="cond-row"></div>
     <div class="cond-panel" id="cond-panel" hidden></div>
   </div>
 
-  <section class="standing">
-    <h1 id="verdict">&mdash;</h1>
-    <p id="verdict-sub">&mdash;</p>
-    <nav class="board" id="board" aria-label="Every system"></nav>
-    <div class="drift" id="drift" hidden>
-      <span class="lab">Drift</span>
-      <span class="txt" id="drift-txt"></span>
-    </div>
-  </section>
+  <!-- The screen, built in one pass by paint(). The structure and the class
+       names are the prototype's; only the data behind them is real. -->
+  <div id="screen"></div>
 
-  <section id="one-sec" hidden>
-    <div class="onething">
-      <div class="lab" id="one-lab">The one thing</div>
-      <div class="ask" id="one-ask"></div>
-      <div class="why" id="one-why"></div>
-      <div class="around" id="one-around" hidden></div>
-      <div class="row2">
-        <button class="did" id="one-did" aria-pressed="false"><span id="one-did-t">that&#39;s the day</span></button>
-        <span class="alt" id="one-alt"></span>
-      </div>
-    </div>
-  </section>
 
-  <!-- One person a day. The board reported "5 owed a touch"; a number is not
-       a thing you do, and a name is. -->
-  <section id="reach-sec" hidden>
-    <div class="kicker">Reach out today <span class="note" id="reach-note"></span></div>
-    <div class="reach" id="reach">
-      <div class="who"><span class="nm" id="reach-name"></span><span class="rl" id="reach-role"></span></div>
-      <div class="why" id="reach-why"></div>
-      <div class="cad"><span id="reach-since"></span><i><b id="reach-bar"></b></i><span id="reach-cad"></span></div>
-      <div class="opener" id="reach-opener"></div>
-      <div class="acts">
-        <button class="pri" id="reach-did" type="button">Log a touch</button>
-        <button id="reach-skip" type="button">Not today</button>
-        <a class="file" id="reach-file">Open file</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="owed-sec">
-    <div class="kicker">Wants you today <span class="note" id="owed-note"></span></div>
-    <div class="owed-grid" id="owed-grid"></div>
-  </section>
-
-  <section id="fold-sec">
-    <button class="reveal" id="reveal" type="button" hidden></button>
-    <div class="fold" id="held-fold" hidden>
-      <button class="folded is-held" id="held-btn" aria-expanded="false">
-        <span class="pip"></span><span id="held-label"></span><span class="chev">&#9660;</span>
-      </button>
-      <div class="folded-list" id="held-list"></div>
-    </div>
-    <div class="fold">
-      <button class="folded" id="cur-btn" aria-expanded="false">
-        <span class="pip"></span><span id="cur-label"></span><span class="chev">&#9660;</span>
-      </button>
-      <div class="folded-list" id="cur-list"></div>
-    </div>
-  </section>
-
-  <section id="acts-sec">
-    <div class="kicker">Do these next <span class="note">from the master plan &middot; tap to close one</span></div>
-    <ul class="acts" id="acts"></ul>
-  </section>
-  <section id="acts-folded" hidden>
-    <button class="folded" id="acts-btn" aria-expanded="false">
-      <span class="pip" style="background:var(--faint)"></span>
-      <span id="acts-fold-label"></span><span class="chev">&#9660;</span>
-    </button>
-    <ul class="acts folded-list" id="acts2" style="margin-top:8px"></ul>
-  </section>
-
-  <!-- Anki · the two numbers, never one -->
-  <section id="anki">
-    <div class="kicker">Anki <span class="note" id="anki-note"></span></div>
-    <div class="ankibox">
-      <div class="ankirow" id="anki-read"></div>
-      <div class="ankiform">
-        <label>due<input id="a-due" type="number" min="0" inputmode="numeric"></label>
-        <label>done<input id="a-done" type="number" min="0" inputmode="numeric"></label>
-        <label>behind<input id="a-back" type="number" min="0" inputmode="numeric"></label>
-        <label>streak<input id="a-streak" type="number" min="0" inputmode="numeric"></label>
-        <button id="a-save" type="button">save</button>
-      </div>
-      <div class="ankihint">Typed by hand for now, but the Mac sync writes these same four
-      fields — so nothing entered here is throwaway. A reading older than a day labels
-      itself rather than passing as this morning&rsquo;s.</div>
-    </div>
-  </section>
-
-  <section>
-    <div class="dir-head">
-      <div class="kicker" style="margin-bottom:0">Everything</div>
-      <div class="finder">
-        <span class="mag">&#8981;</span>
-        <input id="filter" type="search" placeholder="Type to find a page&hellip;" aria-label="Find a page">
-      </div>
-    </div>
-    <div class="dir-grid" id="dir-grid"></div>
-    <p class="empty" id="dir-empty" hidden>Nothing here goes by that name.</p>
-  </section>
-
-  <footer id="foot">
-    <span>The Standing</span>
-    <span id="foot-line">a condition is a fact, not a failure</span>
-  </footer>
   <div class="quote" id="quote" hidden>
     <div class="q" id="quote-q"></div>
     <div class="by" id="quote-by"></div>
@@ -700,7 +722,6 @@ footer {
                'Six things','Seven things','Eight things','Nine things','Ten things'];
   function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
 
-  var PKEY = 'ct-master-plan-v2';   // the master plan's own store, shared with Mission Control
   var FKEY = 'ct_floor_v1';         // which floor days have been met
   /* Which floor days you asked to see the numbers on. Per-day rather than
      sticky: the fold is the right default every morning, and wanting the
@@ -736,38 +757,36 @@ footer {
   }
   function C() { return window.Conditions; }
 
-  /* ── the master plan's next open moves ───────────────────────
-     Same store and same priority order Mission Control uses, so
-     closing one here closes it there. */
+  /* ── the plan's next open moves ──────────────────────────────
+     These came off HUB_DATA — v1's 371-step inventory and v1's store —
+     while the tile above them linked to the v2 plan. So the Standing spent
+     every morning naming work the recalibration had already abandoned.
+
+     PlanV2.moves() is the one reader now: the live phase's open items,
+     soonest deadline first. Closing one here writes v2's store, which is
+     what the Plan page reads, so a move closed on the phone is closed at
+     the desk. */
   function nextActions(limit) {
-    var D = window.HUB_DATA;
-    if (!D || !D.items) return [];
-    var plan = lsJson(PKEY, null) || {};
-    var checked = plan.checked || {};
-    if (!plan.checked && D.defaultChecked) {
-      D.defaultChecked.forEach(function (id) { checked[id] = 1; });
-    }
-    var bMap = {}; (D.branches || []).forEach(function (b) { bMap[b.id] = b; });
-    var byBranch = {};
-    D.items.forEach(function (it) { (byBranch[it.branchId] = byBranch[it.branchId] || []).push(it); });
-    var out = [];
-    (D.priority || []).forEach(function (bid) {
-      (byBranch[bid] || []).forEach(function (it) {
-        if (out.length >= limit || checked[it.id]) return;
-        var b = bMap[bid];
-        out.push({ id: it.id, label: it.label, tag: b ? b.title : '' });
-      });
+    var V = window.PlanV2;
+    if (!V || typeof V.moves !== 'function') return [];
+    return V.moves(limit).map(function (m) {
+      return { id: m.id, label: m.label, tag: dueTag(m) };
     });
-    return out;
+  }
+
+  /* A date beats a label: "Sep 7" is the reason the item is first. */
+  function dueTag(m) {
+    if (!m.due) return m.tag || '';
+    var left = window.PlanV2.daysUntil(m.due);
+    var when = window.PlanV2.fmtDate(m.due).replace(/ \d{4}$/, '');
+    if (left === null) return when;
+    if (left < 0) return when + ' · overdue';
+    if (left === 0) return when + ' · today';
+    return when + ' · ' + left + 'd';
   }
 
   function closeAction(id) {
-    var plan = lsJson(PKEY, null) || {};
-    plan.checked = plan.checked || {};
-    plan.history = plan.history || [];
-    plan.checked[id] = 1;
-    plan.history.push({ id: id, a: 1, ts: Date.now() });   // the shape Mission Control writes
-    lsSet(PKEY, plan);
+    if (window.PlanV2) window.PlanV2.setDone(id, true);
   }
 
   // Whether today's floor ask has been met.
@@ -933,7 +952,7 @@ footer {
     var cs = C().active(), bar = $('#cond-bar'), txt = $('#cond-text');
     if (!cs.length) {
       bar.className = 'cond-bar none';
-      txt.textContent = 'No conditions declared — the hub is asking for everything.';
+      txt.textContent = 'No condition declared \u00b7 full day';
     } else {
       bar.className = 'cond-bar';
       var parts = cs.map(function (c) {
@@ -983,234 +1002,337 @@ footer {
     if (!pick.classList.contains('open')) { draft = null; buildPanel(); }
   });
 
+  /* Prose from the tiles themselves: up to two named, the rest counted, and
+     the review last because it is the one that dates the week. */
+  function subLine(owed, all) {
+    var named = owed.filter(function (s) { return s.id !== 'weekly'; });
+    var wk = all.filter(function (s) { return s.id === 'weekly'; })[0];
+    var out = '';
+    if (named.length) {
+      var first = named.slice(0, 2).map(function (s) { return s.name.toLowerCase(); });
+      var more = named.length - first.length;
+      /* Commas between the named ones and `and` only before the tail, so
+         three items do not come out as "a and b and two others". */
+      var head = first.length === 2 && !more ? first.join(' and ') : first.join(', ');
+      out = cap(head) +
+        (more ? ' and ' + (COUNT[more] || more) + ' other' + (more === 1 ? '' : 's') : '') +
+        (named.length === 1 ? ' wants you.' : ' want you.');
+    }
+    /* The tile beside this already prints its own line; repeating it here
+       gave "Last week is unreviewed — week of Aug 17 is unreviewed". */
+    if (wk) {
+      out += (out ? ' ' : '') +
+        (wk.tone === 'ok' ? 'Last week is reviewed.' : 'Last week is still unreviewed.');
+    }
+    return out || 'Nothing is owed. Pick the thing you want to move.';
+  }
+
   /* ── the page ──────────────────────────────────────────────── */
+  /* ── the screen ────────────────────────────────────────────────────────
+     Ported from the prototype: its tile(), its markup, its class names. The
+     only difference is that every value is read rather than fixtured. */
+
+  function esc(v) {
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+  }
+
+  /* ── the suggestion, rotating ───────────────────────────────────────────
+     One template per tier read as wallpaper by the third day. CTContact
+     now returns a list of angles built from what the map knows about this
+     person; this cycles them.
+
+     Tap forward, double-tap back. The two have to be told apart by waiting,
+     so a single tap settles after 240ms — long enough that a double never
+     fires the single first, short enough that the card does not feel slow.
+     The index is kept per person, so a rotation survives a repaint and the
+     day's other traffic. */
+  var SUGKEY = 'ct_reach_angle_v1';
+
+  function sugIndex(p) {
+    var st = lsJson(SUGKEY, {}) || {};
+    var n = (p.angles || []).length || 1;
+    return ((st[p.id] || 0) % n + n) % n;
+  }
+  function setSugIndex(p, i) {
+    var st = lsJson(SUGKEY, {}) || {};
+    st[p.id] = i;
+    lsSet(SUGKEY, st);
+  }
+
+  function sugHtml(p, i) {
+    var list = p.angles || [];
+    if (!list.length) return '<div class="op">' + esc(p.opener || '') + '</div>';
+    var a = list[i];
+    return '<div class="sug" id="sug" role="button" tabindex="0" ' +
+             'aria-label="Suggestion ' + (i + 1) + ' of ' + list.length +
+             '. Tap for another, double-tap to go back.">' +
+             '<div class="hd"><span>' + esc(a.angle) + '</span>' +
+             '<span class="of">' + (i + 1) + '/' + list.length + '</span>' +
+             '<span class="src">' + esc(a.from) + '</span></div>' +
+             '<div class="body">' + esc(a.text) + '</div>' +
+             '<div class="hint">tap for another · double-tap to go back</div>' +
+           '</div>';
+  }
+
+  /* Swap the text under a fade rather than repainting the whole screen —
+     a repaint would scroll the card out from under your thumb. */
+  function rotate(p, step) {
+    var box = document.getElementById('sug');
+    var list = p.angles || [];
+    if (!box || list.length < 2) return;
+    var n = list.length;
+    var i = ((sugIndex(p) + step) % n + n) % n;
+    setSugIndex(p, i);
+    box.classList.add('fading');
+    setTimeout(function () {
+      var a = list[i];
+      box.querySelector('.hd').innerHTML =
+        '<span>' + esc(a.angle) + '</span><span class="of">' + (i + 1) + '/' + n + '</span>' +
+        '<span class="src">' + esc(a.from) + '</span>';
+      box.querySelector('.body').textContent = a.text;
+      box.setAttribute('aria-label', 'Suggestion ' + (i + 1) + ' of ' + n +
+        '. Tap for another, double-tap to go back.');
+      box.classList.remove('fading');
+    }, 180);
+  }
+
+  function tile(t, wide, extra) {
+    var tone = t.tone === 'go' ? 'go' : t.tone === 'ok' ? 'ok' : '';
+    var cls = ['t', tone, wide ? 'wide' : '', (!tone && !wide) ? 'small' : '',
+               t.eased ? 'is-eased' : ''].filter(Boolean).join(' ');
+    var h = '<a class="' + cls + '" href="' + esc(t.href) + '">';
+    h += '<div class="nm">' + esc(t.name) + '</div>';
+    h += '<div class="fig"><span class="big">' + esc(t.big) + '</span>' +
+         '<span class="un">' + esc(t.unit) + '</span></div>';
+    h += '<div class="ln">' + esc(t.line) + '</div>';
+    return h + (extra || '') + '</a>';
+  }
+
   function paint() {
     var all  = systems();
     paintConditions(all);
-    paintBoard(all);
-    paintQuote();
     var owed = all.filter(function (s) { return s.tone === 'go'; });
     var held = all.filter(function (s) { return s.tone === 'held'; });
-    var rest = all.filter(function (s) { return s.tone !== 'go' && s.tone !== 'held'; });
     var eased = all.filter(function (s) { return !!s.eased; });
     var drift = window.Systems.drift();
-
-    /* Only a condition graded as stopping you produces a floor day. One
-       graded slower produces an easier day, which is a different page: the
-       whole board, the real numbers, a smaller ask. And one merely noted
-       produces an ordinary day with a line on the ribbon, which is the
-       point of having it. */
-    var holding = C().stopping(), easing = C().easing();
-    var floorDay = holding.length > 0 || drift >= 3;
-    var easeDay  = !floorDay && easing.length > 0;
+    var floorDay = window.Systems.floorDay();
+    var holding = C().holding();
+    var easeDay = eased.length > 0 && !floorDay;
     var met = floorMet();
-    paintReach(floorDay);
     var revealed = lsJson(RKEY, {})[C().today()] === 1;
     var showOwed = !floorDay || revealed;
+    var S = window.Systems;
+    var H = '';
 
-    var h1 = $('#verdict'), sub = $('#verdict-sub');
-    h1.className = '';
+    /* ── the verdict ── */
     if (floorDay) {
-      h1.className = 'floor';
-      h1.innerHTML = 'Today is a <em>floor day</em>.';
+      H += '<h2 class="vd">Today is a <em>floor day</em>.</h2>';
       var bits = [];
       if (drift >= 3) bits.push((COUNT[drift] || drift) + ' days down');
       holding.forEach(function (c) { bits.push(C().phrase(c)); });
-      var nh = held.length;
-      sub.textContent = (bits.length ? cap(bits.join(', ')) + '. ' : '') +
-        (nh === 1 ? 'One system is held' : (COUNT[nh] ? cap(COUNT[nh]) : nh) + ' systems are held') +
-        ' — nothing is accruing against you while ' + (nh === 1 ? 'it is' : 'they are') + '. ' +
-        (met ? 'You did the one thing. The day counted.'
-             : 'Do the one thing below and the day counts as a day.') +
-        ' The numbers are still yours to see — the button below opens the full board.';
-    } else if (easeDay) {
-      /* Deliberately not the floor-day page. Nothing is hidden, nothing is
-         folded, and the red column below is the same red column as any
-         other day — because you said this was a slower day, not a lost one,
-         and a hub that hides your numbers the moment you admit to a bad
-         shoulder is a hub you learn not to tell the truth to. */
-      h1.className = 'floor';
-      h1.innerHTML = 'Today is an <em>easier day</em>.';
-      var eb = easing.map(function (c) {
-        var w = C().phrase(c);
-        return c.outAreas.length
-          ? w + ' — ' + c.outAreas.map(function (a) { return a.label.toLowerCase(); }).join(', ') + ' out'
-          : w;
-      });
-      var ne = eased.length;
-      sub.textContent = cap(eb.join('; ')) + '. Nothing is held and nothing is hidden: the board below is ' +
-        'the real one, with the real numbers. ' +
-        (ne ? (ne === 1 ? 'One system is eased' : cap(COUNT[ne] || String(ne)) + ' systems are eased') +
-              ' — the small version clears ' + (ne === 1 ? 'it' : 'them') + ' today.'
-            : 'The ask is smaller today; the standing is not.');
+      H += '<p class="vsub">' + esc(cap(bits.join('; ')) ||
+           'A day the hub is not asking anything of') +
+           '. Nothing is accruing — the ask is smaller today, the standing is not.</p>';
     } else if (owed.length === 0) {
-      h1.className = 'clear';
-      h1.innerHTML = 'Everything is <em>current</em>.';
-      sub.textContent = 'Nothing is owed today. Pick the thing you want to move, not the thing that is shouting.';
+      H += '<h2 class="vd calm">Everything is <em>current</em>.</h2>';
+      H += '<p class="vsub">Nothing is owed. Pick the thing you want to move, ' +
+           'not the thing that is shouting.</p>';
     } else {
-      h1.innerHTML = (WORDS[owed.length] || owed.length + ' things') + ' <em>want you</em> today.';
-      sub.textContent = 'The rest of the hub is current. Everything below is detail — you have already read the important part.';
+      H += '<h2 class="vd">' + (WORDS[owed.length] || owed.length + ' things') +
+           ' <em>want you</em> today.</h2>';
+      H += '<p class="vsub">' + esc(subLine(owed, all)) + '</p>';
     }
 
-    var dr = $('#drift');
-    dr.hidden = drift < 3;
-    if (drift >= 3) {
-      $('#drift-txt').textContent = drift + ' days since the log was fed. The hub is naming it rather than ' +
-        'colouring it red — a rut is a fact about the last week, not a verdict on the plan.';
+    /* ── the date every live item serves ── */
+    var f = S.forcing ? S.forcing() : null;
+    if (f && f.days != null) {
+      H += '<div class="clock"><span class="n">' + esc(f.days) + '</span>' +
+           '<span class="cw">days until ' + esc(f.label) + '</span>' +
+           '<span class="d">' + esc(window.PlanV2 ? window.PlanV2.fmtDate(f.date) : f.date) +
+           '</span></div>';
     }
 
-    /* The same block serves both kinds of lowered day, because they are the
-       same idea at two strengths — but it must not call an eased ask "the
-       one thing", which would imply the rest had been taken away. */
-    $('#one-sec').hidden = !(floorDay || easeDay);
-    if (floorDay || easeDay) {
-      var ramp = holding.length ? C().ramp({ reentry: false })
-               : (drift >= 3 && !easing.length) ? C().RAMPS.drift
-               : C().ramp({ reentry: false });
-      $('#one-lab').textContent = floorDay ? 'The one thing' : "Today's smaller ask";
-      $('#one-ask').textContent = ramp.ask;
-      $('#one-why').textContent = ramp.why;
-      $('#one-alt').textContent = ramp.alt;
-      var env = C().envelope(), wa = $('#one-around');
-      if (env.blocks.length || env.swaps.length) {
-        wa.hidden = false;
-        var lines = [];
-        if (env.blocks.length) lines.push('<b>out:</b> ' + esc(env.blocks.join(' · ')));
-        if (env.allows.length) lines.push('<b>still on:</b> ' + esc(env.allows.join(' · ')));
-        /* The alternatives, which is the question anybody actually has when
-           something is ruled out. Derived from the areas you ticked, so it
-           can never contradict them. */
-        var out = lines.join('&#12288;&#12288;');
-        if (env.swaps.length) out += '<br><b>instead:</b> ' + esc(env.swaps.join(' · '));
-        wa.innerHTML = out;
-      } else { wa.hidden = true; }
-      $('#one-did').setAttribute('aria-pressed', String(met));
-      $('#one-did-t').textContent = met ? 'logged — the day counted' : "that's the day";
+    /* ── the floor day's one ask, in place of the board ── */
+    if (floorDay && !revealed) {
+      var ramp = C().ramp(all, holding);
+      H += '<div class="kick">The one thing</div>';
+      H += '<div class="floor"><div class="ask">' + esc(ramp.ask) + '</div>' +
+           '<div class="wy">' + esc(ramp.why) + '</div>' +
+           '<button class="bt" id="one-did" type="button">' +
+           (met ? 'logged — the day counted' : 'that’s the day') + '</button></div>';
+      H += '<button class="reveal" id="reveal" type="button">↓ show me the numbers anyway (' +
+           owed.length + ' owed, none of it accruing)</button>';
     }
 
-    /* The inversion that matters: on a floor day the red column is folded
-       away by default. Folded, though — not deleted, and no longer without
-       a way back. Asking for the numbers is one tap, the answer is
-       remembered for the day, and what comes back is the ordinary board
-       rather than a censored one. */
-    $('#owed-sec').hidden = !showOwed || owed.length === 0;
-    $('#owed-note').textContent = owed.length
-      ? (floorDay ? 'shown because you asked — none of it is accruing today'
-                  : (easeDay ? 'the real numbers · the ask is smaller, the standing is not'
-                             : 'the ones with something owed'))
-      : '';
-    var grid = $('#owed-grid'); grid.innerHTML = '';
-    if (showOwed) owed.forEach(function (s) {
-      var a = el('a', 'tile' + (s.eased ? ' is-eased' : '')); a.href = s.href;
-      a.appendChild(el('div', 'name', s.name));
-      var fig = el('div', 'fig');
-      fig.appendChild(el('span', 'big', s.big));
-      fig.appendChild(el('span', 'unit', s.unit));
-      a.appendChild(fig);
-      a.appendChild(el('div', 'line', s.line));
-      if (s.eased) a.appendChild(el('div', 'mark', 'eased today'));
-      a.appendChild(el('div', 'go-to', 'open ' + s.name.toLowerCase() + ' →'));
-      grid.appendChild(a);
-    });
+    /* ── one person a day ── */
+    var person = null;
+    try { person = window.CTContact ? window.CTContact.pick() : null; } catch (e) {}
+    if (person && !floorDay) {
+      H += '<div class="kick">Reach out today' +
+           (person.owed ? '<span class="r">a reply is owed</span>' : '') + '</div>';
+      /* The facts the ranking actually used, so the pick can be argued with
+         rather than taken on faith. */
+      var facts = [];
+      if (person.strength) facts.push([person.strength, false]);
+      if (person.type) facts.push([person.type, false]);
+      if (person.city) facts.push([person.city, false]);
+      if (person.reach != null) facts.push(['reach ' + person.reach + '/3', false]);
+      if (person.ops) facts.push([person.ops + (person.ops === 1 ? ' opening' : ' openings'), false]);
+      if (person.overdue) facts.push([(person.days / (person.cadence || 1)).toFixed(1) +
+        '\u00d7 over cadence', true]);
 
-    var rv = $('#reveal');
-    rv.hidden = !floorDay || owed.length === 0;
-    rv.textContent = revealed
-      ? '↑ fold the numbers away again'
-      : '↓ show me the numbers anyway (' + owed.length + ' owed, none of it accruing)';
-
-    $('#held-fold').hidden = held.length === 0;
-    if (held.length) {
-      $('#held-label').innerHTML = '<b>' + (COUNT[held.length] || held.length) + ' system' +
-        (held.length === 1 ? '' : 's') + ' held</b> — nothing accruing';
-      fill($('#held-list'), held, 'is-held');
+      H += '<div class="reach' + (person.overdue ? ' is-overdue' : '') + '">' +
+           '<div><span class="nm">' + esc(person.name) + '</span>' +
+           '<span class="rl">' + esc(person.role || '') + '</span></div>' +
+           '<div class="facts">' + facts.map(function (f) {
+             return '<span' + (f[1] ? ' class="hot"' : '') + '>' + esc(f[0]) + '</span>';
+           }).join('') + '</div>' +
+           '<div class="why">' + esc(person.why) + '</div>' +
+           (person.met ? '<div class="why">' + esc(person.met) + '</div>' : '') +
+           '<div class="cad"><span>last touch ' + esc(person.days) + 'd</span>' +
+           '<i><b style="width:' + Math.min(100, Math.round(person.ratio * 100)) + '%"></b></i>' +
+           '<span>cadence ' + esc(person.cadence) + 'd</span></div>' +
+           sugHtml(person, sugIndex(person)) +
+           '<div class="acts"><button class="pri" id="reach-did" type="button">Log a touch</button>' +
+           '<button id="reach-skip" type="button">Not today</button>' +
+           '<a class="file" href="' + esc(person.href) + '">Open file</a></div>' +
+           '</div>';
+      H += '<div class="foot-note">One person a day, picked from <b>nm_nodes_v2</b> by tier ' +
+           'cadence × days since touch × what the plan needs. Fixed for the calendar day.</div>';
     }
 
-    var waiting = rest.length + (showOwed ? 0 : owed.length);
-    $('#cur-label').innerHTML = (floorDay && !showOwed)
-      ? '<b>' + (COUNT[waiting] || waiting) + ' waiting</b> — the hub will show them when you ask'
-      : '<b>' + (COUNT[rest.length] || rest.length) + ' system' + (rest.length === 1 ? '' : 's') +
-        ' current</b>' + (owed.length ? ', nothing owed' : ' — the whole board');
-    fill($('#cur-list'), showOwed ? rest : rest.concat(owed), '');
+    /* ── every system, at three densities ── */
+    if (showOwed) {
+      var pool = all, cards = [], lines = [];
+      var RANK = { spine: 0, daily: 1, standing: 2 };
+      pool.slice().map(function (x) {
+        return { s: x, tier: S.tierOf ? S.tierOf(x) : 'daily' };
+      }).sort(function (x, y) {
+        var d = RANK[x.tier] - RANK[y.tier];
+        return d !== 0 ? d : (x.s.sort || 0) - (y.s.sort || 0);
+      }).forEach(function (c) { (c.tier === 'standing' ? lines : cards).push(c); });
 
-    /* Folded, not deleted. "They will keep" is the message; hiding them
-       outright would move the dread somewhere you cannot see it. */
-    var acts = nextActions(6);
-    $('#acts-sec').hidden = floorDay;
-    $('#acts-folded').hidden = !floorDay;
-    $('#acts-fold-label').innerHTML = '<b>' + (COUNT[acts.length] || acts.length) +
-      ' action' + (acts.length === 1 ? '' : 's') + ' waiting</b> — they will keep';
-    buildActs($('#acts'), acts);
-    buildActs($('#acts2'), acts);
+      H += '<div class="kick">Every system<span class="r">' +
+           (owed.length ? owed.length + ' of ' + all.length + ' want you'
+                        : 'all ' + all.length + ' current') + '</span></div>';
 
-    paintDirectory($('#filter').value, floorDay && !showOwed);
-  }
-
-  function fill(node, list, extra) {
-    node.innerHTML = '';
-    list.forEach(function (s) {
-      var cls = 'row ' + (extra || (s.tone === 'ok' ? '' : 'is-quiet'));
-      if (s.tone === 'go') cls = 'row is-quiet';
-      if (s.eased) cls += ' is-eased';
-      var a = el('a', cls.trim()); a.href = s.href;
-      a.appendChild(el('span', 'big', s.big));
-      var t = el('span', 'txt');
-      t.appendChild(el('b', null, s.name));
-      t.appendChild(el('span', null, s.line));
-      a.appendChild(t);
-      a.appendChild(el('span', 'unit', s.unit));
-      node.appendChild(a);
-    });
-  }
-
-  function buildActs(node, list) {
-    node.innerHTML = '';
-    if (!list.length) {
-      var li0 = el('li');
-      li0.appendChild(el('div', null, 'Nothing open on the plan.'));
-      li0.firstChild.style.cssText = 'padding:14px 16px;color:var(--muted);font-style:italic';
-      node.appendChild(li0);
-      return;
-    }
-    list.forEach(function (a) {
-      var li = el('li'), b = el('button');
-      b.type = 'button'; b.setAttribute('aria-pressed', 'false');
-      b.appendChild(el('span', 'box'));
-      b.appendChild(el('span', 'label', a.label));
-      b.appendChild(el('span', 'tag', a.tag));
-      b.addEventListener('click', function () {
-        b.setAttribute('aria-pressed', 'true');
-        closeAction(a.id);
-        setTimeout(paint, 220);   // let the tick land before the list re-sorts
+      H += '<div class="grid">';
+      cards.forEach(function (c) {
+        var x = c.s, extra = '';
+        if (x.id === 'record' && S.logStreak) {
+          extra += '<div class="dots">' + S.logStreak(14).map(function (on) {
+            return '<i class="' + (on ? 'on' : '') + '"></i>'; }).join('') + '</div>';
+        }
+        if (x.id === 'plan') {
+          var mv = nextActions(2);
+          if (mv.length) {
+            extra += '<div class="moves">' + mv.map(function (m) {
+              return '<span class="mv" data-move="' + esc(m.id) + '"><span class="bx"></span>' +
+                     '<span>' + esc(m.label) + '</span>' +
+                     '<span class="due">' + esc(m.tag) + '</span></span>';
+            }).join('') + '</div>';
+          }
+        }
+        H += tile(x, c.tier === 'spine', extra);
       });
-      li.appendChild(b); node.appendChild(li);
+      H += '</div>';
+
+      if (lines.length) {
+        H += '<div class="rows">' + lines.map(function (c) {
+          var x = c.s;
+          return '<a class="rw ' + (x.tone === 'go' ? 'go' : x.tone === 'ok' ? 'ok' : '') +
+                 '" href="' + esc(x.href) + '">' +
+                 '<span class="nm">' + esc(x.name) + '</span>' +
+                 '<span class="v">' + esc(x.big) + '</span>' +
+                 '<span class="ln">' + esc(x.line) + '</span></a>';
+        }).join('') + '</div>';
+      }
+    }
+
+    /* ── what the record says ── */
+    var tr = S.trends ? S.trends() : null;
+    if (tr && tr.best && showOwed) {
+      /* Built from the parts rather than printing one flat string, so the
+         measure and the coefficient carry weight the way they do in the
+         prototype — the sentence is read, the numbers are seen. */
+      var bt = tr.best;
+      var dir = bt.r < 0 ? 'less' : 'more';
+      var rr = (bt.r > 0 ? '+' : '\u2212') + Math.abs(bt.r).toFixed(2);
+      H += '<div class="kick">What the record says</div>';
+      H += '<div class="rec"><p>Your heavier social-screen days run with <b>' +
+           dir + ' ' + esc(bt.unit) + '</b> \u2014 <b>r = ' + rr + '</b> across ' +
+           bt.n + ' days where both were logged.</p>' +
+           '<div class="cv">Which one moves the other, this cannot say.</div></div>';
+    }
+
+    /* ── the quote, last ── */
+    var q = null;
+    try { q = window.CTQuote ? window.CTQuote.today() : null; } catch (e) {}
+    if (q) {
+      H += '<div class="qz"><div class="lb">The Standing</div>' +
+           '<q>' + esc(q.q || q.text) + '</q>' +
+           '<div class="by">— <b>' + esc(q.by || q.who) + '</b>' +
+           (q.sub ? ' · ' + esc(q.sub) : '') + '</div></div>';
+    }
+
+    $('#screen').innerHTML = H;
+
+    /* ── rebind, since the screen is rebuilt in one pass ── */
+    var od = $('#one-did');
+    if (od) od.addEventListener('click', function () {
+      setFloorMet(!floorMet()); paint();
+    });
+    var rv = $('#reveal');
+    if (rv) rv.addEventListener('click', function () { setRevealed(true); paint(); });
+    var rd = $('#reach-did');
+    if (rd) rd.addEventListener('click', function () {
+      try { window.CTContact.done(person.id); } catch (e) {}
+      paint();
+    });
+    var rs = $('#reach-skip');
+    if (rs) rs.addEventListener('click', function () {
+      try { window.CTContact.skip(person.id); } catch (e) {}
+      paint();
+    });
+
+    var sug = document.getElementById('sug'), tapTimer = null;
+    if (sug) {
+      sug.addEventListener('click', function () {
+        if (tapTimer) {                       // the second tap of a double
+          clearTimeout(tapTimer); tapTimer = null;
+          rotate(person, -1);
+          return;
+        }
+        tapTimer = setTimeout(function () {
+          tapTimer = null;
+          rotate(person, 1);
+        }, 240);
+      });
+      sug.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); rotate(person, 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); rotate(person, -1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); rotate(person, 1); }
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-move]'), function (n) {
+      n.addEventListener('click', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        closeAction(n.getAttribute('data-move'));
+        setTimeout(paint, 180);
+      });
     });
   }
 
-  function foldToggle(btnSel, listSel) {
-    $(btnSel).addEventListener('click', function () {
-      var open = this.getAttribute('aria-expanded') === 'true';
-      this.setAttribute('aria-expanded', String(!open));
-      $(listSel).classList.toggle('open', !open);
-    });
-  }
-  foldToggle('#held-btn', '#held-list');
-  foldToggle('#cur-btn', '#cur-list');
-  foldToggle('#acts-btn', '#acts2');
 
-  $('#one-did').addEventListener('click', function () {
-    setFloorMet(this.getAttribute('aria-pressed') !== 'true');
-    paint();
-  });
+
 
   /* "Show me the numbers anyway." The floor day's whole argument is that
      the shortest page is the kindest one — but that argument is only
      honest if it is a default rather than a wall, and the first version
      had no door in it at all. */
-  $('#reveal').addEventListener('click', function () {
-    setRevealed(!(lsJson(RKEY, {})[C().today()] === 1));
-    paint();
-  });
 
   /* The daily quote. CTQuote.today() decides which one, so the Standing, the
      Workshop and the Journal cannot disagree about the day's line. Silent if
@@ -1219,32 +1341,6 @@ footer {
      days since the last touch, whether a reply is owed — and the pick is
      fixed for the calendar day. Hidden entirely once the day's touch is
      logged, and on a floor day, where one ask is the whole page. */
-  function paintReach(floorDay) {
-    var sec = $('#reach-sec');
-    if (!sec) return;
-    var p = null;
-    try { if (window.CTContact && !floorDay) p = window.CTContact.pick(); } catch (e) {}
-    if (!p) { sec.hidden = true; return; }
-    sec.hidden = false;
-    $('#reach-name').textContent = p.name;
-    $('#reach-role').textContent = p.role || p.city || '';
-    $('#reach-why').textContent = p.why;
-    $('#reach-since').textContent = 'last touch ' + p.days + 'd';
-    $('#reach-cad').textContent = 'cadence ' + p.cadence + 'd';
-    $('#reach-bar').style.width = Math.round(p.ratio * 100) + '%';
-    $('#reach-opener').textContent = p.opener;
-    $('#reach-note').textContent = p.owed ? 'a reply is owed' : '';
-    $('#reach-file').href = p.href;
-    $('#reach').className = 'reach' + (p.overdue ? ' is-overdue' : '');
-    $('#reach-did').onclick = function () {
-      try { window.CTContact.done(p.id); } catch (e) {}
-      paint();
-    };
-    $('#reach-skip').onclick = function () {
-      try { window.CTContact.skip(p.id); } catch (e) {}
-      paint();
-    };
-  }
 
   function paintQuote() {
     var box = $('#quote');
@@ -1261,40 +1357,6 @@ footer {
     if (q.sub) by.appendChild(document.createTextNode(' \u00B7 ' + q.sub));
   }
 
-  function paintDirectory(q, soften) {
-    q = (q || '').trim().toLowerCase();
-    var byHref = {};
-    systems().forEach(function (s) { byHref[s.href] = s.tone; });
-    var here = decodeURIComponent((location.pathname.split('/').pop() || ''));
-    var grid = $('#dir-grid'); grid.innerHTML = '';
-    var shown = 0;
-
-    GROUPS_().forEach(function (g) {
-      var hits = g[1].filter(function (p) {
-        return !q || p[1].toLowerCase().indexOf(q) >= 0 || g[0].toLowerCase().indexOf(q) >= 0;
-      });
-      if (!hits.length) return;
-      var box = el('div', 'grp');
-      box.appendChild(el('h3', null, g[0]));
-      hits.forEach(function (p) {
-        var tone = byHref[p[0]] || '';
-        // On a floor day an owed page is not shouting, it is waiting.
-        if (soften && tone === 'go') tone = 'wait';
-        var a = el('a', tone === 'go' ? 'go' : (tone === 'held' || tone === 'wait' ? 'held' : (tone === 'ok' ? 'ok' : '')));
-        a.href = p[0];
-        if (p[0] === here) a.setAttribute('aria-current', 'page');
-        a.appendChild(el('span', 'dot'));
-        var lbl = el('span'); lbl.innerHTML = highlight(p[1], q);
-        a.appendChild(lbl);
-        if (tone === 'go')   a.appendChild(el('span', 'via', 'wants you'));
-        if (tone === 'wait') a.appendChild(el('span', 'via', 'waiting'));
-        if (tone === 'held') a.appendChild(el('span', 'via', 'held'));
-        box.appendChild(a); shown++;
-      });
-      grid.appendChild(box);
-    });
-    $('#dir-empty').hidden = shown > 0;
-  }
 
   function highlight(label, q) {
     if (!q) return esc(label);
@@ -1303,17 +1365,6 @@ footer {
     return esc(label.slice(0, i)) + '<mark>' + esc(label.slice(i, i + q.length)) + '</mark>' + esc(label.slice(i + q.length));
   }
 
-  $('#filter').addEventListener('input', function () {
-    paintDirectory(this.value, window.Systems.floorDay());
-  });
-  function focusFilter() { var f = $('#filter'); f.scrollIntoView({ block: 'center', behavior: 'smooth' }); f.focus(); }
-  $('#btn-find').addEventListener('click', focusFilter);
-  document.addEventListener('keydown', function (e) {
-    var typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
-    if (!typing && e.key === '/') { e.preventDefault(); focusFilter(); }
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); focusFilter(); }
-    if (e.key === 'Escape' && typing) document.activeElement.blur();
-  });
 
   /* ── the day has to be able to turn over ──────────────────────────────
      Everything here was computed once, at load, and never again: the
@@ -1338,17 +1389,11 @@ footer {
     return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
   }
 
-  function paintDateline() {
-    $('#dateline').textContent = new Date().toLocaleDateString(undefined,
-      { weekday: 'long', day: 'numeric', month: 'long' });
-  }
 
   function refreshForDay(force) {
     var k = dayKey();
     if (!force && k === paintedFor) return;
     paintedFor = k;
-    paintDateline();
-    try { paintAnki(); } catch (e) {}
     paint();
   }
 
@@ -1368,17 +1413,12 @@ footer {
     setTimeout(function () { refreshForDay(); armMidnight(); }, next - now);
   }
   armMidnight();
-  paintDateline();
 
   /* anatomy-core and the data files are plain scripts, but sync.js may
      still be pulling the cloud copy into localStorage when this runs.
      A first paint now, and one more once the page has settled, so the
      glance is never a frame behind the store. */
   // ── Anki ────────────────────────────────────────────────────────────
-  function ankiRead() {
-    try { var d = JSON.parse(localStorage.getItem('ct_anki_v1')); return (d && typeof d === 'object') ? d : null; }
-    catch (e) { return null; }
-  }
   /* Short codes are declared rather than sliced off the name, so two
      systems can never collide into the same label. */
   var CODE = {
@@ -1386,79 +1426,11 @@ footer {
     reading: 'READ', research: 'RSRCH', record: 'LOG', journal: 'JRNL',
     weekly: 'REVIEW', vault: 'VAULT'
   };
-  function paintBoard(list) {
-    var b = $('#board');
-    if (!b) return;
-    b.innerHTML = '';
-    list.forEach(function (x) {
-      var a = document.createElement('a');
-      a.className = ('bar ' + (x.tone || '')).trim();
-      a.href = x.href;
-      a.title = x.name + ' \u2014 ' + x.big + ' ' + x.unit + ' \u00b7 ' + x.line;
-      var slot = document.createElement('span');
-      slot.className = 'slot';
-      slot.appendChild(document.createElement('i'));
-      var lab = document.createElement('b');
-      lab.textContent = CODE[x.id] || x.name.slice(0, 5).toUpperCase();
-      a.appendChild(slot); a.appendChild(lab);
-      b.appendChild(a);
-    });
-  }
-
-  function paintAnki() {
-    var d = ankiRead();
-    var row = $('#anki-read'), note = $('#anki-note');
-    if (!d) {
-      row.innerHTML = '<b>&mdash;</b> nothing recorded yet.';
-      note.textContent = 'not linked';
-      return;
-    }
-    [['due', d.due], ['done', d.doneToday], ['back', d.backlog], ['streak', d.streak]]
-      .forEach(function (pair) {
-        var f = $('#a-' + pair[0]);
-        if (f && document.activeElement !== f) f.value = (pair[1] == null ? '' : pair[1]);
-      });
-    /* What is waiting is the live queue, not the queue minus today's reps —
-       a rep is not a card, and a card answered Again is still due. Same
-       reading the tile uses, so the two cannot disagree. */
-    var waiting = (d.dueTotal != null) ? (+d.dueTotal || 0) : ((+d.due || 0) + (+d.backlog || 0));
-    var reps = +(d.repsToday != null ? d.repsToday : d.doneToday) || 0;
-    row.innerHTML = '<b>' + (+d.streak || 0) + 'd</b> streak &middot; <b>' + waiting +
-      '</b> waiting &middot; ' + (reps ? reps + ' reps done today' : 'nothing done today') +
-      (d.minsRemaining ? ' &middot; ~' + d.minsRemaining + ' min to clear' : '');
-    /* The age of the reading belongs next to the reading, not only inside
-       the system row — this panel is where you would come to fix a sync that
-       had stopped. */
-    var age = null;
-    if (d.at) {
-      var t = Date.parse(d.at);
-      if (!isNaN(t)) age = Math.floor((Date.now() - t) / 86400000);
-    }
-    note.textContent = d.at
-      ? (age === 0 ? 'read today' : age === 1 ? 'last reading yesterday'
-         : 'last reading ' + age + ' days ago — the sync is not running')
-        + (d.source ? ' · ' + d.source : '')
-      : '';
-  }
-  $('#a-save').addEventListener('click', function () {
-    var d = ankiRead() || {};
-    d.due = +$('#a-due').value || 0;
-    d.doneToday = +$('#a-done').value || 0;
-    d.backlog = +$('#a-back').value || 0;
-    d.streak = +$('#a-streak').value || 0;
-    if (!d.secPerCard) d.secPerCard = 20;
-    d.at = new Date().toISOString();
-    d.source = 'manual';
-    try { localStorage.setItem('ct_anki_v1', JSON.stringify(d)); } catch (e) {}
-    paintAnki();
-    paint();
-  });
-  paintAnki();
   paintedFor = dayKey();
 
   /* A reading published by the Mac lands here. Repaint rather than reload:
      you may be mid-sentence in the capture box. */
-  if (window.Feeds) window.Feeds.start(function () { paintAnki(); paint(); });
+  if (window.Feeds) window.Feeds.start(function () { paint(); });
 
   /* A reading handed over in the URL fragment, by `anki_sync.py --open`.
      A fragment never reaches the server — browsers strip everything after
@@ -1487,12 +1459,7 @@ footer {
         localStorage.setItem('ct_anki_v1', JSON.stringify(payload));
         took = ['anki'];
       }
-      history.replaceState(null, '', location.pathname + location.search);
-      paintAnki(); paint();
-      var n = $('#anki-note');
-      if (n) n.textContent = took.length
-        ? 'updated from the Mac just now'
-        : 'the reading here is already newer';
+      history.replaceState(null, '', location.pathname + location.search); paint();
     } catch (e) {
       history.replaceState(null, '', location.pathname + location.search);
     }

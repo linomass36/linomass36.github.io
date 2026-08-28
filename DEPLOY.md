@@ -976,6 +976,157 @@ live page can be walked back to the front door. The second one immediately
 found three links nobody knew about — Today and Mission Control still
 pointing into the v1 plan and the retired sprint.
 
+### The front door is the prototype now
+
+`Standing.html` is the One Row Per Day screen, top to bottom:
+
+```
+condition · one line          was a ~250px card holding one sentence
+"Five things want you today."
+  + the systems named         was "everything below is detail"
+171 days · applications close the date every live item serves
+Reach out today               moved above the board
+Every system                  spine · daily · standing
+  The Plan          wide, carrying its own next two moves
+  Weekly Review     wide
+  Anatomy · Grind · The Week · Recall · Reading · Research · Life Log
+  Trends · Journal · Vault      one line each
+What the record says          the matrix, on the day it is worth knowing
+folded: the Anki keypad, the page directory
+the daily quote
+```
+
+**Three densities.** Twelve equal cards is a wall and six is half the hub
+missing, so `systems.js` gives each tile a tier — spine, daily, standing —
+and a standing system past its cadence is **promoted** to a card for that
+day. The silhouette of the board is the state of the week: a tall board is a
+behind week, readable before a word of it is.
+
+**Two sections became one.** "Do these next" duplicated the tile that already
+said `0 of 10`, three screens further down. The moves are inside the Plan
+tile now, so the Sep 7 deadline sits beside the percentage it explains.
+
+**Life Log shows fourteen days.** "0 days logged" is a number you can argue
+with; a row of marks with a gap in it is not.
+
+The page went from **8,724px to ~2,270px** with more on it. Nothing was
+deleted: the Anki keypad and the page directory are folded, because the
+keypad is a desk and Recall is the desk.
+
+Two bugs found while building it. A second `trends()` in `systems.js`
+**shadowed** the correlation-sentence function of the same name, which
+silently turned that sentence off on the Weekly Review as well as here.
+And sorting the board by `sort` alone put the Weekly Review — sort 8 — at
+the foot of the board rather than beside the Plan, which is the pairing the
+whole layout rests on.
+
+### Trends and The Week were published and unreachable
+
+Both pages shipped, deployed and sat in the build artifact. Neither was on
+the Standing's board. The board had eleven tiles and named neither, and the
+Grind tile still opened `Grind.dc.html` — the fixed nine-week grid the
+elastic week replaced. From the front door the two pages did not exist; the
+only way in was a thirty-item drawer.
+
+The board also listed only what was **owed**, which had two consequences
+nobody chose:
+
+- **The Plan was never on it.** A plan on track owes nothing, so the thing
+  the other eleven systems serve was absent from the board every day it was
+  going well.
+- **There was no calm state.** The board could show alarms or nothing. You
+  could not check a system that was behaving.
+
+It was also a single column of ~150px cards, which fits one and a half
+systems on a phone — a list you scroll, not a board you read — under a strip
+of eleven bars with four-letter labels (`ANAT`, `RSRCH`, `JRNL`) restating
+the cards directly beneath it, seven of them solid red.
+
+Now: every system, two columns at every width, The Plan pinned across the
+top, and tone carried by the rail rather than by presence — red for owed,
+green for handled, quiet for nothing to report. A tile that says done takes
+less room than one that says DUE. `show live only` narrows to what is owed
+for the days you want the short version. Anki and the Study Engine were two
+tiles opening the same page and asking the same question twice; they are one
+Recall tile that names its three sources.
+
+`tools/board.test.js` checks reachability rather than layout: every live
+page a tile should open is opened by one, every tile's destination exists,
+and the board carries more than one tone. It fails eight assertions against
+the old board.
+
+### Two plans, and the daily pages were reading the retired one
+
+`plan-v2-data.js` opens by saying it supersedes the v1 content in
+`hub-data.js` and that "nothing reads it as current any more". That was not
+true of the three pages actually opened every day:
+
+```
+Standing.html          "Do these next"      <- HUB_DATA, v1's 371 items
+Today.dc.html          next steps           <- HUB_DATA, one per v1 branch
+Weekly Review.dc.html  wins and open loops  <- HUB_DATA + v1's store
+systems.js             the board's first tile — sort 0, top of the Standing
+                       every morning — linked to Plan.html and reported v1's
+                       percentage
+```
+
+Two plans, two stores, no connection between them. The store names are their
+own trap: `ct-master-plan-v2` is **v1's** store; v2's is `plan_v2_state_v1`.
+So a move closed on the Plan page never appeared as a win in the Sunday
+review, and the Standing spent every morning naming work the recalibration
+had explicitly abandoned — the capital engine, the research spine, thirteen
+branches of it.
+
+Nothing could catch this. Both files were valid, every link resolved, the
+site-map tripwires passed, and the wrong number is a perfectly plausible
+number: 371 steps at 34% looks like a plan being worked.
+
+`PlanV2` now answers the question once, for everyone — `moves()`, `counts()`
+and `winsSince()` over the **live phase**, which is the point of v2: a
+percentage of 371 items dated years out never moves and tells you nothing,
+whereas `0 of 10 — close out the summer` does. Moves are ordered by deadline,
+because everything live serves one date.
+
+`tools/plan-source.test.js` pins both halves: the reader's behaviour, and —
+structurally — that the daily surfaces load the v2 plan and read neither
+`HUB_DATA` nor v1's store. That second half is the tripwire that would have
+caught this in the first place. Comments may name v1; code may not read it.
+
+Still on v1, correctly: the archived v1 documents. Still on v1 and worth a
+later pass: `Dossiers`, `Life Log` and `Examiner` use `HUB_DATA` for contacts
+and extras rather than for "what do I do next".
+
+### The corrector was correcting the drawer
+
+`upbar.js` rewrites a back link still pointing at `Hub.dc.html`, the retired
+front door. It found them with one document-wide scan for `a[href]` — and by
+the time it ran, `nav.js` had already appended the drawer, whose page list
+contains a perfectly legitimate link to `Hub.dc.html`: **the Workshop**, which
+is live, not archived.
+
+So the scan hit the drawer. On every page carrying one, the Workshop entry was
+rewritten to that page's own parent:
+
+```
+on Day Budget   "The Workshop"  ->  "← The Plan"      ->  Plan.html
+on The Body     "The Workshop"  ->  "← Today"         ->  Today.dc.html
+on Conditions   "The Workshop"  ->  "← The Standing"  ->  Standing.html
+```
+
+Two failures out of one line. The Workshop became unreachable from the drawer
+anywhere on the site, and the drawer grew a second back link that changed its
+name depending on where you opened it — two arrows in view at once, pointing
+different places. A quieter third: a page declared `back: 'none'` only gets a
+link injected when the scan finds nothing to correct, and the drawer's
+Workshop link counted as a find, so the injection never happened.
+
+The three site-map tripwires could not see any of it. Every declaration was
+correct; the damage was done to the DOM at runtime, after the page loaded. The
+fix is that the corrector now skips `#hbnav`, `#hb-tabs` and `#hb-up` — the
+chrome is a directory of the whole site, not this page's back control — and
+`tools/upbar.test.js` runs it against a stub DOM built the way the browser has
+it at that moment: the page's own header, plus the drawer already appended.
+
 ### Health days follow the reading, not the reader
 
 A sample stamped `2026-08-21 16:00:00 -0700` is already local time where it
@@ -1052,7 +1203,11 @@ reading eight weeks in the past.
 - `contact.js` — one person a day to reach out to, ranked over the Network Map's own tiers and touch dates. Logging a touch writes to `ct_dossier_v1`, which is what the ranking reads. See **One person a day** above.
 - `quotes.js` — the daily line, and `CTQuote.today()`, the one place that decides which one. The bank is kept coprime with 7 so nothing is welded to a weekday.
 - `sitemap.js` — the only declaration of what pages exist: name, drawer group, owning parent, and what each page's back control does now. Read by `nav.js`, the Standing's directory and `upbar.js`.
-- `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px.
+- `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px. Skips the injected chrome, whose links are a site directory rather than this page's back control. See **The corrector was correcting the drawer** above.
+- `tools/upbar.test.js` — the corrector fixes the page's own stale back link and leaves the drawer's Workshop entry alone.
+- `plan-v2.js` — also `moves()`, `counts()` and `winsSince()`: the one reader for "what is next", over the live phase. See **Two plans** above.
+- `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
+- `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
 - `calendar.js` + `Week.html` — next week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
 - `tools/calendar.test.js` — the named calendar is the one read, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.

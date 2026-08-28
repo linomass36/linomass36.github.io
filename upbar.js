@@ -58,6 +58,16 @@
     if (!found && page.back === 'none') inject(parent, label);
   }
 
+  /* The chrome nav.js and this file inject. Its links are a directory of the
+     whole site, not this page's back control, and one of them legitimately
+     points at the Workshop — so rewriting inside here turns a real
+     destination into a duplicate of the back link, relabelled per page. */
+  var CHROME = '#hbnav, #hb-tabs, #hb-up';
+
+  function inChrome(el) {
+    return !!(el.closest && el.closest(CHROME));
+  }
+
   /* Correct the link the page already has. Only links that point at the
      retired front door are touched — a page whose back link is already right
      is left exactly as its author wrote it. */
@@ -67,6 +77,8 @@
     Array.prototype.forEach.call(links, function (a) {
       var href = a.getAttribute('href') || '';
       if (!STALE.test(href)) return;
+      /* The drawer's own page list is not this page's back control. */
+      if (inChrome(a)) return;
       /* Only the one acting as a back control. A body link that happens to
          mention the Workshop is not a navigation affordance, and the
          difference is that a back control is short and sits in a header. */

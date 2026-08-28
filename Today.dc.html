@@ -17,7 +17,8 @@
 <script src="./anatomy-data.js"></script>
 <script src="./anatomy-core.js"></script>
 <script src="./reading-data.js"></script>
-<script src="./hub-data.js"></script>
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
 <script src="./systems.js"></script>
 <script src="./resurface.js"></script>
 <style>
@@ -321,7 +322,6 @@ class Component extends DCLogic {
   RKEY = 'ct_reading_v1';
   RBOOKS = 'ct_reading_books_v1';
   LKEY = 'ct_lifelog_v1';
-  PKEY = 'ct-master-plan-v2';
   WKEY = 'ct_weekly_v1';
   JKEY = 'ct_journal_v1';
 
@@ -475,17 +475,13 @@ class Component extends DCLogic {
      writes — the check, the completion stamp and the history entry the hub's
      streak and momentum are counted from. Anything less and a step ticked
      here would show up as done but never appear in a streak. */
+  /* v2's store, so a step ticked here is ticked on the Plan page. The v1
+     write below it was going to a store nothing current reads. */
   tickStep(id) {
-    const p = this.readJSON(this.PKEY, {}) || {};
-    const checked = Object.assign({}, p.checked || {});
-    const meta = Object.assign({}, p.meta || {});
-    const m = Object.assign({}, meta[id] || {});
-    if (checked[id]) { delete checked[id]; delete m.completedAt; }
-    else { checked[id] = 1; m.completedAt = Date.now(); }
-    meta[id] = m;
-    const history = (p.history || []).concat([{ id, ts: Date.now(), a: checked[id] ? 1 : 0 }]).slice(-2000);
-    this.writeJSON(this.PKEY, Object.assign({}, p, { checked, meta, history }));
-    this.toast(checked[id] ? '✓ step done' : 'step reopened');
+    const V = window.PlanV2;
+    if (!V) return;
+    const on = V.toggleDone(id);
+    this.toast(on ? '✓ step done' : 'step reopened');
     this.bump();
   }
 
@@ -639,42 +635,24 @@ class Component extends DCLogic {
        produces a number that never moves and tells you nothing. The whole
        count is still on the line underneath, and nothing is hidden — the
        plan page itself still holds every step. */
-    const data = window.HUB_DATA || {};
-    const items = data.items || [];
-    const plan = this.readJSON(this.PKEY, {}) || {};
-    const checked = plan.checked || {};
+    const V = window.PlanV2;
     const counts = (window.Systems && window.Systems.planCounts)
       ? window.Systems.planCounts()
-      : { live: items.length, liveDone: 0, later: 0, total: items.length, pct: 0 };
+      : { live: 0, liveDone: 0, later: 0, total: 0, pct: 0 };
 
-    /* The next few live steps, walked in the plan's own branch order and
-       tickable from here — the same write the plan page makes, history and
-       all, so a step ticked on the phone is indistinguishable from one
-       ticked at the desk. */
-    const branchById = {};
-    (data.branches || []).forEach(b => { branchById[b.id] = b; });
-    const liveBranch = id => {
-      const b = branchById[id];
-      return b && (b.horizon === 'now' || b.horizon === 'standing');
-    };
-    const order = (data.priority || []).filter(liveBranch)
-      .concat((data.branches || []).filter(b => liveBranch(b.id)).map(b => b.id));
-    const seenBranch = {};
-    const nextActions = [];
-    for (const bid of order) {
-      if (seenBranch[bid]) continue;
-      seenBranch[bid] = 1;
-      const b = branchById[bid];
-      for (const it of items.filter(x => x.branchId === bid)) {
-        if (checked[it.id]) continue;
-        nextActions.push({
-          label: it.label, branchTitle: b ? b.title : '', color: b ? b.color : '#993C1D',
-          toggle: () => this.tickStep(it.id),
-        });
-        break;                     // one per branch, so it reads as a spread
-      }
-      if (nextActions.length >= 3) break;
-    }
+    /* The next few open moves off the LIVE phase, soonest deadline first,
+       tickable from here — the same write the Plan page makes, so a step
+       ticked on the phone is indistinguishable from one ticked at the desk.
+
+       This walked v1's branches until now: one item per branch across
+       thirteen branches the recalibration retired, so Today opened every
+       morning naming abandoned work. */
+    const nextActions = !V ? [] : V.moves(3).map(m => ({
+      label: m.label,
+      branchTitle: m.due ? V.fmtDate(m.due).replace(/ \d{4}$/, '') : (m.tag || m.phase),
+      color: m.color || '#993C1D',
+      toggle: () => this.tickStep(m.id),
+    }));
 
     // ── this week's priorities ──
     const w = this.readJSON(this.WKEY, {}) || {};

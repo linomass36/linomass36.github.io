@@ -112,7 +112,10 @@
         line: 'rest declared — nothing accrues today' });
     }
     return Object.assign(base, {
-      big: String(sum.openLoops), unit: 'open loops', tone: sum.p0 ? 'ok' : 'go',
+      /* No loops open is the closed state; a bare "0" read as no data. */
+      big: sum.openLoops === 0 ? '\u2713' : String(sum.openLoops),
+      unit: sum.openLoops === 0 ? 'nothing open' : 'open loops',
+      tone: sum.openLoops === 0 ? 'ok' : (sum.p0 ? 'ok' : 'go'),
       line: (sum.p0 ? 'Phase 0 done' : 'Phase 0 still open') + ' · ' +
             sum.dueToday + ' retest' + (sum.dueToday === 1 ? '' : 's') + ' due',
     });
@@ -147,7 +150,9 @@
     var runDone = !!runs['w' + week];
     var done = lifts + (runDone ? 1 : 0), total = liftTotal + 1;
     return Object.assign(base, {
-      big: 'W' + week, unit: done + '/' + total + ' done', tone: done >= total ? 'ok' : 'go',
+      big: done >= total ? '\u2713' : 'W' + week,
+      unit: done >= total ? 'week ' + week + ' done' : done + '/' + total + ' done',
+      tone: done >= total ? 'ok' : 'go',
       line: done >= total
         ? 'week ' + week + ' is complete — it moves when you say so'
         : lifts + ' of ' + liftTotal + ' lifts · ' + (runDone ? 'runs done' : 'no runs yet'),
@@ -248,40 +253,39 @@
     var read = vals.filter(function (v) { return v === 'read'; }).length;
     var now = vals.filter(function (v) { return v === 'reading'; }).length;
     return Object.assign(base, {
-      big: String(now), unit: now === 1 ? 'on the go' : 'on the go', tone: now ? 'ok' : 'go',
+      /* A reading list is a shelf, not a task, so there is no "done" — the
+         question it answers is whether anything is actually being read. */
+      big: now ? '\u2713' : '0',
+      unit: now ? (now === 1 ? 'one on the go' : now + ' on the go') : 'on the go',
+      tone: now ? 'ok' : 'go',
       line: now ? read + ' of ' + total + ' read' : 'nothing in progress — pick one off the shelf',
     });
   }
 
   /* ── the master plan ────────────────────────────────────────────────────
-     371 steps is an inventory, not a plan. The branches already carry a
-     timeframe, so they already say which of them is live now, which stands
-     all year and which is years out; `horizon` on each branch just makes that
-     machine-readable. Nothing is hidden and nothing is deleted — the count
-     you are shown is the one you can act on this term, and the whole number
-     is right beside it. */
+     The tile's href was pointed at the v2 plan in an earlier pass, but its
+     NUMBERS were still counted off v1's 371-step inventory and v1's store.
+     So the first tile on the Standing every morning linked to one plan and
+     reported another's progress.
+
+     The count now comes from PlanV2, over the live phase — which is the
+     whole point of the recalibration: a percentage of 371 items dated years
+     out never moves and tells you nothing. The v1 shape is kept so callers
+     read the same keys.  */
   function planCounts() {
-    var data = w.HUB_DATA || {};
-    var items = data.items || [];
-    var branches = data.branches || [];
-    var horizonOf = {};
-    branches.forEach(function (b) { horizonOf[b.id] = b.horizon || 'later'; });
-    var plan = readJSON('ct-master-plan-v2', {}) || {};
-    var checked = plan.checked || {};
-    var out = { now: 0, nowDone: 0, standing: 0, standingDone: 0, later: 0, laterDone: 0,
-                total: items.length, totalDone: 0 };
-    items.forEach(function (it) {
-      var h = horizonOf[it.branchId] || 'later';
-      var done = !!checked[it.id];
-      out[h] += 1;
-      out[h + 'Done'] += done ? 1 : 0;
-      out.totalDone += done ? 1 : 0;
-    });
-    out.live = out.now + out.standing;
-    out.liveDone = out.nowDone + out.standingDone;
-    out.pct = out.live ? Math.round(out.liveDone / out.live * 100) : 0;
-    out.pctAll = out.total ? Math.round(out.totalDone / out.total * 100) : 0;
-    return out;
+    var V = w.PlanV2;
+    if (V && typeof V.counts === 'function') {
+      var c = V.counts();
+      return { now: c.live, nowDone: c.liveDone, standing: 0, standingDone: 0,
+               later: c.later, laterDone: 0,
+               live: c.live, liveDone: c.liveDone,
+               total: c.total, totalDone: c.totalDone,
+               pct: c.pct, pctAll: c.pctAll,
+               phase: c.phase, phaseLabel: c.phaseLabel };
+    }
+    return { now: 0, nowDone: 0, standing: 0, standingDone: 0, later: 0, laterDone: 0,
+             live: 0, liveDone: 0, total: 0, totalDone: 0, pct: 0, pctAll: 0,
+             phase: null, phaseLabel: '' };
   }
 
   function plan() {
@@ -290,8 +294,14 @@
        Standing every morning — was still opening the v1 master plan that the
        v2 recalibration replaced wholesale. */
     return { id: 'plan', name: 'The plan', href: 'Plan.html', sort: 0,
-      big: c.pct + '%', unit: 'this term', tone: '',
-      line: c.liveDone + ' of ' + c.live + ' live steps · ' + c.later + ' more further out',
+      /* A phase with every item closed read exactly like a phase with no
+         data: neutral, quiet, no mark. */
+      big: (c.live && c.liveDone >= c.live) ? '\u2713' : c.pct + '%',
+      unit: (c.live && c.liveDone >= c.live) ? 'phase closed' : 'this phase',
+      tone: (c.live && c.liveDone >= c.live) ? 'ok' : '',
+      line: c.live
+        ? c.liveDone + ' of ' + c.live + ' — ' + (c.phaseLabel || 'the live phase').toLowerCase()
+        : 'no phase is live right now',
       counts: c };
   }
 
@@ -303,9 +313,17 @@
     var done = (d && d.done && typeof d.done === 'object') ? Object.keys(d.done).length : 0;
     var gates = (d && d.gates && typeof d.gates === 'object') ? Object.keys(d.gates).length : 0;
     var NINETY = 9, GATES = 5;
+    /* Both, or it is not finished. The ninety-day steps alone showed a check
+       over a line that still read "no gate decided yet" — the tile
+       contradicting itself in the same three lines. */
+    var shut = done >= NINETY && gates >= GATES;
     return Object.assign(base, {
-      big: done + '/' + NINETY, unit: 'ninety days', tone: done >= NINETY ? 'ok' : 'go',
-      line: gates ? gates + ' of ' + GATES + ' gates decided' : 'no gate decided yet — ' + GATES + ' waiting',
+      big: shut ? '\u2713' : done + '/' + NINETY,
+      unit: shut ? 'plan closed' : 'ninety days',
+      tone: shut ? 'ok' : 'go',
+      line: shut ? 'all nine served \u00b7 every gate decided'
+        : (gates ? gates + ' of ' + GATES + ' gates decided'
+                 : 'no gate decided yet \u2014 ' + GATES + ' waiting'),
     });
   }
 
@@ -344,9 +362,18 @@
     var today = days[k] || {};
     var closed = !!(today.screen && (today.screen.total !== undefined && today.screen.total !== ''));
     var n = Object.keys(days).length;
+    /* The question this tile answers is "is today closed?", and a running
+       count of every day ever logged does not answer it. */
+    var scr = today.screen || {}, slp = today.sleep || {};
+    var detail = [];
+    if (slp.asleep) detail.push(slp.asleep + 'h sleep');
+    if (scr.total) detail.push(scr.total + 'h screen');
     return Object.assign(base, {
-      big: String(n), unit: n === 1 ? 'day logged' : 'days logged', tone: closed ? 'ok' : 'go',
-      line: closed ? 'today is closed' : 'today is not closed yet',
+      big: closed ? '\u2713' : String(n),
+      unit: closed ? 'today' : (n === 1 ? 'day logged' : 'days logged'),
+      tone: closed ? 'ok' : 'go',
+      line: closed ? (detail.join(' \u00b7 ') || 'today is closed')
+                   : 'today is not closed yet \u00b7 ' + n + ' logged',
     });
   }
 
@@ -358,8 +385,11 @@
     var today = isoDay();
     var n = list.filter(function (e) { return e && e.date === today; }).length;
     return Object.assign(base, {
-      big: String(list.length), unit: list.length === 1 ? 'entry' : 'entries', tone: n ? 'ok' : '',
-      line: n ? n + ' written today' : 'nothing written today yet',
+      big: n ? '\u2713' : String(list.length),
+      unit: n ? 'today' : (list.length === 1 ? 'entry' : 'entries'),
+      tone: n ? 'ok' : '',
+      line: n ? n + ' written today \u00b7 ' + list.length + ' in all'
+              : 'nothing written today yet',
     });
   }
 
@@ -488,7 +518,159 @@
              ready: paired.length >= CORR_MIN };
   }
 
-  var BUILDERS = [plan, anatomy, grind, study, anki, reading, research, record, journal, weekly, vault];
+  /* ── recall: one tile, three queues ────────────────────────────────────
+     Anki and the Study Engine each held a tile and each opened Recall.html,
+     so the board asked "what do I owe my memory today?" twice and answered
+     it in two places. The prototype's rule: one tile, one number, the
+     sources named inside it.  */
+  function recall() {
+    var base = { id: 'recall', name: 'Recall', href: 'Recall.html', sort: 3 };
+
+    /* Read the STORES, not the other tiles. The first version summed
+       parseInt(anki().big) — and anki()'s `big` is the streak, so a cleared
+       queue with a 20-day streak reported "20 due". A display string is not
+       a number, and parsing one as though it were is how a board ends up
+       confidently wrong. */
+    var a = readJSON('ct_anki_v1', null);
+    var parts = [], due = 0, known = false;
+
+    if (a && typeof a === 'object') {
+      var aDue = (a.dueTotal != null)
+        ? Math.max(0, parseInt(a.dueTotal, 10) || 0)
+        : Math.max(0, parseInt(a.due, 10) || 0) + Math.max(0, parseInt(a.backlog, 10) || 0);
+      known = true; due += aDue;
+      if (aDue) parts.push('anki ' + aDue);
+    }
+
+    var st = readJSON('ct_study_v1', null);
+    var cards = (st && Array.isArray(st.cards)) ? st.cards : null;
+    if (cards) {
+      var t = isoDay();
+      var sDue = cards.filter(function (c) { return c && c.due && c.due <= t; }).length;
+      known = true; due += sDue;
+      if (sDue) parts.push('error cards ' + sDue);
+    }
+
+    var r = readJSON('ct_resurface_v1', null);
+    if (r && Array.isArray(r.queue)) {
+      known = true;
+      if (r.queue.length) { due += 1; parts.push('resurfaced 1'); }
+    }
+
+    if (!known) return Object.assign(base, { big: '\u2014', unit: 'not linked', tone: '',
+      line: 'run the Mac sync, or type a reading in' });
+    if (!due) return Object.assign(base, { big: '\u2713', unit: 'clear', tone: 'ok',
+      line: 'all three queues are clear' });
+    return Object.assign(base, {
+      big: String(due), unit: 'due now', tone: 'go', line: parts.join(' \u00b7 ')
+    });
+  }
+
+  /* ── the week ──────────────────────────────────────────────────────────
+     Week.html shipped and nothing on the board pointed at it, so the only
+     way in was a thirty-item drawer. The Grind tile keeps its own page. */
+  function week() {
+    var base = { id: 'week', name: 'The Week', href: 'Week.html', sort: 2.5 };
+    var wk = readJSON('ct_week_v1', null);
+    var days = (wk && wk.days && typeof wk.days === 'object') ? wk.days : null;
+    var keys = days ? Object.keys(days) : [];
+    if (!keys.length) return Object.assign(base, { big: '—', unit: 'not pulled', tone: '',
+      line: 'read the calendar and the week lays itself out' });
+    var placed = 0, done = 0, free = 0;
+    keys.forEach(function (k) {
+      var d = days[k] || {};
+      if (d.session) placed++;
+      if (d.done) done++;
+      free += parseFloat(d.free) || 0;
+    });
+    if (!placed) return Object.assign(base, { big: String(Math.round(free)), unit: 'free hours',
+      tone: 'go', line: 'the week is read — nothing laid into it yet' });
+    return Object.assign(base, {
+      big: done >= placed ? '\u2713' : done + '/' + placed,
+      unit: done >= placed ? 'week done' : 'sessions',
+      tone: done >= placed ? 'ok' : 'go',
+      line: done >= placed ? 'all ' + placed + ' sessions done'
+                           : 'in ' + Math.round(free) + ' free hours'
+    });
+  }
+
+  /* ── trends ────────────────────────────────────────────────────────────
+     Same problem: the page exists and the board never named it. The number
+     is days in the daily table, because that is what gates every answer it
+     can give. */
+  /* NOT `trends` — that name is already the correlation sentence above, which
+     the Weekly Review reads for `.sentence`. Declaring a second one shadowed
+     it and silently turned that sentence off everywhere. */
+  function trendsTile() {
+    var base = { id: 'trends', name: 'Trends', href: 'Trends.html', sort: 6.5 };
+    var F = w.Facts;
+    var n = 0;
+    try { n = F && typeof F.all === 'function' ? Object.keys(F.all() || {}).length : 0; } catch (e) {}
+    var MIN = 8;
+    if (!n) return Object.assign(base, { big: '0', unit: 'days', tone: '',
+      line: 'log a day, or import a health export' });
+    if (n < MIN) return Object.assign(base, { big: String(n), unit: 'of ' + MIN + ' days', tone: '',
+      line: (MIN - n) + ' more and the matrix starts answering' });
+    return Object.assign(base, { big: String(n), unit: 'days paired', tone: 'ok',
+      line: 'every pair, put through four tests' });
+  }
+
+  /* ── how loudly each system reports ────────────────────────────────────
+     Twelve equal cards is a wall; six is half the hub missing. So the board
+     reports every system at a density set by how often that system actually
+     needs you.
+
+       spine     what the rest serve, and what dates the week
+       daily     has a today-state — a number different at 22:00 than 07:00
+       standing  a weekly or monthly heartbeat
+
+     A standing system that goes past its cadence is PROMOTED to a card for
+     the day, which is why the board's silhouette is worth reading: a tall
+     board is a behind week.  */
+  var TIER = {
+    plan: 'spine', weekly: 'spine',
+    anatomy: 'daily', recall: 'daily', week: 'daily', record: 'daily',
+    grind: 'standing', reading: 'standing', research: 'standing',
+    trends: 'standing', journal: 'standing', vault: 'standing'
+  };
+  function tierOf(t) {
+    var base = TIER[t && t.id] || 'standing';
+    if (base === 'standing' && t && t.tone === 'go') return 'daily';   // promoted
+    return base;
+  }
+
+  /* ── the date everything serves ────────────────────────────────────────
+     v2 is built on one external deadline and it appeared nowhere on the
+     page opened every morning. */
+  function forcing() {
+    var P = (w.PlanV2 && w.PlanV2.plan) ? w.PlanV2.plan() : (w.PLAN_V2 || {});
+    var f = P.forcingFunction;
+    if (!f || !f.date) return null;
+    var left = w.PlanV2 ? w.PlanV2.daysUntil(f.date) : null;
+    return { label: f.label, date: f.date, why: f.why, days: left };
+  }
+
+  /* ── the last fourteen days of the log ─────────────────────────────────
+     "0 days logged" is a number you can argue with. Fourteen marks is a
+     pattern you cannot, and a three-day gap shows without the word drift. */
+  function logStreak(n) {
+    n = n || 14;
+    var d = readJSON('ct_lifelog_v1', {}) || {};
+    var days = d.days || {};
+    var out = [];
+    var base = new Date(logDay() + 'T12:00:00');
+    for (var i = n - 1; i >= 0; i--) {
+      var t = new Date(base);
+      t.setDate(t.getDate() - i);
+      var k = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') +
+              '-' + String(t.getDate()).padStart(2, '0');
+      var rec = days[k];
+      out.push(!!(rec && rec.screen && rec.screen.total !== undefined && rec.screen.total !== ''));
+    }
+    return out;
+  }
+
+  var BUILDERS = [plan, anatomy, grind, week, recall, reading, research, record, trendsTile, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
      is dropped rather than allowed to take the page with it — one broken
@@ -602,5 +784,6 @@
   w.Systems = { all: all, owed: owed, held: held, eased: eased, drift: drift, floorDay: floorDay,
                 planCounts: planCounts, isoDay: isoDay, monday: monday,
                 reviewWeek: reviewWeek, workWeek: workWeek,
-                trends: trends, pearson: pearson, CORR_MIN: CORR_MIN };
+                trends: trends, pearson: pearson, CORR_MIN: CORR_MIN,
+                tierOf: tierOf, forcing: forcing, logStreak: logStreak };
 })(window);

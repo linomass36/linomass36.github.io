@@ -107,18 +107,119 @@
     return days + ' days since the last touch.';
   }
 
-  /* A first line, so the suggestion costs a tap rather than a draft. Kept
-     deliberately plain: a script that sounds written is worse than none. */
+  /* ── what to say ────────────────────────────────────────────────────────
+     One template said the same thing every time a tier came up, so the card
+     read as wallpaper by the third day. This builds a ROTATION instead: a
+     list of angles, each one assembled from something the map already
+     knows about this person, and each one carrying where it came from.
+
+     The rule that keeps it honest: an angle is only offered when the field
+     it needs is present. `ops` is their own opportunity list, `met` is how
+     you know them, `notes` is what you wrote about them — so a suggestion
+     can name a real thing without the code inventing one. Nothing here
+     asserts a paper, a conversation or an opinion that is not in the store.
+
+     `Ask about their work` is deliberately a QUESTION rather than a claim
+     for the same reason: you know their field from `role`, you do not know
+     what they published this month, and pretending to is how a message
+     gets sent that should not have been. */
+
+  function firstName(p) {
+    var parts = String(p.name || '').trim().split(/\s+/);
+    var last = parts[parts.length - 1] || 'them';
+    return /^(prof|dr|mr|ms|mrs)\.?$/i.test(parts[0]) ? last : parts[0] || last;
+  }
+
+  /* "they are breast cancer surgeon" needed an article. */
+  function article(s) {
+    var t = lower(s);
+    return (/^[aeiou]/i.test(t) ? 'an ' : 'a ') + t;
+  }
+
+  function lower(s) { return String(s || '').charAt(0).toLowerCase() + String(s || '').slice(1); }
+
+  /* What the live phase needs, in words you would actually use. */
+  function planNeed() {
+    try {
+      var V = w.PlanV2;
+      if (!V || !V.livePhase) return null;
+      var ph = V.livePhase();
+      if (!ph) return null;
+      return { label: ph.label, objective: ph.objective || '' };
+    } catch (e) { return null; }
+  }
+
+  /* Something you are actually reading, so "I have been reading X" is true. */
+  function reading() {
+    try {
+      var r = readJSON('ct_reading_v1', {}) || {};
+      var items = r.items || r.books || r.state || {};
+      var open = [];
+      Object.keys(items).forEach(function (k) {
+        var it = items[k];
+        if (it && (it.status === 'reading' || it.started) && !it.done) {
+          open.push(it.title || it.name || k);
+        }
+      });
+      return open[0] || null;
+    } catch (e) { return null; }
+  }
+
+  function angles(p) {
+    var n = firstName(p), out = [];
+    var logged = lastTouchDays(p.id);
+    var days = logged != null ? logged : (p.lastDays != null ? p.lastDays : null);
+    var need = planNeed();
+    var book = reading();
+
+    if (p.owed) out.push({ angle: 'the reply you owe', from: 'they are marked owed',
+      text: 'Reply to ' + n + '. Short is fine — late and short beats later and long. ' +
+            'Answer the thing they asked, then say what you have been doing since.' });
+
+    (Array.isArray(p.ops) ? p.ops : []).forEach(function (op) {
+      out.push({ angle: 'something on their list', from: 'their ops list on the Network Map',
+        text: '\u201c' + String(op).replace(/\.$/, '') + '\u201d \u2014 ask for it plainly, ' +
+              'give a date, and make it easy to say no to.' });
+    });
+
+    if (p.role) out.push({ angle: 'their work', from: 'their role: ' + p.role,
+      text: 'Ask what they are working on now. You know they are ' + article(p.role) +
+            ' \u2014 ask which case or paper is taking their attention this term, ' +
+            'and say why you are asking.' });
+
+    if (need) out.push({ angle: 'what you are doing', from: 'the live phase of the plan',
+      text: 'Tell them what you are on: ' + lower(need.objective || need.label) +
+            '. Two sentences, no ask attached \u2014 people answer updates more ' +
+            'often than they answer requests.' });
+
+    if (book) out.push({ angle: 'something you read', from: 'your reading list',
+      text: 'You are reading ' + book + '. Send one line on what it changed for you ' +
+            'and ask whether they read it the same way.' });
+
+    if (p.met) out.push({ angle: 'how you know them', from: 'the "met" note on their card',
+      text: 'Pick up the thread you already have \u2014 ' + lower(p.met.replace(/\.$/, '')) +
+            '. Reference it directly rather than starting cold.' });
+
+    if (p.notes) out.push({ angle: 'what you wrote about them', from: 'your notes on their card',
+      text: 'Your note reads: \u201c' + String(p.notes).slice(0, 110).replace(/\s+\S*$/, '') +
+            '\u2026\u201d Write the message that follows from it.' });
+
+    if (p.introById || (p.reach || 0) >= 3) out.push({ angle: 'an introduction',
+      from: 'their reach is ' + (p.reach || '\u2014') + ' of 3',
+      text: 'Ask who else you should be talking to. High-reach people answer this ' +
+            'more readily than they answer a request for their own time.' });
+
+    out.push({ angle: 'no ask at all', from: 'the default, and the safest one',
+      text: 'One line. Say what prompted it, ask one question, stop. ' +
+            (days != null ? 'It has been ' + days + ' days; that is the whole reason needed.' : '') });
+
+    return out;
+  }
+
+  /* Kept for anything still reading a single string. */
   function opener(p) {
-    var n = String(p.name || '').split(' ').slice(-1)[0];
-    if (p.owed) return 'Reply to ' + (n || 'them') + ' — short is fine, late and short beats later and long.';
-    if (p.type === 'mentor' || p.type === 'ct') {
-      return 'Send one specific thing you read this month and ask what they make of it.';
-    }
-    if (p.type === 'conference' || p.type === 'program') {
-      return 'A line saying what you have been working on since you met, and nothing asked for.';
-    }
-    return 'One line. Say what prompted it, ask one question, stop.';
+    var a = angles(p);
+    return a.length ? a[0].text : 'One line. Say what prompted it, ask one question, stop.';
   }
 
   /* Today's person. Fixed for the day: the same list, the same skips, the
@@ -145,6 +246,10 @@
       overdue: days > cad,
       why: why(best, days, cad),
       opener: opener(best),
+      angles: angles(best),
+      met: best.met || '', notes: best.notes || '',
+      reach: best.reach == null ? null : best.reach,
+      ops: Array.isArray(best.ops) ? best.ops.length : 0,
       href: 'Dossiers.dc.html?person=' + encodeURIComponent(best.id),
       note: best.met || best.notes || ''
     };
@@ -174,7 +279,7 @@
   function isDone() { return !!state().done[today()]; }
 
   w.CTContact = {
-    pick: pick, skip: skip, done: done, isDone: isDone,
+    pick: pick, skip: skip, done: done, isDone: isDone, angles: angles,
     score: score, CADENCE: CADENCE, KEY: SKEY
   };
 })(typeof window !== 'undefined' ? window : this);
