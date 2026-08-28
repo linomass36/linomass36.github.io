@@ -121,13 +121,6 @@ button, input { font: inherit; color: inherit; }
 .mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
 .dateline { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .04em; }
 .top .sp { flex: 1; }
-.chip {
-  display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 5px 13px;
-  border: 1px solid var(--rule); border-radius: 20px; background: var(--raise); cursor: pointer;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--mid);
-}
-.chip:hover { border-color: var(--rust); color: var(--rust); }
-.chip kbd { font-family: var(--mono); font-size: 9.5px; color: var(--faint); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 4px; }
 
 .ankibox { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); padding: 15px 17px; }
 .ankirow { font-size: 14.5px; color: var(--mid); }
@@ -625,7 +618,6 @@ footer {
   <span class="mark">CT Hub</span>
   <span class="dateline" id="dateline"></span>
   <span class="sp"></span>
-  <button class="chip" id="btn-find">&#8981; find anything <kbd>/</kbd></button>
 </header>
 
 <main>
@@ -1503,8 +1495,16 @@ footer {
   $('#filter').addEventListener('input', function () {
     paintDirectory(this.value, window.Systems.floorDay());
   });
-  function focusFilter() { var f = $('#filter'); f.scrollIntoView({ block: 'center', behavior: 'smooth' }); f.focus(); }
-  $('#btn-find').addEventListener('click', focusFilter);
+  /* The header chip is gone with the rest of the header furniture. The
+     shortcut stays — but the filter now lives inside a folded section, so
+     opening that fold is part of focusing it. */
+  function focusFilter() {
+    var ex = document.getElementById('extras');
+    if (ex) ex.open = true;
+    var f = $('#filter');
+    f.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    f.focus();
+  }
   document.addEventListener('keydown', function (e) {
     var typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
     if (!typing && e.key === '/') { e.preventDefault(); focusFilter(); }
