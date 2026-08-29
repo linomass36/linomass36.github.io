@@ -957,6 +957,14 @@ result carries a real access token. The calendar stays private. Two honest
 limits: Firebase hands the browser no refresh token, so it is one popup per
 session; and the scope is sensitive, so the OAuth app stays in Testing.
 
+**Both paths need the Calendar API switched on** in the Cloud project — the
+same project as the Firebase config, `master-648ee`. This used to be written
+only under *To turn automatic on* below, which reads as if the popup path can
+skip it. It cannot: Firebase's Google provider issues its token against that
+project's OAuth client, so with the API disabled every read comes back 403
+`accessNotConfigured` no matter which path asked. Console → APIs & Services →
+Library → **Google Calendar API** → Enable.
+
 **Offline.** An `.ics` export dropped in needs no credential at all. The secret
 `.ics` *URL* looks easier and is not — Google serves it without CORS headers.
 
@@ -993,9 +1001,45 @@ the Read button throwing you out of the hub. It now passes `login_hint` with
 `authorizedEmail`, which is the only account that can be signed in here at all.
 
 To turn automatic on: Google Cloud Console → enable the **Google Calendar
-API** → Credentials → **Create API key** → restrict it to that API and to
-`linomass36.github.io/*` → in Google Calendar, set the calendar's sharing to
-public (details, or free/busy only) → paste the key into `config.js`.
+API** (needed for the popup path too, see above) → Credentials → **Create API
+key** → restrict it to that API and to `linomass36.github.io/*` → in Google
+Calendar, set the calendar's sharing to public (details, or free/busy only) →
+paste the key into `config.js`.
+
+### The button was a loop
+
+*"It says the calendar token expired everything I try."*
+
+`fetchRange` treated 401 and 403 as one thing and answered both with **the
+calendar token expired — press it again**. The token is minted seconds before
+the call, so it is almost never expiry. A 403 there means something else
+entirely, and none of them are fixed by pressing again:
+
+| what Google said | what it means |
+| --- | --- |
+| `accessNotConfigured` / `SERVICE_DISABLED` | the Calendar API is off for the project |
+| `insufficientPermissions` / `ACCESS_TOKEN_SCOPE_INSUFFICIENT` | the token carries no calendar scope |
+| `notFound` (404) | the signed-in account cannot see that calendar |
+| `rateLimitExceeded` | too many reads, wait |
+| `authError` (401) | the token really did expire — the one case the old message fitted |
+
+So the button re-opened the popup, got another perfectly good token, got the
+same 403, and printed the same sentence: the one explanation that could not be
+true was the only one it ever gave. It also threw the token away every time,
+including in the cases where the token was fine.
+
+`explain()` now reads `error.details[].reason` (the newer shape) and
+`error.errors[].reason` (the older one) — they disagree often enough that both
+are worth looking at — and each answer carries whether the **token** is at
+fault, which is what decides if dropping it could help. The API-key path and
+the popup path share the reader but not the advice: nobody who never used a
+key is told to check a referrer restriction.
+
+And where the answer is one request away, the page goes and gets it. *"The
+account you signed in as cannot see that calendar"* is a dead end on its own,
+so the Week page follows it with `listCalendars` on the same token and prints
+what that account **can** read, next to what `config.js` is asking for — which
+is the line to paste in.
 
 **Three tripwires run in the deploy.** Every `.html` in the repo is declared
 and every declaration exists; no live page links to an archived one; every
@@ -1276,7 +1320,7 @@ reading eight weeks in the past.
 - `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
 - `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
 - `calendar.js` + `Week.html` — the week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
-- `tools/calendar.test.js` — the named calendar is the one read, the week you are standing in can be asked for rather than only the next one, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
+- `tools/calendar.test.js` — the named calendar is the one read, the week you are standing in can be asked for rather than only the next one, every failure is named as itself rather than all of them as an expired token, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`, then the four tests that try to knock each pair down. See **Ruling things out** above.
 - `causality.js` — the statistics: exact t and F tails from a regularised incomplete beta, OLS, partial correlation, Granger, cross-lag, leave-one-out, first differences, Welch contrast, effective-n deflation and Benjamini-Hochberg. No dependencies; reads `facts.js` or any table handed to it.
