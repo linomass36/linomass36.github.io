@@ -26,6 +26,24 @@
 
    The match is by href rather than by a marker attribute, so the raw exports
    never have to be hand-edited.
+
+   AND IT DOES NOT RUN ONCE. Every page declared back:'wrong' is a .dc.html
+   page, and a .dc.html page is not a static document. support.js parses the
+   <x-dc> template, replaces that element with a React root, and then — a tick
+   later — re-renders the root from the page's PRISTINE source (__dcSource
+   behind the vault, fetch(location.href) in front of it) to repair the rows
+   the HTML parser hoisted out of <table> and <select>.
+
+   So a correction made at DOMContentLoaded was made to a subtree that was
+   about to be thrown away, and the link that replaced it carried the original
+   href and the original label again. Since all thirteen 'wrong' pages are
+   .dc.html, nothing was ever corrected on the live site — while the unit
+   test, which mutated a static DOM once and looked, went on passing. Three
+   reports of "it still says Mission Control" and three green deploys.
+
+   So the correction is re-applied whenever the DOM changes. It is idempotent
+   — a corrected href no longer matches STALE — so a re-render costs one more
+   pass and the observer goes quiet again.
    ───────────────────────────────────────────────────────────── */
 (function (w) {
   'use strict';
@@ -39,6 +57,10 @@
     else fn();
   }
 
+  /* What this page's back control should say and where it should go, worked
+     out once and then re-applied for as long as the page lives. */
+  var plan = null;
+
   function build() {
     var S = w.SITEMAP;
     if (!S) return;
@@ -47,15 +69,56 @@
     if (!page) return;
 
     /* An archived page says what replaced it rather than pretending to a
-       place in the live tree. */
+       place in the live tree. The banner is inserted before <x-dc>, so the
+       runtime replacing that element leaves it standing. */
     if (page.archived) return markArchived(page);
 
     var parent = S.parentOf(here);
     if (!parent) return;                       // the front door
-    var label = '← ' + S.nameOf(parent);
 
-    var found = rewrite(parent, label);
-    if (!found && page.back === 'none') inject(parent, label);
+    plan = { parent: parent, label: '← ' + S.nameOf(parent), needsOwn: page.back === 'none' };
+    apply();
+    watch();
+  }
+
+  function apply() {
+    if (!plan) return;
+    var found = rewrite(plan.parent, plan.label);
+    /* Only a page that declares it has no back control gets one made for it.
+       A 'wrong' page between renders momentarily has no link to correct, and
+       injecting one there would leave the page with two. */
+    if (!found && plan.needsOwn) inject(plan.parent, plan.label);
+  }
+
+  /* ── surviving the re-render ─────────────────────────────────────────────
+     childList catches the runtime swapping the whole subtree out; the href
+     filter catches React reconciling the same anchor in place. Nothing else
+     is watched, so a page animating styles does not wake this up.
+
+     takeRecords() after each pass throws away the mutations the pass itself
+     made, so correcting a link cannot schedule another pass to look at its
+     own work. */
+  var mo = null, queued = false;
+
+  function watch() {
+    if (mo || typeof MutationObserver !== 'function') return;
+    if (!document.documentElement) return;
+    mo = new MutationObserver(schedule);
+    mo.observe(document.documentElement, {
+      childList: true, subtree: true, attributes: true, attributeFilter: ['href']
+    });
+  }
+
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    var pass = function () {
+      queued = false;
+      apply();
+      if (mo) mo.takeRecords();
+    };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(pass);
+    else setTimeout(pass, 0);
   }
 
   /* The chrome nav.js and this file inject. Its links are a directory of the
@@ -117,6 +180,7 @@
   /* Pages that never had one. Desktop only: below 640px the tab bar and the
      drawer already reach everything, and the screen has no room to spare. */
   function inject(parent, label) {
+    if (document.getElementById('hb-up')) return;
     var css = document.createElement('style');
     css.textContent =
       '#hb-up{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));' +
@@ -166,6 +230,6 @@
     else document.body.appendChild(bar);
   }
 
-  w.CTUpbar = { build: build };
+  w.CTUpbar = { build: build, apply: apply };
   ready(build);
 })(typeof window !== 'undefined' ? window : this);

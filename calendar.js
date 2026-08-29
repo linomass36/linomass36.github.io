@@ -1,5 +1,10 @@
 /* ─────────────────────────────────────────────────────────────
-   calendar.js — read next week off Google Calendar, once, on a Sunday.
+   calendar.js — read the week off Google Calendar.
+
+   THE WEEK, not always the next one. See planningRange() below: on a Sunday
+   it is the week that starts tomorrow, which is the ritual; on any other day
+   it is the week you are standing in, because those are the hours you still
+   need and there was previously no way to ask for them.
 
    WHY THIS EXISTS. The Grind board is a fixed nine-week grid keyed
    `week|slot` — `3|push` — so a week where clinic eats Tuesday cannot be
@@ -98,8 +103,19 @@
         p.addScope(SCOPE);
         /* Ask every time rather than reusing a silent grant: this only runs
            when the button is pressed, and a silent failure here looks like
-           the button being broken. */
-        p.setCustomParameters({ prompt: 'consent' });
+           the button being broken.
+
+           And name the account while asking. prompt:'consent' puts the
+           account chooser up, and choosing any account but the owner's signs
+           the hub in as somebody else — at which point sync.js's
+           onAuthStateChanged sees a stranger and replaces the page with the
+           gate. From the outside that is the Read button throwing you out of
+           the site. login_hint preselects the one account that can be signed
+           in here at all. */
+        var params = { prompt: 'consent' };
+        var owner = w.APP_CONFIG && w.APP_CONFIG.authorizedEmail;
+        if (owner) params.login_hint = owner;
+        p.setCustomParameters(params);
         w.firebase.auth().signInWithPopup(p).then(function (r) {
           var t = r && r.credential && r.credential.accessToken;
           if (!t) return done(new Error('signed in, but Google returned no calendar token'));
@@ -179,15 +195,62 @@
       .catch(function (e) { done(e); });
   }
 
-  /* Monday 00:00 to Sunday 23:59 of the week after the one containing `from`. */
-  function nextWeekRange(from) {
-    var d = new Date(from || Date.now());
-    var mon = new Date(d);
-    mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7) + 7);
+  /* ── which week ────────────────────────────────────────────────────────
+     WHICH DAY IT IS, by the hub's own boundary. day.js says a day ends at
+     05:00, so at 02:00 on a Monday you are still finishing Sunday — and the
+     week you want laid out is still the one that starts in a few hours, not
+     the one after it. Without day.js loaded, the local calendar date. */
+  function todayDate(from) {
+    if (from != null) return new Date(from);
+    var D = w.CTDay;
+    if (D && typeof D.today === 'function') {
+      try {
+        var d = new Date(D.today() + 'T12:00:00');
+        if (!isNaN(d.getTime())) return d;
+      } catch (e) {}
+    }
+    return new Date();
+  }
+
+  /* Monday 00:00 to the next Monday, of the week CONTAINING `from`. */
+  function weekRange(from) {
+    var mon = todayDate(from);
+    mon = new Date(mon);
+    mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
     mon.setHours(0, 0, 0, 0);
     var end = new Date(mon);
     end.setDate(end.getDate() + 7);
     return { start: mon, end: end };
+  }
+
+  /* The week after that one. */
+  function nextWeekRange(from) {
+    var r = weekRange(from);
+    var mon = new Date(r.start);
+    mon.setDate(mon.getDate() + 7);
+    var end = new Date(mon);
+    end.setDate(end.getDate() + 7);
+    return { start: mon, end: end };
+  }
+
+  /* THE WEEK THE PAGE SHOULD BE LOOKING AT, which was the bug. Everything
+     read `nextWeekRange`, always — so on a Monday the page fetched the week
+     starting in seven days and the week you were actually standing in could
+     not be read at all. Miss the Sunday ritual once and there was no way to
+     recover it: press the button on Tuesday and you got next week again,
+     while today, and every day either side of it, stayed blank.
+
+     That is not only a display problem. facts.js reads `committed` out of
+     this store as the `work` column, which is what the Trends table
+     correlates against sleep and study — so a week never pulled is a week of
+     work hours that no correlation can ever see.
+
+     So: on a Sunday, the week that starts tomorrow — that is the ritual, and
+     it is the whole point of doing it on a Sunday. On any other day, the week
+     you are in, because those are the hours you still need. */
+  function planningRange(from) {
+    var d = todayDate(from);
+    return d.getDay() === 0 ? nextWeekRange(d) : weekRange(d);
   }
 
   function fetchRange(token, start, end, done, id) {
@@ -305,7 +368,7 @@
     var sessions = opts.sessions || ['Push', 'Pull', 'Legs', 'Run', 'Swim', 'Core'];
     var wakeFrom = opts.wakeFrom == null ? 7 : opts.wakeFrom;   // 07:00
     var wakeTo = opts.wakeTo == null ? 22 : opts.wakeTo;        // 22:00
-    var range = opts.range || nextWeekRange();
+    var range = opts.range || planningRange();
     var DAYN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     var days = [];
@@ -390,7 +453,8 @@
   }
 
   w.CTCalendar = {
-    connect: connect, fetchRange: fetchRange, nextWeekRange: nextWeekRange,
+    connect: connect, fetchRange: fetchRange,
+    weekRange: weekRange, nextWeekRange: nextWeekRange, planningRange: planningRange,
     autoRead: autoRead, canAuto: canAuto, listCalendars: listCalendars, calId: calId,
     parseICS: parseICS, classify: classify, planWeek: planWeek,
     saveWeek: saveWeek, readWeek: readWeek, markDone: markDone,

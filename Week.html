@@ -163,6 +163,13 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     m.textContent = text || '';
   }
 
+  /* The title names the week being shown. It used to be set only by
+     restore(), so a fresh pull on a Tuesday drew this week under the heading
+     "The week ahead." */
+  function heading(start) {
+    $('#h1').textContent = start > Date.now() ? 'The week ahead.' : 'This week.';
+  }
+
   function render(plan) {
     lastPlan = plan;
     var box = $('#days'); box.innerHTML = '';
@@ -178,6 +185,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     $('#s-sess').textContent = plan.placed.length + '/' + (plan.placed.length + plan.unplaced.length);
     var a = plan.range.start, b = new Date(plan.range.end - 1);
     $('#plan-note').textContent = MON[a.getMonth()] + ' ' + a.getDate() + ' – ' + MON[b.getMonth()] + ' ' + b.getDate();
+    heading(a);
 
     var saved = C.readWeek().days || {};
     plan.days.forEach(function (d) {
@@ -230,7 +238,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   }
 
   function apply(events, how) {
-    var plan = C.planWeek(events);
+    var plan = C.planWeek(events, { range: C.planningRange() });
     C.saveWeek(plan);
     render(plan);
     say('Read ' + events.length + ' event' + (events.length === 1 ? '' : 's') + ' from ' + how +
@@ -245,7 +253,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
        the button should just re-read, not open a popup for no reason. */
     if (C.canAuto()) {
       say('Reading the calendar…');
-      var rr = C.nextWeekRange();
+      var rr = C.planningRange();
       return C.autoRead(rr.start, rr.end, function (e0, events) {
         btn.disabled = false;
         if (e0) return say(e0.message, 'bad');
@@ -255,8 +263,8 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     say('Opening Google…');
     C.connect(function (err, token) {
       if (err) { btn.disabled = false; return say(err.message, 'bad'); }
-      say('Reading next week…');
-      var r = C.nextWeekRange();
+      say('Reading the week…');
+      var r = C.planningRange();
       C.fetchRange(token, r.start, r.end, function (e2, events) {
         btn.disabled = false;
         if (e2) return say(e2.message, 'bad');
@@ -272,10 +280,11 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     var fr = new FileReader();
     fr.onload = function () {
       var all = C.parseICS(String(fr.result));
-      var r = C.nextWeekRange();
+      var r = C.planningRange();
       var wk = all.filter(function (e) { return e.start >= r.start && e.start < r.end; });
       if (!all.length) return say('No events found in that file.', 'bad');
-      if (!wk.length) return say('That export has ' + all.length + ' events, but none next week.', 'bad');
+      if (!wk.length) return say('That export has ' + all.length + ' events, but none in ' +
+        (r.start > Date.now() ? 'next week' : 'this week') + '.', 'bad');
       apply(wk, f.name);
     };
     fr.onerror = function () { say('Could not read that file.', 'bad'); };
@@ -286,9 +295,22 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
      to look at what you planned. */
   function restore() {
     var saved = C.readWeek();
-    var keys = Object.keys(saved.days || {}).sort();
+    var all = saved.days || {};
+    /* The store is a dated history and keeps growing — facts.js reads every
+       day of it as the `work` column. Rendering `Object.keys(all)` therefore
+       drew every day ever pulled, so a second pull put fourteen rows on the
+       page and summed fourteen days into "Committed". Show one week: the one
+       being planned, or the ritual's week if that is what was last read. */
+    function within(r) {
+      return Object.keys(all).filter(function (k) {
+        var t = new Date(k + 'T12:00:00').getTime();
+        return t >= r.start.getTime() && t < r.end.getTime();
+      }).sort();
+    }
+    var r = C.planningRange();
+    var keys = within(r);
+    if (!keys.length) { r = C.nextWeekRange(); keys = within(r); }
     if (!keys.length) return render(null);
-    var r = C.nextWeekRange();
     var start = new Date(keys[0] + 'T00:00:00');
     var days = keys.map(function (k, i) {
       var d = saved.days[k];
@@ -311,8 +333,6 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
              totalCommitted: Math.round(days.reduce(function (t, d) { return t + d.committed; }, 0) * 10) / 10 });
     var when = saved.at ? new Date(saved.at) : null;
     if (when) say('Showing the week pulled ' + MON[when.getMonth()] + ' ' + when.getDate() + '. Pull again to refresh.');
-    if (start > Date.now()) $('#h1').textContent = 'The week ahead.';
-    else $('#h1').textContent = 'This week.';
   }
 
   function dateline() {
@@ -327,13 +347,13 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
      still forces a fresh read. */
   function auto() {
     if (!C.canAuto()) {
-      $('#how').textContent = 'press to read · Sunday ritual';
+      $('#how').textContent = 'press to read · any day';
       return;
     }
     $('#how').textContent = 'reads itself';
     $('#pull').textContent = '⟳ Refresh now';
     say('Reading the calendar…');
-    var r = C.nextWeekRange();
+    var r = C.planningRange();
     C.autoRead(r.start, r.end, function (err, events) {
       if (err) {
         /* An automatic read that fails must not look like an empty week.

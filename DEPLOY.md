@@ -965,6 +965,33 @@ id ending `@import.calendar.google.com` or `@group.calendar.google.com`, and
 reading `primary` returns a blank week that looks like it worked. Calendar →
 the calendar → Settings → **Calendar ID**.
 
+**Which week it reads.** Every path used to ask for `nextWeekRange` — always
+the week *after* the one you were in. On a Sunday that is exactly right and it
+is the whole point of doing it on a Sunday. On any other day it meant the week
+you were standing in could not be asked for at all: press the button on a
+Tuesday and you got the week starting in six days, and if you had missed one
+Sunday, this week's committed hours were unreachable for good. That is not
+only a display problem — `facts.js` publishes `committed` as the **`work`**
+column, which is what the Trends table correlates sleep and study against, so
+a week never pulled is a week of work hours no correlation can ever see. It is
+now `planningRange()`: on a Sunday, the week that starts tomorrow; on any other
+day, the week you are in. Which day it is comes from `day.js`, so at 02:00 on a
+Monday you are still finishing Sunday and still get the week that starts in a
+few hours.
+
+**One week on screen.** `ct_week_v1` is a dated history and keeps growing,
+because that is what makes training visible to the trends table. The page was
+rendering `Object.keys(days)` — every day ever pulled — so a second pull put
+fourteen rows under one heading and summed fourteen days into "Committed". It
+now renders the week being planned and leaves the history to `facts.js`.
+
+**The button could sign you out of the site.** `prompt: 'consent'` puts
+Google's account chooser up, and choosing any account but the owner's signs
+the hub in as somebody else — at which point `sync.js`'s `onAuthStateChanged`
+sees a stranger and replaces the page with the gate. From the outside that is
+the Read button throwing you out of the hub. It now passes `login_hint` with
+`authorizedEmail`, which is the only account that can be signed in here at all.
+
 To turn automatic on: Google Cloud Console → enable the **Google Calendar
 API** → Credentials → **Create API key** → restrict it to that API and to
 `linomass36.github.io/*` → in Google Calendar, set the calendar's sharing to
@@ -1127,6 +1154,46 @@ chrome is a directory of the whole site, not this page's back control — and
 `tools/upbar.test.js` runs it against a stub DOM built the way the browser has
 it at that moment: the page's own header, plus the drawer already appended.
 
+### And then it was corrected, and then it was put back
+
+Reported three times: *the pages still go back to Mission Control.* All three
+times the tripwires were green, and all three times they were right about what
+they were looking at — a static DOM, mutated once, inspected once.
+
+A `.dc.html` page is not a static DOM. `support.js` parses the `<x-dc>`
+template, replaces that element with a React root, and then, a tick after
+mounting, **re-renders the root from the page's pristine source** —
+`window.__dcSource` behind the vault, `fetch(location.href)` in front of it —
+because the copy the HTML parser leaves in the DOM has had the rows inside
+`<table>` and `<select>` hoisted out of it. That repair is what fills the day
+log and the Data panel, and it is unconditional.
+
+So the correction was being made to a subtree that was about to be thrown
+away, and the anchor that replaced it carried the original `href` and the
+original label again. Every one of the thirteen pages declared `back: 'wrong'`
+is a `.dc.html` page — Today, Anatomy, Study Engine, Reading List, Grind, Life
+Log, Conference Radar, Network Map, Dossiers, Vault, Weekly Review, Journal,
+the Examiner — so in practice **the corrector had never corrected anything on
+the live site.** Only the pages that were already right looked right.
+
+`upbar.js` now keeps watching. A `MutationObserver` on `documentElement`
+(`childList` for the subtree swap, `attributeFilter: ['href']` for React
+reconciling the same anchor in place) re-applies the correction on the next
+frame. It is idempotent — a corrected href no longer matches the stale
+pattern — and `takeRecords()` after each pass discards the mutations that pass
+made, so a correction cannot schedule another pass to look at its own work. A
+page animating styles never wakes it.
+
+Two tripwires, because one of them would not have been enough:
+
+- `tools/upbar.test.js` now re-creates the back link the way the runtime does
+  and looks again. Against the old file it fails six ways.
+- and it reads every live page off disk and checks that what `sitemap.js`
+  declares about its back control is *true of the file*. `back` is the one
+  field nothing else could check — it is a claim about markup rather than
+  about the site map, so it can drift the moment a header is edited, and the
+  symptom is a link going to the wrong place with every other check green.
+
 ### Health days follow the reading, not the reader
 
 A sample stamped `2026-08-21 16:00:00 -0700` is already local time where it
@@ -1203,13 +1270,13 @@ reading eight weeks in the past.
 - `contact.js` — one person a day to reach out to, ranked over the Network Map's own tiers and touch dates. Logging a touch writes to `ct_dossier_v1`, which is what the ranking reads. See **One person a day** above.
 - `quotes.js` — the daily line, and `CTQuote.today()`, the one place that decides which one. The bank is kept coprime with 7 so nothing is welded to a weekday.
 - `sitemap.js` — the only declaration of what pages exist: name, drawer group, owning parent, and what each page's back control does now. Read by `nav.js`, the Standing's directory and `upbar.js`.
-- `upbar.js` — corrects the back link a page already has, rather than adding a control. Injects one only where none exists, and only above 640px. Skips the injected chrome, whose links are a site directory rather than this page's back control. See **The corrector was correcting the drawer** above.
-- `tools/upbar.test.js` — the corrector fixes the page's own stale back link and leaves the drawer's Workshop entry alone.
+- `upbar.js` — corrects the back link a page already has, rather than adding a control, and keeps correcting it: a `.dc.html` page re-renders itself from its own source a tick after boot and puts the original link back. Injects one only where none exists, and only above 640px. Skips the injected chrome, whose links are a site directory rather than this page's back control. See **The corrector was correcting the drawer** and **And then it was corrected, and then it was put back** above.
+- `tools/upbar.test.js` — the corrector fixes the page's own stale back link, fixes it again after the design-canvas runtime re-renders the page from its own source, leaves the drawer's Workshop entry alone, and checks every live page's `back` declaration against the file it describes.
 - `plan-v2.js` — also `moves()`, `counts()` and `winsSince()`: the one reader for "what is next", over the live phase. See **Two plans** above.
 - `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
 - `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
-- `calendar.js` + `Week.html` — next week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
-- `tools/calendar.test.js` — the named calendar is the one read, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
+- `calendar.js` + `Week.html` — the week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
+- `tools/calendar.test.js` — the named calendar is the one read, the week you are standing in can be asked for rather than only the next one, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`, then the four tests that try to knock each pair down. See **Ruling things out** above.
 - `causality.js` — the statistics: exact t and F tails from a regularised incomplete beta, OLS, partial correlation, Granger, cross-lag, leave-one-out, first differences, Welch contrast, effective-n deflation and Benjamini-Hochberg. No dependencies; reads `facts.js` or any table handed to it.
