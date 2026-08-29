@@ -15,6 +15,12 @@
        the event's timestamp, which is the VIEWER's clock. An Arizona
        evening shift read from Poland moved to the next day — the same
        class of error the health import had.
+
+   And a third, which is why the work hours never turned up: every read went
+   through nextWeekRange, so the week you were standing in could not be asked
+   for at all. Press the button on a Tuesday and you got the week starting in
+   six days; miss one Sunday and this week's committed hours were unreachable
+   for good — including by the Trends table, which reads them as `work`.
    ───────────────────────────────────────────────────────────── */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -56,6 +62,47 @@ group('Automatic reads need a key, and say so when there is none');
   let msg = '';
   load({ id: IMPORTED }).autoRead(new Date(), new Date(), (e) => { msg = e.message; });
   ok(/api key/i.test(msg), 'and the reason names the key rather than failing blankly');
+}
+
+/* ── the week you are in is readable ───────────────────────────────────── */
+group('The week you are standing in can be read, not only the next one');
+{
+  const C = load({ id: IMPORTED });
+  const key = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+                     '-' + String(d.getDate()).padStart(2, '0');
+  const TUE = new Date(2026, 7, 25);   // Tuesday 25 Aug 2026
+  const SUN = new Date(2026, 7, 30);   // the Sunday that ends that week
+  const MON = new Date(2026, 7, 24);
+
+  const wk = C.weekRange(TUE);
+  ok(key(wk.start) === '2026-08-24', 'the week containing a Tuesday starts on its Monday');
+  ok(wk.end - wk.start === 7 * 86400000, 'and runs seven days');
+
+  const tue = C.planningRange(TUE);
+  ok(TUE >= tue.start && TUE < tue.end,
+     'pressing on a Tuesday asks for the week that Tuesday is in');
+  ok(key(tue.start) === '2026-08-24', 'which starts on the Monday just gone');
+
+  const mon = C.planningRange(MON);
+  ok(key(mon.start) === '2026-08-24', 'a Monday asks for the week that starts that morning');
+
+  /* Sunday is the ritual: the week it lays out is the one starting tomorrow. */
+  const sun = C.planningRange(SUN);
+  ok(key(sun.start) === '2026-08-31', 'on a Sunday it is still next week that gets planned');
+  ok(!(SUN >= sun.start), 'so the Sunday itself is not in it');
+
+  /* The old behaviour is still available, and still means what it said. */
+  ok(key(C.nextWeekRange(new Date(2026, 7, 27)).start) === '2026-08-31',
+     'nextWeekRange is unchanged for the callers that want it');
+
+  /* The whole point: a day you can see today carries its committed hours,
+     which is what facts.js publishes as the `work` column. */
+  const shift = [{ title: 'Clinic', kind: 'work', day: '2026-08-25', allDay: false, hours: 8,
+                   start: new Date('2026-08-25T08:00:00'), end: new Date('2026-08-25T16:00:00') }];
+  const plan = C.planWeek(shift, { range: tue });
+  const today = plan.days.filter((d) => d.key === '2026-08-25')[0];
+  ok(!!today && Math.abs(today.committed - 8) < 0.01,
+     'and that day comes back with its eight hours on it');
 }
 
 group('An event lands on its own date, not the reader\'s');

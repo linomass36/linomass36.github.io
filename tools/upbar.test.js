@@ -26,6 +26,13 @@
    A third, quieter one: a page declared `back: 'none'` gets a link injected
    only when the scan finds nothing to correct. The drawer's Workshop link
    counted as a find, so the injection never happened.
+
+   AND THE ONE THIS FILE MISSED TWICE. Every page declared back:'wrong' is a
+   .dc.html page, and support.js re-renders those from their pristine source a
+   tick after boot — so the corrected link was replaced by the original one,
+   on all thirteen of them, every time. This test mutated a static DOM once
+   and looked, which is the one thing that could not see it. It now re-creates
+   the link the way the runtime does and looks again.
    ───────────────────────────────────────────────────────────── */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -91,15 +98,30 @@ function makeDom() {
   }
 
   const body = new Node('body'), head = new Node('head');
+  const root = new Node('html');
+  root.appendChild(head); root.appendChild(body);
   const document = {
     readyState: 'complete',
-    head, body,
+    head, body, documentElement: root,
     createElement: (t) => new Node(t),
     getElementById: (id) => body.walk([]).concat(head.walk([])).find(n => n.id === id) || null,
     querySelectorAll: (sel) => body.querySelectorAll(sel),
     addEventListener: () => {}
   };
-  return { document, el, text, Node };
+
+  /* Enough MutationObserver to prove the re-render is caught: the test drives
+     it by hand, because the point is what upbar.js does when it is told the
+     DOM changed, not when the browser decides to tell it. */
+  const observers = [];
+  function MutationObserver(cb) {
+    this.cb = cb;
+    this.observe = () => { observers.push(this); };
+    this.disconnect = () => {};
+    this.takeRecords = () => [];
+  }
+  const notify = () => observers.slice().forEach(o => o.cb([], o));
+
+  return { document, el, text, Node, MutationObserver, notify };
 }
 
 function loadSitemap() {
@@ -143,7 +165,10 @@ function run(file, opts) {
 
   const S = loadSitemap();
   const win = { SITEMAP: Object.assign(Object.create(S), { here: () => file }) };
-  const ctx = { window: win, document, console, JSON, Object, Array, String, RegExp, Date, Math };
+  const ctx = { window: win, document, console, JSON, Object, Array, String, RegExp, Date, Math,
+    MutationObserver: dom.MutationObserver,
+    /* Synchronous, so a notified pass has finished by the time the test looks. */
+    requestAnimationFrame: (fn) => { fn(); return 0; } };
   ctx.globalThis = ctx; ctx.self = ctx;
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'upbar.js'), 'utf8'), ctx, { filename: 'upbar.js' });
@@ -189,6 +214,82 @@ group('A page that was already right is not touched');
 const fine = run('Day Budget.html', { ownHref: 'Plan.html', ownText: '← The Plan' });
 ok(fine.own.getAttribute('data-upbar') === null,
    'a back link that never pointed at the Workshop is not rewritten');
+
+/* ── the one that shipped three times ──────────────────────────────────── */
+group('A page that re-renders itself is corrected again');
+
+/* What support.js does to every .dc.html page a tick after boot: throw the
+   rendered subtree away and build it again from the file's own source, which
+   still says "Mission Control" and still points at the retired front door. */
+function rerender(dom, host) {
+  host.childNodes.length = 0;
+  const fresh = dom.el('a', { href: 'Hub.dc.html', text: '← Mission Control' });
+  host.appendChild(fresh);
+  dom.notify();
+  return fresh;
+}
+
+['Today.dc.html', 'Reading List.dc.html', 'Weekly Review.dc.html'].forEach((file) => {
+  const parent = loadSitemap().parentOf(file);
+  const d = run(file);
+  ok(d.own.getAttribute('href') === parent, 'on ' + file + ' the first pass corrects the link');
+
+  const after = rerender(d, d.own.parentElement);
+  ok(after.getAttribute('href') === parent,
+     'and the link the runtime puts back is corrected too, not left at Hub.dc.html');
+  ok(after.textContent.trim() === '\u2190 ' + loadSitemap().nameOf(parent),
+     'including its label');
+  ok(d.workshop.getAttribute('href') === 'Hub.dc.html',
+     'while the drawer is still left alone on the second pass');
+});
+
+/* A page with nothing to correct must not grow a second injected link every
+   time something on it moves. */
+{
+  const d = run('Hub.dc.html', { ownBackLink: false });
+  d.notify(); d.notify();
+  const injected = d.document.body.walk([]).filter(n => n.id === 'hb-up');
+  ok(injected.length === 1, 'a re-render does not inject a second back link');
+}
+
+/* ── the declarations have to match the files ──────────────────────────── */
+group("Every page's `back` declaration is true of the page");
+
+/* upbar.js only does the right thing if sitemap.js describes the page it is
+   standing on. `back` is the one field nothing else can check: it is a claim
+   about markup, not about the site map, so it can drift the moment someone
+   edits a header — and the symptom is a back link that goes to the wrong
+   place with every tripwire still green. A short anchor pointing at the
+   retired front door is what 'wrong' means; anything else must have none. */
+{
+  const BACK_LINK = /<a\b[^>]*href="[^"]*(?<![A-Za-z0-9])Hub\.dc\.html(?:[?#][^"]*)?"[^>]*>([\s\S]*?)<\/a>/gi;
+  const S = loadSitemap();
+
+  const staleShortLinks = (html) => {
+    const out = [];
+    for (let m = BACK_LINK.exec(html); m; m = BACK_LINK.exec(html)) {
+      const txt = m[1].replace(/<[^>]+>/g, '').trim();
+      if (txt.length <= 28) out.push(txt);
+    }
+    return out;
+  };
+
+  S.live().forEach((file) => {
+    const full = path.join(ROOT, file);
+    /* Publication Pipeline is rendered from its .md at deploy time. */
+    if (!fs.existsSync(full)) return;
+    const found = staleShortLinks(fs.readFileSync(full, 'utf8'));
+    const back = (S.get(file) || {}).back;
+    if (back === 'wrong') {
+      ok(found.length > 0,
+         file + " is declared back:'wrong' and does carry a stale back link");
+    } else {
+      ok(found.length === 0,
+         file + " is declared back:'" + back + "' and carries no stale back link" +
+         (found.length ? ' (found ' + JSON.stringify(found) + ')' : ''));
+    }
+  });
+}
 
 console.log(failed ? '\n' + failed + ' FAILED' : '\nall green');
 process.exit(failed ? 1 : 0);
