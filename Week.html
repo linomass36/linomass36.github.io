@@ -66,7 +66,8 @@ h1 { font-family:var(--serif); font-weight:500; font-size:32px; line-height:1.08
 .pull button:disabled { opacity:.55; cursor:default; }
 .pull .alt { display:block; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--muted); }
 .pull .alt label { color:var(--rust); text-decoration:underline; cursor:pointer; }
-.pull .msg { font-family:var(--mono); font-size:11px; margin-top:11px; line-height:1.6; color:var(--mid); }
+.pull .msg { font-family:var(--mono); font-size:11px; margin-top:11px; line-height:1.6; color:var(--mid);
+  white-space:pre-line; text-align:left; }
 .pull .msg.bad { color:var(--owed); }
 .pull .msg.good { color:var(--go); }
 .day { border:1px solid var(--rule); background:var(--card); border-radius:12px;
@@ -246,6 +247,26 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
         plan.totalFree + ' free hours.', 'good');
   }
 
+  /* A read can fail for reasons pressing the button again cannot touch, so
+     say which one it was — and where the answer is only a second request
+     away, go and get it. "The account you signed in as cannot see that
+     calendar" is a dead end on its own; the same token can list the ones it
+     CAN see, which turns it into a line to paste into config.js. */
+  function failed(err, token) {
+    say(err.message, 'bad');
+    if (err.code !== 'not-found' || !token) return;
+    C.listCalendars(token, function (e3, list) {
+      if (e3 || !list) return;
+      if (!list.length) {
+        return say(err.message + '\n\nThat account can see no calendars at all.', 'bad');
+      }
+      var lines = list.slice(0, 8).map(function (c) { return '  ' + c.name + '\n    ' + c.id; });
+      say(err.message + '\n\nconfig.js asks for:\n  ' + C.calId() +
+          '\n\nThat account can read:\n' + lines.join('\n') +
+          (list.length > 8 ? '\n  …and ' + (list.length - 8) + ' more' : ''), 'bad');
+    });
+  }
+
   $('#pull').addEventListener('click', function () {
     var btn = this;
     btn.disabled = true;
@@ -267,7 +288,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       var r = C.planningRange();
       C.fetchRange(token, r.start, r.end, function (e2, events) {
         btn.disabled = false;
-        if (e2) return say(e2.message, 'bad');
+        if (e2) return failed(e2, token);
         apply(events, 'Google Calendar');
       });
     });

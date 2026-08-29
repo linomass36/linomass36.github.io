@@ -132,6 +132,93 @@
 
   function iso(d) { return new Date(d).toISOString(); }
 
+  /* ── what Google actually said ──────────────────────────────────────
+     THE BUTTON WAS A LOOP. fetchRange treated 401 and 403 as one thing and
+     answered both with "the calendar token expired — press it again". The
+     token is minted seconds before the call, so it is almost never expiry:
+     a 403 here means the Calendar API is switched off for the project, or
+     the token carries no calendar scope, or the account cannot see that
+     calendar. Pressing again fixes none of those. It re-opened the popup,
+     got another perfectly good token, got the same 403, and said the same
+     thing — with the one sentence that could not be true being the only one
+     ever printed.
+
+     So read the payload. Google names the cause in error.details[].reason
+     (the newer form) or error.errors[].reason (the older one), and the two
+     disagree often enough that both are worth looking at. Each answer also
+     says whether the TOKEN is the problem, because that is what decides
+     whether throwing it away and asking again could ever help. */
+  function reasonOf(body) {
+    var err = (body && body.error) || {};
+    var detail = null, list = err.details || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] && list[i].reason) { detail = list[i].reason; break; }
+    }
+    var first = (err.errors || [])[0] || {};
+    return String(detail || first.reason || err.status || '');
+  }
+
+  function fault(code, message, tokenIsBad) {
+    var e = new Error(message);
+    e.code = code;
+    e.tokenIsBad = !!tokenIsBad;
+    return e;
+  }
+
+  /* `viaKey` distinguishes the API-key path from the OAuth one: the same
+     status means different things, and telling someone to check a referrer
+     restriction when they never used a key is worse than saying nothing. */
+  function explain(status, body, viaKey) {
+    var reason = reasonOf(body);
+    var said = (body && body.error && body.error.message) || '';
+
+    if (/accessNotConfigured|SERVICE_DISABLED/i.test(reason) ||
+        /has not been used in project|API .*is disabled/i.test(said)) {
+      return fault('api-off',
+        'the Google Calendar API is switched off for this project — enable it at ' +
+        'console.cloud.google.com → APIs & Services → Library → Google Calendar API, ' +
+        'then press this again', false);
+    }
+    if (/insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(reason)) {
+      return fault('scope',
+        'you are signed in, but Google granted no calendar access — the OAuth consent ' +
+        'screen needs calendar.readonly listed and this account added as a test user', true);
+    }
+    if (status === 404 || /notFound/i.test(reason)) {
+      return fault('not-found',
+        'the account you signed in as cannot see that calendar' +
+        (viaKey ? ' — check it is set to public' : ''), false);
+    }
+    if (/rateLimitExceeded|userRateLimitExceeded|dailyLimitExceeded$/i.test(reason)) {
+      return fault('rate', 'Google is rate-limiting the read — wait a minute and press again', false);
+    }
+    if (viaKey && (/dailyLimitExceededUnreg|keyInvalid|key/i.test(reason) || /API key/i.test(said))) {
+      return fault('key',
+        'the API key was refused — check the Calendar API is enabled and the referrer allows this site',
+        false);
+    }
+    /* A real 401 is the one case the old message was right about. */
+    if (status === 401 || /authError|UNAUTHENTICATED|invalid_token/i.test(reason)) {
+      return fault('token', 'the calendar token expired — press it again', true);
+    }
+    if (status === 403) {
+      return fault('refused', viaKey
+        ? 'the calendar refused the read — it is probably not public'
+        : 'the calendar refused the read' + (said ? ' — ' + said : ''), false);
+    }
+    return fault('http', 'Calendar said ' + status + (said ? ' — ' + said : ''), false);
+  }
+
+  /* One place decides what a failed response means, and whether the cached
+     token is worth keeping. */
+  function refuse(r, viaKey) {
+    return r.json().catch(function () { return null; }).then(function (body) {
+      var e = explain(r.status, body, viaKey);
+      if (e.tokenIsBad) { try { sessionStorage.removeItem(TOKKEY); } catch (x) {} }
+      throw e;
+    });
+  }
+
   /* ── automatic, with no popup ───────────────────────────────────────
      An API key reads a PUBLIC calendar without any sign-in at all, and
      www.googleapis.com sends CORS headers, so the browser does it directly.
@@ -157,23 +244,7 @@
       '&timeMin=' + encodeURIComponent(iso(start)) +
       '&timeMax=' + encodeURIComponent(iso(end));
     fetch(url)
-      .then(function (r) {
-        if (r.status === 404) {
-          throw new Error('that calendar id is not readable — check it is set to public');
-        }
-        if (r.status === 403) {
-          /* Two very different causes, and the distinction is the whole
-             difference between "fix the key" and "fix the calendar". */
-          return r.json().then(function (j) {
-            var reason = (((j.error || {}).errors || [])[0] || {}).reason || '';
-            throw new Error(reason === 'dailyLimitExceededUnreg' || /key/i.test(reason)
-              ? 'the API key was refused — check the Calendar API is enabled and the referrer allows this site'
-              : 'the calendar refused the read — it is probably not public');
-          }, function () { throw new Error('the calendar refused the read (403)'); });
-        }
-        if (!r.ok) throw new Error('Calendar said ' + r.status);
-        return r.json();
-      })
+      .then(function (r) { return r.ok ? r.json() : refuse(r, true); })
       .then(function (j) { done(null, (j.items || []).map(normalise).filter(Boolean)); })
       .catch(function (e) { done(e); });
   }
@@ -183,10 +254,7 @@
   function listCalendars(token, done) {
     fetch(V3 + '/users/me/calendarList?minAccessRole=reader&maxResults=250',
           { headers: { Authorization: 'Bearer ' + token } })
-      .then(function (r) {
-        if (!r.ok) throw new Error('could not list calendars (' + r.status + ')');
-        return r.json();
-      })
+      .then(function (r) { return r.ok ? r.json() : refuse(r, false); })
       .then(function (j) {
         done(null, (j.items || []).map(function (c) {
           return { id: c.id, name: c.summary || c.id, primary: !!c.primary };
@@ -259,14 +327,7 @@
       '&timeMin=' + encodeURIComponent(iso(start)) +
       '&timeMax=' + encodeURIComponent(iso(end));
     fetch(url, { headers: { Authorization: 'Bearer ' + token } })
-      .then(function (r) {
-        if (r.status === 401 || r.status === 403) {
-          try { sessionStorage.removeItem(TOKKEY); } catch (e) {}
-          throw new Error('the calendar token expired — press it again');
-        }
-        if (!r.ok) throw new Error('Calendar said ' + r.status);
-        return r.json();
-      })
+      .then(function (r) { return r.ok ? r.json() : refuse(r, false); })
       .then(function (j) { done(null, (j.items || []).map(normalise).filter(Boolean)); })
       .catch(function (e) { done(e); });
   }
@@ -456,7 +517,7 @@
     connect: connect, fetchRange: fetchRange,
     weekRange: weekRange, nextWeekRange: nextWeekRange, planningRange: planningRange,
     autoRead: autoRead, canAuto: canAuto, listCalendars: listCalendars, calId: calId,
-    parseICS: parseICS, classify: classify, planWeek: planWeek,
+    parseICS: parseICS, classify: classify, planWeek: planWeek, explain: explain,
     saveWeek: saveWeek, readWeek: readWeek, markDone: markDone,
     hasToken: function () { return !!tok(); }, SCOPE: SCOPE, KEY: WKEY
   };

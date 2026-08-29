@@ -105,6 +105,61 @@ group('The week you are standing in can be read, not only the next one');
      'and that day comes back with its eight hours on it');
 }
 
+/* ── the button stopped being a loop ───────────────────────────────────── */
+group('A failed read says which failure it was');
+{
+  const C = load({ id: IMPORTED });
+  const E = (status, body, viaKey) => C.explain(status, body, viaKey);
+
+  /* The payloads Google actually sends. reason lives in error.details[] on
+     the newer shape and error.errors[] on the older one, and the two do not
+     always agree — both are read. */
+  const apiOff = { error: { code: 403, status: 'PERMISSION_DENIED',
+    message: 'Google Calendar API has not been used in project 73939921858 before or it is disabled.',
+    errors: [{ reason: 'accessNotConfigured', domain: 'usageLimits' }],
+    details: [{ '@type': 'type.googleapis.com/google.rpc.ErrorInfo', reason: 'SERVICE_DISABLED' }] } };
+  const noScope = { error: { code: 403, status: 'PERMISSION_DENIED',
+    message: 'Request had insufficient authentication scopes.',
+    errors: [{ reason: 'insufficientPermissions', domain: 'global' }],
+    details: [{ '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+                reason: 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' }] } };
+  const dead = { error: { code: 401, status: 'UNAUTHENTICATED',
+    message: 'Request had invalid authentication credentials.',
+    errors: [{ reason: 'authError', domain: 'global' }] } };
+  const gone = { error: { code: 404, message: 'Not Found',
+    errors: [{ reason: 'notFound', domain: 'global' }] } };
+  const limit = { error: { code: 403, message: 'Rate Limit Exceeded',
+    errors: [{ reason: 'rateLimitExceeded', domain: 'usageLimits' }] } };
+
+  /* Each of these used to arrive as "the calendar token expired". Only one
+     of them is true, and pressing again cannot fix any of the others. */
+  ok(E(403, apiOff).code === 'api-off', 'a disabled Calendar API is named as a disabled API');
+  ok(/enable it/i.test(E(403, apiOff).message), 'and the message says where to switch it on');
+  ok(E(403, apiOff).tokenIsBad === false, 'and the token is not thrown away over it');
+
+  ok(E(403, noScope).code === 'scope', 'a token with no calendar scope is named as that');
+  ok(/consent screen/i.test(E(403, noScope).message), 'and points at the consent screen');
+  ok(E(403, noScope).tokenIsBad === true,
+     'and that token IS dropped, because re-consenting could grant the scope');
+
+  ok(E(404, gone).code === 'not-found', 'an unreadable calendar id is named as one');
+  ok(E(403, limit).code === 'rate', 'a rate limit is named as a rate limit');
+
+  ok(E(401, dead).code === 'token', 'and a real 401 is still the expired token');
+  ok(E(401, dead).tokenIsBad === true, 'which is dropped');
+  ok(/expired/.test(E(401, dead).message), 'with the message that was always right for it');
+
+  /* The key path and the OAuth path share the reader, so the advice must not. */
+  ok(/public/.test(E(403, { error: { code: 403, message: 'x' } }, true).message),
+     'a bare 403 on the key path still blames the sharing setting');
+  ok(!/public|referrer/.test(E(403, { error: { code: 403, message: 'x' } }, false).message),
+     'but the popup path is never told to check a referrer it never used');
+
+  /* A body that is not JSON at all must not become a thrown TypeError. */
+  ok(E(500, null).code === 'http' && /500/.test(E(500, null).message),
+     'an unparseable failure still reports its status');
+}
+
 group('An event lands on its own date, not the reader\'s');
 {
   const C = load({ id: IMPORTED });
