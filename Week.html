@@ -253,15 +253,20 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
      calendar" is a dead end on its own; the same token can list the ones it
      CAN see, which turns it into a line to paste into config.js. */
   function failed(err, token) {
-    say(err.message, 'bad');
+    /* Google's own sentence, under ours. Ours says what to do; Google's is
+       the evidence, and for a refused project it carries the project number
+       and a link that cannot land on the wrong one. */
+    var full = err.message + (err.said && err.said !== err.message
+      ? '\n\nGoogle said: ' + err.said : '');
+    say(full, 'bad');
     if (err.code !== 'not-found' || !token) return;
     C.listCalendars(token, function (e3, list) {
       if (e3 || !list) return;
       if (!list.length) {
-        return say(err.message + '\n\nThat account can see no calendars at all.', 'bad');
+        return say(full + '\n\nThat account can see no calendars at all.', 'bad');
       }
       var lines = list.slice(0, 8).map(function (c) { return '  ' + c.name + '\n    ' + c.id; });
-      say(err.message + '\n\nconfig.js asks for:\n  ' + C.calId() +
+      say(full + '\n\nconfig.js asks for:\n  ' + C.calId() +
           '\n\nThat account can read:\n' + lines.join('\n') +
           (list.length > 8 ? '\n  …and ' + (list.length - 8) + ' more' : ''), 'bad');
     });

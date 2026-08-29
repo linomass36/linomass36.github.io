@@ -158,11 +158,27 @@
     return String(detail || first.reason || err.status || '');
   }
 
-  function fault(code, message, tokenIsBad) {
+  /* `said` is Google's own sentence, kept verbatim. A friendlier message that
+     REPLACES it throws away the evidence — the accessNotConfigured payload
+     names the project the request was attributed to, and a link carrying that
+     project number, which is the only thing that can settle "but I enabled
+     it" when the console was open on a different project. Say both. */
+  function fault(code, message, tokenIsBad, said) {
     var e = new Error(message);
     e.code = code;
     e.tokenIsBad = !!tokenIsBad;
+    e.said = said || '';
     return e;
+  }
+
+  /* Which project this hub's token is attributed to. Firebase appIds are
+     1:<projectNumber>:web:<hash>, and the number is what Google's error
+     names — the id never appears in it, so comparing on the id alone would
+     never match. */
+  function projectRefs() {
+    var fb = (w.APP_CONFIG && w.APP_CONFIG.firebase) || {};
+    return { id: String(fb.projectId || ''),
+             num: String(fb.appId || '').split(':')[1] || '' };
   }
 
   /* `viaKey` distinguishes the API-key path from the OAuth one: the same
@@ -174,39 +190,57 @@
 
     if (/accessNotConfigured|SERVICE_DISABLED/i.test(reason) ||
         /has not been used in project|API .*is disabled/i.test(said)) {
-      return fault('api-off',
-        'the Google Calendar API is switched off for this project — enable it at ' +
-        'console.cloud.google.com → APIs & Services → Library → Google Calendar API, ' +
-        'then press this again', false);
+      /* Google names the project it refused, and that is the whole answer to
+         "but I enabled it": the console shows whichever project it had open,
+         which is not necessarily the one the token belongs to. */
+      var named = (/\bin project (\S+?)[\s.,]/.exec(said + ' ') || [])[1] || '';
+      var me = projectRefs();
+      var mine = me.id + (me.num ? ' (number ' + me.num + ')' : '');
+      var head = 'the Google Calendar API is off for ' +
+                 (named ? 'project ' + named : 'this project');
+      var body;
+      if (named && me.num && (named === me.num || named === me.id)) {
+        body = ' — which is the one this hub signs in against, ' + me.id + '.' +
+               '\n\nIf the console showed "API Enabled", it had a DIFFERENT project open. ' +
+               'Use the link in Google\'s message below: it carries the project number, ' +
+               'so it cannot land on the wrong one. If you enabled it in the last few ' +
+               'minutes, give it a moment and press again.';
+      } else if (mine.trim()) {
+        body = ' — but this hub signs in against ' + mine + '. Those are different ' +
+               'projects, which is the problem: enable it on the one Google just named.';
+      } else {
+        body = '.';
+      }
+      return fault('api-off', head + body, false, said);
     }
     if (/insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(reason)) {
       return fault('scope',
         'you are signed in, but Google granted no calendar access — the OAuth consent ' +
-        'screen needs calendar.readonly listed and this account added as a test user', true);
+        'screen needs calendar.readonly listed and this account added as a test user', true, said);
     }
     if (status === 404 || /notFound/i.test(reason)) {
       return fault('not-found',
         'the account you signed in as cannot see that calendar' +
-        (viaKey ? ' — check it is set to public' : ''), false);
+        (viaKey ? ' — check it is set to public' : ''), false, said);
     }
     if (/rateLimitExceeded|userRateLimitExceeded|dailyLimitExceeded$/i.test(reason)) {
-      return fault('rate', 'Google is rate-limiting the read — wait a minute and press again', false);
+      return fault('rate', 'Google is rate-limiting the read — wait a minute and press again', false, said);
     }
     if (viaKey && (/dailyLimitExceededUnreg|keyInvalid|key/i.test(reason) || /API key/i.test(said))) {
       return fault('key',
         'the API key was refused — check the Calendar API is enabled and the referrer allows this site',
-        false);
+        false, said);
     }
     /* A real 401 is the one case the old message was right about. */
     if (status === 401 || /authError|UNAUTHENTICATED|invalid_token/i.test(reason)) {
-      return fault('token', 'the calendar token expired — press it again', true);
+      return fault('token', 'the calendar token expired — press it again', true, said);
     }
     if (status === 403) {
       return fault('refused', viaKey
         ? 'the calendar refused the read — it is probably not public'
-        : 'the calendar refused the read' + (said ? ' — ' + said : ''), false);
+        : 'the calendar refused the read', false, said);
     }
-    return fault('http', 'Calendar said ' + status + (said ? ' — ' + said : ''), false);
+    return fault('http', 'Calendar said ' + status, false, said);
   }
 
   /* One place decides what a failed response means, and whether the cached

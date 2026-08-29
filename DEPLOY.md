@@ -1041,6 +1041,19 @@ so the Week page follows it with `listCalendars` on the same token and prints
 what that account **can** read, next to what `config.js` is asking for — which
 is the line to paste in.
 
+**Google's own sentence is printed underneath, verbatim.** A friendlier message
+that *replaces* it throws the evidence away, and the first report back was
+exactly the case where the evidence is the answer: a console screenshot reading
+**API Enabled** beside the page still saying the API was off. Both were true.
+The console shows whichever project it has open; the `accessNotConfigured`
+payload names the project the request was actually attributed to, which is the
+one that owns the OAuth client the token came from — `master-648ee`, number
+`73939921858`, the number in the Firebase `appId` (`1:<projectNumber>:web:…`).
+Google's message also carries a link with that number in it, so it cannot land
+on the wrong project the way a link built from a project *id* can. The page now
+names the refused project, says whether it is this hub's, and prints Google's
+sentence under its own.
+
 **Three tripwires run in the deploy.** Every `.html` in the repo is declared
 and every declaration exists; no live page links to an archived one; every
 live page can be walked back to the front door. The second one immediately

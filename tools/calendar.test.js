@@ -26,10 +26,12 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 
-function load(calendar) {
+function load(calendar, firebase) {
   const ctx = { window: {}, console, JSON, Object, Array, Math, String, Number, Date,
     parseFloat, parseInt, isNaN, isFinite, RegExp, Error, encodeURIComponent,
-    APP_CONFIG: { calendar: calendar || {} },
+    APP_CONFIG: { calendar: calendar || {},
+                  firebase: firebase || { projectId: 'master-648ee',
+                                          appId: '1:73939921858:web:1dc53474505b5319cc045b' } },
     localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
     setTimeout: () => 0 };
   ctx.sessionStorage = ctx.localStorage;
@@ -134,8 +136,24 @@ group('A failed read says which failure it was');
   /* Each of these used to arrive as "the calendar token expired". Only one
      of them is true, and pressing again cannot fix any of the others. */
   ok(E(403, apiOff).code === 'api-off', 'a disabled Calendar API is named as a disabled API');
-  ok(/enable it/i.test(E(403, apiOff).message), 'and the message says where to switch it on');
   ok(E(403, apiOff).tokenIsBad === false, 'and the token is not thrown away over it');
+
+  /* "But I enabled it" — the console shows whichever project it had open,
+     which need not be the one the token belongs to. Google names the project
+     it actually refused, so print that, and keep Google's sentence: it also
+     carries a link with the project number in it. */
+  ok(/project 73939921858/.test(E(403, apiOff).message),
+     'the refused project is named, not just "this project"');
+  ok(E(403, apiOff).said === apiOff.error.message,
+     "and Google's own sentence is kept rather than replaced");
+  ok(/DIFFERENT project/.test(E(403, apiOff).message),
+     'with the reading that answers "but the console said API Enabled"');
+
+  /* The number comes out of the Firebase appId, 1:<projectNumber>:web:<hash>.
+     Google never names the project ID, so matching on that alone never fires. */
+  const elsewhere = load({ id: IMPORTED }, { projectId: 'other-proj', appId: '1:999:web:x' });
+  ok(/different projects/i.test(elsewhere.explain(403, apiOff).message),
+     'and a project that is not this hub\'s is called out as the mismatch it is');
 
   ok(E(403, noScope).code === 'scope', 'a token with no calendar scope is named as that');
   ok(/consent screen/i.test(E(403, noScope).message), 'and points at the consent screen');
