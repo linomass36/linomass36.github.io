@@ -24,7 +24,9 @@
      3. every page that loads facts.js or systems.js also loads screen.js —
         without it those two lose the column silently rather than throwing;
      4. the day-close card actually writes the three keys, run out of the
-        shipped page rather than described here.
+        shipped page rather than described here;
+     5. the weekly export carries them, because the analyst that export is
+        written for cannot read a number the file does not contain.
    ───────────────────────────────────────────────────────────── */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -179,6 +181,50 @@ group('The day-close card writes all three, out of the shipped page');
      'the Life Log shows the same three boxes');
   ok(/^50% off duty — 2h social · 1h games · 0\.5h entertainment$/.test(lv.scrVerdict),
      'and reads the same share off them (' + lv.scrVerdict + ')');
+}
+
+group('The weekly export carries the phone');
+{
+  /* The .md the Life Log hands to an assistant listed sleep, lifts, swims,
+     climbs, study blocks, breaks, spending and the evening note — and no
+     screen time at all, which is the one figure in the file that is typed by
+     hand rather than imported from a device. */
+  const ctx = load(['day.js', 'screen.js', 'hub-data.js', 'systems.js'], {});
+  const m = read('Life Log.dc.html').match(/<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/);
+  vm.runInContext('class DCLogic { constructor() { this.state = {}; this.props = {}; } ' +
+                  'setState(u) { Object.assign(this.state, typeof u === "function" ? u(this.state) : u); } }',
+                  ctx, { filename: 'DCLogic stub' });
+  vm.runInContext(m[1] + '\nglobalThis.__Component = Component;', ctx, { filename: 'Life Log.dc.html' });
+  const c = vm.runInContext('new __Component()', ctx);
+
+  /* The export covers the week the page is on, so the fixture is written
+     into that week rather than to dates picked here. */
+  const wk = c.weekKeys();
+  const days = {};
+  days[wk[0]] = { screen: { total: 7, social: 2, games: 1, ent: 0.5, pickups: 78 } };
+  days[wk[1]] = { screen: { total: 5.5, social: 1 } };
+  days[wk[2]] = { screen: { pickups: 40 } };
+  days[wk[3]] = { note: 'a day off the record' };
+  ctx.__mem.ct_lifelog_v1 = JSON.stringify({ days: days, sessions: [], syllabus: {}, budget: 0 });
+  const md = c.buildMd();
+
+  ok(/- Screen: 7h total, 3\.5h off duty \(2h social · 1h games · 0\.5h entertainment\), 78 pickups/.test(md),
+     'a fully logged day exports the total, the sum and the split');
+  ok(/- Screen: 5\.5h total, 1h off duty\n/.test(md),
+     'a day that only names social exports one figure and no invented breakdown');
+  ok(/- Screen: 40 pickups/.test(md), 'and pickups alone are still worth a line');
+  ok(!/Screen:.*NaN|undefined/.test(md), 'nothing exports as NaN or undefined');
+  const [dayLines, totals] = md.split('## Week totals');
+  const perDay = dayLines.split('\n').filter((l) => /^- Screen:/.test(l));
+  ok(perDay.length === 3, 'a day with no screen record gets no line (' + perDay.length + ')');
+
+  ok(/- Screen: avg 6\.3h\/day over 2 logged days/.test(totals),
+     'the week averages over the days that carry the figure, not over seven');
+  ok(/2\.3h\/day off duty · social 1\.5h\/day · games 1h\/day · entertainment 0\.5h\/day/.test(totals),
+     'and reports each bucket per day it was logged');
+
+  ok(/screen time split into social, games and entertainment/.test(c.PROMPT),
+     'the prompt tells the analyst the figure is in the file');
 }
 
 console.log(failed ? '\n' + failed + ' failed' : '\nall green');

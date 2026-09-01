@@ -681,6 +681,23 @@ class Component extends DCLogic {
         const bMs = br.reduce((a, s) => a + s.end - s.start, 0);
         L.push('- Focus timer: ' + stu.length + ' study blocks (' + this.fmtH(stu.reduce((a, s) => a + s.end - s.start, 0) / 3600000) + '), ' + br.length + ' breaks (' + this.fmtH(bMs / 3600000) + ' total' + (br.length ? ', avg ' + Math.round(bMs / br.length / 60000) + 'm, longest ' + Math.round(Math.max.apply(null, br.map(s => s.end - s.start)) / 60000) + 'm' : '') + ')');
       }
+      /* Screen time has been logged on this page since it existed and never
+         left it: the export the analyst reads had no idea the phone was in
+         the room. It is also the one number in the file that is typed rather
+         than imported from a device — which makes it the most expensive
+         thing to leave out, not the least. */
+      const sc = dy.screen || {};
+      const scT = this.num(sc.total), scOff = window.CTScreen.offDuty(sc), scP = this.num(sc.pickups);
+      if (scT != null || scOff != null || scP != null) {
+        const scBits = [];
+        if (scT != null) scBits.push(scT + 'h total');
+        if (scOff != null) {
+          const sp2 = window.CTScreen.split(sc);
+          scBits.push(scOff + 'h off duty' + (sp2 ? ' (' + sp2 + ')' : ''));
+        }
+        if (scP != null) scBits.push(scP + ' pickups');
+        L.push('- Screen: ' + scBits.join(', '));
+      }
       (dy.spends || []).forEach(sp => L.push('- Spend: $' + sp.amt + ' [' + sp.cat + ']' + (sp.note ? ' ' + sp.note : '')));
       if (dy.note) L.push('- Evening note: ' + dy.note);
       if (L[L.length - 1].startsWith('## ')) L.push('- (nothing logged)');
@@ -692,6 +709,26 @@ class Component extends DCLogic {
     const clN = wk.filter(k => (d.days[k] || {}).climb && d.days[k].climb.on).length;
     L.push('- Gym ' + gymN + '× · Swim ' + swN + '× · Climb ' + clN + '×');
     L.push('- Study hours: ' + this.fmtH(wk.reduce((a, k) => a + this.studyHoursDay(k), 0)));
+    /* Averaged over the days that carry each figure rather than over seven,
+       so three logged days read as three logged days instead of a week that
+       was mostly spent off the phone. The buckets come from screen.js so a
+       fourth one would appear here without this line being touched. */
+    const scAvg = (ks, get) => Math.round(10 * ks.reduce((a2, k) => a2 + get(k), 0) / ks.length) / 10;
+    const scOn = wk.filter(k => this.num(((d.days[k] || {}).screen || {}).total) != null);
+    const offOn = wk.filter(k => window.CTScreen.offDuty((d.days[k] || {}).screen) != null);
+    if (scOn.length || offOn.length) {
+      const scParts = [];
+      if (scOn.length) scParts.push('avg ' + scAvg(scOn, k => this.num(d.days[k].screen.total)) +
+                                   'h/day over ' + scOn.length + ' logged day' + (scOn.length === 1 ? '' : 's'));
+      if (offOn.length) {
+        scParts.push(scAvg(offOn, k => window.CTScreen.offDuty(d.days[k].screen)) + 'h/day off duty');
+        window.CTScreen.BUCKETS.forEach(([key, , word]) => {
+          const on = wk.filter(k => window.CTScreen.num(((d.days[k] || {}).screen || {})[key]) != null);
+          if (on.length) scParts.push(word + ' ' + scAvg(on, k => window.CTScreen.num(d.days[k].screen[key])) + 'h/day');
+        });
+      }
+      L.push('- Screen: ' + scParts.join(' · '));
+    }
     const mp = wk[0].slice(0, 7);
     let spent = 0; Object.keys(d.days).forEach(k => { if (k.slice(0, 7) === mp) (d.days[k].spends || []).forEach(s => spent += this.num(s.amt) || 0); });
     L.push('- Month spend so far: $' + Math.round(spent) + (this.num(d.budget) ? ' of $' + d.budget + ' budget' : ''));
@@ -760,7 +797,7 @@ class Component extends DCLogic {
     if (!sch.length) L.push('- none tracked');
     sch.forEach(g => L.push('- ' + g.name + ' [' + (g.status || 'researching') + ']' + (g.amount ? ' · ' + g.amount : '') + (g.deadline ? ' · due ' + g.deadline : '') + (g.note ? ' · ' + g.note : '')));
   }
-  PROMPT = 'Attached is my weekly export (.md) covering my whole system: a life log (sleep, weight/body-comp, gym bench/squat/OHP, swimming, climbing, a focus timer with study blocks and breaks, spending in USD, evening notes) plus the rest of the project — master-plan moves checked this week, journal entries, network (who I owe a touch), logged conferences and scholarship pipeline. Act as my performance analyst and chief of staff. 1) Synthesize the week: what actually happened vs targets, across body, study and the plan. 2) Cross-correlate: does sleep quality/readiness predict study hours or gym performance? Are break patterns (count, avg, longest) eating focused time — quantify the leak. 3) Flag progression or stalls on the three lifts and body-comp trend. 4) Plan & pipeline: is master-plan progress consistent with the logged hours? Any owed contacts or deadlines (conferences, scholarships) about to slip? 5) Spending: any category drifting? 6) End with the 3 highest-leverage adjustments for next week, each tied to a number in the data. Be blunt, no praise padding.';
+  PROMPT = 'Attached is my weekly export (.md) covering my whole system: a life log (sleep, weight/body-comp, gym bench/squat/OHP, swimming, climbing, a focus timer with study blocks and breaks, screen time split into social, games and entertainment, spending in USD, evening notes) plus the rest of the project — master-plan moves checked this week, journal entries, network (who I owe a touch), logged conferences and scholarship pipeline. Act as my performance analyst and chief of staff. 1) Synthesize the week: what actually happened vs targets, across body, study and the plan. 2) Cross-correlate: does sleep quality/readiness predict study hours or gym performance? Are break patterns (count, avg, longest) eating focused time, and which of the three screen buckets moves against study hours — quantify both leaks. 3) Flag progression or stalls on the three lifts and body-comp trend. 4) Plan & pipeline: is master-plan progress consistent with the logged hours? Any owed contacts or deadlines (conferences, scholarships) about to slip? 5) Spending: any category drifting? 6) End with the 3 highest-leverage adjustments for next week, each tied to a number in the data. Be blunt, no praise padding.';
 
   renderVals() {
     const S = this.state, d = this.read(), k = this.key();
