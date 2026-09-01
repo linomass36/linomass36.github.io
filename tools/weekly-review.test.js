@@ -27,6 +27,19 @@
    The fix is that a week key is a label for a week rather than a stamp on a
    moment, and that the ritual names three of them: the week being reviewed,
    the week being worked, and the week being planned.
+
+   A fourth bug lived one section further down, and it took the whole page
+   with it. The v2 recalibration moved wins and loops off the v1 master plan
+   and deleted the read that gave them `history` and `itemById` — but the
+   stale check below still used both. `history` is a global in a browser, so
+   this was not a ReferenceError anyone would spot in review: it resolved to
+   window.history, `.forEach` was undefined, and renderVals threw. A throw
+   there is invisible from the outside — the component falls back to its
+   empty defaults and the page still looks like a page, with nothing in it.
+
+   So the last group here lifts the logic class straight out of the page and
+   calls renderVals() for real, which is the only assertion that can catch a
+   name that no longer exists.
    ───────────────────────────────────────────────────────────── */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -125,6 +138,78 @@ group('The board no longer opens archived pages');
      (bad.length ? ' — ' + bad.map((b) => b.id + '→' + b.href).join(', ') : ''));
   const plan = S.all().find((s) => s.id === 'plan');
   ok(plan && plan.href === 'Plan.html', 'the first tile opens the live plan');
+}
+
+/* ── the page's own logic class, run for real ─────────────────────────
+   The DC runtime gives the class a base with state and setState on it and
+   nothing else this page touches: it reads no DOM and takes no props. So a
+   five-line stub is the whole harness, and what runs is the shipped file. */
+function page(store, now) {
+  const ctx = load(['day.js', 'systems.js', 'plan-v2-data.js', 'plan-v2.js',
+                    'anatomy-data.js', 'anatomy-core.js'], store, now);
+  const html = fs.readFileSync(path.join(ROOT, 'Weekly Review.dc.html'), 'utf8');
+  const m = html.match(/<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/);
+  if (!m) throw new Error('no logic class found in Weekly Review.dc.html');
+  vm.runInContext('class DCLogic { constructor() { this.state = {}; } ' +
+                  'setState(u) { Object.assign(this.state, typeof u === "function" ? u(this.state) : u); } }',
+                  ctx, { filename: 'DCLogic stub' });
+  vm.runInContext(m[1] + '\nglobalThis.__Component = Component;', ctx,
+                  { filename: 'Weekly Review.dc.html' });
+  return vm.runInContext('new __Component()', ctx);
+}
+
+group('renderVals() survives an empty store');
+{
+  let vals = null, threw = null;
+  try { vals = page({}, SUN).renderVals(); } catch (e) { threw = e; }
+  ok(!threw, 'the page renders on a device with nothing saved' + (threw ? ' — ' + threw.message : ''));
+  ok(!!vals && Object.keys(vals).length > 50, 'and returns a full set of values, not the empty fallback');
+  ok(!!vals && Array.isArray(vals.staleRows), 'including the stale check that used to throw');
+}
+
+group('The stale check reads the live pages, not the archived plan');
+{
+  const S = load(['sitemap.js'], {}, SUN).window.SITEMAP;
+  const rows = page({}, SUN).renderVals().staleRows;
+  const bad = rows.filter((r) => S.isArchived(r.href));
+  ok(bad.length === 0, 'no stale row sends you into a v1 document' +
+     (bad.length ? ' — ' + bad.map((b) => b.label + '→' + b.href).join(', ') : ''));
+  const unknown = rows.filter((r) => !S.get(r.href));
+  ok(unknown.length === 0, 'every stale row points at a declared page' +
+     (unknown.length ? ' — ' + unknown.map((b) => b.label + '→' + b.href).join(', ') : ''));
+
+  const labels = rows.map((r) => r.label);
+  ok(labels.indexOf('Finances') >= 0 && labels.indexOf('Risk register') >= 0,
+     'an untouched hub flags both standing branches');
+}
+
+group('Recording the thing clears its row');
+{
+  /* August 2026 is the month SUN falls in, so a snapshot taken in it is
+     current; the verification was settled five days before. */
+  const store = {
+    ct_vault_v1: JSON.stringify({ snaps: [{ m: '2026-08', cash: 1000, inv: 0, debt: 0 }] }),
+    plan_v2_state_v1: JSON.stringify({ verify: { 1: { result: 'confirmed', at: '2026-08-25' } } })
+  };
+  const rows = page(store, SUN).renderVals().staleRows;
+  const labels = rows.map((r) => r.label);
+  ok(labels.indexOf('Finances') < 0, 'this month’s Vault snapshot clears Finances');
+  ok(labels.indexOf('Risk register') < 0, 'a recently settled assumption clears the risk register');
+
+  /* One month behind is a snapshot you are still in time to take; two is a
+     month that went unrecorded. */
+  const july = page({ ct_vault_v1: JSON.stringify({ snaps: [{ m: '2026-07' }] }) }, SUN)
+    .renderVals().staleRows.map((r) => r.label);
+  ok(july.indexOf('Finances') < 0, 'last month’s snapshot is not yet late');
+  const june = page({ ct_vault_v1: JSON.stringify({ snaps: [{ m: '2026-06' }] }) }, SUN)
+    .renderVals().staleRows.find((r) => r.label === 'Finances');
+  ok(!!june && june.age === '2 mo', 'a month with no snapshot at all is flagged (' +
+     (june ? june.age : 'not flagged') + ')');
+
+  const old = page({ plan_v2_state_v1: JSON.stringify({ verify: { 1: { result: 'confirmed', at: '2026-06-01' } } }) }, SUN)
+    .renderVals().staleRows.find((r) => r.label === 'Risk register');
+  ok(!!old && /^9[01]d$/.test(old.age), 'and an assumption settled three months ago is stale again (' +
+     (old ? old.age : 'not flagged') + ')');
 }
 
 console.log(failed ? '\n' + failed + ' failed' : '\nall green');

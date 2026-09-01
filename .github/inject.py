@@ -45,6 +45,7 @@ SHIM = (
     '<script src="./archive.js"></script>\n'
     '<script src="./sync.js"></script>\n'
     '<script src="./sitemap.js"></script>\n'
+    '<script src="./screen.js"></script>\n'
     '<script src="./facts.js"></script>\n'
     '<script src="./contact.js"></script>\n'
     '<script src="./calendar.js"></script>\n'

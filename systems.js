@@ -472,7 +472,15 @@
     if (!d.days || typeof d.days !== 'object') d.days = {};
     if (!Array.isArray(d.sessions)) d.sessions = [];
 
-    var social = function (k) { return num((((d.days[k] || {}).screen) || {}).social); };
+    /* The phone is logged in three buckets — social, games, entertainment —
+       and the reading is against what they add up to. screen.js owns that
+       sum so this and the Life Log's panel cannot answer the same question
+       two ways; without it there is no figure to correlate, and the panel
+       says "keep logging" rather than reading a third of the day as all of
+       it. */
+    var offDuty = function (k) {
+      return w.CTScreen ? w.CTScreen.offDuty(((d.days[k] || {}).screen)) : null;
+    };
     var dietScore = function (k) { return ({ clean: 3, ok: 2, loose: 1, bad: 0 })[(((d.days[k] || {}).diet) || {}).q]; };
     var trainedOn = function (k) {
       var dd = d.days[k] || {};
@@ -489,14 +497,14 @@
     ];
 
     var days = Object.keys(d.days).sort();
-    var paired = days.filter(function (k) { return social(k) != null; });
+    var paired = days.filter(function (k) { return offDuty(k) != null; });
 
     var rows = METRICS.map(function (m) {
       var xs = [], ys = [];
       paired.forEach(function (k) {
         var y = m[3](k);
         if (y == null) return;
-        xs.push(social(k)); ys.push(y);
+        xs.push(offDuty(k)); ys.push(y);
       });
       var r = xs.length >= CORR_MIN ? pearson(xs, ys) : null;
       return { key: m[0], label: m[1], unit: m[2], n: xs.length, r: r,
@@ -509,7 +517,7 @@
 
     var sentence = '';
     if (best) {
-      sentence = 'Your heavier social-screen days run with ' + (best.r < 0 ? 'less ' : 'more ') +
+      sentence = 'Your heavier off-duty screen days run with ' + (best.r < 0 ? 'less ' : 'more ') +
                  best.unit + ' (r ' + (best.r > 0 ? '+' : '') + best.r.toFixed(2) + ', over ' +
                  best.n + ' days). Does anything change?';
     }

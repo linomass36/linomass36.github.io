@@ -109,7 +109,12 @@ function buildTable(n) {
       /* both of these are the weekend and nothing else */
       screen: 3 + 2.5 * weekend + 0.8 * gauss(),
       study:  4 - 2.2 * weekend + 0.9 * gauss(),
-      social: 1.2 + 1.0 * weekend + 0.4 * gauss(),
+      /* The hours the phone was off duty — social, games and entertainment
+         added up, which is the column the day-close produces now and the
+         successor of the single "social" figure this fixture used to carry.
+         Same number, same role in the table: a second thing that is only the
+         weekend. */
+      offDuty: 1.2 + 1.0 * weekend + 0.4 * gauss(),
       pickups: Math.round(70 + 20 * weekend + 12 * gauss()),
       /* last night's sleep, showing up tomorrow and not today */
       sleep: sleep,
@@ -210,7 +215,7 @@ group('The lagged pair is found even though the matrix cannot see it');
 
 group('The findings list is screened for confounders, not just for p-values');
 {
-  /* screen, study, social and pickups are all simply the weekend in this
+  /* screen, study, off duty and pickups are all simply the weekend in this
      table. The old page printed them in bold as findings and only admitted
      otherwise several hundred pixels down, behind a click. A badge saying a
      pair cleared a multiple-comparisons screen must not read as a badge
@@ -299,16 +304,16 @@ group('The default pair is the strongest real one, and clicking changes it');
 group('A tautology is never offered as a pair to explain');
 {
   const bar = page.byId.pairbar.textContent;
-  ok(!/Screen × Social|Social × Screen/.test(bar),
-     'screen against its own social component is not on the shortlist');
+  ok(!/Screen × Off duty|Off duty × Screen/.test(bar),
+     'screen against its own off-duty component is not on the shortlist');
   const ctx = page.ctx;
   const C = ctx.window.CTCause;
   /* And when one is analysed anyway, its twin must not be allowed to be the
      "confounder" that explains it away. */
   const res = C.analyse('screen', 'study', {
-    table: ctx.window.CTFacts.all(), floor: 8, exclude: ['social', 'pickups']
+    table: ctx.window.CTFacts.all(), floor: 8, exclude: ['offDuty', 'pickups']
   });
-  ok(!res.confound.tested.some((z) => z.field === 'social' || z.field === 'pickups'),
+  ok(!res.confound.tested.some((z) => z.field === 'offDuty' || z.field === 'pickups'),
      'excluded fields are kept out of the confounder screen');
 }
 

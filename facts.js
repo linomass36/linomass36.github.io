@@ -95,6 +95,15 @@
       var screen = dy.screen || {};
       if (num(screen.total) != null) row.screen = num(screen.total);
       if (num(screen.social) != null) row.social = num(screen.social);
+      if (num(screen.games) != null) row.games = num(screen.games);
+      if (num(screen.ent) != null) row.ent = num(screen.ent);
+      /* The three buckets separately, because the point of splitting the box
+         was to be able to ask which of them costs the study hours — and their
+         sum, because that is what the old single figure measured and what the
+         board and the Life Log correlate against. screen.js owns the sum;
+         without it the column is simply absent rather than wrong. */
+      var off = w.CTScreen ? w.CTScreen.offDuty(screen) : null;
+      if (off != null) row.offDuty = off;
       if (num(screen.pickups) != null) row.pickups = num(screen.pickups);
       var diet = dy.diet || {};
       var DIETQ = { clean: 3, ok: 2, loose: 1, bad: 0 };

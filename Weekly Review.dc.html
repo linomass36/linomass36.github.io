@@ -18,6 +18,7 @@
 <script src="./anatomy-core.js"></script>
 <script src="./plan-v2-data.js"></script>
 <script src="./plan-v2.js"></script>
+<script src="./screen.js"></script>
 <script src="./systems.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -392,6 +393,7 @@ class Component extends DCLogic {
   SKEY = 'ct_summer_v1';
   WKEY = 'ct_weekly_v1';
   RRKEY = 'ct_reviewroom_v1';   // the Review Room's old store, read once and carried across
+  VKEY = 'ct_vault_v1';         // the Vault's monthly snapshots — the live record of the finances
 
   /* The five questions, moved here from the Review Room. There were two
      complete weekly reviews with two sets of questions and two stores, and
@@ -721,17 +723,47 @@ class Component extends DCLogic {
     const reviewWeekLabel = MON[dR.getMonth()] + ' ' + dR.getDate() + ' – ' +
                             MON[dRe.getMonth()] + ' ' + dRe.getDate();
 
-    // ---- stale check ----
-    const branchLast = {};
-    history.forEach(h => { const it = itemById[h.id]; if (it) branchLast[it.branchId] = Math.max(branchLast[it.branchId] || 0, h.ts); });
+    /* ---- stale check ----
+       Finances and the risk register were branches on the v1 master plan, and
+       their last-touched times came out of that plan's tick history. The v2
+       recalibration moved wins and loops onto PlanV2 and took the read that
+       defined `history` and `itemById` with it — but left the lines that used
+       them here. `history` then resolved to the browser's own window.history,
+       whose `.forEach` is undefined, and renderVals threw on every load, which
+       empties the whole page rather than just this section.
+
+       Both now read the live page they belong to. v1 is archived: nothing
+       writes its store any more, so those two rows would have sat at "never"
+       for ever, and the link under them went somewhere retired. */
     const staleRows = [];
-    const STALE = 14 * 86400000;
-    // finance / risk branches
-    [['finance', 'Finances', 'CT Master Plan.html'], ['risk', 'Risk register', 'CT Master Plan.html']].forEach(([bid, label, href]) => {
-      const last = branchLast[bid] || 0;
-      const age = last ? Math.floor((nowMs - last) / 86400000) : null;
-      if (!last || (nowMs - last) > STALE) staleRows.push({ label, href, age: last ? age + 'd' : 'never', dot: '#A32E27', border: '#EBD7D4' });
-    });
+
+    /* Finances is the Vault's monthly snapshot, so it is late once a whole
+       month has gone by unrecorded — not after a fortnight. */
+    const snaps = ((this.readJSON(this.VKEY, null) || {}).snaps) || [];
+    const lastSnap = snaps.reduce((m, sn) => (sn && sn.m && sn.m > m ? sn.m : m), '');
+    const monthsBehind = lastSnap
+      ? (now.getFullYear() - +lastSnap.slice(0, 4)) * 12 + (now.getMonth() + 1 - +lastSnap.slice(5, 7))
+      : null;
+    if (monthsBehind === null || monthsBehind >= 2) {
+      staleRows.push({ label: 'Finances', href: 'Vault.dc.html',
+                       age: monthsBehind === null ? 'never' : monthsBehind + ' mo',
+                       dot: '#A32E27', border: '#EBD7D4' });
+    }
+
+    /* The risk register is worked on Verify, and the only mark it leaves is a
+       settled assumption. */
+    const verify = V.read().verify || {};
+    const lastVerify = Object.keys(verify).reduce((m, k) => {
+      const at = verify[k] && verify[k].at;
+      return (at && at > m) ? at : m;
+    }, '');
+    const verifyAge = lastVerify ? V.daysBetween(lastVerify) : null;
+    if (verifyAge === null || verifyAge > 30) {
+      staleRows.push({ label: 'Risk register', href: 'Verify.html',
+                       age: verifyAge === null ? 'never' : verifyAge + 'd',
+                       dot: '#A32E27', border: '#EBD7D4' });
+    }
+
     // journal
     const jj = this.readJSON(this.JKEY, []) || [];
     const jLast = jj.reduce((m, e) => Math.max(m, e.at || (e.date ? new Date(e.date + 'T12:00').getTime() : 0)), 0);

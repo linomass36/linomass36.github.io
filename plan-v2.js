@@ -170,7 +170,11 @@
   }
 
   /* What got closed in the last N days. setDone stamps the day rather than a
-     timestamp, so this is day-accurate and needs no clock arithmetic. */
+     timestamp, so this is day-accurate and needs no clock arithmetic — but it
+     has to be counted back from the same day setDone stamped forward with.
+     Measuring against the wall clock instead put the window a day out between
+     midnight and the 05:00 boundary, when day.js still says yesterday — and
+     dropped a Sunday win off the Sunday review. */
   function winsSince(days) {
     var d = read().done || {};
     var byId = {};
@@ -179,7 +183,7 @@
     Object.keys(d).forEach(function (id) {
       var when = d[id];
       if (typeof when !== 'string') return;      // pre-dating writes stored 1
-      var ago = daysBetween(when);
+      var ago = daysBetween(when, today());
       if (ago === null || ago > days || ago < 0) return;
       out.push({ id: id, when: when, ago: ago,
                  label: byId[id] ? byId[id].label : id,
