@@ -65,7 +65,7 @@ h1 { font-family:var(--serif); font-weight:500; font-size:32px; line-height:1.08
   background:var(--rust); color:#fff; font-family:var(--mono); font-size:12px; cursor:pointer; }
 .pull button:disabled { opacity:.55; cursor:default; }
 .pull .alt { display:block; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--muted); }
-.pull .alt label { color:var(--rust); text-decoration:underline; cursor:pointer; }
+.pull .alt label, .pull .alt a { color:var(--rust); text-decoration:underline; cursor:pointer; }
 .pull .msg { font-family:var(--mono); font-size:11px; margin-top:11px; line-height:1.6; color:var(--mid);
   white-space:pre-line; text-align:left; }
 .pull .msg.bad { color:var(--owed); }
@@ -124,6 +124,9 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     <span class="alt">
       or <label for="ics">drop an .ics export</label> — no sign-in, works offline
       <input type="file" id="ics" accept=".ics,text/calendar" hidden>
+    </span>
+    <span class="alt" id="which-wrap" hidden>
+      <a href="#" id="which">which calendars can I read?</a> — their ids go in config.js
     </span>
     <div class="msg" id="msg"></div>
   </div>
@@ -238,13 +241,24 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     }
   }
 
-  function apply(events, how) {
+  function apply(events, how, failures) {
     var plan = C.planWeek(events, { range: C.planningRange() });
     C.saveWeek(plan);
     render(plan);
-    say('Read ' + events.length + ' event' + (events.length === 1 ? '' : 's') + ' from ' + how +
-        ' · ' + plan.placed.length + ' session' + (plan.placed.length === 1 ? '' : 's') + ' placed in ' +
-        plan.totalFree + ' free hours.', 'good');
+    var n = C.calIds().length;
+    var line = 'Read ' + events.length + ' event' + (events.length === 1 ? '' : 's') +
+      ' from ' + how + (n > 1 ? ' (' + n + ' calendars)' : '') +
+      ' · ' + plan.placed.length + ' session' + (plan.placed.length === 1 ? '' : 's') +
+      ' placed in ' + plan.totalFree + ' free hours.';
+    /* A calendar that could not be read is the one thing a merged pull can
+       lose quietly: the week still renders, just short of whatever was on it. */
+    if (failures && failures.length) {
+      line += '\n\n' + failures.length + ' calendar' + (failures.length === 1 ? '' : 's') +
+        ' could not be read, so anything on ' + (failures.length === 1 ? 'it' : 'them') +
+        ' is missing from this week:\n' +
+        failures.map(function (f) { return '  ' + f.id + '\n    ' + f.error.message; }).join('\n');
+    }
+    say(line, failures && failures.length ? 'bad' : 'good');
   }
 
   /* A read can fail for reasons pressing the button again cannot touch, so
@@ -266,11 +280,36 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
         return say(full + '\n\nThat account can see no calendars at all.', 'bad');
       }
       var lines = list.slice(0, 8).map(function (c) { return '  ' + c.name + '\n    ' + c.id; });
-      say(full + '\n\nconfig.js asks for:\n  ' + C.calId() +
+      say(full + '\n\nconfig.js asks for:\n  ' + C.calIds().join('\n  ') +
           '\n\nThat account can read:\n' + lines.join('\n') +
           (list.length > 8 ? '\n  …and ' + (list.length - 8) + ' more' : ''), 'bad');
     });
   }
+
+  /* You cannot fill in calendar.ids without knowing the ids, and Google's
+     phone app does not show them anywhere. The same token that reads the week
+     can enumerate, so offer it — OAuth only, because an API key cannot list. */
+  function showCalendars() {
+    var have = C.calIds();
+    say('Opening Google…');
+    C.connect(function (err, token) {
+      if (err) return say(err.message, 'bad');
+      C.listCalendars(token, function (e2, list) {
+        if (e2) return failed(e2, token);
+        if (!list.length) return say('That account can see no calendars at all.', 'bad');
+        var lines = list.map(function (c) {
+          return (have.indexOf(c.id) >= 0 ? '  ✓ ' : '    ') + c.name + '\n      ' + c.id;
+        });
+        say('config.js is reading the ticked ones. Paste any others into ' +
+            'calendar.ids:\n\n' + lines.join('\n'));
+      });
+    });
+  }
+
+  $('#which').addEventListener('click', function (ev) {
+    ev.preventDefault();
+    showCalendars();
+  });
 
   $('#pull').addEventListener('click', function () {
     var btn = this;
@@ -280,10 +319,10 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     if (C.canAuto()) {
       say('Reading the calendar…');
       var rr = C.planningRange();
-      return C.autoRead(rr.start, rr.end, function (e0, events) {
+      return C.autoRead(rr.start, rr.end, function (e0, events, failures) {
         btn.disabled = false;
-        if (e0) return say(e0.message, 'bad');
-        apply(events, 'your calendar');
+        if (e0) return failed(e0, null);
+        apply(events, 'your calendar', failures);
       });
     }
     say('Opening Google…');
@@ -291,10 +330,10 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       if (err) { btn.disabled = false; return say(err.message, 'bad'); }
       say('Reading the week…');
       var r = C.planningRange();
-      C.fetchRange(token, r.start, r.end, function (e2, events) {
+      C.fetchRange(token, r.start, r.end, function (e2, events, failures) {
         btn.disabled = false;
         if (e2) return failed(e2, token);
-        apply(events, 'Google Calendar');
+        apply(events, 'Google Calendar', failures);
       });
     });
   });
@@ -374,20 +413,21 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   function auto() {
     if (!C.canAuto()) {
       $('#how').textContent = 'press to read · any day';
+      $('#which-wrap').hidden = false;   // enumerating needs a token, not a key
       return;
     }
     $('#how').textContent = 'reads itself';
     $('#pull').textContent = '⟳ Refresh now';
     say('Reading the calendar…');
     var r = C.planningRange();
-    C.autoRead(r.start, r.end, function (err, events) {
+    C.autoRead(r.start, r.end, function (err, events, failures) {
       if (err) {
         /* An automatic read that fails must not look like an empty week.
            Say what went wrong and leave the other two paths in reach. */
         say(err.message + ' — the button and the .ics drop still work.', 'bad');
         return;
       }
-      apply(events, 'your calendar, automatically');
+      apply(events, 'your calendar, automatically', failures);
     });
   }
 

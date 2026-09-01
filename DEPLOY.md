@@ -968,10 +968,40 @@ Library → **Google Calendar API** → Enable.
 **Offline.** An `.ics` export dropped in needs no credential at all. The secret
 `.ics` *URL* looks easier and is not — Google serves it without CORS headers.
 
-`calendar.id` is not `primary`. A subscribed or imported timetable has its own
-id ending `@import.calendar.google.com` or `@group.calendar.google.com`, and
-reading `primary` returns a blank week that looks like it worked. Calendar →
-the calendar → Settings → **Calendar ID**.
+`calendar.ids` is a **list**, and not `primary`. A subscribed or imported
+timetable has its own id ending `@import.calendar.google.com` or
+`@group.calendar.google.com`, and reading `primary` returns a blank week that
+looks like it worked. Calendar → the calendar → Settings → **Calendar ID**.
+
+### A life is not on one calendar
+
+The reader took one id, so a block on any other calendar was invisible — and
+invisible with no error anywhere, because from the API's side nothing was
+wrong: it was asked about one calendar and it answered about one calendar. The
+clinical timetable is a subscribed import, an internship is its own shared
+calendar, a lecture series is a third; each of them commits hours the planner
+has to work around.
+
+`calendar.ids` is a list now. Every id is read, in parallel, and merged in time
+order. `calendar.id` still works — one string, or several separated by commas —
+so an older config needs no edit.
+
+Two things fall out of merging that did not exist with one calendar:
+
+- **An event on two calendars is one event.** An invitation you accepted sits
+  on yours and on the one that sent it, and counting both would book out a day
+  that is only half committed. Google gives the copies one `iCalUID`; failing
+  that, a block matching on title and both ends is the same block twice.
+- **One calendar failing must not cost the others.** The second calendar exists
+  precisely to carry what the first does not, so a stale id on one no longer
+  loses the read — the week renders from whatever answered, and the page names
+  the calendar it could not reach and what is therefore missing. Only when
+  *nothing* could be read is it an error.
+
+Every event carries the calendar it came from, and the Week page will list
+every calendar the signed-in account can read — *which calendars can I read?*,
+under the button — because you cannot fill in a list of ids without them, and
+Google's phone app does not show ids anywhere.
 
 **Which week it reads.** Every path used to ask for `nextWeekRange` — always
 the week *after* the one you were in. On a Sunday that is exactly right and it
@@ -1333,7 +1363,7 @@ reading eight weeks in the past.
 - `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
 - `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
 - `calendar.js` + `Week.html` — the week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
-- `tools/calendar.test.js` — the named calendar is the one read, the week you are standing in can be asked for rather than only the next one, every failure is named as itself rather than all of them as an expired token, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
+- `tools/calendar.test.js` — the named calendars are the ones read and their events merged, an event on two of them is counted once, one calendar failing does not cost the others, the week you are standing in can be asked for rather than only the next one, every failure is named as itself rather than all of them as an expired token, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`, then the four tests that try to knock each pair down. See **Ruling things out** above.
 - `causality.js` — the statistics: exact t and F tails from a regularised incomplete beta, OLS, partial correlation, Granger, cross-lag, leave-one-out, first differences, Welch contrast, effective-n deflation and Benjamini-Hochberg. No dependencies; reads `facts.js` or any table handed to it.

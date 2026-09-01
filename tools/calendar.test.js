@@ -26,9 +26,10 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 
-function load(calendar, firebase) {
+function load(calendar, firebase, fetchImpl) {
   const ctx = { window: {}, console, JSON, Object, Array, Math, String, Number, Date,
-    parseFloat, parseInt, isNaN, isFinite, RegExp, Error, encodeURIComponent,
+    parseFloat, parseInt, isNaN, isFinite, RegExp, Error, encodeURIComponent, Promise,
+    fetch: fetchImpl,
     APP_CONFIG: { calendar: calendar || {},
                   firebase: firebase || { projectId: 'master-648ee',
                                           appId: '1:73939921858:web:1dc53474505b5319cc045b' } },
@@ -228,5 +229,103 @@ group('A declined invitation is not your week');
   ok(plan.placed.length === 6, 'and every session placed');
 }
 
-console.log(failed ? '\n' + failed + ' failed' : '\nall green');
-process.exit(failed ? 1 : 0);
+/* Async, because these read through real promise chains. Runs last and the
+   summary waits on it. */
+async function multiCalendar() {
+/* ── a life is not on one calendar ─────────────────────────────────────── */
+group('Every configured calendar is read, and merged');
+{
+  const WORK = 'timetable@import.calendar.google.com';
+  const INTERN = 'internship@group.calendar.google.com';
+
+  const evt = (uid, summary, day, h1, h2) => ({
+    status: 'confirmed', iCalUID: uid, summary,
+    start: { dateTime: `${day}T${String(h1).padStart(2,'0')}:00:00-07:00` },
+    end:   { dateTime: `${day}T${String(h2).padStart(2,'0')}:00:00-07:00` } });
+
+  /* Answers per calendar id, so a test can make one of them fail. */
+  const serve = (byId) => (url) => {
+    const id = decodeURIComponent(/calendars\/([^/]+)\/events/.exec(url)[1]);
+    const r = byId[id];
+    if (r && r.status) {
+      return Promise.resolve({ ok: false, status: r.status,
+        json: () => Promise.resolve(r.body) });
+    }
+    return Promise.resolve({ ok: true, status: 200,
+      json: () => Promise.resolve({ items: (r && r.items) || [] }) });
+  };
+
+  const cfg = { ids: [WORK, INTERN], apiKey: 'K' };
+
+  /* autoRead answers through a promise chain, so the assertion has to wait
+     for it rather than read a variable the callback has not written yet. */
+  const read = (C) => new Promise((res) =>
+    C.autoRead(new Date('2026-08-31'), new Date('2026-09-07'), (e, ev, f) => res({ e, ev, f })));
+
+  /* One id, several ids, a comma-separated string, an older single `id`. */
+  ok(load({ ids: [WORK, INTERN] }).calIds().length === 2, 'a list of ids is read as a list');
+  ok(load({ id: WORK }).calIds().join() === WORK, 'an older single id still works');
+  ok(load({ id: WORK + ',' + INTERN }).calIds().length === 2,
+     'and so does a comma-separated one');
+  ok(load({ ids: [WORK, ' ', WORK] }).calIds().length === 1,
+     'blanks and repeats are dropped rather than fetched twice');
+  ok(load({}).calIds().join() === 'primary', 'primary is still the last resort');
+
+  /* The report: a shift on the second calendar reaches the week. */
+  {
+    const C = load(cfg, null, serve({
+      [WORK]:   { items: [evt('a', 'Clinic', '2026-09-01', 8, 16)] },
+      [INTERN]: { items: [evt('b', 'Internship', '2026-09-02', 9, 17)] } }));
+    const out = await read(C);
+    ok(out && !out.e, 'both calendars answer');
+    ok(out.ev.length === 2, 'and both events come back (' + out.ev.length + ')');
+    ok(out.ev.some((x) => x.title === 'Internship'),
+       'including the one that is not on the work calendar');
+    ok(out.ev.map((x) => x.cal).indexOf(INTERN) >= 0, 'each event knows which calendar it came off');
+    ok(out.ev[0].start <= out.ev[1].start, 'and the merge is in time order');
+    ok(out.f.length === 0, 'with nothing reported as failed');
+  }
+
+  /* An invitation you accepted sits on both. Counting it twice would book out
+     a day that is only half committed. */
+  {
+    const C = load(cfg, null, serve({
+      [WORK]:   { items: [evt('shared-uid', 'Grand round', '2026-09-01', 8, 12)] },
+      [INTERN]: { items: [evt('shared-uid', 'Grand round', '2026-09-01', 8, 12)] } }));
+    const out = (await read(C)).ev;
+    ok(out.length === 1, 'an event on two calendars is counted once');
+    const plan = C.planWeek(out, { range: C.nextWeekRange(new Date(2026, 7, 27)) });
+    const d = plan.days.filter((x) => x.key === '2026-09-01')[0];
+    ok(Math.abs(d.committed - 4) < 0.01, 'so the day is committed four hours, not eight');
+  }
+
+  /* THE ONE THAT MATTERS. A stale id on one calendar must not take the other
+     down with it — the second calendar exists precisely to carry what the
+     first does not. */
+  {
+    const C = load(cfg, null, serve({
+      [WORK]:   { status: 404, body: { error: { code: 404, errors: [{ reason: 'notFound' }] } } },
+      [INTERN]: { items: [evt('b', 'Internship', '2026-09-02', 9, 17)] } }));
+    const out = await read(C);
+    ok(!out.e, 'one calendar failing is not an error for the whole read');
+    ok(out.ev.length === 1 && out.ev[0].title === 'Internship',
+       'the calendar that answered is still read');
+    ok(out.f.length === 1 && out.f[0].id === WORK,
+       'and the one that did not is reported by name, not swallowed');
+  }
+
+  /* But nothing readable at all is still a failure, not an empty week. */
+  {
+    const dead = { status: 404, body: { error: { code: 404, errors: [{ reason: 'notFound' }] } } };
+    const C = load(cfg, null, serve({ [WORK]: dead, [INTERN]: dead }));
+    const out = await read(C);
+    ok(!!out.e, 'when no calendar can be read at all, that is an error');
+    ok(out.f.length === 2, 'and every one of them is named');
+  }
+}
+}
+
+multiCalendar().then(() => {
+  console.log(failed ? '\n' + failed + ' failed' : '\nall green');
+  process.exit(failed ? 1 : 0);
+}, (e) => { console.error(e); process.exit(1); });
