@@ -95,6 +95,24 @@ ok(wins[0].label === moves[0].label, 'and it is named, not shown as a bare id');
 const old = planv2({ [first]: '2026-08-01' }, '2026-08-27').winsSince(7);
 ok(old.length === 0, 'a move closed four weeks ago is not this week\'s win');
 
+/* This group used to be a time bomb, and it went off. winsSince called
+   daysBetween without a `from`, so it measured against the REAL clock while
+   this file injected 2026-08-27 as today — it passed for one week after it
+   was written and failed every day after. It was found eight days on, red,
+   with the deploy running it, which would have blocked publishing the site.
+
+   The window is a count of whole days between two DAYS now, both ends
+   anchored at midnight and the near end being today() — so it neither drifts
+   with the hour asked nor ignores the 05:00 boundary day.js owns. */
+group('The review window is a count of days, not a reading of the clock');
+
+const edge = planv2({ [first]: '2026-08-20' }, '2026-08-27').winsSince(7);
+ok(edge.length === 1, 'a move closed exactly seven days before the day under review counts');
+const past = planv2({ [first]: '2026-08-19' }, '2026-08-27').winsSince(7);
+ok(past.length === 0, 'and eight days before it does not');
+ok(planv2({ [first]: '2026-08-25' }, '2026-08-27').winsSince(7)[0].ago === 2,
+   'the distance is measured from the day under review, not from today\'s date');
+
 /* ── and the surfaces are wired to it ──────────────────────────────────── */
 group('The daily surfaces read the current plan');
 

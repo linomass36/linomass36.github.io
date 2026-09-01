@@ -973,6 +973,30 @@ timetable has its own id ending `@import.calendar.google.com` or
 `@group.calendar.google.com`, and reading `primary` returns a blank week that
 looks like it worked. Calendar → the calendar → Settings → **Calendar ID**.
 
+### A window measured against the wrong clock
+
+Found because the deploy was red, on a day nobody had pushed: `plan-source`
+had become a time bomb and gone off.
+
+`PlanV2.winsSince` called `daysBetween(when)` with no second argument, and
+`daysBetween` defaulted its far end to `new Date()` — the raw device clock,
+carrying the time of day into a division by 86400000. Two consequences. The
+Sunday review's *wins this week* moved with the hour you opened it: a move
+closed six days and twenty hours ago rounded to seven and counted, the same
+move at breakfast did not. And it ignored the 05:00 boundary `day.js` exists
+to own, which the comment directly above it already stated.
+
+The test injected `2026-08-27` as today through `CTDay`, exactly as designed —
+but the one function it was testing was the one that did not read it. So it
+pinned the wall clock instead, passed for a week, and failed every day after.
+It was eight days past that when it was found.
+
+`daysBetween` now anchors both ends at midnight and defaults its far end to
+`today()`. It is a count of days between two days, so it neither drifts with
+the hour asked nor disagrees with the rest of the hub about which day it is.
+The test pins the boundary at seven days and eight, and reads `ago` off the
+day under review — against the old file it fails.
+
 ### A life is not on one calendar
 
 The reader took one id, so a block on any other calendar was invisible — and

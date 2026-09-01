@@ -29,10 +29,22 @@
 
   // day.js decides when a day starts — 05:00, not midnight.
   function today() { return window.CTDay ? window.CTDay.today() : new Date().toISOString().slice(0, 10); }
+  /* Whole days between two DAYS, and when the second one is left out it is
+     today() — the hub's day — rather than the raw clock.
+
+     `new Date()` carried the time of day into a division by 86400000, so the
+     answer moved with the hour you asked: a move closed six days and twenty
+     hours ago rounded to seven, and the Sunday review's "wins this week"
+     silently gained or lost a day depending on when the page was opened. It
+     also ignored the 05:00 boundary that day.js exists to own — at 02:00 you
+     are still finishing yesterday everywhere else in the hub, and was not
+     here. Both ends are midnight-anchored now, so the answer is a count of
+     days and does not depend on the moment of asking. */
   function daysBetween(iso, from) {
     if (!iso) return null;
-    var a = new Date(iso + 'T00:00:00'), b = from ? new Date(from + 'T00:00:00') : new Date();
-    if (isNaN(a)) return null;
+    var a = new Date(iso + 'T00:00:00');
+    var b = new Date((from || today()) + 'T00:00:00');
+    if (isNaN(a) || isNaN(b)) return null;
     return Math.round((b - a) / 86400000);
   }
   /* Negative = still ahead of you. The forcing function reads better as
