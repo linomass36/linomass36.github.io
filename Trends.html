@@ -174,6 +174,7 @@ table.ctrls td.br { width:38%; }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
 </style>
 <script src="./day.js"></script>
+<script src="./screen.js"></script>
 <script src="./facts.js"></script>
 <script src="./causality.js"></script>
 </head>
@@ -247,6 +248,9 @@ table.ctrls td.br { width:38%; }
 
     ['screen',     'Screen',      'h',    'day'],
     ['social',     'Social',      'h',    'day'],
+    ['games',      'Games',       'h',    'day'],
+    ['ent',        'Entertainment','h',   'day'],
+    ['offDuty',    'Off duty',    'h',    'day'],
     ['pickups',    'Pickups',     '',     'day'],
     ['diet',       'Diet',        '0–3',  'day'],
     ['work',       'Work',        'h',    'day'],
@@ -285,22 +289,31 @@ table.ctrls td.br { width:38%; }
      same side of the grid. The matrix is symmetric now, over whatever is
      selected. */
   var PRESETS = [
-    ['Sleep & the phone', ['sleep', 'screen', 'social', 'pickups', 'rhr', 'study']],
-    ['What costs study',  ['study', 'work', 'social', 'sleep', 'free', 'ankiReps']],
-    ['Recall',            ['ankiReps', 'ankiAgain', 'ankiMins', 'sleep', 'study', 'social']],
+    /* `offDuty` where these used to say `social`: the day-close asks for
+       social, games and entertainment separately now, and off duty is their
+       sum — the same quantity the single box used to hold. The split itself
+       gets a preset of its own, because "which of the three costs the study
+       hours" is the question the three boxes exist to answer. */
+    ['Sleep & the phone', ['sleep', 'screen', 'offDuty', 'pickups', 'rhr', 'study']],
+    ['The phone, split',  ['social', 'games', 'ent', 'study', 'sleep', 'screen']],
+    ['What costs study',  ['study', 'work', 'offDuty', 'sleep', 'free', 'ankiReps']],
+    ['Recall',            ['ankiReps', 'ankiAgain', 'ankiMins', 'sleep', 'study', 'offDuty']],
     ['Body',              ['sleep', 'rhr', 'hrv', 'trained', 'steps', 'diet']],
     ['Anatomy',           ['closures', 'anatRead', 'anatDraw', 'cardsMade', 'sleep', 'study']]
   ];
 
   /* Pairs that are related by definition rather than by anything you did.
-     Social screen time is part of total screen time; Anki reps, cards and
-     minutes are three views of one session; the watch's sleep and your own
-     are the same night measured twice. They stay in the matrix — seeing
+     Social, games and entertainment are each part of the off-duty hours and
+     of total screen time; Anki reps, cards and minutes are three views of one
+     session; the watch's sleep and your own are the same night measured
+     twice. They stay in the matrix — seeing
      r = +0.95 between reps and minutes is a useful sanity check that the
      import is working — but reporting them as findings is noise dressed as
      insight. */
   var TAUTOLOGY = [
-    ['screen', 'social'], ['screen', 'pickups'],
+    ['screen', 'social'], ['screen', 'games'], ['screen', 'ent'],
+    ['screen', 'offDuty'], ['screen', 'pickups'],
+    ['offDuty', 'social'], ['offDuty', 'games'], ['offDuty', 'ent'],
     ['ankiReps', 'ankiCards'], ['ankiReps', 'ankiMins'], ['ankiCards', 'ankiMins'],
     ['ankiReps', 'ankiAgain'], ['ankiCards', 'ankiAgain'],
     ['sleep', 'sleepWatch'],

@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
 <script src="./hub-data.js"></script>
+<script src="./screen.js"></script>
 <script src="./systems.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -222,8 +223,12 @@
         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 7px;">
           <div class="ll-f"><label>Total h</label>
             <input type="text" inputmode="decimal" value="{{ scrTotal }}" onChange="{{ setScrTotal }}" placeholder="6.5"></div>
-          <div class="ll-f"><label>Social / fun h</label>
+          <div class="ll-f"><label>Social h</label>
             <input type="text" inputmode="decimal" value="{{ scrSocial }}" onChange="{{ setScrSocial }}" placeholder="2.0"></div>
+          <div class="ll-f"><label>Games h</label>
+            <input type="text" inputmode="decimal" value="{{ scrGames }}" onChange="{{ setScrGames }}" placeholder="1.0"></div>
+          <div class="ll-f"><label>Entertainment h</label>
+            <input type="text" inputmode="decimal" value="{{ scrEnt }}" onChange="{{ setScrEnt }}" placeholder="0.5"></div>
           <div class="ll-f"><label>Pickups</label>
             <input type="number" inputmode="numeric" value="{{ scrPickups }}" onChange="{{ setScrPickups }}" placeholder="—"></div>
           <div style="flex: 1; min-width: 150px; align-self: flex-end;">
@@ -455,7 +460,7 @@
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6E4B8A;">The connected effects</div>
-            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">What social screen time moves with</div>
+            <div style="font-family: 'Newsreader', serif; font-size: 19px; font-weight: 500; margin-top: 3px;">What off-duty screen time moves with</div>
           </div>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A6A79F;">{{ corrBasis }}</span>
         </div>
@@ -971,8 +976,11 @@ class Component extends DCLogic {
     const TR = (window.Systems && window.Systems.trends) ? window.Systems.trends() : null;
     const CORR_MIN = TR ? TR.min : 8;
     const cDays = Object.keys(d.days).sort();
-    const social = k2 => this.num(((d.days[k2] || {}).screen || {}).social);
-    const pairedDays = cDays.filter(k2 => social(k2) != null);
+    /* Off duty, not social alone: the phone is now logged in three buckets
+       and a correlation run against one of them would quietly drop the games
+       and the television out of the reading. screen.js sums them. */
+    const offDuty = k2 => window.CTScreen.offDuty((d.days[k2] || {}).screen);
+    const pairedDays = cDays.filter(k2 => offDuty(k2) != null);
     const corrRows = [];
     ((TR && TR.rows) || []).forEach(({ label, unit, n, r, ready }) => {
       if (!ready) {
@@ -993,7 +1001,7 @@ class Component extends DCLogic {
       const dir = r < 0 ? 'less' : 'more';
       const reading = mag < 0.2
         ? 'No relationship in your days — ' + unit + ' does not follow the phone.'
-        : 'More social screen, ' + dir + ' ' + unit + ' — ' + strength + '.';
+        : 'More off-duty screen, ' + dir + ' ' + unit + ' — ' + strength + '.';
       const color = mag < 0.2 ? '#A6A79F' : (r < 0 ? '#A32E27' : '#3B6D11');
       const half = Math.min(50, Math.round(mag * 50));
       corrRows.push({
@@ -1024,7 +1032,7 @@ class Component extends DCLogic {
 
     let splitText = 'Log a fortnight of screen time and this line will compare your heaviest days with your lightest.';
     if (pairedDays.length >= CORR_MIN) {
-      const sorted = pairedDays.slice().sort((a, b) => social(a) - social(b));
+      const sorted = pairedDays.slice().sort((a, b) => offDuty(a) - offDuty(b));
       const half2 = Math.floor(sorted.length / 2);
       const low = sorted.slice(0, half2), high = sorted.slice(sorted.length - half2);
       const avg = (days2, get) => {
@@ -1032,7 +1040,7 @@ class Component extends DCLogic {
         return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
       };
       const bits = [];
-      const lowS = avg(low, social), highS = avg(high, social);
+      const lowS = avg(low, offDuty), highS = avg(high, offDuty);
       METRICS.forEach(([label, get]) => {
         const a = avg(low, get), b2 = avg(high, get);
         if (a == null || b2 == null) return;
@@ -1044,7 +1052,7 @@ class Component extends DCLogic {
         bits.push(label.toLowerCase() + ' ' + (diff < 0 ? 'down' : 'up') + ' ' + word);
       });
       splitText = bits.length
-        ? 'On your ' + high.length + ' heaviest screen days (avg ' + (highS || 0).toFixed(1) + 'h social) against your '
+        ? 'On your ' + high.length + ' heaviest screen days (avg ' + (highS || 0).toFixed(1) + 'h off duty) against your '
           + low.length + ' lightest (avg ' + (lowS || 0).toFixed(1) + 'h): ' + bits.join(', ') + '.'
         : 'Your heaviest and lightest screen days look the same on everything else. That is a real finding too.';
     }
@@ -1117,15 +1125,21 @@ class Component extends DCLogic {
     };
 
     // ── closing the day ────────────────────────────────────────────────
+    /* Three buckets rather than one "social / fun" box, because an hour of
+       messages, an hour of a game and an evening of television cost the day
+       differently and only one of them ever felt like a decision. What they
+       add up to — the off-duty hours — is screen.js's to define, not this
+       page's; see the note there about days logged before the split. */
     const scr = dy.screen || {};
-    const scrT = this.num(scr.total), scrS = this.num(scr.social);
+    const SC = window.CTScreen;
+    const scrT = this.num(scr.total), scrOff = SC.offDuty(scr);
+    const scrShare = SC.share(scr), scrSplit = SC.split(scr);
     let scrVerdict = 'Straight off the phone\u2019s own weekly report.', scrColor = '#A6A79F';
-    if (scrT != null && scrS != null && scrT > 0) {
-      const share = Math.round(100 * Math.min(scrS, scrT) / scrT);
-      scrVerdict = share + '% of your screen was social or fun';
-      scrColor = share >= 60 ? '#A32E27' : share >= 35 ? '#b0741a' : '#3B6D11';
-    } else if (scrS != null && scrS > 0) {
-      scrVerdict = scrS + 'h social — add the total to see the share';
+    if (scrShare != null) {
+      scrVerdict = scrShare + '% off duty' + (scrSplit ? ' — ' + scrSplit : '');
+      scrColor = scrShare >= 60 ? '#A32E27' : scrShare >= 35 ? '#b0741a' : '#3B6D11';
+    } else if (scrOff != null && scrOff > 0) {
+      scrVerdict = scrOff + 'h off duty — add the total to see the share';
       scrColor = '#b0741a';
     }
 
@@ -1200,6 +1214,8 @@ class Component extends DCLogic {
       // something already logged, which is why it is worth typing.
       scrTotal: F('screen', 'total'), setScrTotal: this.setF('screen', 'total'),
       scrSocial: F('screen', 'social'), setScrSocial: this.setF('screen', 'social'),
+      scrGames: F('screen', 'games'), setScrGames: this.setF('screen', 'games'),
+      scrEnt: F('screen', 'ent'), setScrEnt: this.setF('screen', 'ent'),
       scrPickups: F('screen', 'pickups'), setScrPickups: this.setF('screen', 'pickups'),
       scrVerdict, scrColor,
       dietChips, closeLine,

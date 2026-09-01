@@ -19,6 +19,7 @@
 <script src="./reading-data.js"></script>
 <script src="./plan-v2-data.js"></script>
 <script src="./plan-v2.js"></script>
+<script src="./screen.js"></script>
 <script src="./systems.js"></script>
 <script src="./resurface.js"></script>
 <style>
@@ -102,6 +103,14 @@
   .td-field { width: 100%; font-size: 16px; line-height: 1.5; padding: 12px 13px;
               border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F;
               resize: vertical; }
+
+  /* Closing the day asks for four numbers now that the phone's hours are
+     split by what they were spent on. A grid rather than a row: two across on
+     a phone, four on anything wider, and no field squeezed to nothing. */
+  .td-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+             gap: 8px; margin-top: 10px; }
+  .td-lab { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em;
+            text-transform: uppercase; color: #A6A79F; margin-bottom: 4px; }
 
   /* One thing you wrote, coming back. The response row is what makes this a
      loop rather than a feed — see resurface.js. */
@@ -286,14 +295,22 @@
   <!-- ─── close the day ─── -->
   <div class="td-card">
     <div class="td-kicker"><b>Close the day</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">trends →</a></div>
-    <div class="td-study">
-      <div style="flex: 1; min-width: 0;">
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">Screen h</div>
+    <div class="td-grid">
+      <div>
+        <div class="td-lab">Screen h</div>
         <input type="text" inputmode="decimal" value="{{ scrTotal }}" onChange="{{ setScrTotal }}" placeholder="6.5" class="td-field">
       </div>
-      <div style="flex: 1; min-width: 0;">
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-bottom: 4px;">Social / fun h</div>
+      <div>
+        <div class="td-lab">Social h</div>
         <input type="text" inputmode="decimal" value="{{ scrSocial }}" onChange="{{ setScrSocial }}" placeholder="2" class="td-field">
+      </div>
+      <div>
+        <div class="td-lab">Games h</div>
+        <input type="text" inputmode="decimal" value="{{ scrGames }}" onChange="{{ setScrGames }}" placeholder="1" class="td-field">
+      </div>
+      <div>
+        <div class="td-lab">Entertainment h</div>
+        <input type="text" inputmode="decimal" value="{{ scrEnt }}" onChange="{{ setScrEnt }}" placeholder="0.5" class="td-field">
       </div>
     </div>
     <div style="display: flex; gap: 8px; margin-top: 10px;">
@@ -572,15 +589,21 @@ class Component extends DCLogic {
     const day = (this.llDay().days || {})[k] || {};
     const scr = day.screen || {};
     const n = (v) => { const x = parseFloat(v); return isNaN(x) ? null : x; };
-    const t = n(scr.total), so = n(scr.social);
+    const t = n(scr.total);
+    /* One "social / fun" box could not tell an hour of messages from an hour
+       of a game, which is the distinction worth acting on. Three boxes, and
+       the share is read off their sum — screen.js owns that arithmetic, so
+       this card, the Life Log, the board and the fact table cannot drift
+       apart on what "off duty" means. */
+    const SC = window.CTScreen;
+    const off = SC.offDuty(scr), share = SC.share(scr), split = SC.split(scr);
 
     let scrLine = 'straight off the phone\u2019s own report', scrColor = '#A6A79F';
-    if (t != null && so != null && t > 0) {
-      const share = Math.round(100 * Math.min(so, t) / t);
-      scrLine = share + '% of your screen was social or fun';
+    if (share != null) {
+      scrLine = share + '% of your screen was off duty' + (split ? ' — ' + split : '');
       scrColor = share >= 60 ? '#A32E27' : share >= 35 ? '#7d4c09' : '#3B6D11';
-    } else if (so != null && so > 0) {
-      scrLine = so + 'h social — add the total for the share';
+    } else if (off != null && off > 0) {
+      scrLine = off + 'h off duty — add the total for the share';
       scrColor = '#7d4c09';
     }
 
@@ -588,6 +611,8 @@ class Component extends DCLogic {
     return {
       scrTotal: scr.total || '', setScrTotal: (e) => this.llSet('screen', 'total', e.target.value),
       scrSocial: scr.social || '', setScrSocial: (e) => this.llSet('screen', 'social', e.target.value),
+      scrGames: scr.games || '', setScrGames: (e) => this.llSet('screen', 'games', e.target.value),
+      scrEnt: scr.ent || '', setScrEnt: (e) => this.llSet('screen', 'ent', e.target.value),
       scrLine, scrColor,
       dietChips: this.LL_DIET.map(([id, label]) => ({
         label, cls: now === id ? 'on' : '',
