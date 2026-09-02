@@ -62,10 +62,30 @@
      separate calendar, and asking for `primary` returns the empty one you
      never put anything in. That is a silent failure: the page would draw a
      blank week and look like it had worked. */
-  function calId() {
-    var id = String(calCfg().id || '').trim();
-    return id || 'primary';
+  /* EVERY calendar, not one. A life is not on a single calendar: the clinical
+     timetable is a subscribed import, an internship is its own shared
+     calendar, a lecture series is a third — and a block on any of them is a
+     block the planner has to work around. Reading only `calendar.id` meant
+     everything on a second calendar was invisible, with no error anywhere,
+     because from the API's point of view nothing was wrong: it was asked for
+     one calendar and it answered about one calendar.
+
+     Takes `calendar.ids` (a list), or `calendar.id` — a single string, or
+     several separated by commas — so an older config keeps working. */
+  function calIds() {
+    var c = calCfg();
+    var raw = (c.ids != null && c.ids !== '') ? c.ids : c.id;
+    var out = [];
+    (Object.prototype.toString.call(raw) === '[object Array]' ? raw : String(raw || '').split(','))
+      .forEach(function (x) {
+        var v = String(x == null ? '' : x).trim();
+        if (v && out.indexOf(v) < 0) out.push(v);
+      });
+    return out.length ? out : ['primary'];
   }
+
+  /* The first one, for the places that can only name one. */
+  function calId() { return calIds()[0]; }
   function eventsUrl(id) {
     return V3 + '/calendars/' + encodeURIComponent(id) + '/events';
   }
@@ -158,11 +178,27 @@
     return String(detail || first.reason || err.status || '');
   }
 
-  function fault(code, message, tokenIsBad) {
+  /* `said` is Google's own sentence, kept verbatim. A friendlier message that
+     REPLACES it throws away the evidence — the accessNotConfigured payload
+     names the project the request was attributed to, and a link carrying that
+     project number, which is the only thing that can settle "but I enabled
+     it" when the console was open on a different project. Say both. */
+  function fault(code, message, tokenIsBad, said) {
     var e = new Error(message);
     e.code = code;
     e.tokenIsBad = !!tokenIsBad;
+    e.said = said || '';
     return e;
+  }
+
+  /* Which project this hub's token is attributed to. Firebase appIds are
+     1:<projectNumber>:web:<hash>, and the number is what Google's error
+     names — the id never appears in it, so comparing on the id alone would
+     never match. */
+  function projectRefs() {
+    var fb = (w.APP_CONFIG && w.APP_CONFIG.firebase) || {};
+    return { id: String(fb.projectId || ''),
+             num: String(fb.appId || '').split(':')[1] || '' };
   }
 
   /* `viaKey` distinguishes the API-key path from the OAuth one: the same
@@ -174,39 +210,57 @@
 
     if (/accessNotConfigured|SERVICE_DISABLED/i.test(reason) ||
         /has not been used in project|API .*is disabled/i.test(said)) {
-      return fault('api-off',
-        'the Google Calendar API is switched off for this project — enable it at ' +
-        'console.cloud.google.com → APIs & Services → Library → Google Calendar API, ' +
-        'then press this again', false);
+      /* Google names the project it refused, and that is the whole answer to
+         "but I enabled it": the console shows whichever project it had open,
+         which is not necessarily the one the token belongs to. */
+      var named = (/\bin project (\S+?)[\s.,]/.exec(said + ' ') || [])[1] || '';
+      var me = projectRefs();
+      var mine = me.id + (me.num ? ' (number ' + me.num + ')' : '');
+      var head = 'the Google Calendar API is off for ' +
+                 (named ? 'project ' + named : 'this project');
+      var body;
+      if (named && me.num && (named === me.num || named === me.id)) {
+        body = ' — which is the one this hub signs in against, ' + me.id + '.' +
+               '\n\nIf the console showed "API Enabled", it had a DIFFERENT project open. ' +
+               'Use the link in Google\'s message below: it carries the project number, ' +
+               'so it cannot land on the wrong one. If you enabled it in the last few ' +
+               'minutes, give it a moment and press again.';
+      } else if (mine.trim()) {
+        body = ' — but this hub signs in against ' + mine + '. Those are different ' +
+               'projects, which is the problem: enable it on the one Google just named.';
+      } else {
+        body = '.';
+      }
+      return fault('api-off', head + body, false, said);
     }
     if (/insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(reason)) {
       return fault('scope',
         'you are signed in, but Google granted no calendar access — the OAuth consent ' +
-        'screen needs calendar.readonly listed and this account added as a test user', true);
+        'screen needs calendar.readonly listed and this account added as a test user', true, said);
     }
     if (status === 404 || /notFound/i.test(reason)) {
       return fault('not-found',
         'the account you signed in as cannot see that calendar' +
-        (viaKey ? ' — check it is set to public' : ''), false);
+        (viaKey ? ' — check it is set to public' : ''), false, said);
     }
     if (/rateLimitExceeded|userRateLimitExceeded|dailyLimitExceeded$/i.test(reason)) {
-      return fault('rate', 'Google is rate-limiting the read — wait a minute and press again', false);
+      return fault('rate', 'Google is rate-limiting the read — wait a minute and press again', false, said);
     }
     if (viaKey && (/dailyLimitExceededUnreg|keyInvalid|key/i.test(reason) || /API key/i.test(said))) {
       return fault('key',
         'the API key was refused — check the Calendar API is enabled and the referrer allows this site',
-        false);
+        false, said);
     }
     /* A real 401 is the one case the old message was right about. */
     if (status === 401 || /authError|UNAUTHENTICATED|invalid_token/i.test(reason)) {
-      return fault('token', 'the calendar token expired — press it again', true);
+      return fault('token', 'the calendar token expired — press it again', true, said);
     }
     if (status === 403) {
       return fault('refused', viaKey
         ? 'the calendar refused the read — it is probably not public'
-        : 'the calendar refused the read' + (said ? ' — ' + said : ''), false);
+        : 'the calendar refused the read', false, said);
     }
-    return fault('http', 'Calendar said ' + status + (said ? ' — ' + said : ''), false);
+    return fault('http', 'Calendar said ' + status, false, said);
   }
 
   /* One place decides what a failed response means, and whether the cached
@@ -217,6 +271,47 @@
       if (e.tokenIsBad) { try { sessionStorage.removeItem(TOKKEY); } catch (x) {} }
       throw e;
     });
+  }
+
+  /* Read every calendar and merge. ONE FAILING MUST NOT COST THE OTHERS —
+     the whole point of a second calendar is that it carries something the
+     first does not, so losing the lot because one id went stale would be the
+     worst of both. Failures come back beside the events and the page says so;
+     only when nothing at all could be read is it an error. */
+  function readAll(ids, one, done) {
+    var got = [], failures = [], left = ids.length;
+    if (!left) return done(null, [], []);
+    ids.forEach(function (id, n) {
+      one(id, function (err, list) {
+        if (err) { err.calendar = id; failures.push({ id: id, error: err }); }
+        else got[n] = list;
+        if (--left) return;
+        var all = [];
+        got.forEach(function (l) { if (l) all = all.concat(l); });
+        /* Nothing read at all is a failure, and the first reason is as good
+           as any — they are usually the same reason. */
+        if (!all.length && failures.length && got.filter(Boolean).length === 0) {
+          return done(failures[0].error, [], failures);
+        }
+        done(null, dedupe(all).sort(function (a, b) { return a.start - b.start; }), failures);
+      });
+    });
+  }
+
+  /* The same event can sit on two calendars — an invitation you accepted is
+     on yours and on the one that sent it — and counting it twice would book
+     out a day that is only half committed. Google gives both copies one
+     iCalUID; without one, a block matching on title and both ends is the
+     same block seen twice. */
+  function dedupe(list) {
+    var seen = {}, out = [];
+    list.forEach(function (e) {
+      var k = e.uid || (e.title + '|' + (+e.start) + '|' + (+e.end));
+      if (seen[k]) return;
+      seen[k] = 1;
+      out.push(e);
+    });
+    return out;
   }
 
   /* ── automatic, with no popup ───────────────────────────────────────
@@ -233,20 +328,27 @@
      holding its id can read it. Setting it to "see only free/busy" keeps
      the hours and hides the titles, and the planner only needs the hours —
      an untitled block is still a block it must work around. */
-  function canAuto() { return !!(String(calCfg().apiKey || '').trim() && calId()); }
+  function canAuto() { return !!(String(calCfg().apiKey || '').trim() && calIds().length); }
 
   function autoRead(start, end, done) {
     var key = String(calCfg().apiKey || '').trim();
     if (!key) return done(new Error('no API key set — see calendar.apiKey in config.js'));
-    var url = eventsUrl(calId()) +
-      '?singleEvents=true&orderBy=startTime&maxResults=250' +
-      '&key=' + encodeURIComponent(key) +
-      '&timeMin=' + encodeURIComponent(iso(start)) +
-      '&timeMax=' + encodeURIComponent(iso(end));
-    fetch(url)
-      .then(function (r) { return r.ok ? r.json() : refuse(r, true); })
-      .then(function (j) { done(null, (j.items || []).map(normalise).filter(Boolean)); })
-      .catch(function (e) { done(e); });
+    readAll(calIds(), function (id, cb) {
+      var url = eventsUrl(id) +
+        '?singleEvents=true&orderBy=startTime&maxResults=250' +
+        '&key=' + encodeURIComponent(key) +
+        '&timeMin=' + encodeURIComponent(iso(start)) +
+        '&timeMax=' + encodeURIComponent(iso(end));
+      fetch(url)
+        .then(function (r) { return r.ok ? r.json() : refuse(r, true); })
+        .then(function (j) { cb(null, items(j, id)); })
+        .catch(cb);
+    }, done);
+  }
+
+  function items(j, id) {
+    return ((j && j.items) || []).map(function (ev) { return normalise(ev, id); })
+                                 .filter(Boolean);
   }
 
   /* Every calendar the signed-in account can see, so the right one can be
@@ -321,18 +423,21 @@
     return d.getDay() === 0 ? nextWeekRange(d) : weekRange(d);
   }
 
-  function fetchRange(token, start, end, done, id) {
-    var url = eventsUrl(id || calId()) +
-      '?singleEvents=true&orderBy=startTime&maxResults=250' +
-      '&timeMin=' + encodeURIComponent(iso(start)) +
-      '&timeMax=' + encodeURIComponent(iso(end));
-    fetch(url, { headers: { Authorization: 'Bearer ' + token } })
-      .then(function (r) { return r.ok ? r.json() : refuse(r, false); })
-      .then(function (j) { done(null, (j.items || []).map(normalise).filter(Boolean)); })
-      .catch(function (e) { done(e); });
+  /* `only` reads a single named calendar instead of all the configured ones. */
+  function fetchRange(token, start, end, done, only) {
+    readAll(only ? [only] : calIds(), function (id, cb) {
+      var url = eventsUrl(id) +
+        '?singleEvents=true&orderBy=startTime&maxResults=250' +
+        '&timeMin=' + encodeURIComponent(iso(start)) +
+        '&timeMax=' + encodeURIComponent(iso(end));
+      fetch(url, { headers: { Authorization: 'Bearer ' + token } })
+        .then(function (r) { return r.ok ? r.json() : refuse(r, false); })
+        .then(function (j) { cb(null, items(j, id)); })
+        .catch(cb);
+    }, done);
   }
 
-  function normalise(ev) {
+  function normalise(ev, from) {
     if (!ev || ev.status === 'cancelled') return null;
     var s = ev.start || {}, e = ev.end || {};
     var allDay = !!s.date;
@@ -344,6 +449,10 @@
     if (me && me.responseStatus === 'declined') return null;
     return {
       title: ev.summary || '(untitled)', start: start, end: end, allDay: allDay,
+      /* Which calendar it came off, and the id both copies of a shared event
+         share — one for saying where a block came from, one for not counting
+         it twice. */
+      cal: from || null, uid: ev.iCalUID || ev.id || null,
       /* The DATE the event happens on, taken from the stamp's own offset
          rather than from the viewer's clock. Google sends
          "2026-09-01T17:00:00-07:00" — that date is the date it happens,
@@ -384,7 +493,7 @@
         if (cur && cur.start && cur.end) {
           out.push({
             title: cur.title || '(untitled)', start: cur.start, end: cur.end,
-            allDay: !!cur.allDay,
+            allDay: !!cur.allDay, cal: null, uid: cur.uid || null,
             /* An .ics DTSTART is parsed into a local Date above, so its own
                calendar date is the one to key on. */
             day: cur.start.getFullYear() + '-' +
@@ -397,10 +506,11 @@
         cur = null; return;
       }
       if (!cur) return;
-      var m = /^(DTSTART|DTEND|SUMMARY)([^:]*):(.*)$/i.exec(ln);
+      var m = /^(DTSTART|DTEND|SUMMARY|UID)([^:]*):(.*)$/i.exec(ln);
       if (!m) return;
       var key = m[1].toUpperCase(), params = m[2] || '', val = m[3];
       if (key === 'SUMMARY') { cur.title = val.replace(/\\,/g, ',').replace(/\\n/gi, ' ').trim(); return; }
+      if (key === 'UID') { cur.uid = val.trim(); return; }
       var d = icsDate(val, params);
       if (!d) return;
       if (key === 'DTSTART') { cur.start = d; if (/VALUE=DATE(?!-TIME)/i.test(params)) cur.allDay = true; }
@@ -516,7 +626,8 @@
   w.CTCalendar = {
     connect: connect, fetchRange: fetchRange,
     weekRange: weekRange, nextWeekRange: nextWeekRange, planningRange: planningRange,
-    autoRead: autoRead, canAuto: canAuto, listCalendars: listCalendars, calId: calId,
+    autoRead: autoRead, canAuto: canAuto, listCalendars: listCalendars,
+    calId: calId, calIds: calIds, dedupe: dedupe,
     parseICS: parseICS, classify: classify, planWeek: planWeek, explain: explain,
     saveWeek: saveWeek, readWeek: readWeek, markDone: markDone,
     hasToken: function () { return !!tok(); }, SCOPE: SCOPE, KEY: WKEY

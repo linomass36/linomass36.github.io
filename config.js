@@ -49,12 +49,23 @@ window.APP_CONFIG = {
 
        OFFLINE — drop an .ics export. No credential, no network.
 
-     `id` is the calendar to read. Not "primary": a subscribed or imported
-     timetable has its own id, ending @import.calendar.google.com or
-     @group.calendar.google.com, and reading `primary` would return an empty
-     week. Find it in Calendar → the calendar → Settings → Calendar ID.  */
+     `ids` is EVERY calendar to read, and it is a list because a life is not
+     on one calendar: the clinical timetable is a subscribed import, an
+     internship is its own shared calendar, a lecture series is a third. All
+     of them are read and merged, and an event sitting on two of them — an
+     invitation you accepted, say — is counted once. Add a line per calendar.
+
+     Not "primary": a subscribed or imported timetable has its own id, ending
+     @import.calendar.google.com or @group.calendar.google.com, and reading
+     `primary` would return an empty week. Find each one in Google Calendar on
+     the web → hover the calendar → ⋮ → Settings and sharing → Calendar ID.
+     (The phone app does not show ids at all.) The Week page will also list
+     every calendar your account can read when it cannot find one of these. */
   calendar: {
-    id: 'dtbsph5r3al99g399tmjb6am2ce59s72@import.calendar.google.com',
+    ids: [
+      'dtbsph5r3al99g399tmjb6am2ce59s72@import.calendar.google.com'
+      // 'your-internship-calendar-id@group.calendar.google.com',
+    ],
     apiKey: '',          // paste to enable automatic reads; empty = press the button
     tz: 'America/Phoenix'
   },
