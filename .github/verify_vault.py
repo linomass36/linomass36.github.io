@@ -28,7 +28,13 @@ ALLOWED = {
     "vault.js", "vault.json", "manifest.json", "sw.js", "version.txt",
     "robots.txt", ".nojekyll",
 }
-ALLOWED_DIRS = {"icons"}
+# `fonts` joins `icons` for the same reason: a woff2 holds glyph outlines, not
+# your words. It has to ship as a file because hub.css is INLINED INTO EVERY
+# PAGE by the vault pass — four base64 faces would add ~295 KB to each of
+# thirty-one pages, about 9 MB of duplicated typeface. Nothing in here is
+# content, and the rule it must not break is that anything with words in it
+# stays sealed.
+ALLOWED_DIRS = {"icons", "fonts", "plates"}
 
 PAYLOAD_RE = re.compile(
     r'<script id="vault-payload"[^>]*>(.*?)</script>', re.S)

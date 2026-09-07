@@ -36,7 +36,45 @@
    knows the theme exists.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+/* ── the type: IM Fell, self-hosted ───────────────────────────────────────
+   The Fell types are the punches Bishop John Fell bought for Oxford in the
+   1670s — Dutch-cut, unevenly inked, and never regularised. That irregularity
+   is the point: no two 'e's sit quite the same, which is what a page set in a
+   standard digital face can never do. EB Garamond, which this replaced, is a
+   handsome modern revival and reads as a modern font.
+
+   SELF-HOSTED, not fetched. Three reasons, and the third is the binding one:
+   the look must not depend on a third party being up; a sandbox with no egress
+   to Google could never verify it; and @font-face pointing at gstatic would
+   leave the site's appearance dependent on a request the vault cannot make on
+   a locked page.
+
+   NOT base64. hub.css is inlined into every page by the vault pass, so four
+   embedded faces would add ~295 KB to each of thirty-one pages — about 9 MB of
+   duplicated typeface. They ship as files from fonts/, which verify_vault.py
+   allows for the same reason it allows icons/: glyph outlines are not content.
+
+   FOUR FACES, FOUR JOBS:
+     DW Pica italic     display — every page title, in the manuscript hand
+     English roman      body — the one face that has to survive long reading
+     English italic     the annotating voice: ledes, asides, descriptions
+     French Canon SC    small caps for labels, the lettering under a plate  */
+@font-face {
+  font-family: 'Fell'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('./fonts/fell-eng.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fell'; font-style: italic; font-weight: 400; font-display: swap;
+  src: url('./fonts/fell-eng-i.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fell Display'; font-style: italic; font-weight: 400; font-display: swap;
+  src: url('./fonts/fell-pica-i.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fell SC'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('./fonts/fell-sc.woff2') format('woff2');
+}
 
 /* ── tokens ──────────────────────────────────────────────────────────────── */
 :root {
@@ -72,10 +110,11 @@
   /* Prussian, from the sky of a Hudson River canvas. */
   --info:     #2E4A63;  --info-w: #E2E8ED;  --info-l: #AFC0CE;
 
-  --serif:  'EB Garamond', 'Iowan Old Style', Georgia, serif;
-  --mono:   'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
-  --sans:   var(--serif);
-  --display: var(--serif);
+  --serif:   'Fell', 'Iowan Old Style', Georgia, serif;
+  --display: 'Fell Display', 'Fell', Georgia, serif;
+  --sc:      'Fell SC', 'Fell', Georgia, serif;
+  --mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --sans:    var(--serif);
 
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
   --s5: 22px; --s6: 30px; --s7: 42px; --s8: 60px;
@@ -137,7 +176,13 @@ body.hub {
 .hub a { color: var(--accent); text-decoration: none;
   border-bottom: 1px solid var(--accent-l); }
 .hub a:hover { border-bottom-color: var(--accent); }
-.hub input, .hub select, .hub button, .hub textarea { font-family: var(--serif); font-size: inherit; }
+/* :where() so this carries ZERO specificity. Written as `.hub button` it was
+   (0,1,1) and beat every component rule at (0,1,0) — so .hub-tab and .hub-btn
+   silently lost their own typeface to the body face, on every page. A base
+   normaliser must never outrank the components it is normalising for. */
+:where(.hub) :where(input, select, button, textarea) {
+  font-family: var(--serif); font-size: inherit;
+}
 
 /* ── page shell ──────────────────────────────────────────────────────────── */
 .hub-page { max-width: var(--page); margin: 0 auto; padding: 0 var(--s4) var(--s8); }
@@ -161,8 +206,8 @@ body.hub {
 
 /* ── type ────────────────────────────────────────────────────────────────── */
 .hub-h1 {
-  font-family: var(--display); font-weight: 500;
-  font-size: clamp(34px, 6vw, 50px); line-height: 1.02; letter-spacing: -.012em;
+  font-family: var(--display); font-weight: 400; font-style: italic;
+  font-size: clamp(36px, 6.4vw, 54px); line-height: 1.04; letter-spacing: -.004em;
   margin: var(--s6) 0 var(--s2); color: var(--ink);
 }
 /* The manuscript hand. Every lede, aside and marginal note is italic — the
@@ -172,14 +217,14 @@ body.hub {
   color: var(--body); margin: 0; max-width: 60ch;
 }
 .hub-ms { font-size: 17px; color: var(--muted); }
-.hub-h2 { font-family: var(--display); font-weight: 500; font-size: 27px;
-  line-height: 1.16; margin: var(--s6) 0 var(--s2); }
+.hub-h2 { font-family: var(--display); font-weight: 400; font-style: italic;
+  font-size: 29px; line-height: 1.18; margin: var(--s6) 0 var(--s2); }
 .hub-h3 { font-size: 17px; font-weight: 600; margin: 0 0 var(--s2); color: var(--ink); }
 
 /* Small caps on a rule — the caption under an engraved plate. */
 .hub-kicker {
-  font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .22em;
-  text-transform: uppercase; color: var(--owed);
+  font-family: var(--sc); font-size: 15px; font-weight: 400; letter-spacing: .16em;
+  text-transform: lowercase; font-variant: small-caps; color: var(--owed);
   margin: var(--s6) 0 var(--s3); display: flex; align-items: baseline; gap: var(--s3);
 }
 .hub-kicker::after { content: ""; flex: 1; height: 1px; background: var(--line-2); }
@@ -191,16 +236,66 @@ body.hub {
   font-weight: 500; letter-spacing: -.02em; }
 .hub-mono { font-family: var(--mono); font-variant-numeric: lining-nums tabular-nums; }
 
-/* ── plate ornaments ─────────────────────────────────────────────────────── */
-/* Engraved line art, drawn rather than photographed: a heart with its great
-   vessels, and a rib arc. Used at low opacity as section marks and page
-   watermarks — the way an atlas repeats its figure in the margin. */
+/* ── plates ──────────────────────────────────────────────────────────────
+   Engraved line art, drawn rather than photographed. Three figures, each a
+   data-URI so nothing extra has to be fetched or sealed: the heart with its
+   great vessels, the thorax opened, and the bronchial tree.
+
+   ON THE PAINTINGS. The brief asks for Matejko, Chelmonski, the Hudson River
+   School and Eakins on these pages, and they are not here: this machine has
+   no route to Wikimedia, to any museum's open-access API, or to any other
+   image source — every one is blocked, tested and confirmed. So the colour
+   carries those traditions and these figures carry the anatomy, and the slot
+   below is built so that dropping the real files in is the whole job.
+
+   TO ADD A PAINTING: put the file in plates/ and name it in --plate-figure.
+   verify_vault.py allows plates/ to ship as files for the same reason it
+   allows fonts/ — a public-domain painting is not your content, and hub.css
+   is inlined into every page, so a base64 canvas would be duplicated
+   thirty-one times. Nothing else needs to change; .hub-figure already frames
+   and captions whatever it is given. */
 .hub-plate {
-  --plate: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23241B10' stroke-width='1.1'%3E%3Cpath d='M60 104c-16-12-34-27-38-46C18 41 28 28 42 28c8 0 14 4 18 10 4-6 10-10 18-10 14 0 24 13 20 30-4 19-22 34-38 46z'/%3E%3Cpath d='M42 38c6 8 10 20 10 32M78 38c-6 8-10 20-10 32'/%3E%3Cpath d='M46 22c2-6 8-9 14-9s12 3 14 9M52 14V6M68 14V6'/%3E%3C/svg%3E");
+  --plate-heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23241B10' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M60 104c-16-12-34-27-38-46C18 41 28 28 42 28c8 0 14 4 18 10 4-6 10-10 18-10 14 0 24 13 20 30-4 19-22 34-38 46z'/%3E%3Cpath d='M42 38c6 8 10 20 10 32M78 38c-6 8-10 20-10 32'/%3E%3Cpath d='M46 22c2-6 8-9 14-9s12 3 14 9M52 14V6M68 14V6'/%3E%3Cpath d='M36 52c6 2 12 3 18 3M84 52c-6 2-12 3-18 3' stroke-width='.7'/%3E%3C/svg%3E");
+  --plate-thorax: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23241B10' stroke-width='1' stroke-linecap='round'%3E%3Cpath d='M60 14v88'/%3E%3Cpath d='M60 26c-14 1-26 8-32 20M60 26c14 1 26 8 32 20'/%3E%3Cpath d='M60 40c-16 1-28 9-34 22M60 40c16 1 28 9 34 22'/%3E%3Cpath d='M60 54c-16 1-27 9-32 22M60 54c16 1 27 9 32 22'/%3E%3Cpath d='M60 68c-14 1-24 8-28 20M60 68c14 1 24 8 28 20'/%3E%3C/svg%3E");
+  --plate-bronchi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23241B10' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M60 10v34'/%3E%3Cpath d='M60 44c-10 0-18 6-22 14M60 44c10 0 18 6 22 14'/%3E%3Cpath d='M38 58c-6 4-10 12-11 20M38 58c-1 8-4 15-9 20M82 58c6 4 10 12 11 20M82 58c1 8 4 15 9 20'/%3E%3Cpath d='M27 78c-3 5-5 10-5 16M29 78c1 6 1 12-1 17M93 78c3 5 5 10 5 16M91 78c-1 6-1 12 1 17' stroke-width='.7'/%3E%3C/svg%3E");
+  --plate: var(--plate-heart);
   background-image: var(--plate);
-  background-repeat: no-repeat; background-position: center;
-  background-size: contain; opacity: .5;
+  background-repeat: no-repeat; background-position: center; background-size: contain;
+  opacity: .48;
 }
+.hub-plate.thorax  { --plate: var(--plate-thorax); }
+.hub-plate.bronchi { --plate: var(--plate-bronchi); }
+html.hb-dark .hub-plate { filter: invert(1) sepia(.35); opacity: .30; }
+
+/* An atlas figure: the image, ruled, with its lettering beneath. Give it a
+   --plate-figure and it shows a real picture instead of the drawn one. */
+.hub-figure { margin: var(--s6) 0; }
+.hub-figure .frame {
+  border: 1px solid var(--line-2); background: var(--surface);
+  padding: var(--s3); aspect-ratio: 4 / 3;
+  background-image: var(--plate-figure, none);
+  background-size: cover; background-position: center;
+}
+.hub-figure.drawn .frame { background-size: 62%; background-repeat: no-repeat;
+  background-position: center; }
+.hub-figure figcaption {
+  font-family: var(--sc); font-size: 15px; letter-spacing: .1em;
+  font-variant: small-caps; text-transform: lowercase;
+  color: var(--muted); margin-top: var(--s2); text-align: center;
+}
+.hub-figure figcaption em { font-family: var(--serif); font-style: italic;
+  font-variant: normal; letter-spacing: 0; color: var(--body); }
+
+/* A figure set into the margin of a long page, the way an atlas repeats its
+   plate beside the text. Hidden on a phone: there is no margin there. */
+.hub-marginal { display: none; }
+@media (min-width: 1150px) {
+  .hub-marginal {
+    display: block; position: absolute; right: calc(50% + var(--page) / 2 + var(--s5));
+    width: 150px; height: 150px;
+  }
+}
+
 .hub-rule-orn {
   display: flex; align-items: center; gap: var(--s3);
   margin: var(--s6) 0; color: var(--line-2);
@@ -241,8 +336,8 @@ body.hub {
   flex: none; min-height: var(--tap); padding: 0 var(--s4);
   display: inline-flex; align-items: center; gap: var(--s2);
   border: none; border-bottom: 2px solid transparent; background: none;
-  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--muted);
+  font-family: var(--sc); font-size: 17px; letter-spacing: .1em;
+  text-transform: lowercase; font-variant: small-caps; color: var(--muted);
   cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
 }
 .hub-tab:hover { color: var(--ink); }
@@ -270,7 +365,8 @@ body.hub {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
   min-height: var(--tap); padding: 0 var(--s4); border-radius: var(--r2);
   border: 1px solid var(--line-2); background: var(--raised); color: var(--body);
-  font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  font-family: var(--sc); font-size: 16px; letter-spacing: .08em;
+  text-transform: lowercase; font-variant: small-caps;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 .hub-btn:hover { background: var(--sunken); border-color: var(--faint); color: var(--ink); }

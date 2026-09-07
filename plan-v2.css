@@ -56,7 +56,10 @@
   --grey:    var(--muted);
   --grey-bg: var(--sunken);
 
-  --serif:  var(--display);
+  /* NOT --serif. hub.css owns that name for the BODY face; this file used it
+     for headings, and aliasing it here overrode the body face site-wide —
+     `--sans: var(--serif)` resolves at use time, so every page inherited the
+     display italic. The heading rules below point at --display directly. */
   --shadow: var(--sh1);
 }
 
@@ -70,12 +73,12 @@ a{color:inherit}
   padding:calc(20px + env(safe-area-inset-top,0px)) 18px 140px}
 .pv-kick{font-family:var(--mono);font-size:11px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--rust);font-weight:600}
-.pv-h1{font-family:var(--serif);font-size:34px;font-weight:500;line-height:1.1;margin:5px 0 10px}
+.pv-h1{font-family:var(--display);font-size:34px;font-weight:500;line-height:1.1;margin:5px 0 10px}
 /* The manuscript hand: a lede is an annotation beside the plate, not part
    of its lettering. Same rule for pull quotes and marginal notes. */
 .pv-lede{font-size:19px;font-style:italic;line-height:1.55;color:var(--mid);max-width:60ch;margin:0 0 26px}
 
-.pv-h2{font-family:var(--serif);font-size:23px;font-weight:500;line-height:1.2;
+.pv-h2{font-family:var(--display);font-size:23px;font-weight:500;line-height:1.2;
   margin:38px 0 6px;padding-top:22px;border-top:1px solid var(--rule)}
 .pv-h2:first-of-type{border-top:0;padding-top:0}
 .pv-sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
@@ -90,7 +93,7 @@ a{color:inherit}
   border-radius:16px;padding:18px 20px;margin:0 0 26px}
 .pv-ff-lab{font-family:var(--mono);font-size:10px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--live);font-weight:600}
-.pv-ff-n{font-family:var(--serif);font-size:44px;line-height:1;font-weight:500;
+.pv-ff-n{font-family:var(--display);font-size:44px;line-height:1;font-weight:500;
   color:var(--live);margin:8px 0 2px}
 .pv-ff-t{font-size:15px;color:var(--ink);font-weight:600}
 .pv-ff-d{font-size:13.5px;line-height:1.55;color:var(--mid);margin-top:8px;max-width:58ch}
@@ -130,14 +133,14 @@ a{color:inherit}
 .pv-steps{margin:9px 0 0;padding-left:18px}
 .pv-steps li{font-size:13.8px;line-height:1.62;color:var(--mid);margin-bottom:4px}
 
-.pv-quote{font-style:italic;font-family:var(--serif);font-size:15.5px;line-height:1.6;font-style:italic;
+.pv-quote{font-style:italic;font-family:var(--display);font-size:15.5px;line-height:1.6;font-style:italic;
   color:var(--ink);background:var(--warn-bg);border:1px solid var(--warn-ln);
   border-radius:12px;padding:13px 16px;margin:11px 0;max-width:64ch}
 .pv-rule{font-family:var(--mono);font-size:12.5px;line-height:1.62;color:var(--warn);
   background:var(--warn-bg);border:1px solid var(--warn-ln);border-radius:11px;
   padding:11px 14px;margin:11px 0;max-width:66ch}
 .pv-kill{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-ln)}
-.pv-punch{font-family:var(--serif);font-size:19px;line-height:1.4;color:var(--bad);
+.pv-punch{font-family:var(--display);font-size:19px;line-height:1.4;color:var(--bad);
   font-weight:500;margin:14px 0;max-width:58ch}
 
 /* tables */
@@ -160,7 +163,7 @@ tr.dim td{color:var(--faint)}
   border-left:4px solid var(--rule);border-radius:14px;padding:15px 17px;margin-bottom:10px;
   text-decoration:none;box-shadow:var(--shadow)}
 .pv-ph-n{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted)}
-.pv-ph-t{font-family:var(--serif);font-size:20px;font-weight:500;margin:3px 0 4px;color:var(--ink)}
+.pv-ph-t{font-family:var(--display);font-size:20px;font-weight:500;margin:3px 0 4px;color:var(--ink)}
 .pv-ph-o{font-size:14.4px;line-height:1.55;color:var(--mid)}
 .pv-ph-f{font-family:var(--mono);font-size:12px;line-height:1.5;color:var(--bad);margin-top:8px}
 
