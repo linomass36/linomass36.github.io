@@ -213,8 +213,11 @@
       var pageLinks = dests().map(function (d) {
         var lbl = destLabel(d, mode);
         var panels = (d.panels || []).map(function (p) {
-          var on = (p.href === here ||
-                    (p.href === 'Archive.html' && behindReference(here))) ? ' on' : '';
+          /* `p.href` may carry a hash once a page is folded, so compare on the
+             file it came from — otherwise standing on Plan.html lights nothing. */
+          var pf = p.file || p.href;
+          var on = (pf === here || p.href === here ||
+                    (pf === 'Archive.html' && behindReference(here))) ? ' on' : '';
           /* The panel name and the page's own name are usually the same word —
              "Verify" is "Verify" — and printing both is noise that makes the
              drawer look broken. The second line appears only when it actually

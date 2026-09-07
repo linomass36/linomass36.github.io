@@ -1,0 +1,343 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   hub.css — the v5 look: an anatomical atlas on yellowed paper.
+
+   THE BRIEF, and how it is met without a single image file.
+
+   Aged white stock, manuscript italic, Polish and American history painting,
+   cardiothoracic and anatomical themes. No painting is reproduced here and
+   none could be: the vault seals every asset at build time, so an external
+   image would either fail to load or have to ship in the clear, and both are
+   wrong. So the traditions are carried by PALETTE, TYPE and DRAWN LINE —
+   which is what they mostly are anyway.
+
+     Polish history painting — Matejko's crimson and gilt, Chełmoński's
+     umbers, Malczewski's olive. Deep, warm, slightly soiled colour.
+     American history painting — Hudson River School's tannin greens and
+     smoke, and Eakins, whose two great canvases are literally operating
+     theatres: The Gross Clinic and The Agnew Clinic. That is the bridge
+     between the painting brief and the surgical one, and it is the reason
+     arterial crimson is the alarm colour on this site.
+     Anatomical plate — Vesalius and the copperplate atlases: iron-gall ink
+     on foxed vellum, hairline rules, small caps, engraved line art.
+
+   COLOUR HAS MEANING, and only one thing is red. Arterial crimson means OWED
+   and nothing else; the interactive colour is a venous slate blue. v4 used
+   one rust for both links and alarms, which is most of why a board of
+   thirteen tiles read as an emergency in which nothing could be prioritised.
+
+   TYPE. EB Garamond throughout — it is a manuscript face with a real italic,
+   and the italic does actual work here: every aside, lede and marginal note
+   is set in it, the way a hand annotation sits beside a printed plate. IBM
+   Plex Mono is kept for one job only, tabular figures and small-cap labels,
+   because numbers must line up and a humanist serif will not do that.
+
+   DARK MODE is candlelight on the same paper: the stock darkens to tanned
+   leather, the ink warms to bone. It is a token swap; no component below
+   knows the theme exists.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* ── tokens ──────────────────────────────────────────────────────────────── */
+:root {
+  /* Stock. Yellowed white, warmer as it recedes — the page is the oldest
+     sheet, cards are fresher leaves laid on it. */
+  --canvas:   #EFE6D2;
+  --surface:  #F8F2E2;
+  --raised:   #FCF8EC;
+  --sunken:   #E9DFC7;
+
+  /* Iron-gall ink, faded through four steps. Never pure black: nothing on a
+     four-hundred-year-old plate is. */
+  --ink:      #241B10;
+  --body:     #4B3B26;
+  --muted:    #7A6543;
+  --faint:    #A4906B;
+
+  --line:     #DCCFAE;
+  --line-2:   #C6B48B;
+  --gilt:     #B08428;   /* the ruled gold of an illuminated border */
+
+  /* Venous slate — what you can click. Deliberately not red. */
+  --accent:   #35506E;
+  --accent-w: #E4E8ED;
+  --accent-l: #A9BACB;
+
+  /* Arterial crimson — Matejko's red, Eakins' operating field. OWED, only. */
+  --owed:     #8E2A20;  --owed-w: #F6E4DC;  --owed-l: #DCB6A6;
+  /* Verdigris — oxidised copper on an old plate. */
+  --ok:       #3F6B52;  --ok-w:   #E4EDE2;  --ok-l:   #B4CBB6;
+  /* Ochre gilt. */
+  --warn:     #96701A;  --warn-w: #F5EBD3;  --warn-l: #DFC98F;
+  /* Prussian, from the sky of a Hudson River canvas. */
+  --info:     #2E4A63;  --info-w: #E2E8ED;  --info-l: #AFC0CE;
+
+  --serif:  'EB Garamond', 'Iowan Old Style', Georgia, serif;
+  --mono:   'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --sans:   var(--serif);
+  --display: var(--serif);
+
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 22px; --s6: 30px; --s7: 42px; --s8: 60px;
+  --r1: 3px;  --r2: 4px;  --r3: 5px;  --r4: 7px;  --rf: 2px;
+
+  /* Print does not float. Shadows are the faint shade of a laid sheet, not
+     material elevation. */
+  --sh1: 0 1px 0 rgba(36,27,16,.05);
+  --sh2: 0 1px 2px rgba(36,27,16,.10);
+  --sh3: 0 2px 10px rgba(36,27,16,.16);
+
+  --tap: 44px;
+  --page: 760px;
+  --page-wide: 1180px;
+
+  /* Laid-paper grain and foxing. One data-URI, no asset to seal. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");
+}
+
+html.hb-dark, :root.hb-dark {
+  --canvas:  #171208;  --surface: #1F1810;  --raised: #271F14;  --sunken: #120E07;
+  --ink:     #EFE3C8;  --body:    #C7B694;  --muted:  #94815E;  --faint:  #6B5B3F;
+  --line:    #362B1B;  --line-2:  #4A3C26;  --gilt:   #C9A04A;
+  --accent:  #8FB0CE;  --accent-w:#18222C;  --accent-l:#2E4258;
+  --owed:    #E0705B;  --owed-w:  #2B140F;  --owed-l:  #4C241B;
+  --ok:      #7FB894;  --ok-w:    #142016;  --ok-l:    #27402E;
+  --warn:    #D6A63F;  --warn-w:  #2A2010;  --warn-l:  #46351A;
+  --info:    #7FA6C4;  --info-w:  #15202A;  --info-l:  #2A3F52;
+  --sh1: 0 1px 0 rgba(0,0,0,.35);
+  --sh2: 0 1px 2px rgba(0,0,0,.45);
+  --sh3: 0 2px 12px rgba(0,0,0,.55);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.hb-light) {
+    --canvas:  #171208;  --surface: #1F1810;  --raised: #271F14;  --sunken: #120E07;
+    --ink:     #EFE3C8;  --body:    #C7B694;  --muted:  #94815E;  --faint:  #6B5B3F;
+    --line:    #362B1B;  --line-2:  #4A3C26;  --gilt:   #C9A04A;
+    --accent:  #8FB0CE;  --accent-w:#18222C;  --accent-l:#2E4258;
+    --owed:    #E0705B;  --owed-w:  #2B140F;  --owed-l:  #4C241B;
+    --ok:      #7FB894;  --ok-w:    #142016;  --ok-l:    #27402E;
+    --warn:    #D6A63F;  --warn-w:  #2A2010;  --warn-l:  #46351A;
+    --info:    #7FA6C4;  --info-w:  #15202A;  --info-l:  #2A3F52;
+    --sh1: 0 1px 0 rgba(0,0,0,.35);
+    --sh2: 0 1px 2px rgba(0,0,0,.45);
+    --sh3: 0 2px 12px rgba(0,0,0,.55);
+  }
+}
+
+/* ── base ────────────────────────────────────────────────────────────────── */
+.hub, .hub * { box-sizing: border-box; }
+body.hub {
+  margin: 0; color: var(--ink);
+  background-color: var(--canvas);
+  background-image: var(--grain);
+  font-family: var(--serif); font-size: 17.5px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: oldstyle-nums;
+}
+.hub a { color: var(--accent); text-decoration: none;
+  border-bottom: 1px solid var(--accent-l); }
+.hub a:hover { border-bottom-color: var(--accent); }
+.hub input, .hub select, .hub button, .hub textarea { font-family: var(--serif); font-size: inherit; }
+
+/* ── page shell ──────────────────────────────────────────────────────────── */
+.hub-page { max-width: var(--page); margin: 0 auto; padding: 0 var(--s4) var(--s8); }
+.hub-page.wide { max-width: var(--page-wide); }
+
+.hub-top {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--canvas) 92%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line-2);
+  /* The double rule of a title page. */
+  box-shadow: 0 2px 0 -1px var(--line);
+}
+.hub-top-in { max-width: var(--page); margin: 0 auto; padding: var(--s3) var(--s4);
+  display: flex; align-items: center; gap: var(--s3); }
+.hub-mark { font-family: var(--mono); font-size: 9.5px; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--owed); font-weight: 600; }
+.hub-dateline { font-family: var(--mono); font-size: 10px; color: var(--faint);
+  letter-spacing: .08em; }
+.hub-sp { flex: 1; }
+
+/* ── type ────────────────────────────────────────────────────────────────── */
+.hub-h1 {
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(34px, 6vw, 50px); line-height: 1.02; letter-spacing: -.012em;
+  margin: var(--s6) 0 var(--s2); color: var(--ink);
+}
+/* The manuscript hand. Every lede, aside and marginal note is italic — the
+   annotation beside the plate, not the plate's own lettering. */
+.hub-lede, .hub-ms {
+  font-style: italic; font-size: 19px; line-height: 1.52;
+  color: var(--body); margin: 0; max-width: 60ch;
+}
+.hub-ms { font-size: 17px; color: var(--muted); }
+.hub-h2 { font-family: var(--display); font-weight: 500; font-size: 27px;
+  line-height: 1.16; margin: var(--s6) 0 var(--s2); }
+.hub-h3 { font-size: 17px; font-weight: 600; margin: 0 0 var(--s2); color: var(--ink); }
+
+/* Small caps on a rule — the caption under an engraved plate. */
+.hub-kicker {
+  font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--owed);
+  margin: var(--s6) 0 var(--s3); display: flex; align-items: baseline; gap: var(--s3);
+}
+.hub-kicker::after { content: ""; flex: 1; height: 1px; background: var(--line-2); }
+.hub-kicker .end { flex: none; font-weight: 400; letter-spacing: .06em;
+  text-transform: none; color: var(--faint); font-size: 10.5px; font-style: italic; }
+.hub-p { margin: 0 0 var(--s3); color: var(--body); }
+.hub-small { font-size: 14px; color: var(--muted); font-style: italic; }
+.hub-num { font-family: var(--mono); font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 500; letter-spacing: -.02em; }
+.hub-mono { font-family: var(--mono); font-variant-numeric: lining-nums tabular-nums; }
+
+/* ── plate ornaments ─────────────────────────────────────────────────────── */
+/* Engraved line art, drawn rather than photographed: a heart with its great
+   vessels, and a rib arc. Used at low opacity as section marks and page
+   watermarks — the way an atlas repeats its figure in the margin. */
+.hub-plate {
+  --plate: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23241B10' stroke-width='1.1'%3E%3Cpath d='M60 104c-16-12-34-27-38-46C18 41 28 28 42 28c8 0 14 4 18 10 4-6 10-10 18-10 14 0 24 13 20 30-4 19-22 34-38 46z'/%3E%3Cpath d='M42 38c6 8 10 20 10 32M78 38c-6 8-10 20-10 32'/%3E%3Cpath d='M46 22c2-6 8-9 14-9s12 3 14 9M52 14V6M68 14V6'/%3E%3C/svg%3E");
+  background-image: var(--plate);
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; opacity: .5;
+}
+.hub-rule-orn {
+  display: flex; align-items: center; gap: var(--s3);
+  margin: var(--s6) 0; color: var(--line-2);
+}
+.hub-rule-orn::before, .hub-rule-orn::after {
+  content: ""; flex: 1; height: 1px;
+  background: linear-gradient(to right, transparent, var(--line-2), transparent);
+}
+.hub-rule-orn .mark { font-size: 13px; color: var(--gilt); letter-spacing: .3em; }
+
+/* ── card ────────────────────────────────────────────────────────────────── */
+/* A leaf laid on the page: hairline border, squared corners, a hint of the
+   gilt rule. Not a material card — nothing here floats. */
+.hub-card {
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r2);
+  padding: var(--s4); box-shadow: var(--sh1);
+}
+.hub-card + .hub-card { margin-top: var(--s3); }
+.hub-card.pad-lg { padding: var(--s5); }
+.hub-card.flat { box-shadow: none; background: var(--sunken); }
+.hub-card.gilt { border-color: var(--gilt); box-shadow: inset 0 0 0 1px var(--surface); }
+
+.hub-card.t-owed { border-left: 3px solid var(--owed); background: var(--owed-w); }
+.hub-card.t-ok   { border-left: 3px solid var(--ok);   background: var(--ok-w); }
+.hub-card.t-warn { border-left: 3px solid var(--warn); background: var(--warn-w); }
+.hub-card.t-info { border-left: 3px solid var(--info); background: var(--info-w); }
+
+/* ── tabs ────────────────────────────────────────────────────────────────── */
+/* Tabbed index leaves. Scrolls rather than wraps: a wrapping bar changes
+   height as you move along it, which shifts the content under your thumb. */
+.hub-tabs {
+  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; padding: 0; margin: var(--s4) 0 var(--s5);
+  border-bottom: 1px solid var(--line-2);
+}
+.hub-tabs::-webkit-scrollbar { display: none; }
+.hub-tab {
+  flex: none; min-height: var(--tap); padding: 0 var(--s4);
+  display: inline-flex; align-items: center; gap: var(--s2);
+  border: none; border-bottom: 2px solid transparent; background: none;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+  cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
+}
+.hub-tab:hover { color: var(--ink); }
+.hub-tab[aria-selected="true"] {
+  color: var(--owed); border-bottom-color: var(--owed); font-weight: 600;
+}
+.hub-tab .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--owed); flex: none; }
+
+/* ── rows ────────────────────────────────────────────────────────────────── */
+.hub-list { border: 1px solid var(--line-2); border-radius: var(--r2);
+  background: var(--surface); overflow: hidden; box-shadow: var(--sh1); }
+.hub-row { display: flex; align-items: center; gap: var(--s3);
+  min-height: 56px; padding: var(--s3) var(--s4);
+  border-top: 1px solid var(--line); color: inherit; text-decoration: none; }
+.hub-row:first-child { border-top: none; }
+.hub-row:hover { background: var(--sunken); }
+.hub-row .grow { flex: 1; min-width: 0; }
+.hub-row .t { font-size: 17px; color: var(--ink); }
+.hub-row .d { font-size: 14.5px; color: var(--muted); font-style: italic;
+  margin-top: 1px; line-height: 1.45; }
+.hub-row .v { font-family: var(--mono); font-size: 12px; color: var(--faint); flex: none; }
+
+/* ── controls ────────────────────────────────────────────────────────────── */
+.hub-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
+  min-height: var(--tap); padding: 0 var(--s4); border-radius: var(--r2);
+  border: 1px solid var(--line-2); background: var(--raised); color: var(--body);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.hub-btn:hover { background: var(--sunken); border-color: var(--faint); color: var(--ink); }
+.hub-btn.pri { background: var(--owed); border-color: var(--owed); color: var(--surface); font-weight: 600; }
+.hub-btn.pri:hover { filter: brightness(1.12); color: var(--surface); }
+.hub-btn.danger { color: var(--owed); border-color: var(--owed-l); background: var(--owed-w); }
+.hub-btn[disabled] { opacity: .45; cursor: not-allowed; }
+.hub-row-btns { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
+
+.hub-in, .hub-ta {
+  width: 100%; min-height: var(--tap); padding: var(--s2) var(--s3);
+  border: 1px solid var(--line-2); border-radius: var(--r2);
+  background: var(--raised); color: var(--ink); font-size: 17px;
+}
+.hub-in:focus, .hub-ta:focus { outline: 2px solid var(--gilt); outline-offset: 1px;
+  border-color: var(--gilt); }
+.hub-ta { min-height: 120px; resize: vertical; line-height: 1.55; }
+
+.hub-chip {
+  display: inline-flex; align-items: center; gap: var(--s1);
+  font-family: var(--mono); font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  padding: 3px var(--s2); border-radius: var(--rf);
+  border: 1px solid var(--line-2); color: var(--muted); background: var(--raised);
+}
+.hub-chip.owed { color: var(--owed); border-color: var(--owed-l); background: var(--owed-w); }
+.hub-chip.ok   { color: var(--ok);   border-color: var(--ok-l);   background: var(--ok-w); }
+.hub-chip.warn { color: var(--warn); border-color: var(--warn-l); background: var(--warn-w); }
+.hub-chip.info { color: var(--info); border-color: var(--info-l); background: var(--info-w); }
+
+/* ── tables ──────────────────────────────────────────────────────────────── */
+.hub-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.hub-table { width: 100%; border-collapse: collapse; font-size: 16px; min-width: 520px; }
+.hub-table th {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--faint); font-weight: 400; text-align: left;
+  padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line-2);
+}
+.hub-table td { padding: var(--s3); border-bottom: 1px solid var(--line); color: var(--body);
+  vertical-align: top; }
+.hub-table tr:last-child td { border-bottom: none; }
+.hub-table td.k { color: var(--ink); font-weight: 500; }
+
+/* ── utility ─────────────────────────────────────────────────────────────── */
+.hub-rule { border: 1px solid var(--line-2); background: var(--sunken);
+  border-radius: var(--r2); padding: var(--s3) var(--s4); color: var(--body); font-size: 16px; }
+.hub-rule.kill { background: var(--owed-w); border-color: var(--owed-l); color: var(--owed); }
+.hub-foot { margin-top: var(--s7); padding-top: var(--s4); border-top: 1px solid var(--line-2);
+  display: flex; justify-content: space-between; gap: var(--s3);
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--faint); }
+.hub-grid { display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+[hidden] { display: none !important; }
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  body.hub { font-size: 17px; }
+  .hub-page { padding: 0 var(--s3) 96px; }
+  .hub-top-in { padding: var(--s2) 58px var(--s2) var(--s3); }
+  .hub-h1 { margin-top: var(--s5); }
+  .hub-lede { font-size: 18px; }
+  .hub-card { padding: var(--s3); }
+  .hub-table { min-width: 440px; font-size: 15px; }
+}
+@media (min-width: 900px) {
+  .hub-page { padding-left: var(--s5); padding-right: var(--s5); }
+  .hub-h1 { margin-top: var(--s7); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub *, .hub *::before, .hub *::after { animation: none !important; transition: none !important; }
+}

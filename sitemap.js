@@ -167,11 +167,13 @@
     'Campaign.html':             { name: 'The Campaign',  group: 'The plan', parent: 'Plan.html', back: 'correct',
       dest: 'plan', panel: 'Campaign', ord: 2,
       plain: 'Campaign',
-      blurb: 'The phase map: what happens when, through 2027.' },
+      blurb: 'The phase map: what happens when, through 2027.',
+      foldedInto: 'Plan.html#campaign' },
     'Verify.html':               { name: 'Verify',        group: 'The plan', parent: 'Plan.html', back: 'correct',
       dest: 'plan', panel: 'Verify', ord: 3,
       plain: 'Verify',
-      blurb: 'Assumptions nothing should be planned around until they resolve.' },
+      blurb: 'Assumptions nothing should be planned around until they resolve.',
+      foldedInto: 'Plan.html#verify' },
     'Debt.html':                 { name: 'The Debt',      group: 'The plan', parent: 'Plan.html', back: 'correct',
       dest: 'money', panel: 'Debt', ord: 3,
       plain: 'Debt',
@@ -188,7 +190,8 @@
     'Pipeline.html':             { name: 'Pipeline',      group: 'Research', parent: 'Plan.html', back: 'correct',
       dest: 'plan', panel: 'Research', ord: 4,
       plain: 'Research',
-      blurb: 'Every output, and the two fields that predict whether it finishes.' },
+      blurb: 'Every output, and the two fields that predict whether it finishes.',
+      foldedInto: 'Plan.html#research' },
     'Publication Pipeline.html': { name: 'Pipeline · the write-up', group: 'Research', parent: 'Plan.html', back: 'none',
       dest: 'plan', panel: 'Write-up', ord: 5,
       plain: 'Write-up',
@@ -374,12 +377,25 @@
      PAGES happens to be written in. The first panel is what the destination
      opens on, so this is a real decision — Body opens on the session you owe
      today, Money on net worth — and leaving it to file order got it wrong. */
+  /* Panel order is declared per page (`ord`), not inherited from the order
+     PAGES happens to be written in. The first panel is what the destination
+     opens on, so this is a real decision — Body opens on the session you owe
+     today, Money on net worth — and leaving it to file order got it wrong.
+
+     `foldedInto` is set once a page's content has actually moved: the file
+     stays as a redirect stub so no existing link breaks, but navigation goes
+     straight to the panel rather than bouncing through the stub. `file` keeps
+     the original name so the tests can still find it on disk. */
   function panelsOf(id) {
     return live().filter(function (f) { return PAGES[f].dest === id; })
                  .sort(function (a, b) { return (PAGES[a].ord || 99) - (PAGES[b].ord || 99); })
-                 .map(function (f) { return { href: f, panel: PAGES[f].panel || PAGES[f].name,
-                                              ord: PAGES[f].ord || 99 }; });
+                 .map(function (f) {
+                   var p = PAGES[f];
+                   return { href: p.foldedInto || f, file: f, folded: !!p.foldedInto,
+                            panel: p.panel || p.name, ord: p.ord || 99 };
+                 });
   }
+  function isFolded(file) { return !!(PAGES[file] && PAGES[file].foldedInto); }
   function byDestination() {
     return DESTINATIONS.map(function (d) {
       return { id: d.id, name: d.name, plain: d.plain, blurb: d.blurb, icon: d.icon,
@@ -465,6 +481,7 @@
     groups: groups,
     destinations: destinations, destination: destination, destOf: destOf,
     panelsOf: panelsOf, byDestination: byDestination, tabLinks: tabLinks,
+    isFolded: isFolded,
     naming: naming, setNaming: setNaming, label: label, destLabel: destLabel,
     chain: chain, here: here
   };

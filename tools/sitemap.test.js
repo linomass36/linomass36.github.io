@@ -142,6 +142,51 @@ group('Every live page has a destination, and every destination works');
      (clash.length ? ' — ' + clash.join(', ') : ''));
 })();
 
+/* ── folding ───────────────────────────────────────────────────────────────
+   A folded page's content has moved into a destination panel, but its FILE
+   stays as a redirect stub. Deleting those stubs is what turns a
+   consolidation into a wall of broken bookmarks, so the tests treat the stub
+   as load-bearing: it must exist, it must point at the panel, and the panel
+   it points at must be a real panel of a real destination. */
+group('Folded pages still resolve');
+
+(function () {
+  const folded = S.live().filter((f) => S.isFolded(f));
+  ok(folded.length > 0, 'some pages are folded (' + folded.length + ')');
+
+  folded.forEach((f) => {
+    const target = S.pages[f].foldedInto;
+    const [file, hash] = String(target).split('#');
+    ok(fs.existsSync(path.join(ROOT, f)),
+       f + ' keeps a stub on disk so old links survive');
+    ok(!!S.get(file) && !S.isArchived(file),
+       f + ' folds into a live declared page (' + file + ')');
+    ok(S.destOf(f) === S.destOf(file),
+       f + ' folds into its own destination');
+    ok(!!hash, f + ' folds to a named panel, not just a page');
+
+    /* The stub must actually send you there, or it is a dead end wearing a
+       redirect's clothes. */
+    const stub = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    ok(stub.indexOf(target) >= 0, f + ' stub points at ' + target);
+    ok(/location\.replace|http-equiv="refresh"/i.test(stub), f + ' stub actually redirects');
+  });
+
+  /* The destination page has to contain the panel each fold names. */
+  const byDest = {};
+  folded.forEach((f) => {
+    const [file, hash] = String(S.pages[f].foldedInto).split('#');
+    (byDest[file] = byDest[file] || []).push(hash);
+  });
+  Object.keys(byDest).forEach((file) => {
+    const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
+    byDest[file].forEach((h) => {
+      ok(html.indexOf('panel-' + h) >= 0,
+         file + ' contains the #' + h + ' panel it is folded into');
+    });
+  });
+})();
+
 group('Both namings are complete, so the toggle cannot show a blank');
 
 (function () {

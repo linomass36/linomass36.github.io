@@ -187,6 +187,7 @@ BUNDLER_MARK = '<script type="__bundler/template">'
 # saves us from regex-editing the escaped inner one.
 BUNDLER_HEAD = (
     '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+    '<link rel="stylesheet" href="./hub.css?v=__APP_VERSION__">\n'
     '<link rel="stylesheet" href="./mobile.css?v=__APP_VERSION__">\n'
     '<script src="./config.js?v=__APP_VERSION__"></script>\n'
     '<script src="./archive.js?v=__APP_VERSION__"></script>\n'
