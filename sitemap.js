@@ -80,12 +80,61 @@
     'Settings.html':             { name: 'Recalibrate',   group: 'Plan upkeep', parent: 'Plan.html', back: 'correct' },
     'Archive.html':              { name: 'Archive · v1',  group: 'Plan upkeep', parent: 'Plan.html', back: 'correct' },
 
-    'CT Master Plan.html':       { name: 'CT Master Plan (v1)', archived: true, replacedBy: 'Plan.html' },
-    'Summer Sprint.dc.html':     { name: 'Summer Sprint',       archived: true, replacedBy: 'Plan.html' },
-    'Plan Analysis.dc.html':     { name: 'Plan Analysis',       archived: true, replacedBy: 'Plan.html' },
-    'Research Plan.dc.html':     { name: 'Research Plan',       archived: true, replacedBy: 'Pipeline.html' },
-    'Timeline.dc.html':          { name: 'Collision Timeline',  archived: true, replacedBy: 'Plan.html' },
-    'Reference.dc.html':         { name: 'Reference',           archived: true, replacedBy: 'Archive.html' }
+    /* ── archived ──────────────────────────────────────────────────────────
+       Each one carries what the Archive page needs to describe it: `meta` is
+       its size at a glance, `was` what it was for, `why` it stopped being
+       current, `replacedBy` what took over. That text used to live in a
+       hardcoded list inside Archive.html — the same mistake this file was
+       written to end — and it had already drifted: Reference.dc.html was
+       archived here and absent there, so the one page the archive exists to
+       keep readable was reachable only by typing its URL. */
+    'CT Master Plan.html': {
+      name: 'CT Master Plan (v1)', archived: true, replacedBy: 'Plan.html',
+      meta: '371 steps \u00b7 13 branches', color: '#993C1D',
+      was: 'The full inventory: four research tracks, six identity dimensions, and every step ' +
+           'from the summer to the twenty-five-year view.',
+      why: 'Its three founding assumptions did not hold \u2014 the capital engine, the research ' +
+           'spine, and topic-first specialty choice. Replaced wholesale rather than edited.' },
+
+    'Summer Sprint.dc.html': {
+      name: 'Summer Sprint', archived: true, replacedBy: 'Plan.html',
+      meta: '35 moves \u00b7 Jul \u2013 Oct 2026', color: '#3B6D11',
+      was: 'The 52-day sprint at term resolution: the guide, the capital ladder, the habits ' +
+           'underneath them.',
+      why: 'The summer it planned has happened. Its earnings and product assumptions are ' +
+           'superseded by the ground-truth table.' },
+
+    'Research Plan.dc.html': {
+      name: 'Research Plan', archived: true, replacedBy: 'Pipeline.html',
+      meta: '5 tracks \u00b7 8 quarters', color: '#534AB7',
+      was: 'A five-track research portfolio with phase-by-phase execution, decision gates and a ' +
+           'dependency view.',
+      why: 'It had drifted to five tracks while the master plan carried four, and neither matched ' +
+           'what was actually being worked on. Collapsed to one live project plus an annex.' },
+
+    'Plan Analysis.dc.html': {
+      name: 'Plan Analysis', archived: true, replacedBy: 'Plan.html',
+      meta: 'the strategic read', color: '#6E4B8A',
+      was: 'The v1 plan examined rather than listed \u2014 summer into year into decade, with its ' +
+           'soft spots written out.',
+      why: 'It analyses a plan that no longer exists. Worth reading once as a record of what the ' +
+           'reasoning looked like before the recalibration.' },
+
+    'Timeline.dc.html': {
+      name: 'Collision Timeline', archived: true, replacedBy: 'Plan.html',
+      meta: 'one axis', color: '#2E6A86',
+      was: 'Checkpoints, conferences and deadlines merged onto a single line so collisions were ' +
+           'visible early.',
+      why: 'The dates it merges are v1 dates. The v2 phase map carries the live ones.' },
+
+    'Reference.dc.html': {
+      name: 'Reference', archived: true, replacedBy: 'Archive.html',
+      meta: 'the door to five documents', color: '#8a8577',
+      was: 'One drawer entry instead of five: a page saying what each read-only document was and ' +
+           'when it was worth opening, so they did not sit at the same weight as a page you open ' +
+           'every morning.',
+      why: 'The Archive does that job now, and says why each document was retired rather than ' +
+           'only what it held.' }
   };
 
   /* The phone tab bar. Deliberately NOT the spine: the spine is an ownership
@@ -111,6 +160,18 @@
   }
   function archived() {
     return Object.keys(PAGES).filter(function (f) { return PAGES[f].archived; });
+  }
+
+  /* The archived pages as full records, in declaration order, for the Archive
+     page to render. Everything needed to describe a retired document is here,
+     so archiving a page is one edit in this file rather than two in two — and
+     a page cannot be archived into invisibility again. */
+  function archivedPages() {
+    return archived().map(function (f) {
+      var p = PAGES[f];
+      return { href: f, name: p.name, meta: p.meta || '', color: p.color || '#8a8577',
+               was: p.was || '', why: p.why || '', now: p.replacedBy || 'Plan.html' };
+    });
   }
 
   /* Grouped for the drawer and the Standing's directory, in reading order. */
@@ -147,7 +208,8 @@
   w.SITEMAP = {
     spine: SPINE, groupOrder: GROUP_ORDER, pages: PAGES, tabs: TABS,
     get: get, nameOf: nameOf, parentOf: parentOf, isArchived: isArchived,
-    isSpine: isSpine, live: live, archived: archived, groups: groups,
+    isSpine: isSpine, live: live, archived: archived, archivedPages: archivedPages,
+    groups: groups,
     chain: chain, here: here
   };
 })(typeof window !== 'undefined' ? window : this);
