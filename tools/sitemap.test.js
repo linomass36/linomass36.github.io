@@ -66,6 +66,116 @@ group('Every page is declared, and every declaration exists');
    every archived page is described, and every description is of a page that
    really is archived. It matters more as pages are consolidated — each one
    retired is a chance to drop a document on the floor. */
+/* ── the v5 destination model ──────────────────────────────────────────────
+   Thirty-one pages became ten places. The pages have not moved yet — each
+   destination still LANDS on one of them — so these assertions are about the
+   model being complete and coherent before any content is touched, which is
+   the whole reason the structure is being changed first.
+
+   The one that matters most is coverage: a live page with no destination is a
+   page that will vanish from the navigation the moment the drawer stops
+   listing all thirty-one. That is precisely how Reference.dc.html became
+   unreachable, one layer up. */
+group('Every live page has a destination, and every destination works');
+
+(function () {
+  const dests = S.destinations();
+  ok(dests.length >= 9, 'the destinations are declared (' + dests.length + ')');
+
+  const live = S.live();
+  const homeless = live.filter((f) => !S.destOf(f));
+  ok(homeless.length === 0,
+     'every live page belongs to a destination' +
+     (homeless.length ? ' — orphaned: ' + homeless.join(', ') : ''));
+
+  const stray = S.archived().filter((f) => S.pages[f].dest);
+  ok(stray.length === 0,
+     'no archived page claims a destination' +
+     (stray.length ? ' — ' + stray.join(', ') : ''));
+
+  const ids = dests.map((d) => d.id);
+  const bogus = live.map((f) => S.destOf(f)).filter((d) => ids.indexOf(d) < 0);
+  ok(bogus.length === 0, 'no page names a destination that does not exist');
+
+  /* Every destination has to be reachable and land somewhere real, or a tab
+     leads nowhere. */
+  const badLand = dests.filter((d) => !d.lands || !fs.existsSync(path.join(ROOT, d.lands)));
+  ok(badLand.length === 0,
+     'each destination lands on a page that exists' +
+     (badLand.length ? ' — ' + badLand.map((d) => d.id + '->' + d.lands).join(', ') : ''));
+
+  const landsArchived = dests.filter((d) => S.isArchived(d.lands));
+  ok(landsArchived.length === 0, 'no destination lands on an archived page');
+
+  const empty = dests.filter((d) => S.panelsOf(d.id).length === 0);
+  ok(empty.length === 0,
+     'no destination is empty' + (empty.length ? ' — ' + empty.map((d) => d.id).join(', ') : ''));
+
+  /* The landing page must be one of the destination's own panels, or you
+     arrive somewhere the tabs do not include. */
+  const offPanel = dests.filter((d) => !S.panelsOf(d.id).some((p) => p.href === d.lands));
+  ok(offPanel.length === 0,
+     'each destination lands on one of its own panels' +
+     (offPanel.length ? ' — ' + offPanel.map((d) => d.id).join(', ') : ''));
+
+  const total = dests.reduce((n, d) => n + S.panelsOf(d.id).length, 0);
+  ok(total === live.length,
+     'the panels account for every live page exactly once (' + total + '/' + live.length + ')');
+
+  /* Panel order is a decision — the first panel is what opens — so it must be
+     declared rather than inherited from file order. */
+  const unordered = live.filter((f) => typeof S.pages[f].ord !== 'number');
+  ok(unordered.length === 0,
+     'every page declares its panel order' +
+     (unordered.length ? ' — ' + unordered.join(', ') : ''));
+
+  const clash = [];
+  dests.forEach((d) => {
+    const seen = {};
+    S.panelsOf(d.id).forEach((p) => {
+      if (seen[p.ord]) clash.push(d.id + ':' + p.ord);
+      seen[p.ord] = 1;
+    });
+  });
+  ok(clash.length === 0,
+     'no two panels in a destination share an order' +
+     (clash.length ? ' — ' + clash.join(', ') : ''));
+})();
+
+group('Both namings are complete, so the toggle cannot show a blank');
+
+(function () {
+  const live = S.live();
+  const noPlain = live.filter((f) => !S.pages[f].plain);
+  ok(noPlain.length === 0,
+     'every page has a plain-language name' + (noPlain.length ? ' — ' + noPlain.join(', ') : ''));
+
+  const noBlurb = live.filter((f) => !S.pages[f].blurb);
+  ok(noBlurb.length === 0,
+     'every page has a one-line description' + (noBlurb.length ? ' — ' + noBlurb.join(', ') : ''));
+
+  const bad = live.filter((f) => {
+    const a = S.label(f, 'named'), b = S.label(f, 'plain');
+    return !a.title || !b.title;
+  });
+  ok(bad.length === 0, 'both namings resolve to a title for every page');
+
+  const dests = S.destinations();
+  ok(dests.every((d) => d.name && d.plain && d.blurb),
+     'every destination carries a name, a plain word and a description');
+
+  /* A tab bar is five words wide. Anything longer is truncated on a phone,
+     which teaches nobody anything. */
+  const tabs = S.tabLinks('named').concat(S.tabLinks('plain'));
+  const longTab = tabs.filter((t) => t.label.length > 8);
+  ok(longTab.length === 0,
+     'no tab label is too long for a phone' +
+     (longTab.length ? ' — ' + longTab.map((t) => t.label).join(', ') : ''));
+
+  const deadTab = S.tabLinks().filter((t) => !fs.existsSync(path.join(ROOT, t.href)));
+  ok(deadTab.length === 0, 'every phone tab points at a page that exists');
+})();
+
 group('The Archive describes every archived page');
 
 (function () {
@@ -134,8 +244,19 @@ group('The board and the drawer point somewhere live');
   ok(unknown.length === 0, 'every system tile points at a declared page' +
      (unknown.length ? ' — ' + unknown.map((b) => b.id + '→' + b.href).join(', ') : ''));
 
-  const tabsOk = S.tabs.every((t) => !!S.get(t[0]) && !S.isArchived(t[0]));
-  ok(tabsOk, 'every tab points at a live declared page');
+  /* TABS holds destination ids now, not page hrefs — the bar names places, and
+     tabLinks() resolves each to whatever page it currently lands on. The check
+     is the same one it always was, applied to the resolved form: a tab must
+     reach a live, declared page. */
+  const ids = S.destinations().map((d) => d.id);
+  ok(S.tabs.every((t) => ids.indexOf(t[0]) >= 0),
+     'every tab names a destination that exists');
+
+  const links = S.tabLinks();
+  const tabsOk = links.every((t) => !!S.get(t.href) && !S.isArchived(t.href));
+  ok(tabsOk, 'every tab resolves to a live declared page' +
+     (tabsOk ? '' : ' — ' + links.filter((t) => !S.get(t.href) || S.isArchived(t.href))
+                          .map((t) => t.id + '→' + t.href).join(', ')));
 }
 
 group('Every page can be walked home');
