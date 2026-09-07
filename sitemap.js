@@ -101,7 +101,14 @@
 
     { id: 'settings', name: 'Recalibrate',   plain: 'Settings',  icon: '\u2699',
       lands: 'Settings.html',
-      blurb: 'Change the plan, declare a condition, back everything up, read the archive.' }
+      blurb: 'Change the plan, declare a condition, back everything up, read the archive.' },
+
+    /* The tenth, and the only one that is not a system: it explains the other
+       nine. Last because you come here when something is unclear, not as part
+       of a day. */
+    { id: 'guide',    name: 'The Guide',     plain: 'Guide',     icon: '\u2042',
+      lands: 'Guide.html',
+      blurb: 'What this is, where everything lives, and how to get it back.' }
   ];
 
   var PAGES = {
@@ -222,6 +229,11 @@
        unlike Plan.html, which kept its own `Now` content, this file has no
        panel of its own. A shell is what a destination lands on; it is not
        listed as a panel, or the drawer shows "Targets" twice. */
+    'Guide.html':                { name: 'The Guide',     group: 'Plan upkeep', parent: 'Standing.html', back: 'none',
+      dest: 'guide', panel: 'Guide', ord: 1,
+      plain: 'Guide',
+      blurb: 'What this is, where everything lives, and how to get it back.' },
+
     'Money.html':                { name: 'Money',         group: 'People & money', parent: 'Standing.html', back: 'none',
       dest: 'money', shell: true,
       plain: 'Money',
