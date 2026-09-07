@@ -1185,17 +1185,22 @@ class Component extends DCLogic {
     this.setState(s => ({ tick: s.tick + 1 }));
   }
 
-  BKEYS = ['ct-master-plan-v2', 'ct-master-plan-v1', 'ct_lifelog_v1', 'ct_journal_v1', 'nm_nodes_v2', 'nm_settings_v2', 'hub_confs_v1', 'hub_scholarships_v1', 'nm_guide_seen_v1', 'ct_dossier_v1', 'ct_vault_v1', 'ct_study_v1', 'ct_examiner_v1', 'ct_reading_v1', 'ct_reading_books_v1', 'ct_obsidian_cfg_v1', 'ct_anatomy_v1', 'ct_grind_v1', 'ct_research_v1', 'ct_resurface_v1'];
+  /* ── backup ─────────────────────────────────────────────────────────────
+     BKEYS used to live here: a hardcoded list of twenty keys, hand-maintained,
+     against a hub that writes forty. It silently omitted twenty-two live
+     stores — the plan's ticks, the whole health record, the weekly reviews,
+     the elastic week, conditions, the fact table — and listed two nothing has
+     written in months. A backup that restores less than half of what you have
+     is the most dangerous kind, because you only find out when you need it.
+
+     backup.js enumerates localStorage instead of keeping a list, so this now
+     delegates rather than keeping a second, wronger copy. It also keeps
+     credentials out of the file; the old one had no notion of that. */
   doBackupAction = () => {
-    const out = { __ct_hub_backup: 1, ts: Date.now(), data: {} };
-    this.BKEYS.forEach(k => { try { const v = localStorage.getItem(k); if (v != null) out.data[k] = v; } catch (e) {} });
-    const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'ct-hub-backup-' + new Date().toISOString().slice(0, 10) + '.json';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    try { localStorage.setItem('ct_backup_meta_v1', JSON.stringify({ ts: Date.now() })); } catch (e) {}
+    const B = window.Backup;
+    if (!B) { alert('backup.js did not load — reload before trusting a backup.'); return; }
+    const m = B.download();
+    try { localStorage.setItem('ct_backup_meta_v1', JSON.stringify({ ts: Date.now(), count: m.count })); } catch (e) {}
     this.setState(s => ({ tick: s.tick + 1 }));
   };
   doRestoreAction = () => {
@@ -1207,10 +1212,18 @@ class Component extends DCLogic {
       rd.onload = () => {
         try {
           const p = JSON.parse(rd.result);
-          if (!p || !p.__ct_hub_backup || !p.data) { alert('Not a CT Hub backup file.'); return; }
-          const n = Object.keys(p.data).length;
-          if (!confirm('Restore ' + n + ' stores from ' + new Date(p.ts).toLocaleDateString() + '? This overwrites what is in this browser now.')) return;
-          Object.keys(p.data).forEach(k => { try { localStorage.setItem(k, p.data[k]); } catch (e) {} });
+          /* Two shapes: the current one written by backup.js, and the legacy
+             `{__ct_hub_backup, data}` files already sitting in Downloads.
+             Refusing the old ones would strand every backup taken so far. */
+          const stores = (p && p.stores) || (p && p.__ct_hub_backup && p.data) || null;
+          if (!stores) { alert('Not a CT Hub backup file.'); return; }
+          const when = p.day || (p.at || '').slice(0, 10) ||
+                       (p.ts ? new Date(p.ts).toLocaleDateString() : 'an unknown date');
+          const n = Object.keys(stores).length;
+          if (!confirm('Restore ' + n + ' stores from ' + when + '?\n\n' +
+                       'This overwrites what is in this browser now. It does not delete stores ' +
+                       'the file does not mention.')) return;
+          Object.keys(stores).forEach(k => { try { localStorage.setItem(k, stores[k]); } catch (e) {} });
           location.reload();
         } catch (e) { alert('Could not read that file.'); }
       };

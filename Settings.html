@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="./plan-v2.css">
 <script src="./plan-v2-data.js"></script>
 <script src="./plan-v2.js"></script>
+<script src="./backup.js"></script>
 <script src="./day.js"></script>
 </head>
 <body>
@@ -168,6 +169,38 @@
       '<button class="pv-btn" id="dl-state">Download progress</button>' +
       '<button class="pv-btn" id="reset">Reset progress…</button></div>');
 
+    /* ── backup ───────────────────────────────────────────────────────────
+       Above the foot note because it is the most important control on the
+       page: it is the one that survives everything else going wrong.
+
+       Counts are computed live from localStorage rather than described, so
+       the page cannot claim to back up more than it does — which is exactly
+       how the old twenty-key list came to omit twenty-two stores while
+       still calling itself a backup. */
+    H.push('<h2 class="pv-h2">Backup</h2>');
+    H.push('<div class="pv-sub">Every store in this browser, in one file</div>');
+    var bk = window.Backup;
+    if (!bk) {
+      H.push('<div class="pv-rule pv-kill"><b>backup.js did not load.</b> ' +
+        'Without it this page cannot read your stores. Reload before trusting anything here.</div>');
+    } else {
+      var man = bk.collect();
+      H.push('<p class="pv-p"><b>' + man.count + ' stores · ' + bk.human(man.bytes) + '</b>. ' +
+        'Everything the hub has written in this browser \u2014 the plan\u2019s ticks, the boards, ' +
+        'the logs, the journal, the reading list. Not a list of keys someone has to remember to ' +
+        'update: it reads what is actually there, so a store added next year is in the next backup.</p>');
+      if (man.skipped.length) {
+        H.push('<p class="pv-small">Deliberately left out: <code>' + esc(man.skipped.join('</code>, <code>')) +
+          '</code>. Sync bookkeeping, the device-only vault key, and your calendar token \u2014 ' +
+          'credentials do not belong in a file you might email to yourself.</p>');
+      }
+      H.push('<div class="pv-row" style="gap:9px">' +
+        '<button class="pv-btn pri" id="bk-dl">Download backup</button>' +
+        '<button class="pv-btn" id="bk-pick">Restore from a file\u2026</button>' +
+        '<input type="file" id="bk-file" accept=".json,application/json" style="display:none"></div>');
+      H.push('<div id="bk-out"></div>');
+    }
+
     H.push('<p class="pv-foot">Everything on this page writes to one key in your browser store, which sync.js carries across your devices. ' +
       'Nothing is sent anywhere by this page. The shipped plan lives in <code>plan-v2-data.js</code> in the repo — ' +
       'if you want an import to become permanent, paste it there and deploy.</p>');
@@ -294,6 +327,83 @@
   function wire() {
     var $ = function (id) { return document.getElementById(id); };
     var D = P.plan();
+
+    /* ── backup ───────────────────────────────────────────────────────────
+       Restore is two steps on purpose. The file is read and described first,
+       and nothing is written until you have seen the count of what would be
+       replaced — because "replace" is the mode that loses work, and a button
+       that does it on one tap with no preview is a trap. */
+    if (window.Backup && $('bk-dl')) {
+      var bk = window.Backup, pending = null;
+
+      $('bk-dl').addEventListener('click', function () {
+        var m = bk.download();
+        $('bk-out').innerHTML = '<div class="pv-rule"><b>Saved ' + esc(bk.filename(m)) + '</b> \u2014 ' +
+          m.count + ' stores, ' + bk.human(m.bytes) + '. Keep it somewhere that is not this device.</div>';
+      });
+
+      $('bk-pick').addEventListener('click', function () { $('bk-file').click(); });
+
+      $('bk-file').addEventListener('change', function (e) {
+        var f = e.target.files && e.target.files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function () {
+          var look = bk.inspect(String(r.result));
+          if (!look.ok) {
+            pending = null;
+            $('bk-out').innerHTML = '<div class="pv-rule pv-kill"><b>Cannot read that file.</b> ' +
+              esc(look.why) + '</div>';
+            return;
+          }
+          pending = String(r.result);
+          var when = (look.day || look.at || '').slice(0, 10);
+          var h = '<div class="pv-rule"><b>' + look.keys.length + ' stores from ' + esc(when) + '</b>' +
+            (look.version ? ' \u00b7 hub v' + esc(look.version) : '') + ' \u00b7 ' + look.human + '.<br>' +
+            'Restoring would <b>add ' + look.adds.length + '</b>, ' +
+            '<b>overwrite ' + look.replaces.length + '</b>, and leave ' +
+            look.identical.length + ' unchanged.' +
+            (look.untouched.length
+              ? ' <b>' + look.untouched.length + '</b> store' + (look.untouched.length === 1 ? '' : 's') +
+                ' here are not in the file and are never deleted by a restore.'
+              : '') +
+            '</div>';
+          if (look.replaces.length) {
+            h += '<p class="pv-small">Would be overwritten: <code>' +
+              esc(look.replaces.join('</code>, <code>')) + '</code></p>';
+          }
+          h += '<div class="pv-row" style="gap:9px">' +
+            '<button class="pv-btn" id="bk-merge">Merge \u2014 only add what is missing</button>' +
+            '<button class="pv-btn" id="bk-replace">Replace ' + look.replaces.length + ' \u2026</button></div>';
+          $('bk-out').innerHTML = h;
+
+          $('bk-merge').addEventListener('click', function () { doRestore('merge'); });
+          $('bk-replace').addEventListener('click', function () {
+            if (!window.confirm('Overwrite ' + look.replaces.length + ' store' +
+                (look.replaces.length === 1 ? '' : 's') + ' with the backup\u2019s version?\n\n' +
+                'Anything changed since ' + when + ' is lost. This cannot be undone.')) return;
+            doRestore('replace');
+          });
+        };
+        r.readAsText(f);
+        e.target.value = '';
+      });
+
+      function doRestore(mode) {
+        if (!pending) return;
+        var res = bk.restore(pending, mode);
+        if (!res.ok) {
+          $('bk-out').innerHTML = '<div class="pv-rule pv-kill">' + esc(res.why) + '</div>';
+          return;
+        }
+        $('bk-out').innerHTML = '<div class="pv-rule"><b>Restored.</b> ' +
+          res.wrote.length + ' store' + (res.wrote.length === 1 ? '' : 's') + ' written' +
+          (res.skipped.length ? ', ' + res.skipped.length + ' left alone (merge)' : '') +
+          (res.failed.length ? ', <b>' + res.failed.length + ' failed</b>' : '') +
+          '. Reload for the pages to read them.</div>';
+        pending = null;
+      }
+    }
 
     $('copy-plan').addEventListener('click', function () { copy(JSON.stringify(D, null, 2), this); });
     $('copy-prompt').addEventListener('click', function () { copy(PROMPT, this); });
