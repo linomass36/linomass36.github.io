@@ -267,6 +267,18 @@
         <div class="gb-note" style="margin-top: 12px;">{{ skipOrder }}</div>
       </div>
 
+      <!-- The board plans training. The rest protocol plans the day around it,
+           and the two describe the same Monday and Friday differently — so the
+           board says which one governs rather than leaving you to notice. -->
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Rest</div>
+        <div class="gb-h2">{{ restHead }}</div>
+        <div class="gb-note">{{ restLine }}</div>
+        <div class="gb-row" style="margin-top: 12px;">
+          <a href="Rest.html" class="gb-btn">The rest protocol →</a>
+        </div>
+      </div>
+
       <sc-for list="{{ weekRows }}" as="w" hint-placeholder-count="7">
         <div class="gb-panel" style="margin-top: 10px;">
           <div class="gb-row">
@@ -598,7 +610,7 @@ class Component extends DCLogic {
       return { weekLabel: '—', hasWkTag: false, wkTag: '', wkTagColor: '', pips: [], weekLine: 'The programme did not load.',
                weekDone: false, advanceLabel: '', advance: () => {}, prevWeek: () => {}, nextWeek: () => {},
                blockEyebrow: '', weekDates: '', weekHead: '', weekNote: '',
-               rulesHead: '', blockLine: '', rules: [], skipOrder: '',
+               rulesHead: '', blockLine: '', rules: [], skipOrder: '', restHead: '', restLine: '',
                dietIntro: '', dietTargets: [], scaleHead: '', scaleRules: [], anchors: [],
                dietCalibrate: '', menuHead: '', menuNote: '', menuRows: [], dietSunday: '', dietAvoid: [],
                success: [], nextMonth: '',
@@ -744,6 +756,18 @@ class Component extends DCLogic {
       rulesHead: 'Five things the month is not allowed to break',
       rules: (G.RULES || []).map(([head, items]) => ({ head, items })),
       skipOrder: G.SKIPORDER || '',
+
+      /* Monday and Friday are the two clear days AND the two heaviest strength
+         days, so they are exactly the days the rest protocol calls an off day.
+         Both plans exist; only one governs a given Monday, and the board is
+         where you are standing when you need to know that. */
+      restHead: 'Monday and Friday are the clear days — and the heavy ones',
+      restLine: 'Strength A and Strength C sit on the two days with no shift, which is also what '
+              + 'the rest protocol calls an off day. Its off-day spine is the ONE lighter day a '
+              + 'week, and it replaces this timetable rather than adding to it — it is the heavier '
+              + 'of the two, not the lighter. Sunday is recovery here, but it carries the 9:00 '
+              + 'shift, so the protocol counts it a shift day with the load dropped. Run one plan '
+              + 'per day.',
 
       // ── diet ──
       dietIntro: DT.intro || '',
