@@ -2,105 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Archive</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./mobile.css">
-<link rel="stylesheet" href="./plan-v2.css">
-<script src="./plan-v2-data.js"></script>
-<script src="./plan-v2.js"></script>
-<script src="./sitemap.js"></script>
-<script src="./day.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Archive · v1 · CT Hub</title>
+<link rel="canonical" href="Settings.html#archive">
+<meta http-equiv="refresh" content="0; url=Settings.html#archive">
+<link rel="stylesheet" href="./hub.css">
 </head>
-<body>
-<!-- ─────────────────────────────────────────────────────────────
-     Archive — the v1 documents, kept and labelled.
+<body class="hub">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     FOLDED. Archive · v1 is a panel of Settings now, not a page of its own.
 
-     Nothing is deleted. Every v1 page is byte-for-byte where it
-     was and still reachable by URL, because a plan you can no
-     longer read is a plan you cannot learn from. What changes is
-     the frame: each one now says what it was for, what replaced
-     it, and why — so a stale bookmark can never be mistaken for
-     the live plan.
-     ───────────────────────────────────────────────────────────── -->
-<div class="pv" id="app"></div>
+     This stub exists so nothing breaks: a bookmark, a link in an old journal
+     entry, a tab left open since August, the PWA's cached start_url. It sends
+     you to the panel rather than the top of the page, so you land where the
+     content actually is.
+
+     The meta refresh is the fallback; the script below runs first and does not
+     add a history entry, so Back goes where you came from rather than
+     bouncing off this file. Deleting these stubs is what turns a
+     consolidation into broken links, so they stay.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<main class="hub-page">
+  <h1 class="hub-h1">Moved</h1>
+  <p class="hub-lede"><b>Archive · v1</b> is now the <b>Archive</b> panel of Settings.</p>
+  <p class="hub-p"><a class="hub-btn pri" href="Settings.html#archive">Open Settings →</a></p>
+</main>
 <script>
-(function () {
-  var P = window.PlanV2, D = window.PLAN_V2, esc = P.esc;
-  var H = [];
-
-  /* The list is sitemap.js's, not ours. It used to be a hardcoded array here,
-     and it had already drifted: Reference.dc.html was marked archived in the
-     sitemap and simply absent from this page, so the one document the archive
-     exists to keep readable could only be reached by typing its URL. A page
-     that silently omits part of the archive is worse than no archive.
-
-     If the sitemap has not loaded, say so rather than rendering an empty
-     archive that looks like an archive with nothing in it. */
-  var SM = window.SITEMAP || null;
-  var DOCS = (SM && SM.archivedPages) ? SM.archivedPages() : null;
-
-  H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
-  H.push('<div class="pv-kick">Superseded ' + esc(P.fmtDate(D.recalibrated)) + '</div>');
-  H.push('<h1 class="pv-h1">Archive</h1>');
-  H.push('<p class="pv-lede">The v1 documents, intact. Nothing here has been edited or deleted — ' +
-    'a plan you can no longer read is a plan you cannot learn from. But nothing here is current either.</p>');
-
-  H.push('<div class="pv-rule pv-kill"><b>None of these is the live plan.</b> ' +
-    'They describe assumptions that were tested and did not hold. The current plan is ' +
-    '<a href="Plan.html"><b>The Plan</b></a>.</div>');
-
-  if (!DOCS) {
-    H.push('<div class="pv-rule pv-kill"><b>The page index did not load.</b> ' +
-      'The archived documents are still there \u2014 this page could not read the list. ' +
-      'Reload, and if it persists the file to look at is <b>sitemap.js</b>.</div>');
-  }
-  (DOCS || []).forEach(function (d) {
-    H.push('<div class="pv-card acc" style="border-left-color:' + d.color + '">');
-    H.push('<div class="pv-row"><span class="pv-lane-t pv-grow">' + esc(d.name) + '</span>' +
-      '<span class="pv-chip c-dead">archived</span></div>');
-    H.push('<div class="pv-ph-n" style="margin-top:4px">' + esc(d.meta) + '</div>');
-    H.push('<div class="pv-it-d" style="margin-top:9px"><b>What it was.</b> ' + esc(d.was) + '</div>');
-    H.push('<div class="pv-it-d" style="margin-top:7px"><b>Why it is archived.</b> ' + esc(d.why) + '</div>');
-    H.push('<div class="pv-lane-m" style="margin-top:11px">' +
-      '<a href="' + esc(d.href) + '" style="color:' + d.color + '">open the archived page →</a>' +
-      '<a href="' + esc(d.now) + '" style="color:var(--ok)">what replaced it →</a></div>');
-    H.push('</div>');
-  });
-
-  /* The retired claims, so the archive says what was wrong, not just
-     that something was. This is the part that makes an archive useful
-     six months later. */
-  H.push('<h2 class="pv-h2">What v1 got wrong</h2>');
-  H.push('<div class="pv-sub">The specific claims that were retired</div>');
-  H.push('<div class="pv-card">');
-  D.corrections.forEach(function (c) {
-    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
-      '<span class="pv-it-t" style="text-decoration:line-through;color:var(--muted)">' + esc(c.was) + '</span>' +
-      '<span class="pv-chip c-' + esc(c.status) + '">' + esc(c.status) + '</span></div>' +
-      '<div class="pv-it-d">' + esc(c.fix) + '</div></div></div>');
-  });
-  H.push('</div>');
-
-  H.push('<h2 class="pv-h2">Also still here</h2>');
-  H.push('<p class="pv-p">These were never part of the plan documents and are unaffected by the recalibration — ' +
-    'they keep working as they always did.</p>');
-  H.push('<p class="pv-small">' +
-    '<a href="Ledger.html">The Ledger</a> · ' +
-    '<a href="Day Budget.html">The Day Budget</a> · ' +
-    '<a href="Conditions.html">Conditions</a> · ' +
-    '<a href="Network Map.dc.html">Network Map</a> · ' +
-    '<a href="Conference Radar.dc.html">Conference Radar</a></p>');
-
-  H.push('<p class="pv-foot">Archived pages still carry the drawer and still sync. ' +
-    'If you want one back in circulation, the honest move is to fold what still applies into ' +
-    '<a href="Settings.html"><b>a recalibration</b></a> rather than run two plans at once — ' +
-    'which is exactly how the five-track and four-track portfolios drifted apart in the first place.</p>');
-
-  document.getElementById('app').innerHTML = H.join('');
-})();
+  try { location.replace('Settings.html#archive'); } catch (e) { location.href = 'Settings.html#archive'; }
 </script>
 </body>
 </html>

@@ -264,12 +264,19 @@ group('The Archive describes every archived page');
      (gone.length ? ' — ' + gone.map((r) => r.href + ' -> ' + r.now).join(', ') : ''));
 
   /* The page must READ that list rather than keep one. A reintroduced literal
-     array is how the drift happened the first time. */
-  const html = fs.readFileSync(path.join(ROOT, 'Archive.html'), 'utf8');
+     array is how the drift happened the first time.
+
+     Follow the fold: the Archive is a panel of Settings now, and Archive.html
+     is a redirect stub. Resolving foldedInto rather than hardcoding a filename
+     means this keeps checking the real renderer wherever it is moved next. */
+  const archiveFile = (S.pages['Archive.html'] && S.pages['Archive.html'].foldedInto)
+    ? String(S.pages['Archive.html'].foldedInto).split('#')[0]
+    : 'Archive.html';
+  const html = fs.readFileSync(path.join(ROOT, archiveFile), 'utf8');
   ok(/SITEMAP[\s\S]{0,80}archivedPages\(\)/.test(html),
-     'Archive.html renders the sitemap list rather than a copy of it');
+     archiveFile + ' renders the sitemap list rather than a copy of it');
   ok(!/\bhref:\s*'[^']+\.(?:dc\.)?html'/.test(html),
-     'Archive.html no longer hardcodes archived page hrefs');
+     archiveFile + ' no longer hardcodes archived page hrefs');
 })();
 
 group('Nothing live links to an archived page');

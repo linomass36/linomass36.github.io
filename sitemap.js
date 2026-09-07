@@ -120,7 +120,8 @@
     'Conditions.html':           { name: 'Conditions',    group: 'Every day', parent: 'Standing.html', back: 'correct',
       dest: 'settings', panel: 'Conditions', ord: 2,
       plain: 'Conditions',
-      blurb: 'Declare what is true today, and what it holds.' },
+      blurb: 'Declare what is true today, and what it holds.',
+      foldedInto: 'Settings.html#conditions' },
 
     'Recall.html':               { name: 'Recall',        group: 'Study', parent: 'Today.dc.html', back: 'none',
       dest: 'study', panel: 'Due today', ord: 1,
@@ -254,7 +255,8 @@
     'Archive.html':              { name: 'Archive · v1',  group: 'Plan upkeep', parent: 'Plan.html', back: 'correct',
       dest: 'settings', panel: 'Archive', ord: 3,
       plain: 'Archive',
-      blurb: 'The v1 documents, kept and labelled.' },
+      blurb: 'The v1 documents, kept and labelled.',
+      foldedInto: 'Settings.html#archive' },
 
     /* ── archived ──────────────────────────────────────────────────────────
        Each one carries what the Archive page needs to describe it: `meta` is
