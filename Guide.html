@@ -9,6 +9,7 @@
 <script src="./sitemap.js"></script>
 <script src="./backup.js"></script>
 <script src="./tour.js"></script>
+<script src="./plates.js"></script>
 <script src="./day.js"></script>
 </head>
 <body class="hub">
@@ -38,7 +39,7 @@
   <h1 class="hub-h1">The Guide</h1>
   <p class="hub-lede">What this hub is, where everything lives, and how to get
     it back if the browser forgets.</p>
-  <div class="hub-marginal hub-plate" aria-hidden="true"></div>
+  <div class="hub-marginal hub-plate" data-plate="agnew-clinic vesalius-fabrica" aria-hidden="true"></div>
 
   <div class="hub-row-btns" style="margin-top:var(--s5)">
     <button class="hub-btn pri" id="run-tour" type="button">Run the tour</button>
@@ -91,6 +92,21 @@
       file does not mention.</p>
   </div>
 
+  <div class="hub-kicker">The pictures</div>
+  <div class="hub-card">
+    <h3 class="hub-h3">The paintings are opt-in, and the slots are already cut</h3>
+    <p class="hub-p">The margins of the wide pages hold a plate. Until a painting is installed that
+      plate is a drawn engraving — the heart and its great vessels, the opened thorax, the bronchial
+      tree. Put a file in <span class="hub-mono">plates/</span> with one of the names below and the
+      painting takes its place, captioned, wherever that slot asked for it. Remove the file and the
+      engraving comes back. There is nothing to configure.</p>
+    <p class="hub-p">Every one is public domain — the painters have been dead well over a century —
+      so Wikimedia Commons has a high-resolution scan of each. Resize to about 1600px on the long
+      edge and save as JPEG; a 4000px museum scan is eight megabytes and nothing here displays
+      wider than about 1200.</p>
+    <div class="hub-list" id="plates"></div>
+  </div>
+
   <footer class="hub-foot">
     <span>The Guide</span>
     <span id="ver"></span>
@@ -141,6 +157,29 @@
     } catch (e) { $('#bk-line').textContent = ''; }
   } else {
     $('#bk-line').textContent = 'backup.js did not load, so the count is unavailable here.';
+  }
+
+  /* Probed, not asserted. The list below says what is actually sitting in
+     plates/ right now, so it cannot claim a painting that was never added
+     or go stale against one that was. */
+  var P = window.Plates;
+  var ph = $('#plates');
+  if (!P) {
+    ph.innerHTML = '<div class="hub-row"><span class="grow"><span class="t">' +
+      'plates.js did not load.</span><span class="d">The engravings still show; the ' +
+      'inventory does not.</span></span></div>';
+  } else {
+    P.inventory().then(function (rows) {
+      ph.innerHTML = rows.map(function (r) {
+        return '<div class="hub-row"><span class="grow">' +
+          '<span class="t">' + esc(r.title) + '</span>' +
+          '<span class="d">' + esc(r.who) + ', ' + r.year + '</span>' +
+          '<span class="d" style="font-style:normal;font-family:var(--mono);' +
+          'font-size:11.5px;color:var(--faint)">plates/' + esc(r.file) + '</span></span>' +
+          '<span class="hub-chip' + (r.have ? ' ok' : '') + '">' +
+          (r.have ? 'installed' : 'not yet') + '</span></div>';
+      }).join('');
+    });
   }
 
   $('#run-tour').addEventListener('click', function () {

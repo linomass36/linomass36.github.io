@@ -16,6 +16,7 @@ Run from the repo root:  python3 .github/inject.py
 The GitHub Action calls it at build time and deploys _site/ to Pages.
 """
 
+import json
 import os
 import re
 import shutil
@@ -52,6 +53,7 @@ SHIM = (
     '<script src="./calendar.js"></script>\n'
     '<script src="./tabs.js"></script>\n'
     '<script src="./tour.js"></script>\n'
+    '<script src="./plates.js"></script>\n'
     '<script src="./nav.js"></script>\n'
     '<script src="./upbar.js"></script>\n'
     '<script src="./capture.js"></script>\n'
@@ -201,6 +203,7 @@ BUNDLER_HEAD = (
     '<script src="./calendar.js?v=__APP_VERSION__"></script>\n'
     '<script src="./tabs.js?v=__APP_VERSION__"></script>\n'
     '<script src="./tour.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./plates.js?v=__APP_VERSION__"></script>\n'
     '<script src="./nav.js?v=__APP_VERSION__"></script>\n'
     '<script src="./upbar.js?v=__APP_VERSION__"></script>\n'
     '<script src="./capture.js?v=__APP_VERSION__"></script>\n'
@@ -356,6 +359,48 @@ def render_markdown(site):
         print("[inject] rendered %d markdown page(s) into HTML" % made)
 
 
+def strip_docs_from_asset_dirs(site):
+    """The directories that ship in the clear ship only assets.
+
+    plates/ and fonts/ each carry a README for whoever adds a file to them.
+    Those are notes to a maintainer, not part of the site: rendered to HTML
+    and left unencrypted in a plaintext directory, they are the one thing the
+    verifier is right to refuse. The note stays in the repository, where it
+    is read; it just does not deploy.
+    """
+    for d in sorted(vault.PLAINTEXT_DIRS):
+        here = os.path.join(site, d)
+        if not os.path.isdir(here):
+            continue
+        for name in os.listdir(here):
+            if name.lower().endswith((".md", ".markdown", ".txt")):
+                os.remove(os.path.join(here, name))
+                print("[inject] %s/%s is documentation — not deployed" % (d, name))
+
+
+def write_plates_index(site):
+    """List what is actually in plates/, so the site never has to guess.
+
+    plates.js falls back to probing for each catalogued filename when this
+    file is absent — which works, but costs a burst of 404s on every page
+    load. The build knows the answer for free, so it writes it down. A
+    painting added to the repository appears in the next deploy's index; one
+    removed disappears from it. Nothing to maintain by hand.
+    """
+    d = os.path.join(site, "plates")
+    if not os.path.isdir(d):
+        return
+    exts = (".jpg", ".jpeg", ".png", ".webp")
+    names = sorted(
+        n for n in os.listdir(d)
+        if n.lower().endswith(exts) and os.path.isfile(os.path.join(d, n))
+    )
+    with open(os.path.join(d, "index.json"), "w", encoding="utf-8") as f:
+        json.dump(names, f, indent=0)
+        f.write("\n")
+    print("[inject] plates/index.json lists %d picture(s)" % len(names))
+
+
 def build():
     version = read_version()
     print("[inject] building _site for version", version)
@@ -378,6 +423,9 @@ def build():
     # Drop the freshest version number at the site root for the self-heal check.
     with open(os.path.join(SITE, VERSION_FILE), "w", encoding="utf-8") as f:
         f.write(version + "\n")
+
+    strip_docs_from_asset_dirs(SITE)
+    write_plates_index(SITE)
 
     # Markdown -> HTML before the HTML pass, so rendered pages get the shims
     # and are encrypted with everything else.
