@@ -8,9 +8,10 @@
 <script src="./day.js"></script>
 </head>
 <body>
-<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F2EFEA"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#993C1D"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="15" fill="#FFFFFF">TD</text></svg></template>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#EFE6D2"></rect><rect x="30" y="30" width="40" height="40" rx="9" fill="#8E2A20"></rect><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="monospace" font-weight="700" font-size="15" fill="#F8F2E2">TD</text></svg></template>
 <x-dc>
 <helmet>
+<link rel="stylesheet" href="./hub.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
@@ -34,74 +35,75 @@
      Nothing here is smaller than 15px or shorter than 44px.
      ───────────────────────────────────────────────────────────── */
   * { box-sizing: border-box; }
-  body { margin: 0; background: #F4F1EB; }
+  body { margin: 0; background-color: var(--canvas); background-image: var(--grain);
+         color: var(--ink); font-family: var(--serif); }
   button, input, textarea { font-family: inherit; }
   a { text-decoration: none; }
   @keyframes tdIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-  .td { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1A1B1A;
+  .td { font-family: var(--serif); color: var(--ink);
         max-width: 620px; margin: 0 auto;
         padding: calc(14px + env(safe-area-inset-top, 0px)) 14px 120px; }
 
-  .td-card { background: #FFFDF8; border: 1px solid #E7E3DA; border-radius: 18px;
+  .td-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
              padding: 16px 16px 14px; margin-bottom: 14px; animation: tdIn .3s ease both;
              box-shadow: 0 1px 2px rgba(40,30,15,.04); }
-  .td-kicker { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .14em;
-               text-transform: uppercase; color: #8f9088; margin-bottom: 10px; display: flex;
+  .td-kicker { font-family: var(--mono); font-size: 11.5px; letter-spacing: .14em;
+               text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex;
                align-items: center; gap: 8px; }
-  .td-kicker b { font-weight: 600; color: #993C1D; letter-spacing: .16em; }
+  .td-kicker b { font-weight: 600; color: var(--owed); letter-spacing: .16em; }
 
   /* a row you can hit with a thumb without looking */
   .td-row { display: flex; align-items: center; gap: 12px; padding: 12px 0;
-            border-top: 1px solid #F1EDE3; }
+            border-top: 1px solid var(--sunken); }
   .td-row:first-of-type { border-top: none; }
-  .td-title { font-family: 'Newsreader', serif; font-size: 19px; line-height: 1.25; color: #26271F;
+  .td-title { font-family: var(--display); font-size: 19px; line-height: 1.25; color: var(--ink);
               flex: 1; min-width: 0; }
-  .td-sub { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
-            color: #8a8577; margin-top: 3px; }
+  .td-sub { display: block; font-family: var(--mono); font-size: 11.5px;
+            color: var(--muted); margin-top: 3px; }
 
   .td-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
             min-height: 46px; padding: 0 18px; border-radius: 14px; cursor: pointer;
-            font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; letter-spacing: .01em;
-            border: 1px solid #DAD7D0; background: #FFFFFF; color: #3f4038; flex: none; }
+            font-family: var(--mono); font-size: 13.5px; letter-spacing: .01em;
+            border: 1px solid var(--line-2); background: var(--raised); color: var(--body); flex: none; }
   .td-btn.wide { width: 100%; }
-  .td-btn.go { border-color: #3B6D11; background: #3B6D11; color: #fff; }
-  .td-btn.amber { border-color: #E0CB98; background: #FBF6EA; color: #7d4c09; }
+  .td-btn.go { border-color: var(--ok); background: var(--ok); color: #fff; }
+  .td-btn.amber { border-color: var(--warn-l); background: var(--warn-w); color: var(--warn); }
   .td-btn.icon { min-width: 52px; padding: 0 12px; font-size: 16px; }
 
   /* the numbers you want without reading anything */
   .td-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .td-stat { background: #FFFDF8; border: 1px solid #E7E3DA; border-radius: 16px;
+  .td-stat { background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
              padding: 13px 12px; text-align: center; }
-  .td-stat b { display: block; font-family: 'Newsreader', serif; font-size: 27px; font-weight: 500;
-               line-height: 1; color: #26271F; }
-  .td-stat span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-                  letter-spacing: .08em; text-transform: uppercase; color: #A6A79F; margin-top: 6px; }
+  .td-stat b { display: block; font-family: var(--display); font-size: 27px; font-weight: 500;
+               line-height: 1; color: var(--ink); }
+  .td-stat span { display: block; font-family: var(--mono); font-size: 10px;
+                  letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-top: 6px; }
 
-  .td-bar { height: 8px; border-radius: 4px; background: #EDE8DC; overflow: hidden; margin-top: 10px; }
-  .td-bar span { display: block; height: 100%; border-radius: 4px; background: #3B6D11; }
+  .td-bar { height: 8px; border-radius: 4px; background: var(--sunken); overflow: hidden; margin-top: 10px; }
+  .td-bar span { display: block; height: 100%; border-radius: 4px; background: var(--ok); }
 
   .td-chip { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px;
-             border-radius: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-             border: 1px solid #E7E3DA; background: #FBF9F4; color: #6b6c63; }
-  .td-chip.on { border-color: #3B6D11; background: #F1F7E9; color: #3B6D11; }
+             border-radius: 12px; font-family: var(--mono); font-size: 12px;
+             border: 1px solid var(--line); background: var(--raised); color: var(--body); }
+  .td-chip.on { border-color: var(--ok); background: var(--ok-w); color: var(--ok); }
   /* the same chip, but you can press it */
   .td-chip.tap { flex: 1; justify-content: center; min-height: 48px; font-size: 13px;
                  cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  .td-chip.tap.on { border-color: #993C1D; background: #FBF2EE; color: #993C1D; }
+  .td-chip.tap.on { border-color: var(--owed); background: var(--owed-w); color: var(--owed); }
 
-  .td-warn { border: 1px solid #E0CB98; background: #FBF6EA; color: #7d4c09;
+  .td-warn { border: 1px solid var(--warn-l); background: var(--warn-w); color: var(--warn);
              border-radius: 12px; padding: 10px 13px; margin-bottom: 10px;
              font-size: 13.5px; line-height: 1.5; }
 
   /* the study stepper: a subject, then how long */
   .td-study { display: flex; gap: 8px; margin-top: 10px; }
   .td-study select { flex: 1; min-width: 0; min-height: 48px; font-size: 15px; padding: 0 10px;
-                     border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F; }
+                     border: 1px solid var(--line); border-radius: 13px; background: var(--raised); color: var(--ink); }
   .td-study button { flex: none; min-width: 56px; padding: 0 10px; min-height: 48px; font-size: 13px; }
 
   .td-field { width: 100%; font-size: 16px; line-height: 1.5; padding: 12px 13px;
-              border: 1px solid #DFDBD1; border-radius: 13px; background: #FFFFFF; color: #26271F;
+              border: 1px solid var(--line); border-radius: 13px; background: var(--raised); color: var(--ink);
               resize: vertical; }
 
   /* Closing the day asks for four numbers now that the phone's hours are
@@ -109,90 +111,90 @@
      a phone, four on anything wider, and no field squeezed to nothing. */
   .td-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
              gap: 8px; margin-top: 10px; }
-  .td-lab { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .08em;
-            text-transform: uppercase; color: #A6A79F; margin-bottom: 4px; }
+  .td-lab { font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+            text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
 
   /* One thing you wrote, coming back. The response row is what makes this a
      loop rather than a feed — see resurface.js. */
-  .td-back { border-color: #DCD6C6; background: #FCFAF3; }
-  .td-backhead { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .1em;
+  .td-back { border-color: var(--line-2); background: var(--surface); }
+  .td-backhead { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
                  text-transform: uppercase; margin-bottom: 8px; }
-  .td-backtext { display: block; font-family: 'Newsreader', serif; font-size: 18px; line-height: 1.5;
-                 color: #26271F; }
-  .td-backtext:hover { color: #993C1D; }
+  .td-backtext { display: block; font-family: var(--display); font-size: 18px; line-height: 1.5;
+                 color: var(--ink); }
+  .td-backtext:hover { color: var(--owed); }
 
   /* every system, one line each — the glance this page exists to be */
   .td-sys { display: grid; grid-template-columns: 1fr; gap: 0; }
   .td-sysrow { display: flex; align-items: center; gap: 13px; padding: 9px 4px;
-               border-top: 1px solid #F1EDE3; color: #26271F; }
+               border-top: 1px solid var(--sunken); color: var(--ink); }
   .td-sysrow:first-of-type { border-top: none; }
   .td-sysbig { flex: none; min-width: 60px; text-align: right;
-               font-family: 'Newsreader', serif; font-size: 22px; font-weight: 500; line-height: 1;
-               color: #26271F; }
-  .td-sysbig.go { color: #993C1D; }
-  .td-sysbig.ok { color: #3B6D11; }
+               font-family: var(--display); font-size: 22px; font-weight: 500; line-height: 1;
+               color: var(--ink); }
+  .td-sysbig.go { color: var(--owed); }
+  .td-sysbig.ok { color: var(--ok); }
   .td-systxt { flex: 1; min-width: 0; }
-  .td-systxt b { display: block; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px;
+  .td-systxt b { display: block; font-family: var(--serif); font-size: 15px;
                  font-weight: 600; line-height: 1.2; }
-  .td-systxt span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
-                    color: #8a8577; margin-top: 2px; line-height: 1.35;
+  .td-systxt span { display: block; font-family: var(--mono); font-size: 11.5px;
+                    color: var(--muted); margin-top: 2px; line-height: 1.35;
                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   @media (min-width: 480px) { .td-systxt span { white-space: normal; } }
   /* The unit repeats what the line under the name already says, and on a
      phone it is what squeezes that line into two rows. Ten systems wrapping
      is a screen and a half; ten systems not wrapping is most of one. */
-  .td-sysunit { display: none; flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-                letter-spacing: .07em; text-transform: uppercase; color: #A6A79F; max-width: 78px;
+  .td-sysunit { display: none; flex: none; font-family: var(--mono); font-size: 10px;
+                letter-spacing: .07em; text-transform: uppercase; color: var(--faint); max-width: 78px;
                 text-align: right; line-height: 1.3; }
   @media (min-width: 480px) { .td-sysunit { display: block; } }
 
   /* a plan step you can tick without leaving the page */
   .td-act { display: flex; align-items: flex-start; gap: 11px; padding: 11px 0;
-            border-top: 1px solid #F1EDE3; width: 100%; text-align: left;
+            border-top: 1px solid var(--sunken); width: 100%; text-align: left;
             background: none; border-left: none; border-right: none; border-bottom: none;
             cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .td-act:first-of-type { border-top: none; }
-  .td-actbox { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid #CFCABD;
+  .td-actbox { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--line-2);
                background: #FFF; margin-top: 1px; }
-  .td-acttxt { flex: 1; min-width: 0; font-size: 15.5px; line-height: 1.45; color: #3f4038; }
-  .td-acttxt span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;
+  .td-acttxt { flex: 1; min-width: 0; font-size: 15.5px; line-height: 1.45; color: var(--body); }
+  .td-acttxt span { display: block; font-family: var(--mono); font-size: 10.5px;
                     letter-spacing: .06em; text-transform: uppercase; margin-top: 4px; }
 
   @media (min-width: 560px) { .td-sys { grid-template-columns: repeat(2, 1fr); column-gap: 22px; }
                               .td-sysrow:nth-of-type(2) { border-top: none; } }
 </style>
 </helmet>
-<div class="td" data-screen-label="Today">
+<div class="td hub" data-screen-label="Today">
 
   <div style="margin-bottom: 14px; padding-right: 62px;">
     <div>
-      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #993C1D;">{{ dayName }}</div>
-      <div style="font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; line-height: 1.05; margin-top: 2px;">{{ dateLine }}</div>
+      <div style="font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--owed);">{{ dayName }}</div>
+      <div style="font-family: var(--display); font-size: 30px; font-weight: 500; line-height: 1.05; margin-top: 2px;">{{ dateLine }}</div>
     </div>
   </div>
 
-  <!-- ─── every system, one line each ─── -->
-  <div class="td-card">
-    <div class="td-kicker"><b>The state of it</b><span style="flex:1"></span><a href="Hub.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">the workshop →</a></div>
-    <div class="td-sys">
-      <sc-for list="{{ systems }}" as="s" hint-placeholder-count="10">
-        <a href="{{ s.href }}" class="td-sysrow">
-          <span class="td-sysbig {{ s.tone }}">{{ s.big }}</span>
-          <span class="td-systxt"><b>{{ s.name }}</b><span>{{ s.line }}</span></span>
-          <span class="td-sysunit">{{ s.unit }}</span>
-        </a>
-      </sc-for>
-    </div>
-  </div>
+  <!-- ─── the board lives next door ───────────────────────────────────────
+       "The state of it" used to render every system here, as one line each —
+       the same thirteen systems the Standing renders as tiles, from the same
+       Systems.all() call. Two front doors showing the same thing, and nothing
+       saying which to open in the morning. That duplication is the single
+       biggest reason this hub was hard to read.
+
+       So each panel has one job now. The Board is the glance: every system,
+       the condition, the forcing date. This page is the day's work: what to do
+       next, what to read, what to log, what to write. The destination's tab bar
+       sits above both, so they are one place with two tabs rather than two
+       doors. Nothing was lost — the systems are one tap away and always were.
+       ──────────────────────────────────────────────────────────────────── -->
 
   <!-- ─── what to do next ─── -->
   <div class="td-card">
-    <div class="td-kicker"><b>Do these next</b><span style="flex:1"></span><a href="Plan.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">the plan →</a></div>
+    <div class="td-kicker"><b>Do these next</b><span style="flex:1"></span><a href="Plan.html" style="color: var(--owed); font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">the plan →</a></div>
     <sc-if value="{{ hasPrios }}" hint-placeholder-val="{{ false }}">
-      <div style="margin-bottom: 12px; padding: 11px 13px; border-radius: 12px; background: #FBF6EA; border: 1px solid #EFE4CB;">
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #7d4c09; margin-bottom: 6px;">You said, this week</div>
+      <div style="margin-bottom: 12px; padding: 11px 13px; border-radius: 12px; background: var(--warn-w); border: 1px solid var(--warn-l);">
+        <div style="font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--warn); margin-bottom: 6px;">You said, this week</div>
         <sc-for list="{{ prios }}" as="p" hint-placeholder-count="2">
-          <div style="font-size: 15px; line-height: 1.5; color: #5c4413; padding: 2px 0;">· {{ p.text }}</div>
+          <div style="font-size: 15px; line-height: 1.5; color: var(--warn); padding: 2px 0;">· {{ p.text }}</div>
         </sc-for>
       </div>
     </sc-if>
@@ -202,13 +204,13 @@
         <span class="td-acttxt">{{ a.label }}<span style="color: {{ a.color }};">{{ a.branchTitle }}</span></span>
       </button>
     </sc-for>
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 11px;">{{ planLine }}</div>
+    <div style="font-family: var(--mono); font-size: 11px; color: var(--faint); margin-top: 11px;">{{ planLine }}</div>
   </div>
 
   <!-- ─── one thing, coming back ─── -->
   <sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}">
     <div class="td-card td-back">
-      <div class="td-kicker"><b>Coming back</b><span style="flex:1"></span><span style="font-size: 11px; color: #A6A79F;">{{ backSeen }}</span></div>
+      <div class="td-kicker"><b>Coming back</b><span style="flex:1"></span><span style="font-size: 11px; color: var(--faint);">{{ backSeen }}</span></div>
       <div class="td-backhead" style="color: {{ backColor }};">{{ backHead }}</div>
       <a href="{{ backHref }}" class="td-backtext">{{ backText }}</a>
       <div style="display: flex; gap: 8px; margin-top: 12px;">
@@ -220,7 +222,7 @@
 
   <!-- ─── what you are reading ─── -->
   <div class="td-card">
-    <div class="td-kicker"><b>Reading now</b><span style="flex:1"></span><a href="Reading List.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">all books →</a></div>
+    <div class="td-kicker"><b>Reading now</b><span style="flex:1"></span><a href="Reading List.dc.html" style="color: var(--owed); font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">all books →</a></div>
     <sc-if value="{{ hasReading }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ reading }}" as="r" hint-placeholder-count="2">
         <div class="td-row">
@@ -231,7 +233,7 @@
       </sc-for>
     </sc-if>
     <sc-if value="{{ noReading }}" hint-placeholder-val="{{ false }}">
-      <div style="font-size: 15px; color: #77786F; line-height: 1.5; padding: 4px 0 10px;">Nothing on the go. {{ nextLine }}</div>
+      <div style="font-size: 15px; color: var(--muted); line-height: 1.5; padding: 4px 0 10px;">Nothing on the go. {{ nextLine }}</div>
       <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ false }}">
         <button onClick="{{ startNext }}" class="td-btn go wide">Start {{ nextTitle }}</button>
       </sc-if>
@@ -240,9 +242,9 @@
 
   <!-- ─── writing a note, without leaving the page ─── -->
   <sc-if value="{{ noteOpen }}" hint-placeholder-val="{{ false }}">
-    <div class="td-card" style="border-color: #E0CB98; background: #FCFAF3;">
-      <div class="td-kicker"><b style="color:#7d4c09;">A note on {{ noteBook }}</b></div>
-      <input value="{{ noteLoc }}" onInput="{{ setNoteLoc }}" placeholder="p. 128 · ch. 4 · 01:12:30" class="td-field" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px;">
+    <div class="td-card" style="border-color: var(--warn-l); background: var(--surface);">
+      <div class="td-kicker"><b style="color:var(--warn);">A note on {{ noteBook }}</b></div>
+      <input value="{{ noteLoc }}" onInput="{{ setNoteLoc }}" placeholder="p. 128 · ch. 4 · 01:12:30" class="td-field" style="font-family: var(--mono); font-size: 15px;">
       <textarea value="{{ noteText }}" onInput="{{ setNoteText }}" rows="4" placeholder="What struck you, right where you are." class="td-field" style="margin-top: 9px;"></textarea>
       <div style="display: flex; gap: 9px; margin-top: 11px;">
         <button onClick="{{ saveNote }}" class="td-btn go" style="flex: 1;">Save the note</button>
@@ -253,13 +255,13 @@
 
   <!-- ─── today, from the log ─── -->
   <div class="td-card">
-    <div class="td-kicker"><b>Log the day</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">log →</a></div>
+    <div class="td-kicker"><b>Log the day</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: var(--owed); font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">log →</a></div>
     <div style="display: flex; gap: 8px;">
       <sc-for list="{{ trainChips }}" as="c" hint-placeholder-count="3">
         <button onClick="{{ c.toggle }}" class="td-chip tap {{ c.cls }}">{{ c.label }}</button>
       </sc-for>
     </div>
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: {{ liftColor }}; margin-top: 8px;">{{ liftLine }}</div>
+    <div style="font-family: var(--mono); font-size: 11.5px; color: {{ liftColor }}; margin-top: 8px;">{{ liftLine }}</div>
     <div class="td-study">
       <select value="{{ subject }}" onChange="{{ setSubject }}">
         <sc-for list="{{ subjects }}" as="s" hint-placeholder-count="5">
@@ -270,13 +272,13 @@
         <button onClick="{{ b.add }}" class="td-btn">{{ b.label }}</button>
       </sc-for>
     </div>
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A6A79F; margin-top: 8px;">{{ studyLine }}</div>
+    <div style="font-family: var(--mono); font-size: 11.5px; color: var(--faint); margin-top: 8px;">{{ studyLine }}</div>
   </div>
 
   <!-- ─── the anatomy day ─── -->
   <sc-if value="{{ hasAnatomy }}" hint-placeholder-val="{{ true }}">
   <div class="td-card">
-    <div class="td-kicker"><b>Anatomy</b><span style="flex:1"></span><a href="Anatomy.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">closure log →</a></div>
+    <div class="td-kicker"><b>Anatomy</b><span style="flex:1"></span><a href="Anatomy.dc.html" style="color: var(--owed); font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">closure log →</a></div>
     <sc-if value="{{ anWarn }}" hint-placeholder-val="{{ false }}">
       <div class="td-warn">{{ anWarnText }}</div>
     </sc-if>
@@ -288,13 +290,13 @@
     <sc-if value="{{ anDeclared }}" hint-placeholder-val="{{ false }}">
       <button onClick="{{ anP0 }}" class="td-btn wide {{ anP0Cls }}" style="margin-top: 10px;">{{ anP0Label }}</button>
     </sc-if>
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #A6A79F; margin-top: 8px;">{{ anLine }}</div>
+    <div style="font-family: var(--mono); font-size: 11.5px; color: var(--faint); margin-top: 8px;">{{ anLine }}</div>
   </div>
   </sc-if>
 
   <!-- ─── close the day ─── -->
   <div class="td-card">
-    <div class="td-kicker"><b>Close the day</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">trends →</a></div>
+    <div class="td-kicker"><b>Close the day</b><span style="flex:1"></span><a href="Life Log.dc.html" style="color: var(--owed); font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">trends →</a></div>
     <div class="td-grid">
       <div>
         <div class="td-lab">Screen h</div>
@@ -318,19 +320,19 @@
         <button onClick="{{ c.pick }}" class="td-chip tap {{ c.cls }}">{{ c.label }}</button>
       </sc-for>
     </div>
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: {{ scrColor }}; margin-top: 9px;">{{ scrLine }}</div>
+    <div style="font-family: var(--mono); font-size: 11.5px; color: {{ scrColor }}; margin-top: 9px;">{{ scrLine }}</div>
   </div>
 
   <!-- ─── capture ─── -->
   <div class="td-card">
-    <div class="td-kicker"><b>Write it down</b><span style="flex:1"></span><a href="Journal.dc.html" style="color: #993C1D; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">journal →</a></div>
+    <div class="td-kicker"><b>Write it down</b><span style="flex:1"></span><a href="Journal.dc.html" style="color: var(--owed); font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">journal →</a></div>
     <textarea value="{{ jotText }}" onInput="{{ setJot }}" rows="3" placeholder="A line for today's note…" class="td-field"></textarea>
     <button onClick="{{ saveJot }}" class="td-btn go wide" style="margin-top: 10px;">Add to the journal</button>
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #A6A79F; margin-top: 8px;">{{ jotHint }}</div>
+    <div style="font-family: var(--mono); font-size: 11px; color: var(--faint); margin-top: 8px;">{{ jotHint }}</div>
   </div>
 
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
-    <div style="position: fixed; left: 50%; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 950; max-width: 92vw; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 12px 20px; border-radius: 22px; color: #FFFDF8; background: #3B6D11; box-shadow: 0 8px 26px rgba(26,27,26,.28); animation: tdIn .2s ease;">{{ toast }}</div>
+    <div style="position: fixed; left: 50%; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 950; max-width: 92vw; font-family: var(--mono); font-size: 13px; padding: 12px 20px; border-radius: 22px; color: var(--surface); background: var(--ok); box-shadow: 0 8px 26px rgba(26,27,26,.28); animation: tdIn .2s ease;">{{ toast }}</div>
   </sc-if>
 </div>
 </x-dc>
@@ -510,11 +512,11 @@ class Component extends DCLogic {
      this line does is say so, and stop you logging the same lift twice. */
   liftVals() {
     const d = this.readJSON('ct_grind_v1', null);
-    if (!d || typeof d !== 'object') return { liftLine: 'gym sessions logged on the grind board land here too', liftColor: '#A6A79F' };
+    if (!d || typeof d !== 'object') return { liftLine: 'gym sessions logged on the grind board land here too', liftColor: 'var(--faint)' };
     const k = this.logDay();
     const done = (d.days && d.days[k]) ? d.days[k] : null;
-    if (done) return { liftLine: '✓ ' + done + ' — from the grind board', liftColor: '#3B6D11' };
-    return { liftLine: 'no lift marked on the board today', liftColor: '#A6A79F' };
+    if (done) return { liftLine: '✓ ' + done + ' — from the grind board', liftColor: 'var(--ok)' };
+    return { liftLine: 'no lift marked on the board today', liftColor: 'var(--faint)' };
   }
 
   anatomyVals() {
@@ -598,13 +600,13 @@ class Component extends DCLogic {
     const SC = window.CTScreen;
     const off = SC.offDuty(scr), share = SC.share(scr), split = SC.split(scr);
 
-    let scrLine = 'straight off the phone\u2019s own report', scrColor = '#A6A79F';
+    let scrLine = 'straight off the phone\u2019s own report', scrColor = 'var(--faint)';
     if (share != null) {
       scrLine = share + '% of your screen was off duty' + (split ? ' — ' + split : '');
-      scrColor = share >= 60 ? '#A32E27' : share >= 35 ? '#7d4c09' : '#3B6D11';
+      scrColor = share >= 60 ? 'var(--owed)' : share >= 35 ? 'var(--warn)' : 'var(--ok)';
     } else if (off != null && off > 0) {
       scrLine = off + 'h off duty — add the total for the share';
-      scrColor = '#7d4c09';
+      scrColor = 'var(--warn)';
     }
 
     const now = (day.diet || {}).q || '';
@@ -675,7 +677,7 @@ class Component extends DCLogic {
     const nextActions = !V ? [] : V.moves(3).map(m => ({
       label: m.label,
       branchTitle: m.due ? V.fmtDate(m.due).replace(/ \d{4}$/, '') : (m.tag || m.phase),
-      color: m.color || '#993C1D',
+      color: m.color || 'var(--owed)',
       toggle: () => this.tickStep(m.id),
     }));
 
@@ -704,9 +706,6 @@ class Component extends DCLogic {
     const jots = this.readJSON(this.JKEY, []) || [];
     const todayJots = (Array.isArray(jots) ? jots : []).filter(j => j.date === this.isoDay(now)).length;
 
-    // Every system, one line each — see systems.js.
-    const systems = (window.Systems && window.Systems.all) ? window.Systems.all() : [];
-
     /* One thing a day out of everything you have written. The pick is fixed
        for the calendar day, so this does not reshuffle when you come back to
        the page — that is the difference between a loop and a feed. */
@@ -718,12 +717,11 @@ class Component extends DCLogic {
       dayName: DAYS[now.getDay()],
       dateLine: MON[now.getMonth()] + ' ' + now.getDate(),
 
-      systems,
       hasBack: !!back,
       backHead: back ? back.head : '',
       backText: back ? back.text : '',
       backHref: back ? back.href : '#',
-      backColor: back ? back.kindColor : '#A6A79F',
+      backColor: back ? back.kindColor : 'var(--faint)',
       backSeen: back ? back.seenText : '',
       backAgain: () => { if (back) { window.Resurface.again(back.id); this.toast('↻ it will come round sooner'); this.bump(); } },
       backRetire: () => { if (back) { window.Resurface.retire(back.id); this.toast('✕ retired'); this.bump(); } },

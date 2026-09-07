@@ -109,7 +109,11 @@
       dest: 'home', panel: 'Board', ord: 1,
       plain: 'Home',
       blurb: 'Every system, and the seven that want you.' },
-    'Today.dc.html':             { name: 'Today',         group: 'Every day', parent: 'Standing.html', back: 'wrong',
+    /* back was 'wrong': it carried a stale link to Mission Control, tucked into
+       the kicker of the systems list. That whole section is gone — it duplicated
+       the Board — and the link went with it, so the page now has no back control
+       of its own and upbar.js supplies one. */
+    'Today.dc.html':             { name: 'Today',         group: 'Every day', parent: 'Standing.html', back: 'none',
       dest: 'home', panel: 'Today', ord: 2,
       plain: 'Today',
       blurb: 'The day in front of you, and the next three moves.' },
