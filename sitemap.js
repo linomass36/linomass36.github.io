@@ -88,8 +88,8 @@
       blurb: 'The shelf, what is on the go, and what it is worth reading next.' },
 
     { id: 'money',    name: 'The Vault',     plain: 'Money',     icon: '\u25ce',
-      lands: 'Vault.dc.html',
-      blurb: 'Net worth, the targets you are aiming at, the debt, and what a day costs.' },
+      lands: 'Money.html',
+      blurb: 'What you are aiming at, what the plan costs, what a day costs, and where you stand.' },
 
     { id: 'people',   name: 'Network Map',   plain: 'People',    icon: '\u2735',
       lands: 'Network Map.dc.html',
@@ -177,15 +177,18 @@
     'Debt.html':                 { name: 'The Debt',      group: 'The plan', parent: 'Plan.html', back: 'correct',
       dest: 'money', panel: 'Debt', ord: 3,
       plain: 'Debt',
-      blurb: 'What the plan costs before it earns anything.' },
+      blurb: 'What the plan costs before it earns anything.',
+      foldedInto: 'Money.html#debt' },
     'Ledger.html':               { name: 'The Ledger',    group: 'The plan', parent: 'Plan.html', back: 'correct',
       dest: 'money', panel: 'Targets', ord: 2,
       plain: 'Targets',
-      blurb: 'What you are aiming at, and whether it is still true.' },
+      blurb: 'What you are aiming at, and whether it is still true.',
+      foldedInto: 'Money.html#targets' },
     'Day Budget.html':           { name: 'The Day Budget',group: 'The plan', parent: 'Plan.html', back: 'correct',
-      dest: 'money', panel: 'Day budget', ord: 4,
+      dest: 'money', panel: 'Day budget', ord: 5,
       plain: 'Day budget',
-      blurb: 'What the whole hub costs in hours, and which currency is short.' },
+      blurb: 'What the whole hub costs in hours, and which currency is short.',
+      foldedInto: 'Money.html#daybudget' },
 
     'Pipeline.html':             { name: 'Pipeline',      group: 'Research', parent: 'Plan.html', back: 'correct',
       dest: 'plan', panel: 'Research', ord: 4,
@@ -209,8 +212,18 @@
       dest: 'people', panel: 'Files', ord: 2,
       plain: 'Files',
       blurb: 'What was said, and when.' },
+    /* A SHELL, not a panel. Money.html hosts Targets, Debt and Day budget, all
+       three of which are folded pages carrying their own panel names — so
+       unlike Plan.html, which kept its own `Now` content, this file has no
+       panel of its own. A shell is what a destination lands on; it is not
+       listed as a panel, or the drawer shows "Targets" twice. */
+    'Money.html':                { name: 'Money',         group: 'People & money', parent: 'Standing.html', back: 'none',
+      dest: 'money', shell: true,
+      plain: 'Money',
+      blurb: 'What you are aiming at, what the plan costs, and what a day costs.' },
+
     'Vault.dc.html':             { name: 'Vault',         group: 'People & money', parent: 'Plan.html', back: 'wrong',
-      dest: 'money', panel: 'Net worth', ord: 1,
+      dest: 'money', panel: 'Net worth', ord: 4,
       plain: 'Net worth',
       blurb: 'Snapshots, runway, and the line they make.' },
 
@@ -386,8 +399,10 @@
      stays as a redirect stub so no existing link breaks, but navigation goes
      straight to the panel rather than bouncing through the stub. `file` keeps
      the original name so the tests can still find it on disk. */
+  function isShell(file) { return !!(PAGES[file] && PAGES[file].shell); }
+
   function panelsOf(id) {
-    return live().filter(function (f) { return PAGES[f].dest === id; })
+    return live().filter(function (f) { return PAGES[f].dest === id && !PAGES[f].shell; })
                  .sort(function (a, b) { return (PAGES[a].ord || 99) - (PAGES[b].ord || 99); })
                  .map(function (f) {
                    var p = PAGES[f];
@@ -481,7 +496,7 @@
     groups: groups,
     destinations: destinations, destination: destination, destOf: destOf,
     panelsOf: panelsOf, byDestination: byDestination, tabLinks: tabLinks,
-    isFolded: isFolded,
+    isFolded: isFolded, isShell: isShell,
     naming: naming, setNaming: setNaming, label: label, destLabel: destLabel,
     chain: chain, here: here
   };

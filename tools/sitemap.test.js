@@ -111,20 +111,37 @@ group('Every live page has a destination, and every destination works');
   ok(empty.length === 0,
      'no destination is empty' + (empty.length ? ' — ' + empty.map((d) => d.id).join(', ') : ''));
 
-  /* The landing page must be one of the destination's own panels, or you
-     arrive somewhere the tabs do not include. */
-  const offPanel = dests.filter((d) => !S.panelsOf(d.id).some((p) => p.href === d.lands));
+  /* You must land somewhere the tabs include. Two shapes qualify: the landing
+     page is itself a panel (Plan.html keeps its own `Now` content), or it is a
+     SHELL that hosts them (Money.html hosts three folded panels and has no
+     content of its own). Comparing on the file part, because a folded panel's
+     href carries a hash. */
+  const offPanel = dests.filter((d) => {
+    if (S.isShell(d.lands)) return false;
+    return !S.panelsOf(d.id).some((p) => String(p.href).split('#')[0] === d.lands);
+  });
   ok(offPanel.length === 0,
-     'each destination lands on one of its own panels' +
+     'each destination lands on one of its own panels, or on its shell' +
      (offPanel.length ? ' — ' + offPanel.map((d) => d.id).join(', ') : ''));
 
+  /* A shell must host something, or it is a page with nothing on it. */
+  const shells = live.filter((f) => S.isShell(f));
+  const barren = shells.filter((f) => S.panelsOf(S.destOf(f)).length === 0);
+  ok(barren.length === 0, 'every shell hosts at least one panel');
+
+  const idle = shells.filter((f) => !dests.some((d) => d.lands === f));
+  ok(idle.length === 0,
+     'every shell is the landing page of its destination' +
+     (idle.length ? ' — ' + idle.join(', ') : ''));
+
   const total = dests.reduce((n, d) => n + S.panelsOf(d.id).length, 0);
-  ok(total === live.length,
-     'the panels account for every live page exactly once (' + total + '/' + live.length + ')');
+  ok(total + shells.length === live.length,
+     'panels plus shells account for every live page exactly once (' +
+     total + '+' + shells.length + '/' + live.length + ')');
 
   /* Panel order is a decision — the first panel is what opens — so it must be
      declared rather than inherited from file order. */
-  const unordered = live.filter((f) => typeof S.pages[f].ord !== 'number');
+  const unordered = live.filter((f) => !S.isShell(f) && typeof S.pages[f].ord !== 'number');
   ok(unordered.length === 0,
      'every page declares its panel order' +
      (unordered.length ? ' — ' + unordered.join(', ') : ''));
