@@ -122,15 +122,15 @@
   }
 
   /* ── the grind board ────────────────────────────────────────────────────
-     The board's own rule: a week is five lifts plus the runs, and it advances
-     when the work is done rather than when a week passes. Read the lift count
-     off the programme when the page has loaded it, and fall back to the five
-     the programme actually holds when it has not — this file is loaded by
-     Today, which has no reason to carry 34KB of exercise text. */
+     The board's own rule: a week is its six sessions plus that week's cardio
+     row, and it advances when the work is done rather than when a week passes.
+     Read the session count off the programme when the page has loaded it, and
+     fall back to the six the programme actually holds when it has not — this
+     file is loaded by Today, which has no reason to carry the exercise text. */
   function GRIND_LIFTS() {
     var G = w.GRIND_DATA;
     if (G && G.GYM) { var n = Object.keys(G.GYM).length; if (n) return n; }
-    return 5;
+    return 6;
   }
 
   function grind() {
@@ -138,7 +138,7 @@
     var d = readJSON('ct_grind_v1', null);
     if (!d || typeof d !== 'object') {
       return Object.assign(base, { big: 'W1', unit: 'not started', tone: 'go',
-        line: 'nine weeks, and the first session is week 1 day 1' });
+        line: 'four weeks from 7 September, and the first session is Monday' });
     }
     var week = Math.max(1, +d.week || 1);
     var sessions = (d.sessions && typeof d.sessions === 'object') ? d.sessions : {};
@@ -155,8 +155,51 @@
       tone: done >= total ? 'ok' : 'go',
       line: done >= total
         ? 'week ' + week + ' is complete — it moves when you say so'
-        : lifts + ' of ' + liftTotal + ' lifts · ' + (runDone ? 'runs done' : 'no runs yet'),
+        : lifts + ' of ' + liftTotal + ' sessions · ' + (runDone ? 'cardio done' : 'cardio not ticked'),
     });
+  }
+
+  /* ── rest ───────────────────────────────────────────────────────────────
+     The one system on the board whose work is done the night BEFORE the day
+     it belongs to. The protocol's claim is that the night-before checklist is
+     the rest decision — by morning it has already been made, well or badly —
+     so that is what this tile reports, and it reports it as owed until the
+     five rails are set.
+
+     The readiness test is scored but deliberately not the headline. It is
+     answered at lights-out, which is after the glance that would have used
+     it, and a tile that led with "2 of 5" all day would be reporting last
+     night's verdict as though it were today's state. */
+  function rest() {
+    var base = { id: 'rest', name: 'Rest', href: 'Rest.html', sort: 2.2 };
+    var d = readJSON('ct_rest_v1', null);
+    var t = (d && d.days && typeof d.days === 'object') ? d.days[isoDay()] : null;
+    if (!t || typeof t !== 'object') {
+      return Object.assign(base, { big: '0/5', unit: 'rails set', tone: 'go',
+        line: 'the night-before checklist is the rest decision — it is not made in the morning' });
+    }
+    var night = (t.night && typeof t.night === 'object') ? t.night : {};
+    var ready = (t.ready && typeof t.ready === 'object') ? t.ready : {};
+    var n = 0, i;
+    for (i = 0; i < 5; i++) if (night[i]) n++;
+    var yes = 0, no = 0;
+    for (i = 0; i < 5; i++) { if (ready[i] === 'y') yes++; else if (ready[i] === 'n') no++; }
+
+    /* Answered at all, and failing, is the one thing worth interrupting the
+       night-before count for: two or more no means a rail broke, and the
+       repair belongs in tomorrow's checklist rather than in a week's time. */
+    if (no >= 2) {
+      return Object.assign(base, { big: yes + '/5', unit: 'readiness', tone: 'go',
+        line: 'two or more no — name the rail that broke first and repair it tonight' });
+    }
+    if (n >= 5) {
+      return Object.assign(base, { big: '\u2713', unit: 'night set', tone: 'ok',
+        line: yes >= 4 ? 'four rails set and readiness passed at ' + yes + '/5'
+                       : 'lock, food, the sentence and the phone are all decided' });
+    }
+    return Object.assign(base, { big: n + '/5', unit: 'rails set', tone: 'go',
+      line: n ? 'the night-before checklist is part-done — an unset rail is a decision the morning makes for you'
+              : 'nothing set tonight — lock, food, the day\u2019s sentence, the phone' });
   }
 
   // ── the study engine ───────────────────────────────────────────────────
@@ -678,7 +721,7 @@
     return out;
   }
 
-  var BUILDERS = [plan, anatomy, grind, week, recall, reading, research, record, trendsTile, journal, weekly, vault];
+  var BUILDERS = [plan, anatomy, grind, rest, week, recall, reading, research, record, trendsTile, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
      is dropped rather than allowed to take the page with it — one broken

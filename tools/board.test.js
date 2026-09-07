@@ -137,10 +137,13 @@ ok(checked.length >= 5,
    checked.map(t => t.name).join(', ') + ')');
 
 /* The four with a period rather than a day: a closed programme week, a
-   shelf in use, every gate decided. */
+   shelf in use, every gate decided. The grind week is six sessions plus the
+   cardio row since month 1 replaced the nine-week block — the count comes off
+   GRIND_DATA when the page has it and falls back to six when it does not, so
+   this fixture has to carry six. */
 const period = board({
   ct_grind_v1: JSON.stringify({ week: 3, runs: { w3: true },
-    sessions: { '3|a': 1, '3|b': 1, '3|c': 1, '3|d': 1, '3|e': 1 } }),
+    sessions: { '3|mon': 1, '3|tue': 1, '3|wed': 1, '3|thu': 1, '3|fri': 1, '3|sat': 1 } }),
   ct_reading_v1: JSON.stringify({ status: { b1: 'reading' } }),
   ct_research_v1: JSON.stringify({ done: { a:1,b:1,c:1,d:1,e:1,f:1,g:1,h:1,i:1 },
     gates: { g1:1,g2:1,g3:1,g4:1,g5:1 } })
