@@ -122,15 +122,15 @@
   }
 
   /* ── the grind board ────────────────────────────────────────────────────
-     The board's own rule: a week is five lifts plus the runs, and it advances
-     when the work is done rather than when a week passes. Read the lift count
-     off the programme when the page has loaded it, and fall back to the five
-     the programme actually holds when it has not — this file is loaded by
-     Today, which has no reason to carry 34KB of exercise text. */
+     The board's own rule: a week is its six sessions plus that week's cardio
+     row, and it advances when the work is done rather than when a week passes.
+     Read the session count off the programme when the page has loaded it, and
+     fall back to the six the programme actually holds when it has not — this
+     file is loaded by Today, which has no reason to carry the exercise text. */
   function GRIND_LIFTS() {
     var G = w.GRIND_DATA;
     if (G && G.GYM) { var n = Object.keys(G.GYM).length; if (n) return n; }
-    return 5;
+    return 6;
   }
 
   function grind() {
@@ -138,7 +138,7 @@
     var d = readJSON('ct_grind_v1', null);
     if (!d || typeof d !== 'object') {
       return Object.assign(base, { big: 'W1', unit: 'not started', tone: 'go',
-        line: 'nine weeks, and the first session is week 1 day 1' });
+        line: 'four weeks from 7 September, and the first session is Monday' });
     }
     var week = Math.max(1, +d.week || 1);
     var sessions = (d.sessions && typeof d.sessions === 'object') ? d.sessions : {};
@@ -155,7 +155,7 @@
       tone: done >= total ? 'ok' : 'go',
       line: done >= total
         ? 'week ' + week + ' is complete — it moves when you say so'
-        : lifts + ' of ' + liftTotal + ' lifts · ' + (runDone ? 'runs done' : 'no runs yet'),
+        : lifts + ' of ' + liftTotal + ' sessions · ' + (runDone ? 'cardio done' : 'cardio not ticked'),
     });
   }
 

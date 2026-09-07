@@ -48,8 +48,10 @@
   .gb-wktag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em;
               text-transform: uppercase; border-radius: 12px; padding: 4px 10px;
               border: 1px solid currentColor; }
+  .gb-dates { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8a8577;
+              letter-spacing: .04em; }
   .gb-pips { display: flex; gap: 4px; }
-  .gb-pip { width: 26px; height: 8px; border-radius: 3px; background: #E7E4DE; }
+  .gb-pip { width: 34px; height: 8px; border-radius: 3px; background: #E7E4DE; }
   .gb-pip.on { background: #A8761F; }
   .gb-pip.now { background: #26271F; }
 
@@ -145,13 +147,14 @@
     <div class="gb-wrap gb-top" style="padding-top: 16px; padding-bottom: 14px;">
       <div class="gb-row">
         <a href="Hub.dc.html" class="gb-btn" style="min-height: 44px; font-size: 11px; border-radius: 20px;">← Mission Control</a>
-        <span class="gb-eyebrow">Nine-week block</span>
+        <span class="gb-eyebrow">{{ blockEyebrow }}</span>
       </div>
       <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: 28px; line-height: 1.06;
                  margin: 10px 0 0; letter-spacing: -.01em;">Grind board</h1>
 
       <div class="gb-weekbar">
         <span class="gb-wknum">{{ weekLabel }}</span>
+        <span class="gb-dates">{{ weekDates }}</span>
         <sc-if value="{{ hasWkTag }}" hint-placeholder-val="{{ false }}">
           <span class="gb-wktag" style="color: {{ wkTagColor }};">{{ wkTag }}</span>
         </sc-if>
@@ -173,12 +176,8 @@
       </sc-if>
 
       <div class="gb-row" style="margin-top: 12px;">
-        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
           <button onClick="{{ t.pick }}" class="gb-btn {{ t.cls }}">{{ t.label }}</button>
-        </sc-for>
-        <span style="flex: 1;"></span>
-        <sc-for list="{{ modes }}" as="m" hint-placeholder-count="2">
-          <button onClick="{{ m.pick }}" class="gb-btn {{ m.cls }}">{{ m.label }}</button>
         </sc-for>
       </div>
     </div>
@@ -253,6 +252,21 @@
 
     <!-- ══ WEEK ══ -->
     <sc-if value="{{ isWeek }}" hint-placeholder-val="{{ false }}">
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Hard rules</div>
+        <div class="gb-h2">{{ rulesHead }}</div>
+        <div class="gb-note">{{ blockLine }}</div>
+        <sc-for list="{{ rules }}" as="r" hint-placeholder-count="5">
+          <div class="gb-ex">
+            <div class="gb-exh"><span>{{ r.head }}</span><span></span></div>
+            <sc-for list="{{ r.items }}" as="it" hint-placeholder-count="3">
+              <div class="gb-exrow"><div class="gb-exd" style="margin-top:0">{{ it }}</div></div>
+            </sc-for>
+          </div>
+        </sc-for>
+        <div class="gb-note" style="margin-top: 12px;">{{ skipOrder }}</div>
+      </div>
+
       <sc-for list="{{ weekRows }}" as="w" hint-placeholder-count="7">
         <div class="gb-panel" style="margin-top: 10px;">
           <div class="gb-row">
@@ -267,9 +281,14 @@
       </sc-for>
     </sc-if>
 
-    <!-- ══ LIFTING ══ -->
+    <!-- ══ SESSIONS ══ -->
     <sc-if value="{{ isLift }}" hint-placeholder-val="{{ false }}">
-      <sc-for list="{{ lifts }}" as="l" hint-placeholder-count="5">
+      <div class="gb-panel">
+        <div class="gb-eyebrow">{{ weekLabel }} · {{ weekDates }}</div>
+        <div class="gb-h2">{{ weekHead }}</div>
+        <div class="gb-note">{{ weekNote }}</div>
+      </div>
+      <sc-for list="{{ lifts }}" as="l" hint-placeholder-count="7">
         <div class="gb-panel">
           <div class="gb-eyebrow">{{ l.day }} · {{ l.mins }}</div>
           <div class="gb-h2">{{ l.title }}</div>
@@ -293,19 +312,21 @@
       </sc-for>
     </sc-if>
 
-    <!-- ══ RUNS ══ -->
+    <!-- ══ CARDIO ══ -->
     <sc-if value="{{ isRuns }}" hint-placeholder-val="{{ false }}">
       <div class="gb-panel">
-        <div class="gb-eyebrow">Nine weeks</div>
-        <div class="gb-h2">Run progression</div>
-        <div class="gb-note">Ratios are jog:walk in minutes. Ticking a week here is what advances the block — there is no calendar underneath it.</div>
+        <div class="gb-eyebrow">Four weeks</div>
+        <div class="gb-h2">Cardio progression</div>
+        <div class="gb-note">No regular running this month — bike, rower, elliptical, swim, or walk. The Saturday
+          walk-run is a gated test, not a workout: only if walking 30 minutes is pain-free and the tibia is not tender
+          to press, and only advance a step after two pain-free sessions. Ticking a week here counts its cardio done.</div>
         <div class="gb-scroll">
           <table class="gb-table">
-            <tr><th></th><th>Wk</th><th>Short — Tuesday</th><th>Long — Friday</th><th>Distance</th></tr>
-            <sc-for list="{{ runRows }}" as="r" hint-placeholder-count="9">
+            <tr><th></th><th>Wk</th><th>Tue — easy</th><th>Thu — intervals</th><th>Sat — long easy</th><th>Sat — walk-run, gated</th></tr>
+            <sc-for list="{{ runRows }}" as="r" hint-placeholder-count="4">
               <tr class="{{ r.cls }}">
                 <td><input type="checkbox" checked="{{ r.on }}" onChange="{{ r.toggle }}"></td>
-                <td>{{ r.w }}</td><td>{{ r.a }}</td><td>{{ r.b }}</td><td>{{ r.d }}</td>
+                <td>{{ r.w }}</td><td>{{ r.a }}</td><td>{{ r.b }}</td><td>{{ r.c }}</td><td>{{ r.d }}</td>
               </tr>
             </sc-for>
           </table>
@@ -313,12 +334,72 @@
       </div>
     </sc-if>
 
+    <!-- ══ DIET ══ -->
+    <sc-if value="{{ isDiet }}" hint-placeholder-val="{{ false }}">
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Daily targets</div>
+        <div class="gb-h2">What the food has to do</div>
+        <div class="gb-note">{{ dietIntro }}</div>
+        <div class="gb-scroll">
+          <table class="gb-table">
+            <tr><th>Item</th><th>Daily target</th><th>Why</th></tr>
+            <sc-for list="{{ dietTargets }}" as="t" hint-placeholder-count="8">
+              <tr><td>{{ t.item }}</td><td>{{ t.target }}</td><td style="color:#8a8577">{{ t.why }}</td></tr>
+            </sc-for>
+          </table>
+        </div>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">The scale decides</div>
+        <div class="gb-h2">{{ scaleHead }}</div>
+        <sc-for list="{{ scaleRules }}" as="r" hint-placeholder-count="4">
+          <div class="gb-exrow"><div class="gb-exn">{{ r }}</div></div>
+        </sc-for>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Anchor foods — pick and rotate</div>
+        <div class="gb-h2">The repeating plate</div>
+        <div class="gb-note">{{ dietCalibrate }}</div>
+        <sc-for list="{{ anchors }}" as="a" hint-placeholder-count="5">
+          <div class="gb-ex">
+            <div class="gb-exh"><span>{{ a.head }}</span><span></span></div>
+            <div class="gb-exrow"><div class="gb-exd" style="margin-top:0">{{ a.body }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">Worked example</div>
+        <div class="gb-h2">{{ menuHead }}</div>
+        <div class="gb-note">{{ menuNote }}</div>
+        <div class="gb-scroll">
+          <table class="gb-table">
+            <tr><th>Meal</th><th>Food</th><th>Approx</th></tr>
+            <sc-for list="{{ menuRows }}" as="m" hint-placeholder-count="6">
+              <tr><td>{{ m.meal }}</td><td>{{ m.food }}</td><td style="white-space:nowrap;color:#A8761F">{{ m.approx }}</td></tr>
+            </sc-for>
+          </table>
+        </div>
+        <div class="gb-note" style="margin-top: 12px;">{{ dietSunday }}</div>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">What not to do</div>
+        <div class="gb-h2">Four ways to waste the month</div>
+        <sc-for list="{{ dietAvoid }}" as="a" hint-placeholder-count="4">
+          <div class="gb-exrow"><div class="gb-exn">{{ a }}</div></div>
+        </sc-for>
+      </div>
+    </sc-if>
+
     <!-- ══ BENCHMARKS ══ -->
     <sc-if value="{{ isBm }}" hint-placeholder-val="{{ false }}">
       <div class="gb-panel">
-        <div class="gb-eyebrow">Eight measures</div>
+        <div class="gb-eyebrow">Nine measures</div>
         <div class="gb-h2">Baseline against now</div>
-        <div class="gb-note">Set the baseline once at the start of the block, then re-measure in the test week. The gap is the only proof the nine weeks did anything.</div>
+        <div class="gb-note">Set the baseline on Monday 7 September, then re-measure on Sunday 4 October. The gap is the only proof the four weeks did anything.</div>
         <div class="gb-scroll">
           <table class="gb-table">
             <tr><th>Measure</th><th>Unit</th><th>Baseline</th><th>Latest</th></tr>
@@ -332,6 +413,15 @@
             </sc-for>
           </table>
         </div>
+      </div>
+
+      <div class="gb-panel">
+        <div class="gb-eyebrow">4 October</div>
+        <div class="gb-h2">What success looks like</div>
+        <sc-for list="{{ success }}" as="s" hint-placeholder-count="6">
+          <div class="gb-exrow"><div class="gb-exn">{{ s }}</div></div>
+        </sc-for>
+        <div class="gb-note" style="margin-top: 12px;">{{ nextMonth }}</div>
       </div>
     </sc-if>
   </div>
@@ -351,21 +441,26 @@
    Tomorrow's board looked exactly like today's whether or not you had done
    the work.
 
-   So the record is the part that is new. There is deliberately NO START DATE:
-   the week advances when its sessions are done, not when the calendar moves.
-   A fortnight away costs nothing — the board is simply still on week 4, where
-   you left it.
+   So the record is the part that is new. The block is now dated — month 1
+   runs 7 September to 4 October 2026 — but the week still advances when its
+   sessions are done rather than when the calendar moves, so a fortnight away
+   costs nothing and the board is where you left it. The dates label the week;
+   they do not lock it.
+
+   `mode` is dead. The programme assumes a gym and writes its substitutions
+   under each lift instead, so the Gym/Home toggle is gone. The key is left in
+   the store rather than migrated away — it costs nothing and nothing reads it.
 
    STORAGE CONTRACT
-     ct_grind_v1 = { v:1, week:1..9, mode:'gym'|'home',
-                     sessions:{ "<week>|<dayId>": true },   // the five lifts
-                     runs:{ "w<week>": true },              // the two runs
+     ct_grind_v1 = { v:1, week:1..4,
+                     sessions:{ "<week>|<dayId>": true },   // the six sessions
+                     runs:{ "w<week>": true },              // that week's cardio
                      checks:{ "<week>|<dayId>": { <itemId>: true } },
                      bm:{ base:{<name>:str}, latest:{<name>:str} },
                      open:{ <groupId>: true } }
 
-   Everything else — the lifts, the runs, the armor menus, the timetable —
-   lives in grind-data.js and never enters the store.
+   Everything else — the lifts, the cardio, the posture and calf blocks, the
+   diet and the timetable — lives in grind-data.js and never enters the store.
    ───────────────────────────────────────────────────────────────────────── */
 class Component extends DCLogic {
   KEY = 'ct_grind_v1';
@@ -386,21 +481,33 @@ class Component extends DCLogic {
   read() {
     let s = null;
     try { s = JSON.parse(localStorage.getItem(this.KEY)); } catch (e) {}
-    const d = Object.assign({ v: 1, week: 1, mode: 'gym', sessions: {}, runs: {}, checks: {},
+    const d = Object.assign({ v: 1, week: 1, sessions: {}, runs: {}, checks: {},
                               bm: { base: {}, latest: {} }, open: {} }, s || {});
     d.bm = Object.assign({ base: {}, latest: {} }, d.bm || {});
     ['sessions', 'runs', 'checks', 'open'].forEach(k => { if (!d[k]) d[k] = {}; });
-    d.week = Math.max(1, Math.min(this.G ? this.G.weeks : 9, +d.week || 1));
+    d.week = Math.max(1, Math.min(this.G ? this.G.weeks : 4, +d.week || 1));
     return d;
   }
   write(d) { try { localStorage.setItem(this.KEY, JSON.stringify(d)); } catch (e) {} }
   mut(fn) { const d = this.read(); fn(d); this.write(d); this.bump(); }
 
+  /* "7 Sep – 4 Oct 2026" off the block's own dates, so the eyebrow cannot
+     drift from the programme the way a hand-typed range would. */
+  span(B) {
+    if (!B || !B.start || !B.end) return '';
+    const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const fmt = (iso, withYear) => {
+      const p = String(iso).split('-');
+      return +p[2] + ' ' + MON[+p[1] - 1] + (withYear ? ' ' + p[0] : '');
+    };
+    return fmt(B.start, false) + ' – ' + fmt(B.end, true);
+  }
+
   todayId() { return this.DAYS[new Date().getDay()]; }
   curDay(d) { return this.state.day || this.todayId(); }
 
-  /* The week is done when every lift and both runs are ticked. That — not a
-     date — is what lets it advance. */
+  /* The week is done when all six sessions and the week's cardio row are
+     ticked. That — not the date on it — is what lets it advance. */
   weekKeys(week) { return Object.keys((this.G && this.G.GYM) || {}).map(id => week + '|' + id); }
   weekProgress(d) {
     const lifts = this.weekKeys(d.week);
@@ -410,10 +517,9 @@ class Component extends DCLogic {
   }
 
   setWeek(n) {
-    const max = this.G ? this.G.weeks : 9;
+    const max = this.G ? this.G.weeks : 4;
     this.mut(d => { d.week = Math.max(1, Math.min(max, n)); });
   }
-  setMode(m) { this.mut(d => { d.mode = m; }); }
 
   /* ── one lift, one record ───────────────────────────────────────────────
      A gym session had two homes that never met: this board, which knows
@@ -428,7 +534,7 @@ class Component extends DCLogic {
      none of the board's business.
 
      `days[<iso>]` on this store records which session the day held, so
-     Today can say "✓ Lower B — from the grind board" rather than just
+     Today can say "✓ Strength B — from the grind board" rather than just
      "gym". The Life Log keys days by the UTC date and this follows it, for
      the same reason every other page does: its convention, not ours. */
   LKEY = 'ct_lifelog_v1';
@@ -479,8 +585,8 @@ class Component extends DCLogic {
 
   advance() {
     const d = this.read();
-    const max = this.G ? this.G.weeks : 9;
-    if (d.week >= max) { this.toast('block complete — nine weeks done'); return; }
+    const max = this.G ? this.G.weeks : 4;
+    if (d.week >= max) { this.toast('block complete — month 1 done'); return; }
     this.setWeek(d.week + 1);
     this.toast('week ' + (d.week + 1) + ' — carry on');
   }
@@ -491,7 +597,12 @@ class Component extends DCLogic {
     if (!G) {
       return { weekLabel: '—', hasWkTag: false, wkTag: '', wkTagColor: '', pips: [], weekLine: 'The programme did not load.',
                weekDone: false, advanceLabel: '', advance: () => {}, prevWeek: () => {}, nextWeek: () => {},
-               tabs: [], modes: [], isDay: false, isWeek: false, isLift: false, isRuns: false, isBm: false,
+               blockEyebrow: '', weekDates: '', weekHead: '', weekNote: '',
+               rulesHead: '', blockLine: '', rules: [], skipOrder: '',
+               dietIntro: '', dietTargets: [], scaleHead: '', scaleRules: [], anchors: [],
+               dietCalibrate: '', menuHead: '', menuNote: '', menuRows: [], dietSunday: '', dietAvoid: [],
+               success: [], nextMonth: '',
+               tabs: [], isDay: false, isWeek: false, isLift: false, isRuns: false, isDiet: false, isBm: false,
                dayBtns: [], dayShift: '', dayTitle: '', dayFocus: '', slots: [], slotCount: '', groups: [],
                noChecks: true, checkHead: '', sessionCls: '', sessionLabel: '', toggleSession: () => {},
                weekRows: [], lifts: [], runRows: [], bmRows: [], hasToast: false, toast: '' };
@@ -510,14 +621,13 @@ class Component extends DCLogic {
                   title: 'Week ' + i + ' — ' + p.done + '/' + p.total });
     }
 
-    const tabs = [['day', 'Day'], ['week', 'Week'], ['lift', 'Lifting'], ['runs', 'Runs'], ['bm', 'Benchmarks']]
+    const tabs = [['day', 'Day'], ['week', 'Week'], ['lift', 'Sessions'], ['runs', 'Cardio'],
+                  ['diet', 'Diet'], ['bm', 'Benchmarks']]
       .map(([k, label]) => ({ label, cls: this.state.view === k ? 'sel' : '', pick: () => this.setState({ view: k }) }));
-    const modes = [['gym', 'Gym'], ['home', 'Home']]
-      .map(([k, label]) => ({ label, cls: d.mode === k ? 'sel' : '', pick: () => this.setMode(k) }));
 
     // ── the day ──
     const wd = G.WEEK.filter(x => x.id === dayId)[0] || G.WEEK[0];
-    const slotsRaw = G.build(dayId, d.mode, d.week) || [];
+    const slotsRaw = G.build(dayId, d.week) || [];
     const slots = slotsRaw.map(s => ({
       time: s[0] + '–' + s[1], kind: s[2] || 'rest', label: s[3],
       sub: s[4] || '', hasSub: !!s[4],
@@ -575,9 +685,9 @@ class Component extends DCLogic {
       };
     });
 
-    // ── lifting ──
-    const lifts = Object.keys(G.GYM).map(id => {
-      const s = (d.mode === 'home' ? G.HOME : G.GYM)[id];
+    // ── the sessions, as this week prescribes them ──
+    const lifts = G.WEEK.map(x => x.id).map(id => {
+      const s = G.session(id, d.week);
       const wdx = G.WEEK.filter(x => x.id === id)[0] || {};
       return {
         day: wdx.d || id, mins: s.m || '', title: s.t || '',
@@ -590,7 +700,7 @@ class Component extends DCLogic {
 
     // ── runs ──
     const runRows = G.RUN.map(r => ({
-      w: r.w, a: r.a, b: r.b, d: r.d, cls: r.dl ? 'dl' : '',
+      w: r.w, a: r.a, b: r.b, c: r.c, d: r.d, cls: r.w === d.week ? 'dl' : '',
       on: !!d.runs['w' + r.w], toggle: () => this.toggleRun(r.w),
     }));
 
@@ -602,31 +712,61 @@ class Component extends DCLogic {
       setLatest: (e) => this.setBm('latest', name, e.target.value),
     }));
 
+    const wi = (G.WEEKINFO || []).filter(x => x.w === d.week)[0] || { dates: '', head: '', note: '' };
+    const DT = G.DIET || {};
+
     return {
       weekLabel: 'Week ' + d.week,
+      weekDates: wi.dates,
+      weekHead: wi.head,
+      weekNote: wi.note,
+      blockEyebrow: ((G.BLOCK && G.BLOCK.title) || 'Block') + ' · ' + this.span(G.BLOCK),
+      blockLine: (G.BLOCK && G.BLOCK.line) || '',
       hasWkTag: isDeload || isTest,
-      wkTag: isTest ? 'test week' : 'deload',
+      wkTag: isTest ? 'final week' : 'deload',
       wkTagColor: isTest ? '#2E6A86' : '#A8761F',
       pips,
-      weekLine: prog.done + ' of ' + prog.total + ' sessions done — ' + prog.lifts + '/' + prog.liftTotal
-              + ' lifts and ' + (prog.runDone ? 'the runs' : 'no runs yet')
-              + '. No dates here: the week moves when the work does.',
+      weekLine: prog.done + ' of ' + prog.total + ' done — ' + prog.lifts + '/' + prog.liftTotal
+              + ' sessions and ' + (prog.runDone ? 'the cardio row' : 'no cardio row yet')
+              + '. ' + wi.head + ' The week moves when the work does, not when the date does.',
       weekDone: prog.done === prog.total,
-      advanceLabel: d.week >= G.weeks ? 'Nine weeks done' : 'Week complete — go to week ' + (d.week + 1),
+      advanceLabel: d.week >= G.weeks ? 'Month 1 done — 5 Oct starts month 2' : 'Week complete — go to week ' + (d.week + 1),
       advance: () => this.advance(),
       prevWeek: () => this.setWeek(d.week - 1),
       nextWeek: () => this.setWeek(d.week + 1),
 
-      tabs, modes,
+      tabs,
       isDay: this.state.view === 'day', isWeek: this.state.view === 'week',
       isLift: this.state.view === 'lift', isRuns: this.state.view === 'runs',
-      isBm: this.state.view === 'bm',
+      isDiet: this.state.view === 'diet', isBm: this.state.view === 'bm',
+
+      // ── the hard rules, on the week tab ──
+      rulesHead: 'Five things the month is not allowed to break',
+      rules: (G.RULES || []).map(([head, items]) => ({ head, items })),
+      skipOrder: G.SKIPORDER || '',
+
+      // ── diet ──
+      dietIntro: DT.intro || '',
+      dietTargets: (DT.targets || []).map(([item, target, why]) => ({ item, target, why })),
+      scaleHead: (DT.scale && DT.scale.head) || '',
+      scaleRules: (DT.scale && DT.scale.rules) || [],
+      anchors: (DT.anchors || []).map(([head, body]) => ({ head, body })),
+      dietCalibrate: DT.calibrate || '',
+      menuHead: (DT.menu && DT.menu.head) || '',
+      menuNote: (DT.menu && DT.menu.note) || '',
+      menuRows: ((DT.menu && DT.menu.rows) || []).map(([meal, food, approx]) => ({ meal, food, approx })),
+      dietSunday: DT.sunday || '',
+      dietAvoid: DT.avoid || [],
+
+      // ── the finish line ──
+      success: G.SUCCESS || [],
+      nextMonth: G.NEXT || '',
 
       dayBtns,
       dayShift: (G.DAYNAME[dayId] || wd.d) + (wd.off ? '' : ''),
       dayTitle: wd.focus, dayFocus: wd.sub,
       sessionCls: sessionOn ? 'done' : (isLiftDay ? 'go' : ''),
-      sessionLabel: !isLiftDay ? (sessionOn ? 'Day marked done ✓' : 'Mark the day done')
+      sessionLabel: !isLiftDay ? (sessionOn ? 'Recovery day marked done ✓' : 'Mark the recovery day done')
                                : (sessionOn ? 'Session done ✓' : 'Mark the session done'),
       toggleSession: () => this.toggleSession(dayId),
 

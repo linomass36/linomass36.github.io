@@ -368,21 +368,34 @@ to be possible from a phone. **In Weekly Review**: the week's four numbers and
 any tripwire that fired — a panel that stays away entirely until there is
 something to report.
 
-### Grind — the nine-week board
+### Grind — month 1, the four-week foundation block
 
-`Grind.dc.html`. Five lifting days, a run progression with deloads at weeks
-four and eight and a test in week nine, a daily block of McGill work, posture
-and mobility, the armor menus, and eight benchmarks.
+`Grind.dc.html`. Six sessions a week — three strength days (A squat/hinge/pull,
+B deadlift/press/row, C lighter full body plus shadowboxing), an engine day, an
+interval day and a long easy day — with Sunday as recovery. Warm-up, calf
+protocol and the posture block bracket every strength day. Six tabs: Day, Week
+(the hard rules and the seven days), Sessions, Cardio, Diet, Benchmarks.
 
-**There is no start date, on purpose.** The standalone board had a manual week
-counter and a checklist keyed by weekday, so it was overwritten every seven
-days and tomorrow looked like today whether or not you had done the work. Here
-the week advances when its *sessions* are done — five lifts and the runs — so a
-fortnight away costs nothing and the board is simply still on week 4, where you
-left it. The pips across the top show which weeks are complete.
+The block runs **7 September – 4 October 2026**, and replaced the nine-week
+block that had no dates at all. Two things changed shape with it:
+
+- **The weeks are dated now**, because the plan dates them and because month 2
+  starts on 5 October whether or not week 4 was ticked. The week still
+  *advances* when its work is done — six sessions plus that week's cardio row —
+  so a fortnight away still costs nothing. The dates label the week; they do
+  not lock it. The pips across the top show which weeks are complete.
+- **There is no home mode.** The plan assumes a gym and writes its
+  substitutions under each lift, so the Gym/Home toggle is gone rather than
+  left to invent a home variant the plan never wrote. `mode` is left in the
+  store unmigrated: it costs nothing and nothing reads it.
+
+The running rule inverted too. The old block ran a nine-week jog:walk
+progression twice a week; this one does not run at all by default — shins get
+non-impact cardio, and the Saturday walk-run is a **gated test** that only
+advances a step after two pain-free sessions.
 
 The programme is in `grind-data.js` and never enters the store; `ct_grind_v1`
-holds the record — sessions, run ticks, per-week checklists, and the
+holds the record — sessions, cardio ticks, per-week checklists, and the
 benchmarks. Training is **not** merged into the Life Log: this is its own
 track, so a grind session and a Life Log gym tick stay separate records.
 
@@ -928,7 +941,7 @@ on a phone, where an N x N grid of everything against everything is a wall.
 Cells below eight paired days are hatched and report nothing.
 
 **`Week.html` and `calendar.js`** make the week elastic. The Grind board is a
-fixed nine-week grid keyed `week|slot` — `3|push` — so a week where clinic
+fixed grid keyed `week|day` — `3|wed` — so a week where clinic
 eats Tuesday cannot be expressed: there is nowhere to put "moved to
 Thursday". That keying is also why training was invisible to the trends
 table. The new week reads what is already committed and lays the sessions
@@ -1372,7 +1385,7 @@ reading eight weeks in the past.
 ## Files in this system
 - `config.js` — the one place you edit (owner email + Firebase keys, and `mobileHubUrl`, where a phone lands).
 - `Anatomy.dc.html` + `anatomy-core.js` + `anatomy-data.js` — the closure log: the screen, the rules, and the syllabus. See **Three systems folded in** above.
-- `Grind.dc.html` + `grind-data.js` — the nine-week board and its programme.
+- `Grind.dc.html` + `grind-data.js` — the board and its programme: month 1, the four-week foundation block, 7 Sep – 4 Oct 2026.
 - `Research Plan.dc.html` — the five-track portfolio, with a live ninety days and live gates.
 - `archive.js` — the hot/cold split: which quarters go in the main document and which go to `hubData/{uid}/archive`, and the rejoin that stops an incoming sync deleting your archive. See **The ceiling, removed** above.
 - `capture.js` — one input on every page that routes a line to a person, a paper, a conference, this week or the journal. Injected beside the drawer.

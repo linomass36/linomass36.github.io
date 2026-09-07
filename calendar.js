@@ -6,8 +6,8 @@
    it is the week you are standing in, because those are the hours you still
    need and there was previously no way to ask for them.
 
-   WHY THIS EXISTS. The Grind board is a fixed nine-week grid keyed
-   `week|slot` — `3|push` — so a week where clinic eats Tuesday cannot be
+   WHY THIS EXISTS. The Grind board is a fixed grid keyed
+   `week|day` — `3|wed` — so a week where clinic eats Tuesday cannot be
    expressed: there is nowhere to put "moved to Thursday". That keying is
    also why the board is invisible to the trends table, which reads training
    from the Life Log instead. A week that changes shape every week, and a
@@ -536,7 +536,11 @@
      are going to override it anyway, and you need to see why it chose. */
   function planWeek(events, opts) {
     opts = opts || {};
-    var sessions = opts.sessions || ['Push', 'Pull', 'Legs', 'Run', 'Swim', 'Core'];
+    /* Month 1's six sessions, in the order the block runs them. Generic
+       Push/Pull/Legs labels were left over from before the programme was
+       written down; the planner deals what the block actually asks for. */
+    var sessions = opts.sessions ||
+      ['Strength A', 'Engine', 'Strength B', 'Intervals', 'Strength C + shadow', 'Long easy'];
     var wakeFrom = opts.wakeFrom == null ? 7 : opts.wakeFrom;   // 07:00
     var wakeTo = opts.wakeTo == null ? 22 : opts.wakeTo;        // 22:00
     var range = opts.range || planningRange();
