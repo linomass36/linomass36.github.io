@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rest · CT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<style>
+:root {
+  --ground:#F7F5F1; --card:#FFFDF8; --raise:#FFFFFF;
+  --ink:#1A1B1A; --mid:#55564F; --muted:#8A8B82; --faint:#B4B2A9;
+  --rule:#E4E2DD; --rust:#993C1D; --rust-dim:#FBF2EE;
+  --owed:#A32E27; --owed-bg:#FBEDE8; --owed-ln:#E8C4B6;
+  --ok:#0F6E56; --ok-bg:#EEF5F1; --ok-ln:#C4DED2;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
+  --serif:"Newsreader",Georgia,serif;
+  --shadow:0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131315; --card:#1B1B1D; --raise:#212124;
+    --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+    --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+    --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+    --ok:#5FBF9B; --ok-bg:#14231E; --ok-ln:#20392F;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+html.hb-dark {
+  --ground:#131315; --card:#1B1B1D; --raise:#212124;
+  --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+  --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+  --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+  --ok:#5FBF9B; --ok-bg:#14231E; --ok-ln:#20392F;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+a { color:var(--rust); text-decoration:none; }
+main { max-width:720px; margin:0 auto; padding:0 20px 90px; }
+.top { display:flex; align-items:center; gap:10px; padding:14px 20px 12px;
+  border-bottom:1px solid var(--rule); max-width:720px; margin:0 auto; }
+.mark { font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); }
+.dateline { font-family:var(--mono); font-size:10.5px; color:var(--faint); }
+.sp { flex:1; }
+h1 { font-family:var(--serif); font-weight:500; font-size:34px; line-height:1.08;
+  margin:24px 0 8px; letter-spacing:-.015em; }
+.lede { color:var(--mid); font-size:15px; margin:0; max-width:58ch; }
+.kicker { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--rust); margin:34px 0 10px; display:flex;
+  align-items:baseline; gap:8px; }
+.kicker .note { flex:1; font-weight:400; letter-spacing:.04em; text-transform:none;
+  color:var(--faint); font-size:10px; text-align:right; }
+p { margin:0 0 12px; }
+.box { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  padding:16px 17px; box-shadow:var(--shadow); }
+.box + .box { margin-top:10px; }
+.box h3 { font-family:var(--sans); font-size:13px; font-weight:600; margin:0 0 6px; color:var(--ink); }
+.box p:last-child { margin-bottom:0; }
+.sub { color:var(--mid); font-size:13.5px; }
+
+/* A tickable line. The whole row is the target — a 20px box is not a
+   phone-sized tap, and this page is read at 21:00 with one hand. */
+.tick { display:flex; gap:12px; align-items:flex-start; min-height:52px; padding:9px 15px;
+  border-top:1px solid var(--rule); cursor:pointer; }
+.tick:first-child { border-top:none; }
+.tick input { width:21px; height:21px; flex:none; margin-top:2px; accent-color:var(--rust); cursor:pointer; }
+.tick .t { flex:1; min-width:0; }
+.tick .t b { font-weight:500; font-size:14.5px; display:block; }
+.tick .t small { color:var(--muted); font-size:12.5px; display:block; margin-top:2px; line-height:1.45; }
+.tick.done .t b { color:var(--faint); text-decoration:line-through; }
+.tick.done .t small { color:var(--faint); }
+.list { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  overflow:hidden; box-shadow:var(--shadow); }
+.when { font-family:var(--mono); font-size:11px; color:var(--muted); flex:none;
+  width:92px; padding-top:3px; }
+.tick.danger { background:var(--owed-bg); }
+.tick.danger .t small { color:var(--owed); }
+
+.count { font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+.count.all { color:var(--ok); }
+.count.part { color:var(--rust); }
+
+/* The three kinds. The first one is not a kind of rest, and is drawn as
+   the thing it is rather than as the first item in a menu. */
+.kind { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  padding:14px 16px; margin-top:9px; box-shadow:var(--shadow); }
+.kind .n { font-family:var(--mono); font-size:10px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--rust); }
+.kind .d { font-size:14px; color:var(--mid); margin-top:5px; }
+.kind.no { background:var(--owed-bg); border-color:var(--owed-ln); }
+.kind.no .n { color:var(--owed); }
+
+.scroll { overflow-x:auto; margin-top:2px; }
+table { width:100%; border-collapse:collapse; font-size:13.5px; min-width:580px; }
+th { font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--faint); font-weight:400; text-align:left; padding:9px 11px;
+  border-bottom:1px solid var(--rule); }
+td { padding:11px; border-bottom:1px solid var(--rule); vertical-align:top; color:var(--mid); }
+td.sig { color:var(--ink); font-weight:500; width:24%; }
+td.yes { color:var(--ink); }
+td.no { color:var(--owed); }
+
+/* Readiness: five yes/no rows and a verdict that is allowed to say the day
+   worked even when it did not feel like it. */
+.rd { display:flex; gap:11px; align-items:center; min-height:56px; padding:10px 15px;
+  border-top:1px solid var(--rule); }
+.rd:first-child { border-top:none; }
+.rd .q { flex:1; min-width:0; font-size:14.5px; }
+.rd .btns { display:flex; gap:6px; flex:none; }
+.rd button { min-height:40px; min-width:52px; padding:0 13px; border-radius:10px;
+  border:1px solid var(--rule); background:var(--raise); color:var(--mid);
+  font-family:var(--mono); font-size:12px; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; }
+.rd button.on-y { border-color:var(--ok); background:var(--ok-bg); color:var(--ok); font-weight:600; }
+.rd button.on-n { border-color:var(--owed-ln); background:var(--owed-bg); color:var(--owed); font-weight:600; }
+.verdict { margin-top:10px; border-radius:13px; padding:15px 17px; border:1px solid var(--rule);
+  background:var(--card); }
+.verdict .big { font-family:var(--serif); font-size:23px; line-height:1.15; }
+.verdict .l { font-size:13.5px; color:var(--mid); margin-top:5px; }
+.verdict.good { background:var(--ok-bg); border-color:var(--ok-ln); }
+.verdict.good .big { color:var(--ok); }
+.verdict.bad { background:var(--owed-bg); border-color:var(--owed-ln); }
+.verdict.bad .big { color:var(--owed); }
+
+.rails { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.rail { font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+  border:1px solid var(--rule); border-radius:20px; padding:6px 12px; color:var(--mid);
+  background:var(--card); }
+.pull { border-left:2px solid var(--rust); padding:2px 0 2px 15px; margin:14px 0;
+  color:var(--mid); font-size:14px; }
+.pull b { color:var(--ink); font-weight:500; }
+footer { display:flex; justify-content:space-between; gap:12px; margin-top:44px;
+  padding-top:16px; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:10px; color:var(--faint); }
+@media (max-width:560px) {
+  h1 { font-size:29px; }
+  .when { width:74px; font-size:10.5px; }
+  table { min-width:480px; }
+}
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
+</style>
+<script src="./day.js"></script>
+<script src="./screen.js"></script>
+</head>
+<body>
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span class="dateline" id="dateline"></span>
+  <span class="sp"></span>
+</header>
+<main>
+  <h1>Rest is load management with a spine.</h1>
+  <p class="lede">Not the absence of demand — a planned reduction of cognitive and training load
+    that keeps four rails: a time box, the body, food decided in advance, and the lock on. Anything
+    emptier than this is not rest. It is how the last streak ended.</p>
+
+  <div class="rails">
+    <span class="rail">Time box</span>
+    <span class="rail">Body</span>
+    <span class="rail">Food decided</span>
+    <span class="rail">Lock on</span>
+  </div>
+
+  <!-- ══ the night-before checklist ══════════════════════════════════════
+       First on the page because it is first in time. The document is explicit
+       that this checklist IS the rest decision — the morning does not get to
+       make it. -->
+  <div class="kicker">Tonight — the rest decision <span class="note" id="night-n"></span></div>
+  <div class="list" id="night"></div>
+
+  <!-- ══ what rest is ═══════════════════════════════════════════════════ -->
+  <div class="kicker">What rest is <span class="note">three kinds, two of them real</span></div>
+  <p class="sub">For most people rest means unstructured time: sleep in, scroll, eat whatever, call
+    it recovery. That definition wrecks you. Your output holds under load. It collapses when the day
+    has no appointed work and no appointed end.</p>
+  <div class="kind no">
+    <div class="n">Passive collapse — not rest</div>
+    <div class="d">No plan, phone in hand, Canopy optional, food by default. This is the rut.</div>
+  </div>
+  <div class="kind">
+    <div class="n">Active recovery</div>
+    <div class="d">Sleep, walking, mobility, easy cardio, sunlight, a real meal, a short social or
+      church block. Load drops. Structure stays.</div>
+  </div>
+  <div class="kind">
+    <div class="n">Strategic deload</div>
+    <div class="d">One lighter training day, one shorter deep-work cap, earlier lights-out. Used
+      after ten-plus hard weeks, after a shift stack, or after a slip week so the next week starts clean.</div>
+  </div>
+
+  <!-- ══ impact ═════════════════════════════════════════════════════════ -->
+  <div class="kicker">What it does to you specifically</div>
+  <div class="box">
+    <h3>When rest is unstructured</h3>
+    <p class="sub">The last slip was a clean case study. Cancelled trip. No work until evening.
+      Canopy unpaid. Spicy stories already in circulation. Large food order. Manuscript as the
+      only finished output. That stack is not random: empty time raises novelty-seeking, novelty-seeking
+      finds fiction, then “destress,” then the day is gone.</p>
+    <p class="sub">Shame then attacks the dating standard and the two-and-a-half-week line as if
+      both were voided. They were not. The cost was vigilance returning, and confidence that had
+      been borrowed from a lock.</p>
+    <p class="sub">A collapsed Saturday does not always wreck Monday strength. It wrecks Sunday’s
+      abstract buffer and Monday’s 7:30 start, if you stay up making it up.</p>
+  </div>
+  <div class="box">
+    <h3>When rest is structured</h3>
+    <p class="sub">Cortisol and training strain drop without handing the afternoon to appetite.
+      Sleep and walking restore the thing the overdrive spends: attention. A hard training session
+      on an off-day is destress that does not require a story. A two-hour cap on open-ended research
+      stops the work becoming another form of drift. The identity block — 05:00 writing — keeps the
+      day yours even when clinical or job hours move.</p>
+  </div>
+  <div class="box">
+    <h3>What rest will not do</h3>
+    <p class="sub">It will not make you feel balanced. It will not prove the appetite is gone. It
+      will not replace a wife. It will not earn a beach day. Those are the wrong success metrics.</p>
+    <p class="sub"><b>Success is:</b> you can hit the next block, strength did not slide, the lock
+      is paid, the abstract or manuscript moved, and you did not buy a full day with one spike.</p>
+  </div>
+
+  <!-- ══ the decision table ═════════════════════════════════════════════
+       The centre of the document. Mood after a streak-break votes for more
+       collapse or more punishment, so the choice is made from the signal and
+       the calendar type instead. -->
+  <div class="kicker">Choose by signal, not by mood <span class="note">the calendar decides, not the feeling</span></div>
+  <div class="scroll">
+    <table>
+      <tr><th>Signal</th><th>Choose this</th><th>Do not choose</th></tr>
+      <tr><td class="sig">Ten-plus hard weeks, sleep short, lifts stalling</td>
+          <td class="yes">Strategic deload: cut volume 30–40%, keep writing, keep the walk</td>
+          <td class="no">Total days off with no plan</td></tr>
+      <tr><td class="sig">One cancelled plan — LA, a date, the gym</td>
+          <td class="yes">Replacement block: train plus one deep-work window</td>
+          <td class="no">Bonus free afternoon</td></tr>
+      <tr><td class="sig">Evening shift, 6:30 or 7:30</td>
+          <td class="yes">Full morning spine, hard stop mid-afternoon, bed after the shift</td>
+          <td class="no">A third work block at 15:45</td></tr>
+      <tr><td class="sig">Morning shift, 6:30</td>
+          <td class="yes">Treat as a workday. Writing only if already up at 4:30. Train after.</td>
+          <td class="no">Calling it an off-day</td></tr>
+      <tr><td class="sig">Morning shift, 7:30</td>
+          <td class="yes">05:00 writing, food, out. One block after work.</td>
+          <td class="no">Staying up to redeem the prior afternoon</td></tr>
+      <tr><td class="sig">Deadline inside 48 hours</td>
+          <td class="yes">Deadline first. Manuscript drills as warm-up only.</td>
+          <td class="no">Open-ended research vibe with no output</td></tr>
+      <tr><td class="sig">Lock down, or the bill lapsed</td>
+          <td class="yes">Pay and restore before coffee. The phone is not yours until it is up.</td>
+          <td class="no">Negotiating after the first spike</td></tr>
+      <tr><td class="sig">Shame after a slip</td>
+          <td class="yes">Minimum viable day — below</td>
+          <td class="no">A clipboard about dating, and a self-verdict</td></tr>
+    </table>
+  </div>
+
+  <!-- ══ allotment + sleep ══════════════════════════════════════════════ -->
+  <div class="kicker">The weekly allotment</div>
+  <div class="box">
+    <p class="sub">You do not get a weekly rest day as a blank square. You get six days with a
+      spine, and <b>one lighter day that still has</b> writing, a walk or a train, one deep-work
+      cap, food decided, and the lock on.</p>
+    <p class="sub">After a ten-week grind, insert one deload week: same wake time, less volume,
+      earlier bed, no new open loops.</p>
+  </div>
+  <div class="box">
+    <h3>Sleep</h3>
+    <p class="sub">The only rest that is non-negotiable and unstructured in its content. Protect
+      seven-plus hours on work nights. Do not stay up to process her, the date, or the slip —
+      those files do not get the hours the abstract needs.</p>
+  </div>
+
+  <!-- ══ the spine ══════════════════════════════════════════════════════ -->
+  <div class="kicker">The full off-day spine <span class="note" id="spine-n"></span></div>
+  <div class="list" id="spine"></div>
+  <div class="pull">13:00–16:00 is the danger window. It gets a hard stop and a named output,
+    not an open afternoon.</div>
+
+  <div class="kicker">Off-day with evening work</div>
+  <div class="box">
+    <p class="sub">Morning is the work. The shift is the lock. After the shift: one finishable
+      block if clean minutes remain, otherwise bed. Morning work the next day is already the test.</p>
+  </div>
+
+  <!-- ══ minimum viable ═════════════════════════════════════════════════ -->
+  <div class="kicker">Minimum viable rest <span class="note" id="mvr-n"></span></div>
+  <p class="sub">For a day that is already in the hole. Enough not to lose the week — and do not
+    try to redeem the whole Saturday before you leave the house.</p>
+  <div class="list" id="mvr"></div>
+
+  <!-- ══ appetite ═══════════════════════════════════════════════════════ -->
+  <div class="kicker">Appetite during rest</div>
+  <div class="box">
+    <p class="sub">Rest is when spikes chain. One spike is fifteen minutes. Five spikes in a hole
+      afternoon is the cascade. <b>Break the chain on spike one and two by standing up and moving.</b>
+      Do not sit and decide.</p>
+    <p class="sub">Fiction that wears a relationship costume — an imaginary wife, old girlfriend
+      logic, a spicy text — is the same door as a site. The lock is a tool. The line is held with
+      the door open, not only when the lock works.</p>
+    <p class="sub">Marriage later is where that appetite belongs. Until then it gets a job:
+      training, writing, the abstract, a real person in the room. It does not get a screen because
+      the calendar is empty.</p>
+  </div>
+
+  <!-- ══ readiness ══════════════════════════════════════════════════════
+       Asked at lights-out, and scored, because the document's own standard is
+       four of five — which means a rest day is allowed to have worked without
+       having felt like anything. -->
+  <div class="kicker">Readiness — at lights-out <span class="note">four of five is a pass</span></div>
+  <div class="list" id="ready"></div>
+  <div class="verdict" id="verdict"><div class="big">—</div><div class="l">Answer the five when the phone is parked.</div></div>
+
+  <!-- ══ the larger program ═════════════════════════════════════════════ -->
+  <div class="kicker">How this sits in the larger program</div>
+  <div class="box">
+    <p class="sub">The career block stays first on deadline weeks. Manuscript drills are warm-up,
+      not the day’s proof. Training is the pressure valve, so destress does not become fiction.
+      Dating gets one live question per date, not a clipboard on a rest day. Shame about a slip does
+      not get to cancel the walk date or rewrite the house standard.</p>
+    <p class="sub"><b>Files stay separate:</b> today’s output, her file, the appetite file.</p>
+  </div>
+
+  <div class="kicker">Default for the next fourteen days</div>
+  <div class="box">
+    <p class="sub">No blank squares. One lighter day after any three-shift cluster. Writing stays at
+      05:00 except on a 6:30 start. Training stays on every off-day, even shortened. Food decided the
+      night before. The lock treated as task zero. Open-ended research only inside a cap. After 21:00,
+      no processing of the date or the slip.</p>
+  </div>
+
+  <footer>
+    <span>Rest</span>
+    <span>a scheduled drop in load that still has a spine</span>
+  </footer>
+</main>
+<script>
+/* ─────────────────────────────────────────────────────────────────────────
+   Rest.html — the rest protocol, and the four things on it you tick.
+
+   The document this page carries is a protocol rather than an essay: a
+   decision table, a night-before checklist, an off-day timetable, a
+   minimum-viable day, and a five-question readiness test with a stated pass
+   mark. The prose is content and lives in the markup. The four lists are
+   state, and live here.
+
+   WHY THE NIGHT-BEFORE LIST IS AT THE TOP. The protocol's own claim is that
+   the checklist *is* the rest decision — by morning the choice has already
+   been made, well or badly. A page that opened with the definition of rest
+   and buried the checklist at the bottom would be an essay about a decision
+   you had already lost.
+
+   KEYED BY DAY, through CTDay, so the hub's 05:00 boundary applies: a list
+   ticked at 01:00 belongs to the day it was ticked in, not the one the
+   calendar had just started. Same convention as the Life Log and the grind
+   board, for the same reason.
+
+   STORAGE CONTRACT
+     ct_rest_v1 = { v:1, days:{ "<iso>": {
+                      night:{<i>:true}, spine:{<i>:true}, mvr:{<i>:true},
+                      ready:{<i>:'y'|'n'} } } }
+
+   Nothing else is stored. The protocol text is not user data and never
+   enters the store.
+   ───────────────────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+  var KEY = 'ct_rest_v1';
+  var $ = function (s) { return document.querySelector(s); };
+
+  function today() {
+    return window.CTDay ? window.CTDay.today() : new Date().toISOString().slice(0, 10);
+  }
+  function read() {
+    var d = null;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+    if (!d || typeof d !== 'object') d = {};
+    if (!d.days || typeof d.days !== 'object') d.days = {};
+    d.v = 1;
+    return d;
+  }
+  function day(d) {
+    var k = today();
+    if (!d.days[k] || typeof d.days[k] !== 'object') d.days[k] = {};
+    var t = d.days[k];
+    ['night', 'spine', 'mvr', 'ready'].forEach(function (n) {
+      if (!t[n] || typeof t[n] !== 'object') t[n] = {};
+    });
+    return t;
+  }
+  function write(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+
+  /* Mutate and persist, and NOTHING else. An earlier version repainted the
+     whole page from here, which was wrong twice over: it replaced the row you
+     had just tapped, so a quick second tap on a neighbour landed on a node
+     that no longer existed, and it rebuilt fourteen rows to change one class.
+     Each caller now updates the one row it touched. */
+  function mut(fn) { var d = read(); fn(day(d), d); write(d); }
+
+  /* ── the content ──────────────────────────────────────────────────────
+     Verbatim from the protocol, with the one proper name removed. Kept as
+     data rather than markup only because these four lists are the ones that
+     carry a tick. */
+  var NIGHT = [
+    ['Lock paid and on.', 'Task zero. Not negotiable after the first spike.'],
+    ['Food decided.', 'Delivery apps stay closed.'],
+    ['One sentence for the day.', 'Writing / deep work / train / work-or-people.'],
+    ['If a trip exists, write the replacement sentence now.', 'In case it dies. This is the one that saved the last cancelled weekend, and the one that was skipped.'],
+    ['Phone charges outside the bedroom.', '']
+  ];
+  var SPINE = [
+    ['05:00–05:45', 'Writing', 'Skip this and the day is already arguing.'],
+    ['05:45–06:30', 'Walk, mobility, sunlight', 'No entertainment logins.'],
+    ['06:30–07:15', 'Real breakfast', 'Already bought.'],
+    ['07:15', 'Three lines on paper, with end times', 'Deep work, training, manuscript minutes.'],
+    ['07:30–11:00', 'Deep work 1', 'Phone in another room.'],
+    ['11:00', 'Eat', 'Short.'],
+    ['11:00–12:30', 'Train', 'Or 11:30–13:00. This is destress. Do not cancel.'],
+    ['13:00–13:30', 'Shower, change clothes', 'The visual end of the slump shift.'],
+    ['13:30–16:00', 'Deep work 2, or manuscript', 'Hard stop. 13:00–16:00 is the danger window.', 1],
+    ['16:00–17:00', 'Admin', 'Lock, money, laundry, messages, dating logistics.'],
+    ['17:00–18:30', 'People, or extra movement', 'Not a solo couch.'],
+    ['18:30', 'Dinner', 'Already decided.'],
+    ['19:30–21:00', 'Light close', 'Manuscript polish, Anki, NKJV. Not reward content that looks like the cave.'],
+    ['21:00', 'Phone parked', 'Tomorrow’s sentence written.']
+  ];
+  var MVR = [
+    ['Restore the lock.', ''],
+    ['Leave the room.', ''],
+    ['Train 30 minutes.', ''],
+    ['One 90-minute work block.', 'With a named output.'],
+    ['Work, or sleep.', '']
+  ];
+  var READY = [
+    'Can I hit tomorrow’s study or writing block if I set it tonight?',
+    'Is strength holding, or did training go first?',
+    'Is money moving?',
+    'Could I take a hit this month without folding?',
+    'Is the lock on without a negotiation?'
+  ];
+
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+
+  /* One tickable list. `rows` are [label, sub] or [when, label, sub, danger].
+     Built once; a tick then edits its own row's class and the count. */
+  function paintTicks(host, rows, bucket, timed, noteId) {
+    var t = day(read());
+    host.innerHTML = '';
+    rows.forEach(function (r, i) {
+      var when = timed ? r[0] : null;
+      var label = timed ? r[1] : r[0];
+      var sub = timed ? r[2] : r[1];
+      var danger = timed ? r[3] : false;
+      var base = 'tick' + (danger ? ' danger' : '');
+      var row = el('label', base + (t[bucket][i] ? ' done' : ''));
+      var cb = el('input'); cb.type = 'checkbox'; cb.checked = !!t[bucket][i];
+      cb.addEventListener('change', function () {
+        var on = false;
+        mut(function (d) {
+          if (d[bucket][i]) delete d[bucket][i]; else d[bucket][i] = true;
+          on = !!d[bucket][i];
+        });
+        row.className = base + (on ? ' done' : '');
+        cb.checked = on;
+        countNote(noteId, rows, bucket);
+      });
+      row.appendChild(cb);
+      if (when) row.appendChild(el('span', 'when', when));
+      var body = el('span', 't');
+      body.appendChild(el('b', null, label));
+      if (sub) body.appendChild(el('small', null, sub));
+      row.appendChild(body);
+      host.appendChild(row);
+    });
+    countNote(noteId, rows, bucket);
+  }
+
+  function countNote(id, rows, bucket) {
+    var t = day(read());
+    var n = rows.reduce(function (a, _, i) { return a + (t[bucket][i] ? 1 : 0); }, 0);
+    var node = $(id);
+    node.textContent = n + ' of ' + rows.length;
+    node.className = 'note count ' + (n === rows.length ? 'all' : (n ? 'part' : ''));
+  }
+
+  /* ── readiness ────────────────────────────────────────────────────────
+     Three states per question, not two: unanswered is not the same as no,
+     and a verdict computed off four unanswered questions would report a
+     failure every morning before the day had happened. */
+  function paintReady() {
+    var t = day(read());
+    var host = $('#ready');
+    host.innerHTML = '';
+    READY.forEach(function (q, i) {
+      var row = el('div', 'rd');
+      row.appendChild(el('span', 'q', q));
+      var btns = el('span', 'btns');
+      var pair = {};
+      [['y', 'Yes'], ['n', 'No']].forEach(function (p) {
+        var b = el('button', t.ready[i] === p[0] ? 'on-' + p[0] : '', p[1]);
+        pair[p[0]] = b;
+        b.addEventListener('click', function () {
+          var now = '';
+          mut(function (d) {
+            if (d.ready[i] === p[0]) delete d.ready[i]; else d.ready[i] = p[0];
+            now = d.ready[i] || '';
+          });
+          pair.y.className = now === 'y' ? 'on-y' : '';
+          pair.n.className = now === 'n' ? 'on-n' : '';
+          paintVerdict();
+        });
+        btns.appendChild(b);
+      });
+      row.appendChild(btns);
+      host.appendChild(row);
+    });
+    paintVerdict();
+  }
+
+  function paintVerdict() {
+    var t = day(read());
+    var yes = 0, no = 0;
+    READY.forEach(function (_, i) { if (t.ready[i] === 'y') yes++; else if (t.ready[i] === 'n') no++; });
+    var v = $('#verdict'), big = v.firstChild, line = v.lastChild;
+    if (!yes && !no) {
+      v.className = 'verdict';
+      big.textContent = '—';
+      line.textContent = 'Answer the five when the phone is parked.';
+    } else if (no >= 2) {
+      v.className = 'verdict bad';
+      big.textContent = yes + ' of 5';
+      line.textContent = 'Two or more no. Name which rail broke first and repair that rail in ' +
+                         'tomorrow’s night-before. Do not add philosophy.';
+    } else if (yes >= 4) {
+      v.className = 'verdict good';
+      big.textContent = yes + ' of 5';
+      line.textContent = 'The rest day worked, even if it did not feel holy.';
+    } else {
+      v.className = 'verdict';
+      big.textContent = yes + ' of 5';
+      line.textContent = (yes + no < 5)
+        ? 'Still ' + (5 - yes - no) + ' unanswered.'
+        : 'Short of four. One rail is loose rather than broken — name it tonight.';
+    }
+  }
+
+  function paint() {
+    paintTicks($('#night'), NIGHT, 'night', false, '#night-n');
+    paintTicks($('#spine'), SPINE, 'spine', true, '#spine-n');
+    paintTicks($('#mvr'), MVR, 'mvr', false, '#mvr-n');
+    paintReady();
+  }
+
+  function dateline() {
+    var d = new Date();
+    var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    $('#dateline').textContent = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+  }
+
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  dateline();
+  paint();
+})();
+</script>
+</body>
+</html>

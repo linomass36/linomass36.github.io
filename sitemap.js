@@ -51,6 +51,7 @@
     'Grind.dc.html':             { name: 'Grind board',   group: 'Body', parent: 'Today.dc.html', back: 'wrong' },
     'Life Log.dc.html':          { name: 'Life Log',      group: 'Body', parent: 'Today.dc.html', back: 'wrong' },
     'Health.html':               { name: 'The Body',      group: 'Body', parent: 'Today.dc.html', back: 'correct' },
+    'Rest.html':                 { name: 'Rest',          group: 'Body', parent: 'Today.dc.html', back: 'correct' },
     'Trends.html':               { name: 'Trends',        group: 'Body', parent: 'Life Log.dc.html', back: 'none' },
     'Week.html':                 { name: 'The Week',      group: 'Body', parent: 'Grind.dc.html', back: 'none' },
 
