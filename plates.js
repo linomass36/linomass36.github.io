@@ -1,9 +1,9 @@
 /* plates.js — the pictures, and the slots they fall into.
 
-   Seventeen public-domain works ship in plates/: Joseph Maclise's `Surgical
+   Thirty public-domain works ship in plates/: Joseph Maclise's `Surgical
    Anatomy` (1859) for the thorax and the heart, Matejko and Chelmonski and
    their contemporaries for the Polish half of the brief, and the Hudson
-   River School for the American half.
+   River School — Cole's `Course of Empire` among it — for the American half.
 
    Wikimedia and every museum's open-access API answer 403 at this machine's
    gateway, so none of these came from where you would expect. They came from
@@ -48,65 +48,109 @@
     'maclise-thorax': {
       title: 'The thorax opened: the heart, the lungs and the great vessels',
       short: 'the thorax opened', who: 'Joseph Maclise', year: 1859,
-      from: 'Surgical Anatomy', plate: 'I' },
+      group: 'anatomy', from: 'Surgical Anatomy', plate: 'I' },
     'maclise-thorax-ii': {
       title: 'The form of the thorax and the position of its contained parts',
       short: 'the form of the thorax', who: 'Joseph Maclise', year: 1859,
-      from: 'Surgical Anatomy', plate: 'II' },
+      group: 'anatomy', from: 'Surgical Anatomy', plate: 'II' },
     'maclise-aortic-arch': {
       title: 'The episternal region: the arch of the aorta and its branches',
       short: 'the aortic arch', who: 'Joseph Maclise', year: 1859,
-      from: 'Surgical Anatomy', plate: 'IX' },
+      group: 'anatomy', from: 'Surgical Anatomy', plate: 'IX' },
     'maclise-heart-deep': {
       title: 'The deeper organs of the thorax: the heart in situ',
       short: 'the heart in situ', who: 'Joseph Maclise', year: 1859,
-      from: 'Surgical Anatomy', plate: 'XXIII' },
+      group: 'anatomy', from: 'Surgical Anatomy', plate: 'XXIII' },
     'maclise-great-vessels': {
       title: 'The great vessels of the thoracico-abdominal cavity',
       short: 'the great vessels', who: 'Joseph Maclise', year: 1859,
-      from: 'Surgical Anatomy', plate: 'XXIV' },
+      group: 'anatomy', from: 'Surgical Anatomy', plate: 'XXIV' },
     'maclise-vessels-skeleton': {
       title: 'The vessels of the thorax in relation to the skeleton',
       short: 'the vessels and the skeleton', who: 'Joseph Maclise', year: 1859,
-      from: 'Surgical Anatomy', plate: 'XXV' },
+      group: 'anatomy', from: 'Surgical Anatomy', plate: 'XXV' },
     'maclise-pericardium': {
       title: 'The internal parts referred to the surface: pleura and pericardium',
       short: 'pleura and pericardium', who: 'Joseph Maclise', year: 1859,
-      from: 'Surgical Anatomy', plate: 'XXVI' },
+      group: 'anatomy', from: 'Surgical Anatomy', plate: 'XXVI' },
 
     /* ── Polish ──────────────────────────────────────────────────────── */
     'matejko-grunwald': {
       title: 'The Battle of Grunwald', short: 'Grunwald',
-      who: 'Jan Matejko', year: 1878 },
+      who: 'Jan Matejko', year: 1878, group: 'polish' },
     'chelmonski-autumn': {
       title: 'Babie Lato (Indian Summer)', short: 'Babie Lato',
-      who: 'J\u00f3zef Che\u0142mo\u0144ski', year: 1875 },
+      who: 'J\u00f3zef Che\u0142mo\u0144ski', year: 1875, group: 'polish' },
+    'malczewski-armour': {
+      title: 'Self-Portrait in Armour', short: 'Self-Portrait in Armour',
+      who: 'Jacek Malczewski', year: 1914, group: 'polish' },
     'boznanska-chrysanthemums': {
       title: 'Girl with Chrysanthemums', short: 'Girl with Chrysanthemums',
-      who: 'Olga Bozna\u0144ska', year: 1894 },
+      who: 'Olga Bozna\u0144ska', year: 1894, group: 'polish' },
     'wyspianski-god-father': {
       title: 'God the Father: Let It Be', short: 'Let It Be',
-      who: 'Stanis\u0142aw Wyspia\u0144ski', year: 1904 },
+      who: 'Stanis\u0142aw Wyspia\u0144ski', year: 1904, group: 'polish' },
 
-    /* ── American, the Hudson River School ───────────────────────────── */
+    /* ── American, the Hudson River School ───────────────────────────────
+       The Course of Empire is kept in its own order — Cole painted the five
+       as one argument about a republic that grows, gorges, and is pulled
+       down, and shuffling them alphabetically would throw the argument
+       away. Everything after them is loose. */
+    'cole-empire-savage': {
+      title: 'The Savage State', short: 'The Savage State',
+      who: 'Thomas Cole', year: 1834, group: 'american', from: 'The Course of Empire' },
+    'cole-empire-arcadian': {
+      title: 'The Arcadian or Pastoral State', short: 'The Arcadian State',
+      who: 'Thomas Cole', year: 1834, group: 'american', from: 'The Course of Empire' },
+    'cole-empire-consummation': {
+      title: 'The Consummation of Empire', short: 'The Consummation',
+      who: 'Thomas Cole', year: 1836, group: 'american', from: 'The Course of Empire' },
+    'cole-empire-destruction': {
+      title: 'Destruction', short: 'Destruction',
+      who: 'Thomas Cole', year: 1836, group: 'american', from: 'The Course of Empire' },
+    'cole-empire-desolation': {
+      title: 'Desolation', short: 'Desolation',
+      who: 'Thomas Cole', year: 1836, group: 'american', from: 'The Course of Empire' },
+
     'cole-oxbow': {
       title: 'View from Mount Holyoke after a Thunderstorm (The Oxbow)',
-      short: 'The Oxbow', who: 'Thomas Cole', year: 1836 },
+      short: 'The Oxbow', who: 'Thomas Cole', year: 1836, group: 'american' },
     'cole-kaaterskill': {
       title: 'Kaaterskill Falls', short: 'Kaaterskill Falls',
-      who: 'Thomas Cole', year: 1826 },
+      who: 'Thomas Cole', year: 1826, group: 'american' },
+    'cole-expulsion': {
+      title: 'Expulsion from the Garden of Eden', short: 'The Expulsion',
+      who: 'Thomas Cole', year: 1828, group: 'american' },
     'church-andes': {
       title: 'The Heart of the Andes', short: 'The Heart of the Andes',
-      who: 'Frederic Edwin Church', year: 1859 },
+      who: 'Frederic Edwin Church', year: 1859, group: 'american' },
     'church-twilight': {
       title: 'Twilight in the Wilderness', short: 'Twilight in the Wilderness',
-      who: 'Frederic Edwin Church', year: 1860 },
+      who: 'Frederic Edwin Church', year: 1860, group: 'american' },
+    'church-icebergs': {
+      title: 'The Icebergs', short: 'The Icebergs',
+      who: 'Frederic Edwin Church', year: 1861, group: 'american' },
+    'church-cotopaxi': {
+      title: 'Cotopaxi', short: 'Cotopaxi',
+      who: 'Frederic Edwin Church', year: 1862, group: 'american' },
     'bierstadt-rockies': {
       title: "The Rocky Mountains, Lander's Peak", short: "Lander's Peak",
-      who: 'Albert Bierstadt', year: 1863 },
+      who: 'Albert Bierstadt', year: 1863, group: 'american' },
+    'bierstadt-storm-rosalie': {
+      title: 'A Storm in the Rocky Mountains, Mt. Rosalie', short: 'Mt. Rosalie',
+      who: 'Albert Bierstadt', year: 1866, group: 'american' },
+    'bierstadt-sierra-nevada': {
+      title: 'Among the Sierra Nevada, California', short: 'Among the Sierra Nevada',
+      who: 'Albert Bierstadt', year: 1868, group: 'american' },
     'durand-kindred-spirits': {
       title: 'Kindred Spirits', short: 'Kindred Spirits',
-      who: 'Asher Brown Durand', year: 1849 }
+      who: 'Asher Brown Durand', year: 1849, group: 'american' },
+    'gifford-hunter-mountain': {
+      title: 'Hunter Mountain, Twilight', short: 'Hunter Mountain',
+      who: 'Sanford Robinson Gifford', year: 1866, group: 'american' },
+    'cropsey-starrucca': {
+      title: 'Starrucca Viaduct, Pennsylvania', short: 'Starrucca Viaduct',
+      who: 'Jasper Francis Cropsey', year: 1865, group: 'american' }
   };
 
   /* Whatever the export dialog happened to be set to. Tried in this order. */
@@ -269,9 +313,10 @@
           base: base, url: urls[i], have: !!urls[i],
           title: a.title, who: a.who, year: a.year,
           from: a.from || null, plate: a.plate || null,
-          group: a.from ? 'anatomy' : (base.indexOf('maclise') === 0 ? 'anatomy' :
-                 ['matejko-grunwald', 'chelmonski-autumn', 'boznanska-chrysanthemums',
-                  'wyspianski-god-father'].indexOf(base) !== -1 ? 'polish' : 'american'),
+          /* Straight off the entry. This used to be worked out from the file
+             name and a hardcoded list of the Polish ones, which meant every
+             painting added landed in "American" by default and silently. */
+          group: a.group || 'american',
           file: base + '.jpg'
         };
       });

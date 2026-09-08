@@ -106,14 +106,20 @@
       drawn from dissection at a time when nobody could yet operate inside one. The heart in Plate I
       is the organ this whole hub is pointed at, drawn eighty years before anyone learned to stop it
       and start it again. Then the Polish history painting, and then the Hudson River School for the
-      long view.</p>
+      long view — including Cole's <em>Course of Empire</em>, five canvases about a republic that
+      grows, gorges and is pulled down.</p>
 
     <p class="hub-p">Each wide page carries one in the margin, chosen to suit it: the thorax on
       the Plan, Grunwald on Money, Che&#322;mo&#324;ski's girl in the late-summer field on Rest.
       They appear on a desktop, where there is a margin to put them in, and not on a phone, where
       there is not.</p>
 
-    <p class="hub-p">All seventeen are public domain — the painters and the anatomist have been
+    <div class="hub-strip" id="empire"></div>
+    <p class="hub-small" id="empire-note" hidden>Cole painted these five as one argument — a republic
+      that grows, gorges, and is pulled down — and they are kept in his order rather than sorted
+      into the rest.</p>
+
+    <p class="hub-p">All thirty are public domain — the painters and the anatomist have been
       dead well over a century — and they ship as files rather than sealed with the rest of the
       site, because a public painting is not your content. To add another, put the file in
       <span class="hub-mono">plates/</span> and name it in a slot; there is no CSS to edit.</p>
@@ -205,6 +211,19 @@
           ', ' + lead.year;
       } else {
         fig.hidden = true;
+      }
+
+      /* The Course of Empire, in Cole's order, as a strip rather than five
+         entries a page apart. Driven off the catalogue's own `from`, so it
+         picks up a sixth canvas if one is ever added and disappears if the
+         files are removed. */
+      var cycle = rows.filter(function (r) { return r.from === 'The Course of Empire' && r.have; });
+      if (cycle.length) {
+        $('#empire').innerHTML = cycle.map(function (r) {
+          return '<figure><div class="frame" style="background-image:url(&quot;' +
+            esc(r.url) + '&quot;)"></div><figcaption>' + esc(r.title) + '</figcaption></figure>';
+        }).join('');
+        $('#empire-note').hidden = false;
       }
 
       var out = '';
