@@ -63,8 +63,9 @@ window.APP_CONFIG = {
      every calendar your account can read when it cannot find one of these. */
   calendar: {
     ids: [
-      'dtbsph5r3al99g399tmjb6am2ce59s72@import.calendar.google.com'
-      // 'your-internship-calendar-id@group.calendar.google.com',
+      'dtbsph5r3al99g399tmjb6am2ce59s72@import.calendar.google.com',
+      '14dd788c968bf726d6634361329a30ced7b36b6e921be81f72fe008c66615d6a@group.calendar.google.com'
+      // 'another-calendar-id@group.calendar.google.com',
     ],
     apiKey: '',          // paste to enable automatic reads; empty = press the button
     tz: 'America/Phoenix'
