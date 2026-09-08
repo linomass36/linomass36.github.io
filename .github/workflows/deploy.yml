@@ -113,6 +113,7 @@ jobs:
           node tools/calendar.test.js
           node tools/training.test.js
           node tools/grind-board.test.js
+          node tools/plates.test.js
           node tools/day-boundary.test.js
           node tools/anatomy-core.test.js
           node tools/causality.test.js

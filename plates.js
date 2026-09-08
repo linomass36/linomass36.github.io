@@ -221,6 +221,94 @@
     return pending[base];
   }
 
+  /* ── the rotation ──────────────────────────────────────────────────────
+     Thirty pictures and six slots meant twenty-four of them were never on
+     the site, and the six that were never changed — which is the same as
+     wallpaper, and wallpaper stops being looked at within a week.
+
+     So a slot may name a GROUP rather than a picture, and the choice turns
+     over daily. Three things it has to be at once:
+
+       STABLE WITHIN A DAY. A picture that changed on every render would
+       flicker as the page redrew, and you would never get to look at one.
+       The day is the hub's own day — day.js puts the boundary at 05:00, so
+       a page open at 02:00 is still yesterday's, which is what the rest of
+       the site believes too.
+
+       DIFFERENT ON EVERY PAGE. Each slot mixes its own name into the
+       position, so Monday's Standing and Monday's Week are not the same
+       painting.
+
+       A ROTATION RATHER THAN A DRAW. Random-with-replacement shows you the
+       same canvas twice in a week and hides another for a month. This deals
+       from a shuffled deck and advances one card a day, so ANY run of days
+       as long as the group covers every picture in it exactly once. The
+       shuffle is seeded by the slot, so each page has its own order and no
+       two pages march in step; it is the same order on the next pass, which
+       is what the word rotation means and is the price of the guarantee.
+
+     No storage: the same day and the same slot always give the same answer,
+     on every device, with nothing written down. */
+  function hash(str) {
+    var h = 2166136261;
+    for (var i = 0; i < String(str).length; i++) {
+      h ^= String(str).charCodeAt(i);
+      h = (h * 16777619) >>> 0;
+    }
+    return h >>> 0;
+  }
+  /* Deterministic PRNG — mulberry32. Same seed, same shuffle, anywhere. */
+  function rng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shuffled(list, seed) {
+    var out = list.slice(), r = rng(seed);
+    for (var i = out.length - 1; i > 0; i--) {
+      var j = Math.floor(r() * (i + 1));
+      var t = out[i]; out[i] = out[j]; out[j] = t;
+    }
+    return out;
+  }
+  /* Which day it is, by the hub's reckoning rather than the clock's. */
+  function dayNumber() {
+    var iso = null;
+    try {
+      if (window.CTDay && typeof window.CTDay.today === 'function') iso = window.CTDay.today();
+    } catch (e) {}
+    var ms = iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)
+      ? Date.parse(iso + 'T00:00:00Z')
+      : Date.now();
+    return Math.floor(ms / 86400000);
+  }
+  /* The catalogue, or one group of it. 'any' — or nothing — is everything. */
+  function inGroup(want) {
+    var groups = String(want || 'any').toLowerCase().split(/[\s,]+/).filter(Boolean);
+    var all = Object.keys(CATALOGUE).sort();
+    if (!groups.length || groups.indexOf('any') > -1) return all;
+    return all.filter(function (k) { return groups.indexOf(CATALOGUE[k].group) > -1; });
+  }
+  /* The order this slot will see its group in, and where in it today sits. */
+  function rotation(want, slot, day) {
+    var pool = inGroup(want);
+    if (!pool.length) return [];
+    day = day == null ? dayNumber() : day;
+    var key = String(want || 'any') + '|' + String(slot || 'slot');
+    var offset = hash(key);
+    var step = (((day + offset) % pool.length) + pool.length) % pool.length;
+    var deck = shuffled(pool, offset);
+    /* Today's card first, then the rest of the deck as the fallback order —
+       so a name whose file is missing costs you the next one along rather
+       than the whole slot. */
+    return deck.slice(step).concat(deck.slice(0, step));
+  }
+
   /* The first installed painting from a preference list. */
   function pick(names) {
     var list = (names || []).slice();
@@ -256,8 +344,30 @@
 
   /* Dress one slot. The engraving stays until a painting is actually loaded,
      so a slow file never leaves an empty box on the page. */
-  function dress(el) {
-    var names = (el.getAttribute('data-plate') || '').split(/\s+/).filter(Boolean);
+  /* What names this slot asks for: an explicit list, or the rotation. */
+  function wanted(el) {
+    var fixed = (el.getAttribute('data-plate') || '').split(/\s+/).filter(Boolean);
+    if (!el.hasAttribute('data-plate-rotate')) return fixed;
+    var want = el.getAttribute('data-plate-rotate') || 'any';
+    var slot = el.getAttribute('data-plate-slot') || el.id ||
+               (location.pathname.split('/').pop() || 'page') + '|' + fixed.join('-');
+    /* The rotation leads; an explicit list is what it falls back to. Putting
+       the fixed names first would have meant a slot that names a picture it
+       already has never rotates at all — which is the thing being fixed. */
+    var deck = rotation(want, slot);
+    return deck.concat(fixed.filter(function (n) { return deck.indexOf(n) < 0; }));
+  }
+
+  function dress(el, used) {
+    var names = wanted(el);
+    /* Two slots on one page must not land on the same painting — that reads
+       as a bug, not as a coincidence. The rotation offers the whole group in
+       order, so taking the first one this page has not already used costs
+       nothing and cannot run out. */
+    if (used) {
+      var free = names.filter(function (n) { return !used[n]; });
+      if (free.length) names = free;
+    }
     if (!names.length) return Promise.resolve(false);
     /* Already dressed — a re-render creates a new element, so this only ever
        short-circuits the one that is genuinely finished. */
@@ -266,6 +376,7 @@
 
     return pick(names).then(function (hit) {
       if (!hit) return false;
+      if (used) used[hit.base] = true;
       el.style.setProperty('--plate-figure', 'url("' + hit.url + '")');
       el.classList.add('has-plate');
 
@@ -303,9 +414,17 @@
     });
   }
 
+  /* In document order, one after another, so each slot can see what the ones
+     above it took. */
   function dressAll(root) {
-    var els = (root || document).querySelectorAll('[data-plate]');
-    return Promise.all(Array.prototype.map.call(els, dress));
+    var els = Array.prototype.slice.call(
+      (root || document).querySelectorAll('[data-plate],[data-plate-rotate]'));
+    var used = {};
+    return els.reduce(function (chain, el) {
+      return chain.then(function (acc) {
+        return dress(el, used).then(function (r) { acc.push(r); return acc; });
+      });
+    }, Promise.resolve([]));
   }
 
   /* What is installed and what is still wanted. The Guide reports this, so
@@ -331,9 +450,43 @@
     });
   }
 
+  /* ── the break, dressed by this file rather than by each page ──────────
+     A picture at the foot of a page needs eight lines of CSS, and there are
+     fourteen stylesheets on this site — six pages carry hub.css and the rest
+     each have their own, which is how the Rest page ended up with a slot in
+     its markup, a painting on disk, and no rule anywhere to draw it. So the
+     class travels with the code that fills it: put
+     `<div class="plate-break" data-plate-rotate="anatomy"></div>` at the end
+     of any page and it works, hub.css or no hub.css.
+
+     Neutral colours on purpose — this sheet is shared by fourteen palettes
+     and must not assume any of them. */
+  var BREAK_CSS =
+    '.plate-break{display:none;margin:44px auto 10px;width:min(100%,34rem);}' +
+    '.plate-break.has-plate{display:block;}' +
+    '.plate-break.has-plate::before{content:"";display:block;' +
+      'aspect-ratio:var(--plate-ar-true,4/3);background-image:var(--plate-figure);' +
+      'background-size:cover;background-position:center;' +
+      'border:1px solid rgba(127,110,80,.34);box-shadow:0 2px 10px rgba(20,16,10,.13);}' +
+    '.plate-break .plate-cap{display:block;margin-top:8px;text-align:center;' +
+      'font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;' +
+      'letter-spacing:.06em;color:#8A8B82;line-height:1.45;}' +
+    '@media print{.plate-break{display:none!important;}}';
+
+  function styleOnce() {
+    try {
+      if (document.getElementById('plate-break-css')) return;
+      var st = document.createElement('style');
+      st.id = 'plate-break-css';
+      st.textContent = BREAK_CSS;
+      (document.head || document.documentElement).appendChild(st);
+    } catch (e) {}
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { dressAll(); });
+    document.addEventListener('DOMContentLoaded', function () { styleOnce(); dressAll(); });
   } else {
+    styleOnce();
     dressAll();
   }
 
@@ -352,7 +505,7 @@
     var soon = function () {
       if (queued) return;
       queued = true;
-      setTimeout(function () { queued = false; dressAll(); }, 60);
+      setTimeout(function () { queued = false; styleOnce(); dressAll(); }, 60);
     };
     new MutationObserver(function (recs) {
       for (var i = 0; i < recs.length; i++) {
@@ -370,6 +523,7 @@
   window.Plates = {
     catalogue: CATALOGUE,
     dir: DIR,
+    rotation: rotation, inGroup: inGroup, dayNumber: dayNumber,
     caption: fullCap,
     dress: dress,
     dressAll: dressAll,

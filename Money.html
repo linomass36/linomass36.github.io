@@ -192,6 +192,7 @@
   #panel-daybudget *, #panel-daybudget *::before, #panel-daybudget *::after { transition: none !important;}
 }
 </style>
+<script src="./plates.js"></script>
 </head>
 <body class="hub">
 <!-- ═══════════════════════════════════════════════════════════════════════
@@ -217,7 +218,7 @@
 
 <main class="hub-page" style="position:relative">
   <h1 class="hub-h1">Money</h1>
-  <div class="hub-marginal hub-plate thorax" data-plate="matejko-grunwald cole-empire-consummation" aria-hidden="true"></div>
+  <div class="hub-marginal hub-plate thorax" data-plate-rotate="polish" data-plate-slot="money-margin" data-plate="matejko-grunwald cole-empire-consummation" aria-hidden="true"></div>
 
   <div class="hub-tabs" role="tablist" id="tabs"></div>
 
@@ -306,6 +307,8 @@
 
   <footer>The Ledger · goal-revision prototype · assumptions are re-checked, not just progress</footer>
 
+  <div class="plate-break" data-plate-cap data-plate-slot="money"
+       data-plate-rotate="polish"></div>
 </main></div>
   <div id="panel-debt"      class="pv" role="tabpanel" hidden></div>
   <div id="panel-daybudget" role="tabpanel" hidden><header class="top">

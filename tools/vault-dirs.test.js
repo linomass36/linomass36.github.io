@@ -129,22 +129,50 @@ const GROUPS = ['anatomy', 'polish', 'american'];
     : [];
 
   const pages = fs.readdirSync(ROOT).filter((f) => /\.html$/i.test(f));
-  let slots = 0;
+  const GROUPS = ['anatomy', 'polish', 'american', 'any'];
+  let slots = 0, rotating = 0, withPictures = 0;
   pages.forEach(function (f) {
     const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    let onPage = 0;
+
+    /* A named list: every name has to be a picture that exists. */
     const re = /data-plate="([^"]+)"/g;
     let m;
     while ((m = re.exec(html))) {
       const names = m[1].split(/\s+/).filter(Boolean);
-      slots++;
+      slots++; onPage++;
       names.forEach(function (n) {
         ok(!!cat[n], f + ' asks for a catalogued picture (' + n + ')');
       });
       ok(names.some((n) => onDisk.indexOf(n) !== -1),
          f + ' has at least one of ' + names.join('/') + ' installed');
     }
+
+    /* A rotation: the group has to exist and have files in it, or the slot
+       silently draws nothing for ever. */
+    const rot = /data-plate-rotate="([^"]*)"/g;
+    while ((m = rot.exec(html))) {
+      const want = m[1].split(/[\s,]+/).filter(Boolean);
+      slots++; rotating++; onPage++;
+      want.forEach(function (g) {
+        ok(GROUPS.indexOf(g) !== -1, f + ' rotates a group that exists (' + g + ')');
+      });
+      const pool = Object.keys(cat).filter((k) =>
+        want.indexOf('any') !== -1 || want.indexOf(cat[k].group) !== -1);
+      ok(pool.some((k) => onDisk.indexOf(k) !== -1),
+         f + ' rotates a group with pictures in it (' + want.join('/') + ')');
+    }
+
+    /* And a page that shows one has to load the file that fills it. */
+    if (onPage) {
+      withPictures++;
+      ok(/plates\.js/.test(html) || /data-dc-script/.test(html),
+         f + ' loads plates.js, or is a page the deploy shim injects it into');
+    }
   });
-  ok(slots >= 8, 'the pictures are on more than a page or two (' + slots + ' slots)');
+  ok(withPictures >= 10, 'the pictures are on the site rather than on a page or two (' +
+     withPictures + ' pages, ' + slots + ' slots)');
+  ok(rotating >= 9, 'and most of them turn over (' + rotating + ' rotating)');
 }
 
 if (fails) { console.error('vault-dirs: ' + fails + ' failure(s)'); process.exit(1); }
