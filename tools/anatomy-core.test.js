@@ -54,7 +54,7 @@ function load(withSyllabus, seed) {
   vm.createContext(ctx);
   const files = withSyllabus ? ['anatomy-data.js', 'anatomy-core.js'] : ['anatomy-core.js'];
   files.forEach((f) => vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f }));
-  return { A: ctx.window.AnatomyCore, store };
+  return { A: ctx.window.AnatomyCore, store, ctx };
 }
 
 /* Days are counted back from the store's own study day, not from the calendar
@@ -275,6 +275,41 @@ os6.days[TODAY] = day({ tier: 'full', pick: 'nk3' });
 older.A.write(os6);
 older.A.unmarkStudied('nk3');
 ok(older.A.read().blocks.nk3.studied === ago(2), 'a block studied on an earlier day is left alone');
+
+/* The thorax gate on the three days that matter, driven by a synthetic gate
+   rather than by the calendar.
+
+   `pastGate` was `t >= gate()`, so on the gate day itself the line read
+   "Past 2026-09-08" on 2026-09-08 — untrue, and on the one day the line most
+   needs to be believed. It survived this long because the only day it is
+   wrong is the gate day, and the suite reads the real date. These three cases
+   do not wait for the date to come round again.
+
+   anatomy-core reads window.ANATOMY_DATA on every call, so moving the gate is
+   enough; nothing has to be reloaded. */
+function gateLine(offsetDays) {
+  const g = load(true);
+  const st = g.A.blank();
+  const t = g.A.today(st);
+  const d = new Date(t + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  g.ctx.window.ANATOMY_DATA.thoraxGate = d.toISOString().slice(0, 10);
+  const lines = g.A.tripwires(st);
+  return lines[lines.length - 1];
+}
+
+const gAhead = gateLine(3);
+ok(!/^Past /.test(gAhead.text), 'three days out it does not say "Past": ' + JSON.stringify(gAhead.text));
+ok(!gAhead.fired, 'and it does not fire three days out');
+
+const gToday = gateLine(0);
+ok(!/^Past /.test(gToday.text), 'on the gate day it does not say "Past": ' + JSON.stringify(gToday.text));
+ok(/today/i.test(gToday.text), 'it says the gate is today');
+ok(!gToday.fired, 'and it does not fire on the gate day — a deadline is not yet a breach');
+
+const gPast = gateLine(-1);
+ok(/^Past /.test(gPast.text), 'the day after, it does say "Past": ' + JSON.stringify(gPast.text));
+ok(gPast.fired, 'and it fires the day after');
 
 console.log(failed ? '\n' + failed + ' failed\n' : '\nall green\n');
 process.exit(failed ? 1 : 0);

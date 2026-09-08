@@ -279,7 +279,7 @@ html.hb-dark .hub-plate { filter: invert(1) sepia(.35); opacity: .30; }
 .hub-plate.has-plate { background-image: none; opacity: 1; filter: none; }
 html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
 .hub-plate.has-plate::before {
-  content: ''; display: block; aspect-ratio: 1;
+  content: ''; display: block; aspect-ratio: var(--plate-ar, 1);
   background-image: var(--plate-figure);
   background-size: cover; background-position: center;
   border: 1px solid var(--line-2);
@@ -300,9 +300,14 @@ html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
 .hub-figure { margin: var(--s6) 0; }
 .hub-figure .frame {
   border: 1px solid var(--line-2); background: var(--surface);
-  padding: var(--s3); aspect-ratio: 4 / 3;
+  padding: var(--s3); aspect-ratio: var(--plate-ar-true, 4 / 3);
+  /* A full plate is shown whole: `contain`, never `cover`. Cropping a
+     figure to fill a box is what a stock photo is for, not an atlas. */
   background-image: var(--plate-figure, none);
-  background-size: cover; background-position: center;
+  background-size: contain; background-repeat: no-repeat;
+  background-position: center;
+  /* And it never takes more than a screenful, however tall the plate. */
+  max-height: 78vh;
 }
 .hub-figure.drawn .frame { background-size: 62%; background-repeat: no-repeat;
   background-position: center; }

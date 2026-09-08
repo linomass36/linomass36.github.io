@@ -1,63 +1,87 @@
 # plates/ — the pictures
 
-Drop an image file in here and the site picks it up on the next reload. There
-is no CSS to edit and no list to update: `plates.js` probes this directory for
-the names below, and dresses each slot with the first one it finds. Take the
-file away again and the drawn engraving comes back.
+Seventeen public-domain works, in three groups, and the site picks each of them
+up by itself. There is no CSS to edit and no list to maintain: `plates.js`
+holds the catalogue, each slot names the pictures it wants in order of
+preference, and the build writes `index.json` from whatever is actually here.
 
-The Guide (`Guide.html` → *The pictures*) shows which of these are installed
-right now, probed rather than asserted.
+The Guide (`Guide.html` → *The pictures*) shows the whole set and which are
+installed, probed rather than asserted.
 
-## The names it looks for
+## What is here
 
-Every one is public domain — the painters have been dead well over a century —
-so Wikimedia Commons has a high-resolution scan of each, free of any licence
-question.
+### Cardiothoracic and anatomy — Joseph Maclise, *Surgical Anatomy* (1859)
 
-| File | Painting | Where it lands |
-|---|---|---|
-| `gross-clinic.jpg` | Eakins, *The Gross Clinic*, 1875 | The Plan |
-| `agnew-clinic.jpg` | Eakins, *The Agnew Clinic*, 1889 | The Guide (and The Plan's second choice) |
-| `matejko-rejtan.jpg` | Matejko, *Rejtan*, 1866 | Money — a reckoning, in the room where it is refused |
-| `matejko-grunwald.jpg` | Matejko, *Battle of Grunwald*, 1878 | Money, second choice |
-| `matejko-stanczyk.jpg` | Matejko, *Stańczyk*, 1862 | Recalibrate — the one man who sees the problem while the party goes on |
-| `chelmonski-autumn.jpg` | Chełmoński, *Indian Summer*, 1875 | Recalibrate, second choice |
-| `church-andes.jpg` | Church, *The Heart of the Andes*, 1859 | The Standing — the front door asks for the long view |
-| `bierstadt-rockies.jpg` | Bierstadt, *The Rocky Mountains, Lander's Peak*, 1863 | The Standing, second choice |
-| `cole-oxbow.jpg` | Cole, *The Oxbow*, 1836 | The Standing, third choice |
-| `chelmonski-czworka.jpg` | Chełmoński, *Czwórka*, 1881 | unassigned — available to any slot |
-| `vesalius-fabrica.jpg` | Vesalius, *De humani corporis fabrica*, 1543 | The Guide, second choice |
+Hand-tinted lithographs of the opened thorax, drawn from dissection at a time
+when nobody could yet operate inside one.
 
-`.jpg`, `.jpeg`, `.png` and `.webp` all work, tried in that order.
+| File | Plate |
+|---|---|
+| `maclise-thorax.jpg` | I — the thorax opened: the heart, the lungs and the great vessels |
+| `maclise-thorax-ii.jpg` | II — the form of the thorax |
+| `maclise-aortic-arch.jpg` | IX — the arch of the aorta and its branches |
+| `maclise-heart-deep.jpg` | XXIII — the deeper organs of the thorax, the heart in situ |
+| `maclise-great-vessels.jpg` | XXIV — the great vessels |
+| `maclise-vessels-skeleton.jpg` | XXV — the vessels in relation to the skeleton |
+| `maclise-pericardium.jpg` | XXVI — pleura and pericardium referred to the surface |
 
-The build writes `plates/index.json` listing what is actually here, so the
-deployed site knows what exists without asking for anything that does not.
-Opened straight off disk before a build has run, `plates.js` falls back to
-trying each name in turn — which works, and is noisier in the console.
+### Polish
 
-## Sizing
+| File | Painting |
+|---|---|
+| `matejko-grunwald.jpg` | Jan Matejko, *The Battle of Grunwald*, 1878 |
+| `chelmonski-autumn.jpg` | Józef Chełmoński, *Babie Lato*, 1875 |
+| `boznanska-chrysanthemums.jpg` | Olga Boznańska, *Girl with Chrysanthemums*, 1894 |
+| `wyspianski-god-father.jpg` | Stanisław Wyspiański, *God the Father: Let It Be*, 1904 |
 
-About 1600px on the long edge, JPEG quality 80. A 4000px museum scan is eight
-megabytes and nothing here displays wider than about 1200px.
+### American — the Hudson River School
 
-## Why these ship as files
+| File | Painting |
+|---|---|
+| `cole-oxbow.jpg` | Thomas Cole, *The Oxbow*, 1836 |
+| `cole-kaaterskill.jpg` | Thomas Cole, *Kaaterskill Falls*, 1826 |
+| `church-andes.jpg` | Frederic Edwin Church, *The Heart of the Andes*, 1859 |
+| `church-twilight.jpg` | Frederic Edwin Church, *Twilight in the Wilderness*, 1860 |
+| `bierstadt-rockies.jpg` | Albert Bierstadt, *The Rocky Mountains, Lander's Peak*, 1863 |
+| `durand-kindred-spirits.jpg` | Asher Brown Durand, *Kindred Spirits*, 1849 |
 
-`verify_vault.py` allows `plates/` for the same reason it allows `fonts/` and
-`icons/`: a public-domain painting is not your content, so there is nothing for
-the vault to protect. Sealing them would also mean base64 in `hub.css`, which
-is inlined into every page — one canvas, duplicated thirty-one times.
+## Where they came from, and why it is worth writing down
 
-**This is not a place for anything of yours.** A photograph, a scan, a
-screenshot of your own notes: those ship in the clear, unencrypted, to a public
-repository. Paintings only.
+Wikimedia Commons and every museum's open-access API answer 403 at this
+machine's egress gateway. These are all Commons scans, but they were taken
+from public GitHub repositories that had already committed them — the one
+image source the policy allows.
 
-## Adding a new slot
+**Every file was opened and looked at before it was kept.** That is not
+ceremony: one promising candidate set — a repository of Polish history
+textbooks — turned out to hold AI-generated illustrations captioned as
+Matejko. It was thrown away. If you add to this directory, look at the file
+first.
 
-Give any element the classes and an ordered preference list:
+## Adding one
+
+Put the file here and name it in a slot:
 
 ```html
 <div class="hub-marginal hub-plate" data-plate="cole-oxbow church-andes"></div>
 ```
 
-New painting the catalogue does not know? Add it to `CATALOGUE` in
+`.jpg`, `.jpeg`, `.png` and `.webp` all work, tried in that order. A new
+painting the catalogue does not know needs an entry in `CATALOGUE` in
 `plates.js` — that is where the caption comes from.
+
+About 1500px on the long edge, JPEG quality 82. A 6400px museum scan is eight
+megabytes and nothing here displays wider than about 1200px.
+
+## Why these ship as files
+
+`verify_vault.py` and `vault.py` both allow `plates/` for the same reason they
+allow `fonts/` and `icons/`: a public-domain painting is not your content, so
+there is nothing for the vault to protect. Sealing them would also mean base64
+inside `hub.css`, which is inlined into every page — one canvas, repeated
+thirty-one times.
+
+**This is not a place for anything of yours.** A photograph, a scan, a
+screenshot of your own notes: those would ship in the clear, unencrypted, to a
+public repository. Paintings only — and `tools/vault-dirs.test.js` fails the
+build if a file appears here that the catalogue does not name.
