@@ -580,11 +580,34 @@
       d.blocks.sort(function (a, b) { return a.start - b.start; });
     });
 
+    /* A SESSION ALREADY DONE DOES NOT MOVE. Re-planning re-deals the week —
+       that is the point of it — but a session you have already trained is not
+       a plan any more, it is a fact, and dealing it onto Thursday because
+       Thursday now has more free hours would rewrite what happened. Days
+       carrying one are out of the deal, and so are their sessions. */
+    var pinned = opts.pinned || {};
+    var held = {};
+    days.forEach(function (d) {
+      var p = pinned[d.key];
+      if (!p) return;
+      d.session = p.session || (p.slot && T ? T.label(p.slot) : null);
+      d.slot = p.slot || (T ? T.slotOf(d.session) : null);
+      if (d.session) held[d.session] = true;
+      if (d.slot) held['#' + d.slot] = true;
+    });
+
     /* Hardest days first out of the running: sort by free time descending and
        deal the sessions round. */
-    var order = days.slice().sort(function (a, b) { return b.free - a.free; });
+    var order = days.filter(function (d) { return !d.session; })
+                    .sort(function (a, b) { return b.free - a.free; });
     var placed = [], unplaced = [];
-    sessions.forEach(function (s, n) {
+    days.forEach(function (d) {
+      if (d.session) placed.push({ day: d.key, name: d.name, session: d.session, slot: d.slot, held: true });
+    });
+    sessions.filter(function (s) {
+      var slot = T ? T.slotOf(s) : null;
+      return !held[s] && !(slot && held['#' + slot]);
+    }).forEach(function (s, n) {
       var d = order[n];
       /* The SLOT travels with the label. "Intervals" here is "Non-impact
          work capacity" in the programme, so a string is not enough to say
@@ -612,12 +635,18 @@
     try { store = JSON.parse(localStorage.getItem(WKEY)) || {}; } catch (e) { store = {}; }
     if (!store.days || typeof store.days !== 'object') store.days = {};
     plan.days.forEach(function (d) {
+      /* Blocks you added yourself are not written back here — they live under
+         `own`, which this function never touches, so a re-pull cannot delete
+         your Friday. `ownHours` records how much of them this plan already
+         counted, so the free hours are not charged for them twice. */
+      var mine = d.blocks.filter(function (b) { return b.own; });
       store.days[d.key] = {
         session: d.session, slot: d.slot || null,
         done: (store.days[d.key] || {}).done || false,
         committed: Math.round(d.committed * 10) / 10,
         free: Math.round(d.free * 10) / 10,
-        blocks: d.blocks.map(function (b) {
+        ownHours: Math.round(mine.reduce(function (t, b) { return t + (+b.hours || 0); }, 0) * 10) / 10,
+        blocks: d.blocks.filter(function (b) { return !b.own; }).map(function (b) {
           return { title: b.title, kind: b.kind,
                    from: b.allDay ? null : b.start.getHours() + ':' + String(b.start.getMinutes()).padStart(2, '0'),
                    to: b.allDay ? null : b.end.getHours() + ':' + String(b.end.getMinutes()).padStart(2, '0'),

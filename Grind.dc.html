@@ -65,6 +65,20 @@
   .gb-day.today { box-shadow: inset 0 0 0 2px #26271F; }
   .gb-day small { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #A6A79F; }
   /* Where a session came from, when it is not where the grid would put it. */
+  /* A plate at the foot of the day. plates.js dresses any element carrying
+     data-plate — it sets --plate-figure and the has-plate class — so a page
+     with its own stylesheet can have one without importing the hub's. Until
+     a file is installed this is an empty box that draws nothing, which is why
+     it is only shown once dressed. */
+  .gb-plate { display: none; }
+  .gb-plate.has-plate { display: block; margin: 22px auto 0; width: min(100%, 30rem); }
+  .gb-plate.has-plate::before {
+    content: ''; display: block; aspect-ratio: var(--plate-ar-true, 4 / 3);
+    background-image: var(--plate-figure); background-size: cover; background-position: center;
+    border: 1px solid #E4E2DD; box-shadow: 0 2px 7px rgba(36, 27, 16, .16); }
+  .gb-plate .plate-cap { display: block; margin-top: 7px; text-align: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .06em;
+    color: #A6A79F; line-height: 1.4; }
   .gb-moved { margin-top: 8px; padding: 8px 10px; border-radius: 9px; background: #FAF3E6;
               border: 1px solid #EADFC4; color: #7d5713; font-size: 12.5px; line-height: 1.55; }
 
@@ -82,6 +96,10 @@
   .gb-slot.k-people .gb-bar { background: #993C1D; }
   .gb-slot.k-faith .gb-bar { background: #6E4B8A; }
   .gb-slot.k-upkeep .gb-bar { background: #DEDBD3; }
+  /* Unclaimed time, and the evenings you have held yourself: not prescribed,
+     so not drawn as if it were. */
+  .gb-slot.k-open .gb-bar { background: transparent; border-left: 2px dashed #C9A227; width: 4px; }
+  .gb-slot.k-open .gb-label { color: #7d5713; }
   /* A block that had to move to clear a booked hour. */
   .gb-slot.shifted .gb-time { color: #7d5713; }
   .gb-label { font-size: 14px; color: #26271F; line-height: 1.35; }
@@ -240,6 +258,9 @@
           </sc-for>
         </div>
       </div>
+
+      <figure class="gb-plate" data-plate-cap
+              data-plate="maclise-heart-deep maclise-thorax maclise-great-vessels"></figure>
 
       <div class="gb-panel">
         <div class="gb-eyebrow">Today's list</div>
@@ -632,18 +653,21 @@ class Component extends DCLogic {
 
   dayShape(G, dayId, week, slotId, pday) {
     const rows = (G.build(dayId, week, slotId) || []).slice();
-    if (!pday || !pday.planned) return { rows, source: '', spill: [], moved: 0 };
+    if (!pday) return { rows, source: '', spill: [], moved: 0, open: [], free: 0 };
 
     const LATE = 180;        // a block pushed more than three hours is not that block
     const blocks = pday.blocks || [];
     const timed = blocks.filter(b => b && !b.allDay && b.from && b.to)
-                        .map(b => ({ a: this.mins(b.from), b: this.mins(b.to), t: b.title, k: b.kind }))
+                        .map(b => ({ a: this.mins(b.from), b: this.mins(b.to), t: b.title,
+                                     k: b.kind, own: !!b.own }))
                         .filter(b => b.b > b.a)
                         .sort((x, y) => x.a - y.a);
     const allDay = blocks.filter(b => b && b.allDay);
 
-    /* The template's own shift rows go: the calendar's are the real ones. */
-    const own = rows.filter(r => r[2] !== 'work');
+    /* The template's own shift rows go — the calendar's are the real ones —
+       but only where the calendar has actually been read. A week nobody
+       pulled is not evidence that you have no shift. */
+    const own = pday.planned ? rows.filter(r => r[2] !== 'work') : rows.slice();
     const droppedOwn = rows.length - own.length;
 
     /* Two kinds of block, and only one of them may be moved. An appointment
@@ -651,8 +675,16 @@ class Component extends DCLogic {
        away, so it holds its hour and the day flows round it exactly as it
        flows round the calendar. Everything else is yours to move. */
     const ANCHOR = { people: 1, faith: 1 };
+    /* Unless it collides with something real. Two fixed things cannot both
+       hold the same hour, and between the gathering the programme assumes and
+       the evening you actually booked, the one you booked is the one that is
+       happening. The other loses its anchor and takes its chances with
+       everything else — which usually means it is reported as not fitting,
+       and that is the true thing to say about a night you gave to someone. */
+    const anchored = (r) => ANCHOR[r[2]] &&
+      !timed.some(b => this.mins(r[0]) < b.b && this.mins(r[1]) > b.a);
     const busy = timed.slice();
-    own.forEach(r => { if (ANCHOR[r[2]]) busy.push({ a: this.mins(r[0]), b: this.mins(r[1]), t: r[3] }); });
+    own.forEach(r => { if (anchored(r)) busy.push({ a: this.mins(r[0]), b: this.mins(r[1]), t: r[3] }); });
 
     /* Flow the rest around them, in order, keeping durations. A block only
        moves as far as it must, and never earlier — the day runs late, it is
@@ -664,7 +696,7 @@ class Component extends DCLogic {
       const s0 = this.mins(r[0]), dur = Math.max(5, this.mins(r[1]) - s0);
       const row = r.slice();
       row[8] = idx;        // its place in the TEMPLATE — what its ticks are keyed by
-      if (ANCHOR[r[2]]) { out.push(row); return; }   // held, not flowed
+      if (anchored(r)) { out.push(row); return; }   // held, not flowed
       /* A posture reset is two minutes and the programme puts one mid-shift,
          at the bar, on purpose. Blocks this short do not need a free hour and
          are not moved out of one. */
@@ -684,16 +716,45 @@ class Component extends DCLogic {
       cursor = s + dur;
     });
 
-    timed.forEach(b => out.push([this.hhmm(b.a), this.hhmm(b.b), 'work', b.t, 'on your calendar', null, null]));
+    timed.forEach(b => out.push([this.hhmm(b.a), this.hhmm(b.b),
+      b.own ? 'open' : 'work', b.t, b.own ? 'yours — held on the Week' : 'on your calendar', null, null]));
+
+    /* ── the hours nobody has claimed ──────────────────────────────────────
+       A timetable that runs 06:15 to 23:15 with every hour named looks like a
+       day with no room in it for a friend ringing up, and that is how it gets
+       abandoned. The gaps are real; they were simply never drawn. So they are
+       drawn: anything over half an hour between waking and midnight that
+       neither your calendar nor the programme has claimed, shown as what it
+       is — yours, unspoken for, and the first thing to spend when someone
+       asks you out. */
+    const OPEN = 30, DAY_A = 6 * 60, DAY_B = 23 * 60 + 30;
+    const claimed = out.map(r => [this.mins(r[0]), this.mins(r[1])])
+                       .concat(timed.map(b => [b.a, b.b]))
+                       .filter(x => x[1] > x[0]).sort((x, y) => x[0] - y[0]);
+    const gaps = [];
+    let edge = DAY_A;
+    claimed.forEach(c => {
+      if (c[0] - edge >= OPEN) gaps.push([edge, c[0]]);
+      edge = Math.max(edge, c[1]);
+    });
+    if (DAY_B - edge >= OPEN) gaps.push([edge, DAY_B]);
+    gaps.forEach(g => out.push([this.hhmm(g[0]), this.hhmm(g[1]), 'open', 'Open — yours',
+      'unclaimed: whoever asks first', null, null]));
+    const freeMin = gaps.reduce((t, g) => t + (g[1] - g[0]), 0);
+
     out.sort((a, b2) => this.mins(a[0]) - this.mins(b2[0]));
     allDay.forEach(b => out.unshift(['all', 'day', 'work', b.title, 'all day, on your calendar', null, null]));
 
     const hrs = Math.round(timed.reduce((t, b) => t + (b.b - b.a), 0) / 6) / 10;
-    const source = timed.length
+    const free = Math.round(freeMin / 6) / 10;
+    let source = timed.length
       ? 'Your calendar has ' + hrs + 'h booked today' + (moved ? ', so ' + moved + ' block' +
           (moved === 1 ? '' : 's') + ' moved to fit round ' + (timed.length === 1 ? 'it' : 'them') : ', and nothing collided with it') + '.'
       : (droppedOwn ? 'Nothing on your calendar this day — the template\u2019s shift has been dropped rather than shown.' : '');
-    return { rows: out, source, spill, moved };
+    source += (source ? ' ' : '') + (freeMin
+      ? free + 'h of the day is unclaimed.'
+      : 'Not half an hour of this day is unclaimed — that is worth knowing before someone asks you out.');
+    return { rows: out, source, spill, moved, open: gaps.length, free };
   }
 
   /* The week is done when all six sessions and the week's cardio row are

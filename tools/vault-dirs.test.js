@@ -108,5 +108,44 @@ const GROUPS = ['anatomy', 'polish', 'american'];
   });
 }
 
+/* EVERY SLOT ON EVERY PAGE ASKS FOR A PICTURE THAT EXISTS. A slot naming a
+   file that is not there falls back to the drawn engraving and looks like a
+   design choice, so a typo in a data-plate list is invisible: the page still
+   renders, just without the painting nobody knows was meant to be there. */
+{
+  const vm = require('vm');
+  const doc = { readyState: 'complete', querySelectorAll: () => [],
+                addEventListener: () => {}, createElement: () => ({}) };
+  const ctx = { window: {}, document: doc, Image: function () {},
+                fetch: () => Promise.reject(new Error('no network in tests')),
+                Promise, Object, Array, String, Math, Number, console, setTimeout };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'plates.js'), 'utf8'), ctx,
+                  { filename: 'plates.js' });
+  const cat = ctx.window.Plates.catalogue;
+  const onDisk = fs.existsSync(plates)
+    ? fs.readdirSync(plates).filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+        .map((f) => f.replace(/\.[^.]+$/, ''))
+    : [];
+
+  const pages = fs.readdirSync(ROOT).filter((f) => /\.html$/i.test(f));
+  let slots = 0;
+  pages.forEach(function (f) {
+    const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    const re = /data-plate="([^"]+)"/g;
+    let m;
+    while ((m = re.exec(html))) {
+      const names = m[1].split(/\s+/).filter(Boolean);
+      slots++;
+      names.forEach(function (n) {
+        ok(!!cat[n], f + ' asks for a catalogued picture (' + n + ')');
+      });
+      ok(names.some((n) => onDisk.indexOf(n) !== -1),
+         f + ' has at least one of ' + names.join('/') + ' installed');
+    }
+  });
+  ok(slots >= 8, 'the pictures are on more than a page or two (' + slots + ' slots)');
+}
+
 if (fails) { console.error('vault-dirs: ' + fails + ' failure(s)'); process.exit(1); }
 console.log('vault-dirs: ok');

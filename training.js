@@ -151,12 +151,23 @@
      recorded about the day. `slot` is stored from now on; a week pulled
      before this file existed only has the label, so read that too. */
   function day(iso) {
-    var d = weekStore().days[iso];
-    if (!d) return null;
+    var store = weekStore();
+    var d = store.days[iso];
+    var mine = own(iso);
+    if (!d && !mine.length) return null;
+    d = d || {};
     var slot = slotOf(d.slot || d.session);
+    /* A block you added after the week was last planned is time that has
+       gone, whether or not the planner has been run again since. `ownHours`
+       is what the planner already took off; anything added after it is the
+       difference. */
+    var mineH = mine.reduce(function (t, b) { return t + (+b.hours || 0); }, 0);
+    var extra = Math.max(0, mineH - (+d.ownHours || 0));
     return { iso: iso, slot: slot, label: d.session || (slot ? label(slot) : null),
-             done: !!d.done, committed: +d.committed || 0, free: +d.free || 0,
-             blocks: d.blocks || [] };
+             done: !!d.done,
+             committed: Math.round(((+d.committed || 0) + extra) * 10) / 10,
+             free: Math.max(0, Math.round(((+d.free || 0) - extra) * 10) / 10),
+             blocks: blocksFor(iso), planned: !!store.days[iso] };
   }
   function slotFor(iso) { var p = day(iso); return p ? p.slot : null; }
 
@@ -224,6 +235,99 @@
     return { iso: iso, slot: slot, week: wk, label: name, title: full, done: on };
   }
 
+  /* ── your own blocks ───────────────────────────────────────────────────
+     A calendar the hub can only READ cannot hold a date on Friday, and the
+     planner was filling every hour it could not see a reason not to. So a
+     block you add here is a first-class commitment: the week plans round it,
+     the board draws it, and the training moves for it exactly as it moves
+     for a shift. It is not written to Google — the token this site asks for
+     is read-only, deliberately — so it lives beside the pulled week under
+     `own`, which saveWeek never touches. A re-pull cannot delete your
+     Friday.
+
+     `kind` is what it is FOR, and it is on the block because "there is no
+     room for anything spontaneous" and "there is no room for anything" are
+     different complaints with different answers. */
+  function ownAll() { var s = weekStore(); return (s.own && typeof s.own === 'object') ? s.own : {}; }
+  function own(iso) { return (ownAll()[iso] || []).slice(); }
+  function ownId() {
+    return 'own-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 46656).toString(36);
+  }
+  function hours(from, to) {
+    var a = mins(from), b = mins(to);
+    if (a == null || b == null) return 0;
+    return Math.max(0, (b - a) / 60);
+  }
+  function mins(t) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(t == null ? '' : t).trim());
+    return m ? (+m[1]) * 60 + (+m[2]) : null;
+  }
+  function addOwn(iso, b) {
+    b = b || {};
+    var from = pad(b.from), to = pad(b.to);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) return null;
+    if (mins(from) == null || mins(to) == null || mins(to) <= mins(from)) return null;
+    var s = weekStore();
+    if (!s.own || typeof s.own !== 'object') s.own = {};
+    if (!Array.isArray(s.own[iso])) s.own[iso] = [];
+    var block = { id: ownId(), title: String(b.title || '').trim() || 'Yours',
+                  from: from, to: to, hours: hours(from, to), allDay: false,
+                  kind: b.kind || 'own', own: true };
+    s.own[iso].push(block);
+    s.own[iso].sort(function (x, y) { return mins(x.from) - mins(y.from); });
+    save(WKEY, s);
+    return block;
+  }
+  function dropOwn(iso, id) {
+    var s = weekStore();
+    if (!s.own || !Array.isArray(s.own[iso])) return false;
+    var before = s.own[iso].length;
+    s.own[iso] = s.own[iso].filter(function (b) { return b.id !== id; });
+    var gone = s.own[iso].length !== before;
+    if (!s.own[iso].length) delete s.own[iso];
+    if (gone) save(WKEY, s);
+    return gone;
+  }
+  /* "9:5" is a time; "09:05" is the same time written so it sorts. */
+  function pad(t) {
+    var m = /^(\d{1,2}):?(\d{2})?$/.exec(String(t == null ? '' : t).trim());
+    if (!m) return String(t == null ? '' : t).trim();
+    return (+m[1]) + ':' + String(m[2] == null ? 0 : +m[2]).padStart(2, '0');
+  }
+
+  /* Everything on a day, in one list: what the calendar carries and what you
+     put there yourself. Every page that draws a day reads this, so a block
+     you added is not a second-class citizen on any of them. */
+  function blocksFor(iso) {
+    var d = weekStore().days[iso] || {};
+    var all = (d.blocks || []).concat(own(iso));
+    return all.sort(function (a, b) {
+      if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+      return (mins(a.from) || 0) - (mins(b.from) || 0);
+    });
+  }
+
+  /* The week's blocks as planner input, so the training is laid round them.
+     Rebuilt from the store rather than re-fetched: the hours are already
+     known, and re-planning after adding a Friday should not need Google. */
+  function eventsFromStore(r) {
+    var store = weekStore(), out = [];
+    for (var i = 0; i < 7; i++) {
+      var dt = new Date(r.start);
+      dt.setDate(dt.getDate() + i);
+      var iso = isoOf(dt);
+      blocksFor(iso).forEach(function (b) {
+        out.push({ title: b.title, day: iso, kind: b.kind || 'other',
+                   allDay: !!b.allDay, uid: b.id || (iso + '|' + b.title + '|' + b.from),
+                   hours: b.allDay ? 4 : (+b.hours || hours(b.from, b.to)),
+                   start: new Date(iso + 'T' + (b.allDay ? '00:00' : pad(b.from || '0:00')) + ':00'),
+                   end: new Date(iso + 'T' + (b.allDay ? '23:59' : pad(b.to || '0:00')) + ':00'),
+                   own: !!b.own });
+      });
+    }
+    return out;
+  }
+
   /* ── the week in view ──────────────────────────────────────────────────
      The seven dated days of the week the planner is working on, each with
      the session the CALENDAR put there rather than the one the weekday grid
@@ -265,7 +369,8 @@
         done: isDone(iso, slot),
         committed: p ? p.committed : 0, free: p ? p.free : 0,
         blocks: p ? p.blocks : [],
-        planned: !!p
+        own: own(iso),
+        planned: !!(p && p.planned)
       });
     }
     if (!found) return null;
@@ -278,10 +383,12 @@
 
   /* Does the store carry any day of this range? */
   function has(store, r) {
+    var mine = ownAll();
     for (var i = 0; i < 7; i++) {
       var d = new Date(r.start);
       d.setDate(d.getDate() + i);
-      if (store.days[isoOf(d)]) return true;
+      var k = isoOf(d);
+      if (store.days[k] || (mine[k] && mine[k].length)) return true;
     }
     return false;
   }
@@ -314,6 +421,8 @@
     blockWeek: blockWeek, today: today, iso: isoOf,
     day: day, slotFor: slotFor, isDone: isDone, setDone: setDone,
     week: week, reconcile: reconcile,
+    own: own, addOwn: addOwn, dropOwn: dropOwn, blocksFor: blocksFor,
+    eventsFromStore: eventsFromStore,
     KEYS: { week: WKEY, grind: GKEY, log: LKEY }
   };
 })(typeof window !== 'undefined' ? window : this);

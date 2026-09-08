@@ -957,6 +957,16 @@ board's store, the dated week the Trends table reads as `trained`, and the Life
 Log's gym flag **for the day the session was actually done** — which the board
 used to stamp on today whichever day you were looking at.
 
+**Evenings you hold yourself** live under `ct_week_v1.own`, which `saveWeek`
+never touches, so a re-pull cannot delete your Friday. The site asks Google for
+a read-only token on purpose and cannot write an event back, so the Week page
+holds them instead: a date, an evening with friends, anything that is not
+training. They are counted as committed hours, handed to the planner as
+commitments, drawn on the board's timetable, and the week is dealt again from
+what is already stored — no second trip to Google. Re-dealing leaves alone any
+session already marked done: that is a fact about a day rather than a plan for
+it, and moving it would rewrite what happened.
+
 The day itself is laid **around what is booked**. Every timed event on the
 calendar is drawn, whatever the classifier made of its title — filtering that by
 kind is what showed the clinical rota and hid the job, since "Smoothie bar"
@@ -969,7 +979,12 @@ block under ten minutes stays where it is, because the programme puts a posture
 reset mid-shift on purpose; and an appointment with other people — the gathering,
 church — holds its hour and is flowed round like the calendar's own. What would
 land more than three hours late, or past midnight, is **named** under the
-timetable rather than drawn at an hour that makes it a different block. It owns no store of
+timetable rather than drawn at an hour that makes it a different block. And the
+hours **nobody has claimed** are drawn as themselves — anything over half an
+hour between waking and midnight that neither your calendar nor the programme
+has taken. A timetable that names every hour from 06:15 to 23:15 reads as a day
+with no room in it for a friend ringing up, which is how it gets abandoned; the
+gaps were always there and were simply never shown. It owns no store of
 its own; every write lands in a store that already existed, in the shape it
 already had, so `facts.js`, `systems.js`, Today and the backup keep reading
 what they read. Load the two pages without it and each behaves exactly as it
@@ -1428,8 +1443,10 @@ reading eight weeks in the past.
 - `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
 - `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
 - `calendar.js` + `Week.html` — the week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
+- `plates.js` + `plates/` — thirty public-domain pictures and the slots they fall into: Maclise's `Surgical Anatomy` for the cardiothoracic half, Matejko and Chełmoński for the Polish, the Hudson River School for the American. A slot is `data-plate="first-choice second-choice"`; the first installed file wins and is captioned from the catalogue. **They were invisible until v5.5**: the marginal slot was `display:none` below 1150px, so nobody reading on a phone — which is most of the reading — ever saw one. Below that width a slot that found its painting is now a break in the text with its lettering under it, and the design-canvas pages get theirs dressed after the runtime boots rather than never.
 - `training.js` — the join between the planned week and the board: which slot a session label names, which date that slot landed on, and the one writer every "mark done" goes through. See **The rest of it** above.
 - `tools/training.test.js` — a session named two ways resolves to one slot, a date knows its week of the block, one tick reaches all three stores, a session moved to another day keeps its own record, the Life Log is stamped on the day it was done, and two stores filled in separately converge without resurrecting a session you cleared.
+- `tools/vault-dirs.test.js` — also: every `data-plate` on every page names a catalogued picture and at least one of its choices is installed. A slot with a typo in it falls back to the drawn engraving and looks like a design choice, so nothing else would ever have said.
 - `tools/grind-board.test.js` — the board's own logic class, run for real: it falls back to the block's grid when no week has been pulled and says so, shows the session the calendar actually put on the day, prints your shift instead of the template's, and a tick on either page counts on both.
 - `tools/calendar.test.js` — the named calendars are the ones read and their events merged, an event on two of them is counted once, one calendar failing does not cost the others, the week you are standing in can be asked for rather than only the next one, every failure is named as itself rather than all of them as an expired token, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.

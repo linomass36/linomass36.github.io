@@ -95,6 +95,35 @@ h1 { font-family:var(--serif); font-weight:500; font-size:32px; line-height:1.08
 .sum div { flex:1; border:1px solid var(--rule); background:var(--card); border-radius:11px; padding:10px 11px; }
 .sum .l { font-family:var(--mono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; }
 .sum .v { font-family:var(--serif); font-size:22px; color:var(--ink); display:block; margin-top:2px; font-variant-numeric:tabular-nums; }
+.mine { border:1px solid var(--rule); background:var(--card); border-radius:12px; padding:13px 14px; }
+.mine-lede { margin:0 0 11px; color:var(--mid); font-size:13.5px; }
+.mine-form { display:flex; flex-wrap:wrap; gap:7px; }
+.mine-form select, .mine-form input {
+  min-height:40px; border:1px solid var(--rule); border-radius:9px; background:var(--raise);
+  color:var(--ink); font-family:var(--sans); font-size:14px; padding:0 10px; }
+.mine-form #m-what { flex:1; min-width:130px; }
+.mine-form input[type="time"] { font-family:var(--mono); font-size:12.5px; }
+.mine-form button { min-height:40px; padding:0 16px; border-radius:9px; border:1px solid var(--rust);
+  background:var(--rust); color:#fff; font-family:var(--mono); font-size:12px; cursor:pointer; }
+.mine-row { display:flex; align-items:baseline; gap:9px; margin-top:9px; padding-top:9px;
+  border-top:1px solid var(--rule); font-size:14px; }
+.mine-row .when { font-family:var(--mono); font-size:10.5px; color:var(--muted); flex:none; width:96px; }
+.mine-row .what { flex:1; }
+.mine-row button { border:none; background:none; color:var(--muted); font-family:var(--mono);
+  font-size:11px; cursor:pointer; min-height:32px; }
+.mine-row button:hover { color:var(--owed); }
+.mine-none { margin-top:9px; font-family:var(--mono); font-size:10.5px; color:var(--faint); font-style:italic; }
+.day .b.own { background:var(--rust-dim); color:var(--rust); border:1px solid var(--owed-ln); }
+/* The pictures reach this page too. plates.js dresses anything carrying
+   data-plate, so no shared stylesheet is needed — and the slot draws nothing
+   at all until a painting is actually installed. */
+.wk-plate { display:none; }
+.wk-plate.has-plate { display:block; margin:26px auto 0; width:min(100%, 30rem); }
+.wk-plate.has-plate::before { content:''; display:block; aspect-ratio:var(--plate-ar-true, 4 / 3);
+  background-image:var(--plate-figure); background-size:cover; background-position:center;
+  border:1px solid var(--rule); box-shadow:0 2px 7px rgba(26,27,26,.16); }
+.wk-plate .plate-cap { display:block; margin-top:7px; text-align:center;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--faint); line-height:1.4; }
 .note-box { border:1px dashed var(--rule); border-radius:12px; padding:13px 14px;
   font-family:var(--mono); font-size:10.5px; color:var(--muted); line-height:1.7; }
 .note-box b { color:var(--rust); }
@@ -108,6 +137,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 <script src="./config.js"></script>
 <script src="./calendar.js"></script>
 <script src="./training.js"></script>
+<script src="./plates.js"></script>
 </head>
 <body>
 <header class="top">
@@ -140,6 +170,21 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   </div>
   <div id="days"></div>
 
+  <div class="kicker">Yours <span class="note">a date, a friend, an evening that is not training</span></div>
+  <div class="mine">
+    <p class="mine-lede">The calendar this site reads is read-only, so hold a date or an evening with
+      friends here instead and the week plans round it: the training moves for it exactly as it moves
+      for a shift, the Grind board lays the day out round it, and a re-pull cannot delete it.</p>
+    <div class="mine-form">
+      <select id="m-day" aria-label="which day"></select>
+      <input id="m-what" type="text" placeholder="Date night" maxlength="60" aria-label="what it is">
+      <input id="m-from" type="time" value="19:00" aria-label="from">
+      <input id="m-to" type="time" value="22:00" aria-label="until">
+      <button id="m-add" type="button">Hold it</button>
+    </div>
+    <div id="m-list"></div>
+  </div>
+
   <div class="kicker">Why this is dated</div>
   <div class="note-box">
     The Grind board keys its sessions <b>week|slot</b> — <b>3|mon</b> — which says
@@ -149,6 +194,9 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     session here marks it on the <b>board</b> and on the <b>Life Log</b> for the same
     day, and the board lays its week out on the days this page found for it.
   </div>
+
+  <figure class="wk-plate" data-plate-cap
+          data-plate="durand-kindred-spirits cole-kaaterskill church-twilight"></figure>
 
   <footer>
     <span>The Week</span>
@@ -206,10 +254,11 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       hd.appendChild(el('span', 'free', d.free + 'h free'));
       row.appendChild(hd);
 
-      if (d.blocks.length) {
+      var blocks = T ? T.blocksFor(d.key) : d.blocks;
+      if (blocks.length) {
         var bl = el('div', 'blocks');
-        d.blocks.forEach(function (b2) {
-          var chip = el('span', 'b ' + (b2.kind === 'work' ? 'work' : b2.kind === 'class' ? 'class' : ''));
+        blocks.forEach(function (b2) {
+          var chip = el('span', 'b ' + (b2.own ? 'own' : b2.kind === 'work' ? 'work' : b2.kind === 'class' ? 'class' : ''));
           chip.textContent = (b2.allDay ? '' : b2.from ? '' : '') + b2.title +
             (b2.allDay ? ' · all day' : ' · ' + b2.hours + 'h');
           bl.appendChild(chip);
@@ -249,10 +298,28 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     }
   }
 
+  /* What must not move when the week is dealt again: a session already done
+     is a fact about a day rather than a plan for it. */
+  function pinned() {
+    var out = {}, saved = C.readWeek().days || {};
+    Object.keys(saved).forEach(function (k) {
+      var d = saved[k] || {};
+      if (d.done && d.session) out[k] = { session: d.session, slot: d.slot || null };
+    });
+    return out;
+  }
+  /* The evenings you have held are commitments too, so the planner gets them. */
+  function ownEvents(r) {
+    if (!T) return [];
+    return T.eventsFromStore(r).filter(function (e) { return e.own; });
+  }
+
   function apply(events, how, failures) {
-    var plan = C.planWeek(events, { range: C.planningRange() });
+    var r0 = C.planningRange();
+    var plan = C.planWeek(events.concat(ownEvents(r0)), { range: r0, pinned: pinned() });
     C.saveWeek(plan);
     render(plan);
+    renderMine();
     var n = C.calIds().length;
     var line = 'Read ' + events.length + ' event' + (events.length === 1 ? '' : 's') +
       ' from ' + how + (n > 1 ? ' (' + n + ' calendars)' : '') +
@@ -313,6 +380,89 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       });
     });
   }
+
+  /* ── the evenings you hold yourself ───────────────────────────────────
+     The site reads Google and cannot write to it — the token it asks for is
+     read-only, on purpose. So a date, or an evening with friends, is held
+     here instead: stored beside the pulled week under a key a re-pull never
+     touches, counted as committed hours, and laid into the timetable on the
+     Grind board exactly like a shift. The week is then dealt again from what
+     is already stored, with no second trip to Google. */
+  function weekDays() {
+    var r = C.planningRange();
+    var saved = C.readWeek().days || {};
+    var out = [];
+    for (var i = 0; i < 7; i++) {
+      var dt = new Date(r.start);
+      dt.setDate(dt.getDate() + i);
+      var key = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') +
+                '-' + String(dt.getDate()).padStart(2, '0');
+      out.push({ key: key, date: dt,
+                 name: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+                 has: !!saved[key] });
+    }
+    return out;
+  }
+
+  function replan() {
+    var r = C.planningRange();
+    if (!T) return render(lastPlan);
+    var plan = C.planWeek(T.eventsFromStore(r), { range: r, pinned: pinned() });
+    C.saveWeek(plan);
+    render(plan);
+    renderMine();
+  }
+
+  function renderMine() {
+    var sel = $('#m-day'), list = $('#m-list');
+    if (!sel || !T) return;
+    var days = weekDays();
+    var keep = sel.value;
+    sel.innerHTML = '';
+    days.forEach(function (d) {
+      var o = document.createElement('option');
+      o.value = d.key;
+      o.textContent = d.name + ' ' + MON[d.date.getMonth()] + ' ' + d.date.getDate();
+      sel.appendChild(o);
+    });
+    if (keep && days.some(function (d) { return d.key === keep; })) sel.value = keep;
+
+    list.innerHTML = '';
+    var any = 0;
+    days.forEach(function (d) {
+      T.own(d.key).forEach(function (b) {
+        any++;
+        var row = el('div', 'mine-row');
+        row.appendChild(el('span', 'when', d.name + ' ' + b.from + '–' + b.to));
+        row.appendChild(el('span', 'what', b.title));
+        var x = el('button', null, 'let it go');
+        x.type = 'button';
+        x.addEventListener('click', function () {
+          T.dropOwn(d.key, b.id);
+          replan();
+        });
+        row.appendChild(x);
+        list.appendChild(row);
+      });
+    });
+    if (!any) {
+      list.appendChild(el('div', 'mine-none',
+        'Nothing held this week. A week with no room in it for anything unplanned is a week you will not keep to.'));
+    }
+  }
+
+  $('#m-add').addEventListener('click', function () {
+    if (!T) return;
+    var key = $('#m-day').value;
+    var what = $('#m-what').value;
+    var from = $('#m-from').value, to = $('#m-to').value;
+    if (!key) return;
+    var b = T.addOwn(key, { title: what, from: from, to: to });
+    if (!b) return say('That needs a start before its end.', 'bad');
+    $('#m-what').value = '';
+    replan();
+    say('Held: ' + b.title + ', ' + b.from + '–' + b.to + '. The week has been dealt again round it.', 'good');
+  });
 
   $('#which').addEventListener('click', function (ev) {
     ev.preventDefault();
@@ -445,6 +595,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
      session done. Take the union of the two records first, then draw. */
   if (T) { try { T.reconcile(); } catch (e) {} }
   restore();
+  renderMine();
   auto();
 })();
 </script>

@@ -190,7 +190,7 @@ group('Nothing is booked twice');
   const plain = board({}).renderVals();
   const len = (rows) => { const o = {}; rows.forEach(s => { o[s.label] = span(s)[1] - span(s)[0]; }); return o; };
   const was = len(plain.slots), now = len(v.slots);
-  ok(Object.keys(now).filter(k => !/Smoothie bar/.test(k)).every(k => was[k] === now[k]),
+  ok(Object.keys(now).filter(k => !/Smoothie bar|Open — yours/.test(k)).every(k => was[k] === now[k]),
      'nothing was shortened to make room');
   ok(v.slots.map(s => s.label).indexOf('Strength B') < v.slots.map(s => s.label).indexOf('Shower, food'),
      'and the order the day was written in survives');
@@ -200,6 +200,46 @@ group('Nothing is booked twice');
   ok(gathering && gathering.time === '19:00–23:00', 'the evening gathering holds its hour (' +
      (gathering ? gathering.time : 'missing') + ')');
   ok(!gathering.cls, 'and is not described as moved');
+}
+
+group('The day shows where the space is');
+{
+  /* A timetable that runs 06:15 to 23:15 with every hour named looks like a
+     day with no room in it for a friend ringing up, and that is how it gets
+     abandoned. The gaps were always there; they were never drawn. */
+  const b = board({ ct_week_v1: JSON.stringify(plannedWeek()), ct_grind_v1: JSON.stringify(GRIND) });
+  b.state.day = 'wed';
+  const v = b.renderVals();
+  const open = v.slots.filter(s => /Open — yours/.test(s.label));
+  ok(open.length > 0, 'the unclaimed hours are on the timetable (' + open.map(o => o.time).join(', ') + ')');
+  ok(/unclaimed/.test(v.shapeNote), 'and counted (' + v.shapeNote.slice(-40) + ')');
+  const m = (t) => { const p = t.split(':'); return (+p[0]) * 60 + (+p[1]); };
+  const span = (s) => { const p = s.time.split('–'); return [m(p[0]), m(p[1])]; };
+  ok(open.every(o => span(o)[1] - span(o)[0] >= 30), 'nothing under half an hour is called open time');
+  const busy = v.slots.filter(s => !/Open — yours/.test(s.label));
+  const clash = open.filter(o => busy.some(x => { const [a, z] = span(x), [c, d] = span(o); return a < d && z > c; }));
+  ok(clash.length === 0, 'and open time is genuinely unclaimed (' + clash.map(c => c.time).join(', ') + ')');
+}
+
+group('An evening you hold yourself moves the training, not the other way round');
+{
+  const week = plannedWeek();
+  week.own = { [WED]: [{ id: 'own-1', title: 'Date night', from: '17:00', to: '22:00',
+                         hours: 5, allDay: false, kind: 'own', own: true }] };
+  const b = board({ ct_week_v1: JSON.stringify(week), ct_grind_v1: JSON.stringify(GRIND) });
+  b.state.day = 'wed';
+  const v = b.renderVals();
+  const date = v.slots.filter(s => /Date night/.test(s.label))[0];
+  ok(date && date.time === '17:00–22:00', 'it is on the day, at its hour (' + (date ? date.time : 'missing') + ')');
+  ok(date.kind === 'open', 'drawn as yours rather than as another thing prescribed to you');
+  const m = (t) => { const p = t.split(':'); return (+p[0]) * 60 + (+p[1]); };
+  const span = (s) => { const p = s.time.split('–'); return [m(p[0]), m(p[1])]; };
+  const on = v.slots.filter(s => !/Date night/.test(s.label))
+                    .filter(s => { const [a, z] = span(s); return a < 22 * 60 && z > 17 * 60; })
+                    .filter(s => span(s)[1] - span(s)[0] > 10);
+  ok(on.length === 0, 'and nothing is scheduled on top of it (' + on.map(o => o.label).join(', ') + ')');
+  ok(/Strength B/.test(JSON.stringify(v.slots)) || v.spillNote.indexOf('Strength B') >= 0,
+     'the session is either moved or reported as not fitting — never silently dropped');
 }
 
 group('What will not fit is named rather than dropped');

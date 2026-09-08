@@ -259,6 +259,10 @@
   function dress(el) {
     var names = (el.getAttribute('data-plate') || '').split(/\s+/).filter(Boolean);
     if (!names.length) return Promise.resolve(false);
+    /* Already dressed — a re-render creates a new element, so this only ever
+       short-circuits the one that is genuinely finished. */
+    if (el.classList.contains('has-plate') &&
+        el.style.getPropertyValue('--plate-figure')) return Promise.resolve(true);
 
     return pick(names).then(function (hit) {
       if (!hit) return false;
@@ -285,7 +289,11 @@
       el.setAttribute('role', 'img');
       el.setAttribute('aria-label', fullCap(hit));
 
-      if (el.classList.contains('hub-marginal') && !el.querySelector('.plate-cap')) {
+      /* The lettering, for a slot that wants it. `data-plate-cap` is how a
+         page with its own stylesheet — the Grind board, the Week — asks for
+         one without having to import the hub's. */
+      if ((el.classList.contains('hub-marginal') || el.hasAttribute('data-plate-cap')) &&
+          !el.querySelector('.plate-cap')) {
         var cap = document.createElement('span');
         cap.className = 'plate-cap';
         cap.textContent = shortCap(hit);
@@ -327,6 +335,36 @@
     document.addEventListener('DOMContentLoaded', function () { dressAll(); });
   } else {
     dressAll();
+  }
+
+  /* A PAGE THAT DRAWS ITSELF AFTER LOAD. The design-canvas pages — the Grind
+     board, Today, the Life Log — render their whole body from React once the
+     runtime has booted, which is after this file has run and long after
+     DOMContentLoaded. A slot inside one of them was never dressed: the plate
+     was in the markup, the file was in plates/, and nothing appeared. Worse,
+     every re-render replaces the node, taking the dressing with it.
+
+     So new slots are watched for. Only ADDED nodes carrying data-plate are
+     reacted to, and dressing one adds a caption that carries none, so this
+     cannot feed itself. */
+  if (window.MutationObserver && document.documentElement) {
+    var queued = false;
+    var soon = function () {
+      if (queued) return;
+      queued = true;
+      setTimeout(function () { queued = false; dressAll(); }, 60);
+    };
+    new MutationObserver(function (recs) {
+      for (var i = 0; i < recs.length; i++) {
+        var added = recs[i].addedNodes || [];
+        for (var j = 0; j < added.length; j++) {
+          var n = added[j];
+          if (n.nodeType !== 1) continue;
+          if ((n.hasAttribute && n.hasAttribute('data-plate')) ||
+              (n.querySelector && n.querySelector('[data-plate]'))) { soon(); return; }
+        }
+      }
+    }).observe(document.documentElement, { childList: true, subtree: true });
   }
 
   window.Plates = {

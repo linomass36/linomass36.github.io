@@ -236,6 +236,56 @@ group('On a Sunday the board is not shown next week');
   ok(nx && nx.days[0].iso === '2026-09-14', 'and the week being planned when that is all there is');
 }
 
+group('An evening you hold yourself is a commitment like any other');
+{
+  const { T, C, ls } = load();
+  const range = { start: new Date(2026, 8, 7), end: new Date(2026, 8, 14) };
+  const FRI = '2026-09-11';
+  ok(T.addOwn(FRI, { title: 'Date night', from: '19:00', to: '23:00' }), 'an evening can be held');
+  ok(!T.addOwn(FRI, { title: 'Backwards', from: '22:00', to: '19:00' }), 'but not one that ends before it starts');
+  ok(!T.addOwn('not-a-date', { title: 'x', from: '9:00', to: '10:00' }), 'and not on a day that is not a day');
+  const held = T.own(FRI);
+  ok(held.length === 1 && held[0].own === true && held[0].hours === 4, 'four hours of Friday are gone');
+
+  /* The planner is given it, so nothing is laid on top of it. */
+  const plan = C.planWeek(T.eventsFromStore(range), { range });
+  const fri = plan.days.filter(d => d.key === FRI)[0];
+  ok(fri.committed === 4, 'the planner counts it as committed (' + fri.committed + 'h)');
+  C.saveWeek(plan);
+
+  /* And the thing that matters most: a re-pull must not delete your Friday.
+     saveWeek rewrites `days` wholesale, so it is stored somewhere else. */
+  const again = C.planWeek([], { range });
+  C.saveWeek(again);
+  ok(T.own(FRI).length === 1, 'a fresh pull of the week leaves it standing');
+  ok(ls.read('ct_week_v1').days[FRI].blocks.every(b => !b.own), 'and it is not duplicated into the pulled blocks');
+
+  const d = T.day(FRI);
+  ok(d.blocks.some(b => b.title === 'Date night'), 'every page that draws the day sees it');
+  ok(d.committed >= 4, 'and it is charged to the day’s committed hours (' + d.committed + 'h)');
+
+  ok(T.dropOwn(FRI, held[0].id) === true, 'it can be let go');
+  ok(T.own(FRI).length === 0, 'and then it is gone');
+  ok(T.dropOwn(FRI, 'nothing') === false, 'letting go of nothing changes nothing');
+}
+
+group('A session already done does not get dealt somewhere else');
+{
+  /* Re-planning re-deals the week — that is the point of it — but a session
+     you have already trained is a fact about a day, not a plan for it. */
+  const { T, C, ls } = load();
+  const range = { start: new Date(2026, 8, 7), end: new Date(2026, 8, 14) };
+  ls.seed('ct_week_v1', { days: {
+    [MON]: { session: 'Strength A', slot: 'mon', done: true, committed: 0, free: 15, blocks: [] },
+  } });
+  const plan = C.planWeek([], { range, pinned: { [MON]: { session: 'Strength A', slot: 'mon' } } });
+  const mon = plan.days.filter(d => d.key === MON)[0];
+  ok(mon.session === 'Strength A', 'Monday keeps the session it was ticked for');
+  const others = plan.days.filter(d => d.key !== MON).map(d => d.session).filter(Boolean);
+  ok(others.indexOf('Strength A') < 0, 'and Strength A is not dealt a second time');
+  ok(plan.placed.length === 6, 'the other five are still dealt round it');
+}
+
 group('Without the programme, nothing explodes');
 {
   const { T, ls } = load({ grind: false });

@@ -336,13 +336,32 @@ html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
   font-variant: normal; letter-spacing: 0; color: var(--body); }
 
 /* A figure set into the margin of a long page, the way an atlas repeats its
-   plate beside the text. Hidden on a phone: there is no margin there. */
+   plate beside the text.
+
+   IT USED TO BE HIDDEN ON A PHONE, and since the margin only exists above
+   1150px that meant the paintings did not exist at all for anyone reading on
+   a phone, or on a laptop held narrow — which is most of the reading. The
+   pictures shipped, the slots were on six pages, and nobody ever saw one.
+
+   There is still no margin on a narrow screen, so the plate stops pretending
+   to be a margin note and becomes what a book does instead: a break in the
+   text, full width, with its lettering under it. Only a slot that actually
+   found its painting: the drawn engraving is a margin ornament and would be
+   a strange thing to stop the page for. */
 .hub-marginal { display: none; }
 @media (min-width: 1150px) {
   .hub-marginal {
     display: block; position: absolute; right: calc(50% + var(--page) / 2 + var(--s5));
     width: 150px; height: 150px;
   }
+}
+@media (max-width: 1149px) {
+  .hub-marginal.has-plate {
+    display: block; position: static; width: min(100%, 34rem); height: auto;
+    margin: var(--s6) auto;
+  }
+  .hub-marginal.has-plate::before { aspect-ratio: var(--plate-ar-true, 4 / 3); }
+  .hub-marginal.has-plate .plate-cap { text-align: center; font-size: 12px; }
 }
 
 .hub-rule-orn {
