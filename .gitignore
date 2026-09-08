@@ -2,3 +2,7 @@ _site/
 __pycache__/
 *.pyc
 node_modules/
+
+# plates/index.json is written by the build from whatever is in plates/.
+# Committing one would just go stale against the directory it describes.
+plates/index.json

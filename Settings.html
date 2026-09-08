@@ -3,35 +3,396 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Plan Settings</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<title>Settings · CT Hub</title>
+<link rel="stylesheet" href="./hub.css">
 <link rel="stylesheet" href="./mobile.css">
 <link rel="stylesheet" href="./plan-v2.css">
 <script src="./plan-v2-data.js"></script>
 <script src="./plan-v2.js"></script>
+<script src="./backup.js"></script>
+<script src="./sitemap.js"></script>
 <script src="./day.js"></script>
+<style>
+/* Conditions shipped its own page stylesheet — the same shape as Ledger's and
+   Day Budget's, down to the bare body/main/section rules and an id="punch".
+   Scoped to its panel, ids namespaced, palette dropped: hub.css owns the
+   theme. Recalibrate and Archive need none of this; both are plan-v2
+   renderers and already share that stylesheet. */
+#panel-conditions * { box-sizing: border-box;}
+#panel-conditions [hidden] { display: none !important;}
+#panel-conditions a { color: inherit;}
+#panel-conditions button, #panel-conditions input { font: inherit; color: inherit;}
+#panel-conditions :focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px;}
+#panel-conditions .top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 68px 13px 20px; border-bottom: 1px solid var(--rule);}
+#panel-conditions .mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust);}
+#panel-conditions .top a { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-decoration: none; margin-left: auto;}
+#panel-conditions .top a:hover { color: var(--rust);}
+#panel-conditions main { max-width: 900px; margin: 0 auto; padding: 30px 20px 90px;}
+#panel-conditions .kicker { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust);}
+#panel-conditions h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 6vw, 44px); line-height: 1.06; letter-spacing: -.018em; margin: 10px 0 0; text-wrap: balance;}
+#panel-conditions .lede { margin: 14px 0 0; max-width: 62ch; font-family: var(--serif); font-style: italic; font-size: 16.5px; line-height: 1.55; color: var(--mid);}
+#panel-conditions section { margin-top: 40px;}
+#panel-conditions h2 { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); margin: 0 0 14px;}
+#panel-conditions p { max-width: 64ch;}
+#panel-conditions .steps { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));}
+#panel-conditions .step { padding: 16px 18px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px;}
+#panel-conditions .step .n { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--rust);}
+#panel-conditions .step b { display: block; margin-top: 8px; font-size: 15px; font-weight: 600;}
+#panel-conditions .step span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--mid); line-height: 1.5;}
+#panel-conditions .dials { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));}
+#panel-conditions .dial { padding: 12px 14px; background: var(--card); border: 1px solid var(--rule); border-radius: 11px;}
+#panel-conditions .dial label { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-conditions .dial .v { margin-top: 5px; font-family: var(--serif); font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums;}
+#panel-conditions .dial input[type=range] { width: 100%; margin-top: 4px; accent-color: var(--rust);}
+#panel-conditions .dial small { display: block; margin-top: 3px; font-family: var(--mono); font-size: 9.5px; color: var(--faint);}
+#panel-conditions .forkwrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--card);}
+#panel-conditions table { border-collapse: collapse; width: 100%; min-width: 740px;}
+#panel-conditions th, #panel-conditions td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top;}
+#panel-conditions thead th { position: sticky; top: 0; background: var(--card); font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-conditions thead th.a { color: var(--owed);}
+#panel-conditions thead th.b { color: var(--ok);}
+#panel-conditions tbody tr:last-child td { border-bottom: 0;}
+#panel-conditions td.day { font-family: var(--mono); font-size: 10.5px; color: var(--faint); width: 58px; white-space: nowrap;}
+#panel-conditions td.a, #panel-conditions td.b { width: 28%;}
+#panel-conditions .cell { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;}
+#panel-conditions .cell .num { font-family: var(--serif); font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; min-width: 46px;}
+#panel-conditions .cell .num.up { color: var(--owed);}
+#panel-conditions .cell .num.dn { color: var(--ok);}
+#panel-conditions .cell .num.flat { color: var(--held);}
+#panel-conditions .cell .what { font-size: 12.5px; color: var(--mid);}
+#panel-conditions .tagx { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; white-space: nowrap;}
+#panel-conditions .tagx.skim { background: var(--owed-bg); color: var(--owed);}
+#panel-conditions .tagx.held { background: var(--held-bg); color: var(--held);}
+#panel-conditions .tagx.clear { background: var(--ok-bg); color: var(--ok);}
+#panel-conditions tr.lift td { background: var(--held-bg);}
+#panel-conditions .gate { padding: 20px 22px; border-radius: 12px; border: 1px solid var(--owed-ln); border-left: 3px solid var(--owed); background: var(--card);}
+#panel-conditions .gate.ok { border-color: var(--ok-ln); border-left-color: var(--ok);}
+#panel-conditions .gate .big { font-family: var(--serif); font-size: clamp(21px, 4vw, 27px); font-weight: 500; line-height: 1.25; text-wrap: balance;}
+#panel-conditions .gate .big em { font-style: normal; color: var(--owed);}
+#panel-conditions .gate.ok .big em { color: var(--ok);}
+#panel-conditions .gate .scales { display: flex; gap: 10px; align-items: flex-end; margin-top: 16px; flex-wrap: wrap;}
+#panel-conditions .gate .sc { flex: 1; min-width: 120px;}
+#panel-conditions .gate .sc .lab { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-conditions .gate .sc .n { font-family: var(--serif); font-size: 25px; font-weight: 500; font-variant-numeric: tabular-nums;}
+#panel-conditions .gate .sc .track { height: 9px; border-radius: 5px; background: var(--rule); margin-top: 6px; overflow: hidden;}
+#panel-conditions .gate .sc .track i { display: block; height: 100%; border-radius: 5px;}
+#panel-conditions .gate .verdict2 { margin-top: 15px; font-size: 14px; color: var(--mid); line-height: 1.55;}
+#panel-conditions thead th.b2 { color: var(--held);}
+#panel-conditions td.b2 { width: 28%;}
+#panel-conditions .totals { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-top: 14px;}
+#panel-conditions .tot.b2 { border-left: 3px solid var(--held);}
+#panel-conditions .tot.b2 .n { color: var(--held);}
+#panel-conditions .tot { padding: 16px 18px; border-radius: 12px; border: 1px solid var(--rule); background: var(--card);}
+#panel-conditions .tot.a { border-left: 3px solid var(--owed);}
+#panel-conditions .tot.b { border-left: 3px solid var(--ok);}
+#panel-conditions .tot .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-conditions .tot .n { margin-top: 8px; font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums;}
+#panel-conditions .tot.a .n { color: var(--owed);}
+#panel-conditions .tot.b .n { color: var(--ok);}
+#panel-conditions .tot .s { margin-top: 8px; font-size: 13px; color: var(--mid); line-height: 1.45;}
+#panel-conditions .bar { display: flex; height: 7px; border-radius: 4px; overflow: hidden; margin-top: 11px; background: var(--rule);}
+#panel-conditions .bar i { display: block; height: 100%;}
+#panel-conditions .bar i.skim { background: var(--owed);}
+#panel-conditions .bar i.held { background: var(--held);}
+#panel-conditions .bar i.clear { background: var(--ok);}
+#panel-conditions .legend { margin-top: 7px; font-family: var(--mono); font-size: 9.5px; color: var(--faint);}
+#panel-conditions .punch { margin-top: 16px; padding: 18px 20px; background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 12px; font-family: var(--serif); font-size: 17.5px; line-height: 1.5;}
+#panel-conditions .punch b { color: var(--held); font-weight: 600;}
+#panel-conditions .opts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));}
+#panel-conditions .opt { padding: 16px 18px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; display: flex; flex-direction: column;}
+#panel-conditions .opt.pick { border-color: var(--ok); border-left: 3px solid var(--ok);}
+#panel-conditions .opt .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-conditions .opt.pick .h { color: var(--ok);}
+#panel-conditions .opt b { display: block; margin-top: 8px; font-family: var(--serif); font-size: 20px; font-weight: 500;}
+#panel-conditions .opt span { display: block; margin-top: 7px; font-size: 13px; color: var(--mid); line-height: 1.5;}
+#panel-conditions .opt .cost { margin-top: auto; padding-top: 11px; font-family: var(--mono); font-size: 10px; color: var(--faint);}
+#panel-conditions .note { margin-top: 14px; padding: 14px 16px; border: 1px dashed var(--rule); border-radius: 11px; font-size: 13.5px; color: var(--mid); max-width: none;}
+#panel-conditions .note b { color: var(--ink);}
+#panel-conditions footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--faint);}
+@media (max-width: 620px) {
+  #panel-conditions main { padding: 24px 16px 80px;}
+  #panel-conditions .totals { grid-template-columns: 1fr;}
+}
+@media (prefers-reduced-motion: reduce) {
+  #panel-conditions *, #panel-conditions *::before, #panel-conditions *::after { transition: none !important;}
+}
+</style>
 </head>
-<body>
-<!-- ─────────────────────────────────────────────────────────────
-     Plan Settings — how the plan gets recalibrated without a deploy.
+<body class="hub">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SETTINGS — the destination, v5.
 
-     v1 went stale because changing it meant editing a 1 MB bundled
-     HTML file. So it was never changed; it was abandoned and then
-     rewritten from scratch eight months later. That is the failure
-     this page exists to prevent.
+     Recalibrate, Conditions and the Archive. Unlike Money, this file keeps
+     content of its own: Recalibrate was already Settings.html, so this is a
+     panel rather than a shell, and the destination lands on its own first
+     tab.
 
-     An imported plan SHADOWS the shipped file rather than replacing
-     it — plan-v2.js prefers state.imported and falls back to
-     window.PLAN_V2. A bad import is therefore always one tap from
-     being undone, which is what makes it safe to import at all.
-     ───────────────────────────────────────────────────────────── -->
-<div class="pv" id="app"></div>
+     Two of the three were already plan-v2 renderers writing into #app — and
+     both used that same id, which is the collision that makes "just put them
+     in one file" fail. Each writes into its own container now.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<header class="hub-top">
+  <div class="hub-top-in">
+    <span class="hub-mark">CT Hub</span>
+    <span class="hub-dateline" id="dateline"></span>
+    <span class="hub-sp"></span>
+  </div>
+</header>
+
+<main class="hub-page" style="position:relative">
+  <h1 class="hub-h1">Settings</h1>
+  <div class="hub-marginal hub-plate bronchi" data-plate="matejko-stanczyk chelmonski-autumn" aria-hidden="true"></div>
+
+  <div class="hub-tabs" role="tablist" id="tabs"></div>
+
+  <div id="panel-recalibrate" class="pv" role="tabpanel"></div>
+  <div id="panel-conditions"  role="tabpanel" hidden><header class="top">
+  <span class="mark">CT Hub</span>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Conditions</span>
+  <a href="Standing.html">← the standing</a>
+</header>
+
+<main>
+
+  <div class="kicker">Conditions</div>
+  <h1>What declaring one actually does to the next two weeks.</h1>
+  <p class="lede">Fair question, and the last version had no answer — it only ever showed
+  the effect on today. Here is the same fortnight run twice, on the one number that makes the
+  case by itself: a 250-day streak with 250 cards behind it.</p>
+
+  
+  <section>
+    <h2>The mechanism, in three moves</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <b>You name what is blocked</b>
+        <span>Not a mood — a constraint, at a strength, ticked activity by activity. A lower back
+        that rules out lifting and a long sit is a different fact from one that rules out standing
+        up, and the picker asks which. It has no opinion about recall either way.</span>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <b>Held systems stop accruing</b>
+        <span>They go a quiet colour, not red. Nothing counts against you, and the streak holds
+        instead of breaking — which is what removes the reason to fake it.</span>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <b>The ask shrinks to fit</b>
+        <span>One thing, drawn from what the condition still allows. Do it and the day counts
+        as a day. The backlog stays visible but folded — it will keep.</span>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Three strengths, because most days are not the worst day</h2>
+    <p class="lede" style="font-size:15.5px">Everything modelled on this page is the strongest of
+    the three. It is the right setting for a fortnight in a sling and the wrong one for a sore
+    shoulder, and having only it is what made the mechanism something you reached for twice a year.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">NOTED</div>
+        <b>Just keep note</b>
+        <span>Nothing is held and nothing is lowered. The board asks for everything and every
+        number reads as it would on any other day. It is on the record so that a thin week, read
+        back in a month, has its reason attached to it.</span>
+      </div>
+      <div class="step">
+        <div class="n">SLOWER</div>
+        <b>Take it slower</b>
+        <span>The whole board stays on screen, in full, with the real numbers — nothing hidden and
+        nothing folded. Only the size of a finished day moves: the small version of each affected
+        system clears it. Not a floor day, and not modelled below.</span>
+      </div>
+      <div class="step">
+        <div class="n">STOPS ME</div>
+        <b>Debilitating</b>
+        <span>The version the fortnight below runs. Systems held, nothing accruing, one ask for the
+        day — and the numbers still reachable in one tap, because being held is a fact about what is
+        owed rather than a reason to be shown nothing.</span>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Your numbers <span style="text-transform:none;letter-spacing:.04em;color:var(--faint);font-weight:400">— change any of them</span></h2>
+    <div class="dials">
+      <div class="dial">
+        <label for="conditions-r-due">Due / day</label>
+        <div class="v"><span id="conditions-v-due">60</span></div>
+        <input id="conditions-r-due" type="range" min="10" max="150" value="60">
+        <small>cards Anki asks for</small>
+      </div>
+      <div class="dial">
+        <label for="conditions-r-sec">Seconds / card</label>
+        <div class="v"><span id="conditions-v-sec">20</span>s</div>
+        <input id="conditions-r-sec" type="range" min="4" max="45" value="20">
+        <small>60 cards in 20 min = 20s</small>
+      </div>
+      <div class="dial">
+        <label for="conditions-r-mins">Minutes you give it</label>
+        <div class="v"><span id="conditions-v-mins">20</span> min</div>
+        <input id="conditions-r-mins" type="range" min="2" max="90" value="20">
+        <small>on an ordinary day</small>
+      </div>
+      <div class="dial">
+        <label for="conditions-r-extra">Clearing minutes</label>
+        <div class="v">+<span id="conditions-v-extra">6</span> min</div>
+        <input id="conditions-r-extra" type="range" min="0" max="40" value="6">
+        <small>extra, once you are back</small>
+      </div>
+      <div class="dial">
+        <label for="conditions-r-skim">A skim is</label>
+        <div class="v"><span id="conditions-v-skim">25</span></div>
+        <input id="conditions-r-skim" type="range" min="5" max="90" value="25">
+        <small>cards on a rut day</small>
+      </div>
+      <div class="dial">
+        <label for="conditions-r-hold">Hold for</label>
+        <div class="v"><span id="conditions-v-hold">10</span> days</div>
+        <input id="conditions-r-hold" type="range" min="0" max="14" value="10">
+        <small>how long you are down</small>
+      </div>
+      <div class="dial">
+        <label for="conditions-r-back">Behind now</label>
+        <div class="v"><span id="conditions-v-back">250</span></div>
+        <input id="conditions-r-back" type="range" min="0" max="1200" step="10" value="250">
+        <small>cards in the backlog</small>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Before any plan: what does the day actually cost?</h2>
+    <div class="gate" id="conditions-gate"></div>
+    <p style="margin-top:14px">Two versions of this page got this wrong in opposite directions. The
+    first offered a clearing plan without checking whether the day was payable. The second checked, but
+    counted in <em>cards</em> — and cards are not comparable to anything. Minutes are. A card is only
+    heavy or light once you know what it costs, and the moment the load is priced in minutes the
+    argument usually settles itself.</p>
+  </section>
+
+  
+  <section>
+    <h2>The same fortnight, three ways</h2>
+    <div class="note" style="margin-bottom:14px">
+      <b>First, a thing the model says that you should hear:</b> your back does not hold Anki.
+      A lumbar injury rules out lifting, running and a long sit — it has no opinion whatsoever
+      about recall, so the scoping leaves the queue owed. That is the model being right rather
+      than lenient, and it is the whole reason scoping exists. Column B below therefore assumes a
+      condition that <em>does</em> cover recall — <b>Flat</b>, the one for a five-day rut.
+      Declaring the injury alone would hold the grind board and change nothing here.
+      <br><br>
+      <b>Which points at something bigger:</b> the 250-card backlog is not a conditions problem
+      at all. Conditions stop it compounding while you are down. They do not fix what built it.
+      That is the section below the table, and it is the one that actually matters.
+    </div>
+    <div class="forkwrap">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th class="a">A · nothing declared</th>
+            <th class="b2">B · condition only</th>
+            <th class="b">C · condition + the extra minutes</th>
+          </tr>
+        </thead>
+        <tbody id="conditions-fork"></tbody>
+      </table>
+    </div>
+    <div class="totals" id="conditions-totals"></div>
+    <div class="punch" id="conditions-punch"></div>
+  </section>
+
+  
+  <section>
+    <h2>The part that is doing the damage</h2>
+    <p>The streak counts 250 days and says nothing about what happened on any of them.
+    That is not a neutral omission. The cheapest way to keep the number alive is to skim
+    25 cards, and skimming defers the rest — so <b>the streak is what is producing the
+    backlog.</b> The instrument is eating the thing it was built to protect, and it will
+    keep doing that no matter how the fortnight above goes.</p>
+    <p>The repair is small: the hub records <em>what kind of day</em> each one was, and
+    shows the two numbers together — never the streak on its own. A day can be a clear,
+    a skim, or a held day. All three keep the streak. Only one of them is a lie, and
+    once it is labelled it stops being an invisible one.</p>
+
+    <div class="note" id="conditions-honest"></div>
+  </section>
+
+  
+  <section>
+    <h2>What to do with the 250</h2>
+    <div class="opts" id="conditions-opts"></div>
+    <div class="note">
+      <b>On holding and Anki, honestly:</b> the hub cannot reach into your collection, and
+      cards do not evaporate because a page went quiet. Holding means one concrete action —
+      postpone the due queue by the length of the hold — which the hub tells you to take and
+      records. Postponing costs a little retention on those cards. Skimming 25 a day costs
+      retention <em>and</em> grows the debt, which is the trade you are currently making by default.
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>When it lifts</h2>
+    <p>The condition carries a review date — seven days for an injury — so it cannot quietly
+    become permanent. On the day it expires the hub asks one question: still true? Yes extends
+    it and says so on the record. No starts the ramp, which goes up one rung at a time and only
+    when the previous rung was met. The full board comes back when you have had an ordinary day,
+    and what counts as ordinary is the hub's arithmetic, not your mood on the morning.</p>
+  </section>
+
+  <footer>Conditions · forward-view prototype · a condition is a fact, not a failure</footer>
+
+</main></div>
+  <div id="panel-archive"     class="pv" role="tabpanel" hidden></div>
+</main>
+
 <script>
 (function () {
+  'use strict';
+  var PANELS = [['recalibrate','Recalibrate'],['conditions','Conditions'],['archive','Archive']];
+  var KNOWN = {}; PANELS.forEach(function (p) { KNOWN[p[0]] = 1; });
+  var bar = document.getElementById('tabs');
+  function show(id) {
+    if (!KNOWN[id]) id = 'recalibrate';
+    PANELS.forEach(function (p) {
+      var el = document.getElementById('panel-' + p[0]);
+      if (el) el.hidden = p[0] !== id;
+      var t = document.getElementById('tab-' + p[0]);
+      if (t) t.setAttribute('aria-selected', String(p[0] === id));
+    });
+    try { history.replaceState(null, '', '#' + id); } catch (e) { location.hash = id; }
+  }
+  PANELS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.className = 'hub-tab'; b.id = 'tab-' + p[0]; b.type = 'button';
+    b.setAttribute('role','tab'); b.textContent = p[1];
+    b.addEventListener('click', function () { show(p[0]); });
+    bar.appendChild(b);
+  });
+  window.addEventListener('hashchange', function () { show((location.hash||'').replace('#','')); });
+  var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var d=new Date();
+  document.getElementById('dateline').textContent = DAYS[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()];
+  try { if (localStorage.getItem('hub_theme_v1')==='dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  window.__setShow = show;
+})();
+</script>
+
+<!-- ══ panel: recalibrate — from Settings.html, retargeted ══ -->
+<script>
+
+(function () {
   var P = window.PlanV2, esc = P.esc;
-  var app = document.getElementById('app');
+  var app = document.getElementById('panel-recalibrate');
 
   /* The prompt handed to an assistant. Kept as an array so the source
      stays readable; joined with newlines for the copy button. */
@@ -168,6 +529,38 @@
       '<button class="pv-btn" id="dl-state">Download progress</button>' +
       '<button class="pv-btn" id="reset">Reset progress…</button></div>');
 
+    /* ── backup ───────────────────────────────────────────────────────────
+       Above the foot note because it is the most important control on the
+       page: it is the one that survives everything else going wrong.
+
+       Counts are computed live from localStorage rather than described, so
+       the page cannot claim to back up more than it does — which is exactly
+       how the old twenty-key list came to omit twenty-two stores while
+       still calling itself a backup. */
+    H.push('<h2 class="pv-h2">Backup</h2>');
+    H.push('<div class="pv-sub">Every store in this browser, in one file</div>');
+    var bk = window.Backup;
+    if (!bk) {
+      H.push('<div class="pv-rule pv-kill"><b>backup.js did not load.</b> ' +
+        'Without it this page cannot read your stores. Reload before trusting anything here.</div>');
+    } else {
+      var man = bk.collect();
+      H.push('<p class="pv-p"><b>' + man.count + ' stores · ' + bk.human(man.bytes) + '</b>. ' +
+        'Everything the hub has written in this browser \u2014 the plan\u2019s ticks, the boards, ' +
+        'the logs, the journal, the reading list. Not a list of keys someone has to remember to ' +
+        'update: it reads what is actually there, so a store added next year is in the next backup.</p>');
+      if (man.skipped.length) {
+        H.push('<p class="pv-small">Deliberately left out: <code>' + esc(man.skipped.join('</code>, <code>')) +
+          '</code>. Sync bookkeeping, the device-only vault key, and your calendar token \u2014 ' +
+          'credentials do not belong in a file you might email to yourself.</p>');
+      }
+      H.push('<div class="pv-row" style="gap:9px">' +
+        '<button class="pv-btn pri" id="bk-dl">Download backup</button>' +
+        '<button class="pv-btn" id="bk-pick">Restore from a file\u2026</button>' +
+        '<input type="file" id="bk-file" accept=".json,application/json" style="display:none"></div>');
+      H.push('<div id="bk-out"></div>');
+    }
+
     H.push('<p class="pv-foot">Everything on this page writes to one key in your browser store, which sync.js carries across your devices. ' +
       'Nothing is sent anywhere by this page. The shipped plan lives in <code>plan-v2-data.js</code> in the repo — ' +
       'if you want an import to become permanent, paste it there and deploy.</p>');
@@ -295,6 +688,83 @@
     var $ = function (id) { return document.getElementById(id); };
     var D = P.plan();
 
+    /* ── backup ───────────────────────────────────────────────────────────
+       Restore is two steps on purpose. The file is read and described first,
+       and nothing is written until you have seen the count of what would be
+       replaced — because "replace" is the mode that loses work, and a button
+       that does it on one tap with no preview is a trap. */
+    if (window.Backup && $('bk-dl')) {
+      var bk = window.Backup, pending = null;
+
+      $('bk-dl').addEventListener('click', function () {
+        var m = bk.download();
+        $('bk-out').innerHTML = '<div class="pv-rule"><b>Saved ' + esc(bk.filename(m)) + '</b> \u2014 ' +
+          m.count + ' stores, ' + bk.human(m.bytes) + '. Keep it somewhere that is not this device.</div>';
+      });
+
+      $('bk-pick').addEventListener('click', function () { $('bk-file').click(); });
+
+      $('bk-file').addEventListener('change', function (e) {
+        var f = e.target.files && e.target.files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function () {
+          var look = bk.inspect(String(r.result));
+          if (!look.ok) {
+            pending = null;
+            $('bk-out').innerHTML = '<div class="pv-rule pv-kill"><b>Cannot read that file.</b> ' +
+              esc(look.why) + '</div>';
+            return;
+          }
+          pending = String(r.result);
+          var when = (look.day || look.at || '').slice(0, 10);
+          var h = '<div class="pv-rule"><b>' + look.keys.length + ' stores from ' + esc(when) + '</b>' +
+            (look.version ? ' \u00b7 hub v' + esc(look.version) : '') + ' \u00b7 ' + look.human + '.<br>' +
+            'Restoring would <b>add ' + look.adds.length + '</b>, ' +
+            '<b>overwrite ' + look.replaces.length + '</b>, and leave ' +
+            look.identical.length + ' unchanged.' +
+            (look.untouched.length
+              ? ' <b>' + look.untouched.length + '</b> store' + (look.untouched.length === 1 ? '' : 's') +
+                ' here are not in the file and are never deleted by a restore.'
+              : '') +
+            '</div>';
+          if (look.replaces.length) {
+            h += '<p class="pv-small">Would be overwritten: <code>' +
+              esc(look.replaces.join('</code>, <code>')) + '</code></p>';
+          }
+          h += '<div class="pv-row" style="gap:9px">' +
+            '<button class="pv-btn" id="bk-merge">Merge \u2014 only add what is missing</button>' +
+            '<button class="pv-btn" id="bk-replace">Replace ' + look.replaces.length + ' \u2026</button></div>';
+          $('bk-out').innerHTML = h;
+
+          $('bk-merge').addEventListener('click', function () { doRestore('merge'); });
+          $('bk-replace').addEventListener('click', function () {
+            if (!window.confirm('Overwrite ' + look.replaces.length + ' store' +
+                (look.replaces.length === 1 ? '' : 's') + ' with the backup\u2019s version?\n\n' +
+                'Anything changed since ' + when + ' is lost. This cannot be undone.')) return;
+            doRestore('replace');
+          });
+        };
+        r.readAsText(f);
+        e.target.value = '';
+      });
+
+      function doRestore(mode) {
+        if (!pending) return;
+        var res = bk.restore(pending, mode);
+        if (!res.ok) {
+          $('bk-out').innerHTML = '<div class="pv-rule pv-kill">' + esc(res.why) + '</div>';
+          return;
+        }
+        $('bk-out').innerHTML = '<div class="pv-rule"><b>Restored.</b> ' +
+          res.wrote.length + ' store' + (res.wrote.length === 1 ? '' : 's') + ' written' +
+          (res.skipped.length ? ', ' + res.skipped.length + ' left alone (merge)' : '') +
+          (res.failed.length ? ', <b>' + res.failed.length + ' failed</b>' : '') +
+          '. Reload for the pages to read them.</div>';
+        pending = null;
+      }
+    }
+
     $('copy-plan').addEventListener('click', function () { copy(JSON.stringify(D, null, 2), this); });
     $('copy-prompt').addEventListener('click', function () { copy(PROMPT, this); });
     $('dl-md').addEventListener('click', function () {
@@ -347,6 +817,339 @@
   }
 
   render(null);
+})();
+
+</script>
+
+<!-- ══ panel: conditions — ids and CSS namespaced ══ -->
+<script>
+
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  var DAYS = 14, STREAK0 = 250;
+
+  function mm(min) {
+    min = Math.round(min);
+    if (min < 60) return min + ' min';
+    return Math.floor(min / 60) + ' h ' + (min % 60 ? (min % 60) + ' min' : '').trim();
+  }
+
+  function dials() {
+    var d = {
+      due:   +$('#conditions-r-due').value,
+      sec:   +$('#conditions-r-sec').value,
+      mins:  +$('#conditions-r-mins').value,
+      extra: +$('#conditions-r-extra').value,
+      skim:  +$('#conditions-r-skim').value,
+      hold:  +$('#conditions-r-hold').value,
+      back:  +$('#conditions-r-back').value
+    };
+    // Everything downstream is priced in minutes and converted back at the edge.
+    d.perMin  = 60 / d.sec;                 // cards a minute
+    d.cost    = d.due / d.perMin;           // what today's due costs, in minutes
+    d.sus     = Math.round(d.mins * d.perMin);          // cards an ordinary day buys
+    d.susPlus = Math.round((d.mins + d.extra) * d.perMin);
+    d.backMin = d.back / d.perMin;          // the backlog, in minutes
+    return d;
+  }
+
+  function runA(d) {
+    var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
+    for (var i = 1; i <= DAYS; i++) {
+      b += Math.max(0, d.due - d.skim); kinds.skim++;
+      rows.push({ n: Math.round(b), delta: d.due - d.skim, kind: 'skim',
+                  what: d.skim + ' cards · ' + mm(d.skim / d.perMin) });
+    }
+    return { rows: rows, end: Math.round(b), kinds: kinds };
+  }
+
+  /* B · the condition, and nothing else. At break-even the backlog simply
+     freezes — which is the finding, not a rounding artefact. */
+  function runB(d) {
+    var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
+    for (var i = 1; i <= DAYS; i++) {
+      if (i <= d.hold) {
+        kinds.held++;
+        rows.push({ n: Math.round(b), delta: 0, kind: 'held', what: 'postponed' });
+      } else {
+        var net = d.due - d.sus;
+        b = Math.max(0, b + net);
+        if (net > 0) kinds.skim++; else kinds.clear++;
+        rows.push({ n: Math.round(b), delta: net, kind: net > 0 ? 'skim' : (net < 0 ? 'clear' : 'held'),
+                    lift: i === d.hold + 1, what: d.sus + ' cards · ' + mm(d.mins) });
+      }
+    }
+    return { rows: rows, end: Math.round(b), kinds: kinds };
+  }
+
+  /* C · the condition plus the extra minutes. Not a load cut — the load is
+     fine. Six more minutes is the entire intervention. */
+  function runC(d) {
+    var b = d.back, rows = [], kinds = { skim: 0, held: 0, clear: 0 };
+    for (var i = 1; i <= DAYS; i++) {
+      if (i <= d.hold) {
+        kinds.held++;
+        rows.push({ n: Math.round(b), delta: 0, kind: 'held', what: 'postponed' });
+      } else {
+        var net = d.due - d.susPlus;
+        b = Math.max(0, b + net);
+        if (net < 0) kinds.clear++; else kinds.skim++;
+        rows.push({ n: Math.round(b), delta: net, kind: net < 0 ? 'clear' : 'skim',
+                    lift: i === d.hold + 1,
+                    what: (b <= 0 ? 'clear' : d.susPlus + ' cards') + ' · ' + mm(d.mins + d.extra) });
+      }
+    }
+    return { rows: rows, end: Math.round(b), kinds: kinds };
+  }
+
+  function cell(r) {
+    var c = el('div', 'cell');
+    c.appendChild(el('span', 'num ' + (r.delta > 0.5 ? 'up' : (r.delta < -0.5 ? 'dn' : 'flat')), String(r.n)));
+    c.appendChild(el('span', 'tagx ' + r.kind, r.kind));
+    c.appendChild(el('span', 'what', r.what));
+    return c;
+  }
+
+  function paint() {
+    var d = dials();
+    $('#conditions-v-due').textContent   = d.due;
+    $('#conditions-v-sec').textContent   = d.sec;
+    $('#conditions-v-mins').textContent  = d.mins;
+    $('#conditions-v-extra').textContent = d.extra;
+    $('#conditions-v-skim').textContent  = d.skim;
+    $('#conditions-v-hold').textContent  = d.hold;
+    $('#conditions-v-back').textContent  = d.back;
+
+    var spare = d.mins - d.cost;            // minutes left after the day's due
+    var payable = spare >= -0.5;
+    var breakeven = Math.abs(spare) < 0.5;
+
+    /* ── the gate, in minutes ── */
+    var G = $('#conditions-gate');
+    G.className = 'gate' + (payable ? ' ok' : '');
+    G.innerHTML = '';
+    var big = el('div', 'big');
+    if (breakeven) {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em>, and you give it ' + mm(d.mins) +
+        '. Exactly break-even — which means the backlog never grows and <em>never shrinks either</em>. ' +
+        'It just sits there at ' + d.back + '.';
+    } else if (payable) {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em> and you give it ' + mm(d.mins) +
+        ' — <em>' + mm(spare) + ' spare</em>. The whole backlog is ' + mm(d.backMin) + ' of work.';
+    } else {
+      big.innerHTML = 'The day costs <em>' + mm(d.cost) + '</em> and you give it ' + mm(d.mins) +
+        ' — short by <em>' + mm(-spare) + ' every day</em>, before the backlog is touched.';
+    }
+    G.appendChild(big);
+
+    var sc = el('div', 'scales'), mx = Math.max(d.cost, d.mins, 1);
+    [['what the day costs', mm(d.cost), d.cost, 'var(--owed)'],
+     ['what you give it', mm(d.mins), d.mins, payable ? 'var(--ok)' : 'var(--held)'],
+     ['the whole backlog', mm(d.backMin), Math.min(d.backMin, mx), 'var(--held)']].forEach(function (r) {
+      var w = el('div', 'sc');
+      w.appendChild(el('div', 'lab', r[0]));
+      w.appendChild(el('div', 'n', r[1]));
+      var t = el('div', 'track'), f = el('i');
+      f.style.width = Math.min(100, r[2] / mx * 100) + '%'; f.style.background = r[3];
+      t.appendChild(f); w.appendChild(t); sc.appendChild(w);
+    });
+    G.appendChild(sc);
+
+    var v2 = el('div', 'verdict2');
+    var days14 = d.backMin / 14;
+    if (!payable) {
+      v2.innerHTML = '<b>Cut the load first.</b> No clearing plan survives a daily shortfall: clear the ' +
+        d.back + ' today and the same gap rebuilds it. The lever is fewer new cards or faster cards — not effort.';
+    } else {
+      v2.innerHTML = '<b>' + d.back + ' cards is ' + mm(d.backMin) + ' of work. Total, ever.</b> ' +
+        'Spread across a fortnight that is <b>' + days14.toFixed(1) + ' extra minutes a day</b> — a ' +
+        mm(d.mins + days14) + ' day instead of a ' + mm(d.mins) + ' one. ' +
+        'Your ' + d.skim + '-card skim is ' + mm(d.skim / d.perMin) + ', so the gap between a rut day and ' +
+        'a clearing day is about ' + mm(d.cost + days14 - d.skim / d.perMin) + '. ' +
+        '<b>That is the whole size of this problem.</b>';
+    }
+    G.appendChild(v2);
+
+    /* ── the fork ── */
+    var A = runA(d), B = runB(d), C = runC(d);
+    var tb = $('#conditions-fork'); tb.innerHTML = '';
+    for (var i = 0; i < DAYS; i++) {
+      var tr = el('tr');
+      if (C.rows[i].lift) tr.className = 'lift';
+      tr.appendChild(el('td', 'day', 'day ' + (i + 1) + (C.rows[i].lift ? ' ·lifts' : '')));
+      [['a', A], ['b2', B], ['b', C]].forEach(function (col) {
+        var td = el('td', col[0]); td.appendChild(cell(col[1].rows[i])); tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    }
+
+    var T = $('#conditions-totals'); T.innerHTML = '';
+    function tot(cls, head, n2, sub, kinds) {
+      var n = el('div', 'tot ' + cls);
+      n.appendChild(el('div', 'h', head));
+      n.appendChild(el('div', 'n', n2));
+      n.appendChild(el('div', 's', sub));
+      var bar = el('div', 'bar');
+      ['skim', 'held', 'clear'].forEach(function (k) {
+        if (!kinds[k]) return;
+        var i2 = el('i', k); i2.style.width = (kinds[k] / DAYS * 100) + '%'; bar.appendChild(i2);
+      });
+      n.appendChild(bar);
+      var bits = [];
+      if (kinds.clear) bits.push(kinds.clear + ' cleared');
+      if (kinds.held)  bits.push(kinds.held + ' held');
+      if (kinds.skim)  bits.push(kinds.skim + ' behind');
+      n.appendChild(el('div', 'legend', 'streak ' + (STREAK0 + DAYS) + ' — ' + bits.join(' · ')));
+      T.appendChild(n);
+    }
+    tot('a', 'A · nothing declared', A.end + ' behind',
+        'Grew by ' + (A.end - d.back) + '. Every day an eight-minute visit that saved the number and moved nothing.', A.kinds);
+    tot('b2', 'B · condition only', B.end + ' behind',
+        breakeven ? 'Frozen. ' + mm(d.mins) + ' a day exactly covers the day — so the ' + d.back +
+                    ' sits there untouched, forever. Holding is not enough on its own.'
+                  : (B.end > d.back ? 'The gap reopens the day it lifts.' : 'Falling, because the day already has room.'), B.kinds);
+    tot('b', 'C · condition + ' + d.extra + ' min', C.end + ' behind',
+        C.end <= 0 ? 'Clear. ' + mm(d.mins + d.extra) + ' a day, and the streak means what it says again.'
+                   : 'Coming down at ' + Math.abs(d.due - d.susPlus) + ' a day on ' + mm(d.mins + d.extra) + '.', C.kinds);
+
+    $('#conditions-punch').innerHTML =
+      'Same fortnight. Column A ends <b>' + A.end + '</b> behind, B <b>' + B.end + '</b>, C <b>' + C.end +
+      '</b>. The difference between B and C is <b>' + d.extra + ' minutes a day</b>. ' +
+      '<b>Not discipline, not a smaller collection, not a second job — six minutes.</b> ' +
+      'And B is the one worth staring at: a condition alone freezes the debt but never repays it. ' +
+      'Holding stops things getting worse. Only the extra minutes make them better.';
+
+    var perDay = Math.max(0, d.due - d.skim);
+    $('#conditions-honest').innerHTML =
+      '<b>Where the skim leads:</b> ' + d.skim + ' cards is ' + mm(d.skim / d.perMin) + ' — you are not ' +
+      'running out of time, you are stopping at ' + mm(d.skim / d.perMin) + '. The backlog grows ' + perDay +
+      ' a day, about <b>' + (d.back + perDay * 42) + ' cards by October</b>, which is ' +
+      mm((d.back + perDay * 42) / d.perMin) + ' of work you are storing up to avoid ' +
+      Math.round(d.cost - d.skim / d.perMin) + ' minutes today.';
+
+    /* ── options, ordered by what the gate found ── */
+    var O = $('#conditions-opts'); O.innerHTML = '';
+    [
+      { h: 'The move', b: 'Add ' + d.extra + ' minutes', pick: payable,
+        s: 'Not a new system, not a reset — ' + mm(d.mins + d.extra) + ' instead of ' + mm(d.mins) +
+           '. The backlog is ' + mm(d.backMin) + ' and it clears in ' +
+           (d.susPlus > d.due ? Math.ceil(d.back / (d.susPlus - d.due)) + ' days' : 'no time at this pace') +
+           '. Then hold at ' + mm(d.cost) + ' a day, which you already know you can do.',
+        cost: payable ? 'the whole fix' : 'blocked — see below' },
+      { h: 'If the day were short', b: 'Cut the load', pick: !payable,
+        s: 'Only if the due count genuinely outruns the minutes: new cards to zero, or shorter cards. ' +
+           'At ' + d.sec + 's a card and ' + mm(d.mins) + ' a day, that is not your situation — which is ' +
+           'why I was wrong to lead with it last time.',
+        cost: payable ? 'not your problem' : 'do this first' },
+      { h: 'Or', b: 'Reset, on the record', pick: false,
+        s: 'Bankrupt the backlog with a date and a reason — the Ledger move applied to a habit. ' +
+           'Hard to justify against ' + mm(d.backMin) + ' of work, but it stays on the table, and choosing ' +
+           'it deliberately still beats skimming past it for another month.',
+        cost: 'streak → 0, honestly' }
+    ].forEach(function (o) {
+      var n = el('div', 'opt' + (o.pick ? ' pick' : ''));
+      n.appendChild(el('div', 'h', o.h));
+      n.appendChild(el('b', null, o.b));
+      n.appendChild(el('span', null, o.s));
+      n.appendChild(el('div', 'cost', o.cost));
+      O.appendChild(n);
+    });
+  }
+
+  ['#conditions-r-due', '#conditions-r-sec', '#conditions-r-mins', '#conditions-r-extra', '#conditions-r-skim', '#conditions-r-hold', '#conditions-r-back'].forEach(function (s2) {
+    $(s2).addEventListener('input', paint);
+  });
+  paint();
+})();
+
+</script>
+
+<!-- ══ panel: archive — from Archive.html, retargeted ══ -->
+<script>
+
+(function () {
+  var P = window.PlanV2, D = window.PLAN_V2, esc = P.esc;
+  var H = [];
+
+  /* The list is sitemap.js's, not ours. It used to be a hardcoded array here,
+     and it had already drifted: Reference.dc.html was marked archived in the
+     sitemap and simply absent from this page, so the one document the archive
+     exists to keep readable could only be reached by typing its URL. A page
+     that silently omits part of the archive is worse than no archive.
+
+     If the sitemap has not loaded, say so rather than rendering an empty
+     archive that looks like an archive with nothing in it. */
+  var SM = window.SITEMAP || null;
+  var DOCS = (SM && SM.archivedPages) ? SM.archivedPages() : null;
+
+  H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+  H.push('<div class="pv-kick">Superseded ' + esc(P.fmtDate(D.recalibrated)) + '</div>');
+  H.push('<h1 class="pv-h1">Archive</h1>');
+  H.push('<p class="pv-lede">The v1 documents, intact. Nothing here has been edited or deleted — ' +
+    'a plan you can no longer read is a plan you cannot learn from. But nothing here is current either.</p>');
+
+  H.push('<div class="pv-rule pv-kill"><b>None of these is the live plan.</b> ' +
+    'They describe assumptions that were tested and did not hold. The current plan is ' +
+    '<a href="Plan.html"><b>The Plan</b></a>.</div>');
+
+  if (!DOCS) {
+    H.push('<div class="pv-rule pv-kill"><b>The page index did not load.</b> ' +
+      'The archived documents are still there \u2014 this page could not read the list. ' +
+      'Reload, and if it persists the file to look at is <b>sitemap.js</b>.</div>');
+  }
+  (DOCS || []).forEach(function (d) {
+    H.push('<div class="pv-card acc" style="border-left-color:' + d.color + '">');
+    H.push('<div class="pv-row"><span class="pv-lane-t pv-grow">' + esc(d.name) + '</span>' +
+      '<span class="pv-chip c-dead">archived</span></div>');
+    H.push('<div class="pv-ph-n" style="margin-top:4px">' + esc(d.meta) + '</div>');
+    H.push('<div class="pv-it-d" style="margin-top:9px"><b>What it was.</b> ' + esc(d.was) + '</div>');
+    H.push('<div class="pv-it-d" style="margin-top:7px"><b>Why it is archived.</b> ' + esc(d.why) + '</div>');
+    H.push('<div class="pv-lane-m" style="margin-top:11px">' +
+      '<a href="' + esc(d.href) + '" style="color:' + d.color + '">open the archived page →</a>' +
+      '<a href="' + esc(d.now) + '" style="color:var(--ok)">what replaced it →</a></div>');
+    H.push('</div>');
+  });
+
+  /* The retired claims, so the archive says what was wrong, not just
+     that something was. This is the part that makes an archive useful
+     six months later. */
+  H.push('<h2 class="pv-h2">What v1 got wrong</h2>');
+  H.push('<div class="pv-sub">The specific claims that were retired</div>');
+  H.push('<div class="pv-card">');
+  D.corrections.forEach(function (c) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t" style="text-decoration:line-through;color:var(--muted)">' + esc(c.was) + '</span>' +
+      '<span class="pv-chip c-' + esc(c.status) + '">' + esc(c.status) + '</span></div>' +
+      '<div class="pv-it-d">' + esc(c.fix) + '</div></div></div>');
+  });
+  H.push('</div>');
+
+  H.push('<h2 class="pv-h2">Also still here</h2>');
+  H.push('<p class="pv-p">These were never part of the plan documents and are unaffected by the recalibration — ' +
+    'they keep working as they always did.</p>');
+  H.push('<p class="pv-small">' +
+    '<a href="Ledger.html">The Ledger</a> · ' +
+    '<a href="Day Budget.html">The Day Budget</a> · ' +
+    '<a href="Conditions.html">Conditions</a> · ' +
+    '<a href="Network Map.dc.html">Network Map</a> · ' +
+    '<a href="Conference Radar.dc.html">Conference Radar</a></p>');
+
+  H.push('<p class="pv-foot">Archived pages still carry the drawer and still sync. ' +
+    'If you want one back in circulation, the honest move is to fold what still applies into ' +
+    '<a href="Settings.html"><b>a recalibration</b></a> rather than run two plans at once — ' +
+    'which is exactly how the five-track and four-track portfolios drifted apart in the first place.</p>');
+
+  document.getElementById('panel-archive').innerHTML = H.join('');
+})();
+
+</script>
+
+<script>
+(function () {
+  var want = (location.hash || '').replace('#', '');
+  if (window.__setShow) window.__setShow(want || 'recalibrate');
 })();
 </script>
 </body>

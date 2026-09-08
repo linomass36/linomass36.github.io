@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Money · CT Hub</title>
+<link rel="stylesheet" href="./hub.css">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./plan-v2.css">
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+<script src="./sitemap.js"></script>
+<script src="./day.js"></script>
+<style>
+/* ── the folded panels' own stylesheets, scoped ────────────────────────────
+   Ledger and Day Budget each shipped a full page stylesheet, and they collide
+   on ten class names — kicker, lede, top, punch, mark, good, n, s, v, h —
+   plus bare body/main/section/footer rules. Dropped into one document as
+   written they would silently restyle each other, which is the kind of bug
+   you find weeks later and cannot explain.
+
+   So every selector is prefixed with its panel. The palette blocks (:root and
+   the dark-mode :root) are dropped rather than scoped: hub.css owns the theme
+   now, and keeping two more copies of a warm-paper palette is exactly the
+   drift this whole version is undoing. html/body rules go for the same reason.
+
+   Every DOM id is namespaced too — `punch` existed in both markups — including
+   the two the scripts create at runtime by assigning .id, which an attribute
+   scan does not see. */
+#panel-targets * { box-sizing: border-box;}
+#panel-targets [hidden] { display: none !important;}
+#panel-targets a { color: inherit;}
+#panel-targets button, #panel-targets input { font: inherit; color: inherit;}
+#panel-targets :focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px;}
+#panel-targets .top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 68px 13px 20px; border-bottom: 1px solid var(--rule);}
+#panel-targets .mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust);}
+#panel-targets .top a { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-decoration: none; margin-left: auto;}
+#panel-targets .top a:hover { color: var(--rust);}
+#panel-targets main { max-width: 880px; margin: 0 auto; padding: 30px 20px 90px;}
+#panel-targets .kicker { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust);}
+#panel-targets h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 6vw, 44px); line-height: 1.06; letter-spacing: -.018em; margin: 10px 0 0; text-wrap: balance;}
+#panel-targets .lede { margin: 12px 0 0; max-width: 60ch; font-family: var(--serif); font-style: italic; font-size: 16.5px; line-height: 1.55; color: var(--mid);}
+#panel-targets section { margin-top: 36px;}
+#panel-targets h2 { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); margin: 0 0 12px;}
+#panel-targets .target { padding: 22px 24px; background: var(--card); border: 1px solid var(--owed-ln); border-left: 3px solid var(--owed); border-radius: 14px; box-shadow: var(--shadow);}
+#panel-targets .target .name { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--owed);}
+#panel-targets .target .verdict { margin-top: 10px; font-family: var(--serif); font-size: clamp(23px, 4.4vw, 30px); font-weight: 500; line-height: 1.2; text-wrap: balance;}
+#panel-targets .target .verdict em { font-style: normal; color: var(--owed);}
+#panel-targets .working { margin-top: 18px; border-top: 1px solid var(--rule);}
+#panel-targets .wrow { display: flex; align-items: baseline; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--rule); flex-wrap: wrap;}
+#panel-targets .wrow .k { font-size: 14px; color: var(--mid); min-width: 190px; flex: 1;}
+#panel-targets .wrow .v { font-family: var(--serif); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.01em;}
+#panel-targets .wrow .m { font-family: var(--mono); font-size: 10.5px; color: var(--faint); width: 100%;}
+#panel-targets .wrow:last-child { border-bottom: 0; padding-bottom: 2px;}
+#panel-targets .wrow.hot .v { color: var(--owed);}
+#panel-targets .wrow.good .v { color: var(--ok);}
+#panel-targets .inputs { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));}
+#panel-targets .fld { padding: 12px 14px; background: var(--card); border: 1px solid var(--rule); border-radius: 11px;}
+#panel-targets .fld label { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-targets .fld input { width: 100%; margin-top: 6px; padding: 4px 0; background: none; border: 0; border-bottom: 1px solid var(--rule); font-family: var(--serif); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums;}
+#panel-targets .fld input:focus { outline: none; border-bottom-color: var(--rust);}
+#panel-targets .fld small { display: block; margin-top: 5px; font-family: var(--mono); font-size: 9.5px; color: var(--faint);}
+#panel-targets .asm { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--card);}
+#panel-targets .asm-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--rule); flex-wrap: wrap;}
+#panel-targets .asm-row:last-child { border-bottom: 0;}
+#panel-targets .asm-row .what { flex: 1; min-width: 150px;}
+#panel-targets .asm-row .what b { display: block; font-size: 14.5px; font-weight: 500;}
+#panel-targets .asm-row .what span { font-size: 12.5px; color: var(--muted);}
+#panel-targets .asm-row .pair { font-family: var(--mono); font-size: 12px; color: var(--mid); white-space: nowrap; font-variant-numeric: tabular-nums;}
+#panel-targets .asm-row .pair s { color: var(--faint);}
+#panel-targets .asm-row .flag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; white-space: nowrap;}
+#panel-targets .asm-row .flag.broke { background: var(--owed-bg); color: var(--owed); border: 1px solid var(--owed-ln);}
+#panel-targets .asm-row .flag.held { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--rule);}
+#panel-targets .punch { margin-top: 14px; padding: 16px 18px; background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 12px; font-family: var(--serif); font-size: 17px; line-height: 1.5; color: var(--ink);}
+#panel-targets .punch b { color: var(--held); font-weight: 600; font-style: normal;}
+#panel-targets .reach { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));}
+#panel-targets .opt { padding: 15px 16px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px;}
+#panel-targets .opt.pick { border-color: var(--ok); border-left: 3px solid var(--ok);}
+#panel-targets .opt .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-targets .opt.pick .h { color: var(--ok);}
+#panel-targets .opt .n { margin-top: 8px; font-family: var(--serif); font-size: 27px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums;}
+#panel-targets .opt .s { margin-top: 7px; font-size: 12.5px; color: var(--mid);}
+#panel-targets .chain { position: relative; padding-left: 22px;}
+#panel-targets .chain::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px; background: var(--rule);}
+#panel-targets .ent { position: relative; padding: 0 0 20px;}
+#panel-targets .ent::before { content: ""; position: absolute; left: -21px; top: 6px; width: 11px; height: 11px; border-radius: 50%; background: var(--ground); border: 2px solid var(--faint);}
+#panel-targets .ent.now::before { border-color: var(--rust); background: var(--rust);}
+#panel-targets .ent.next::before { border-style: dashed;}
+#panel-targets .ent .d { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; color: var(--faint);}
+#panel-targets .ent .n { margin-top: 3px; font-family: var(--serif); font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums;}
+#panel-targets .ent.was .n { color: var(--faint); text-decoration: line-through; text-decoration-thickness: 1px;}
+#panel-targets .ent .why { margin-top: 4px; font-size: 13.5px; color: var(--mid); max-width: 58ch;}
+#panel-targets .act { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 11px 20px; margin-top: 4px; background: var(--ink); color: var(--ground); border: 0; border-radius: 22px; cursor: pointer; font-size: 14.5px; font-weight: 500;}
+#panel-targets .act:hover { filter: brightness(1.15);}
+#panel-targets .act.ghost { background: none; color: var(--mid); border: 1px solid var(--rule);}
+#panel-targets .act.ghost:hover { border-color: var(--rust); color: var(--rust); filter: none;}
+#panel-targets .acts-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;}
+#panel-targets footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--faint);}
+@media (max-width: 560px) {
+  #panel-targets main { padding: 24px 16px 80px;}
+  #panel-targets .wrow .k { min-width: 100%;}
+}
+@media (prefers-reduced-motion: reduce) {
+  #panel-targets *, #panel-targets *::before, #panel-targets *::after { transition: none !important;}
+}
+
+#panel-daybudget * { box-sizing: border-box;}
+#panel-daybudget [hidden] { display: none !important;}
+#panel-daybudget a { color: inherit;}
+#panel-daybudget button, #panel-daybudget input { font: inherit; color: inherit;}
+#panel-daybudget :focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px;}
+#panel-daybudget .top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 13px 68px 13px 20px; border-bottom: 1px solid var(--rule);}
+#panel-daybudget .mark { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--rust);}
+#panel-daybudget .top a { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-decoration: none; margin-left: auto;}
+#panel-daybudget .top a:hover { color: var(--rust);}
+#panel-daybudget main { max-width: 900px; margin: 0 auto; padding: 30px 20px 90px;}
+#panel-daybudget .kicker { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust);}
+#panel-daybudget h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 6vw, 44px); line-height: 1.06; letter-spacing: -.018em; margin: 10px 0 0; text-wrap: balance;}
+#panel-daybudget .lede { margin: 14px 0 0; max-width: 62ch; font-family: var(--serif); font-style: italic; font-size: 16.5px; line-height: 1.55; color: var(--mid);}
+#panel-daybudget section { margin-top: 40px;}
+#panel-daybudget h2 { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--rust); margin: 0 0 14px;}
+#panel-daybudget h2 .aside { text-transform: none; letter-spacing: .03em; color: var(--faint); font-weight: 400;}
+#panel-daybudget p { max-width: 64ch;}
+#panel-daybudget .daybar { display: flex; height: 42px; border-radius: 10px; overflow: hidden; border: 1px solid var(--rule);}
+#panel-daybudget .daybar i { display: block; height: 100%; position: relative;}
+#panel-daybudget .daybar i.s { background: var(--sleep);}
+#panel-daybudget .daybar i.j { background: var(--job);}
+#panel-daybudget .daybar i.f { background: var(--fixed);}
+#panel-daybudget .daybar i.free { background: repeating-linear-gradient(135deg, var(--ok-bg), var(--ok-bg) 6px, transparent 6px, transparent 12px);}
+#panel-daybudget .daykey { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-family: var(--mono); font-size: 10px; color: var(--muted);}
+#panel-daybudget .daykey span { display: inline-flex; align-items: center; gap: 6px;}
+#panel-daybudget .daykey i { width: 9px; height: 9px; border-radius: 2px; display: block;}
+#panel-daybudget .dials { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(146px, 1fr)); margin-top: 16px;}
+#panel-daybudget .dial { padding: 11px 13px; background: var(--card); border: 1px solid var(--rule); border-radius: 11px;}
+#panel-daybudget .dial label { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);}
+#panel-daybudget .dial .v { margin-top: 4px; font-family: var(--serif); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums;}
+#panel-daybudget .dial input[type=range] { width: 100%; margin-top: 3px; accent-color: var(--rust);}
+#panel-daybudget .bill { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--card);}
+#panel-daybudget .brow { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--rule); flex-wrap: wrap;}
+#panel-daybudget .brow:last-child { border-bottom: 0;}
+#panel-daybudget .brow.off { opacity: .45;}
+#panel-daybudget .brow .tog { flex: none; width: 34px; height: 20px; border-radius: 20px; background: var(--ok); border: 0; cursor: pointer; position: relative; padding: 0;}
+#panel-daybudget .brow .tog::after { content: ""; position: absolute; top: 2px; left: 16px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .16s;}
+#panel-daybudget .brow.off .tog { background: var(--held);}
+#panel-daybudget .brow.off .tog::after { left: 2px;}
+#panel-daybudget .brow .nm { flex: 1; min-width: 130px; font-size: 14.5px;}
+#panel-daybudget .brow .nm small { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--faint); margin-top: 2px;}
+#panel-daybudget .brow .prov { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; white-space: nowrap;}
+#panel-daybudget .prov.measured { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-ln);}
+#panel-daybudget .prov.estimate { background: var(--held-bg); color: var(--held); border: 1px solid var(--held-ln);}
+#panel-daybudget .prov.guess { background: var(--owed-bg); color: var(--owed); border: 1px solid var(--owed-ln);}
+#panel-daybudget .brow .blk { font-family: var(--mono); font-size: 9.5px; color: var(--faint); width: 58px;}
+#panel-daybudget .brow .mins { width: 62px; text-align: right; font-family: var(--serif); font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; background: none; border: 0; border-bottom: 1px solid var(--rule); padding: 2px 0;}
+#panel-daybudget .brow .mins:focus { outline: none; border-bottom-color: var(--rust);}
+#panel-daybudget .brow .unit { font-family: var(--mono); font-size: 10px; color: var(--faint);}
+#panel-daybudget .verdicts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));}
+#panel-daybudget .vd { padding: 20px 22px; border-radius: 12px; border: 1px solid var(--rule); border-left: 3px solid var(--faint); background: var(--card);}
+#panel-daybudget .vd.good { border-color: var(--ok-ln); border-left-color: var(--ok);}
+#panel-daybudget .vd.bad { border-color: var(--owed-ln); border-left-color: var(--owed);}
+#panel-daybudget .vd .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);}
+#panel-daybudget .vd .n { margin-top: 9px; font-family: var(--serif); font-size: clamp(26px, 5vw, 34px); font-weight: 500; line-height: 1.05;}
+#panel-daybudget .vd.good .n { color: var(--ok);}
+#panel-daybudget .vd.bad .n { color: var(--owed);}
+#panel-daybudget .vd .s { margin-top: 10px; font-size: 13.5px; color: var(--mid); line-height: 1.5;}
+#panel-daybudget .vd .meter { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--rule); margin-top: 13px;}
+#panel-daybudget .vd .meter i { display: block; height: 100%;}
+#panel-daybudget .punch { margin-top: 16px; padding: 18px 20px; background: var(--held-bg); border: 1px solid var(--held-ln); border-radius: 12px; font-family: var(--serif); font-size: 17.5px; line-height: 1.5;}
+#panel-daybudget .punch b { color: var(--held); font-weight: 600;}
+#panel-daybudget .blocks { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));}
+#panel-daybudget .blk-card { padding: 15px 17px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px;}
+#panel-daybudget .blk-card .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--rust);}
+#panel-daybudget .blk-card .t { margin-top: 7px; font-family: var(--serif); font-size: 23px; font-weight: 500; font-variant-numeric: tabular-nums;}
+#panel-daybudget .blk-card ul { margin: 9px 0 0; padding-left: 16px; font-size: 13px; color: var(--mid); line-height: 1.65;}
+#panel-daybudget .blk-card .when { margin-top: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--faint);}
+#panel-daybudget .blk-card.empty { opacity: .5;}
+#panel-daybudget .mq { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--card);}
+#panel-daybudget .mq-row { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-bottom: 1px solid var(--rule); flex-wrap: wrap;}
+#panel-daybudget .mq-row:last-child { border-bottom: 0;}
+#panel-daybudget .mq-row .rank { font-family: var(--mono); font-size: 10px; color: var(--faint); width: 20px;}
+#panel-daybudget .mq-row .nm { flex: 1; min-width: 120px; font-size: 14px;}
+#panel-daybudget .mq-row .sw { font-family: var(--mono); font-size: 11px; color: var(--owed); white-space: nowrap;}
+#panel-daybudget .mq-row .sw.lo { color: var(--faint);}
+#panel-daybudget .note { margin-top: 16px; padding: 15px 17px; border: 1px dashed var(--rule); border-radius: 11px; font-size: 13.5px; color: var(--mid); max-width: none; line-height: 1.6;}
+#panel-daybudget .note b { color: var(--ink);}
+#panel-daybudget footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--faint);}
+@media (max-width: 560px) {
+  #panel-daybudget main { padding: 24px 16px 80px;}
+  #panel-daybudget .brow .blk { display: none;}
+}
+@media (prefers-reduced-motion: reduce) {
+  #panel-daybudget *, #panel-daybudget *::before, #panel-daybudget *::after { transition: none !important;}
+}
+</style>
+</head>
+<body class="hub">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MONEY — the destination, v5.
+
+     Targets, Debt and the Day Budget are folded here. Net worth is NOT: the
+     Vault is a React page with chart maths and locale-sensitive number entry,
+     and fusing React into a vanilla document is the risk Body and Study were
+     made two-level to avoid. It stays its own file and arrives as a tab that
+     navigates, exactly like the Plan's write-up.
+
+     Three panels in, one panel out. The tab bar does not care which is which,
+     which is the point of routing through the destination model rather than
+     through filenames.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<header class="hub-top">
+  <div class="hub-top-in">
+    <span class="hub-mark">CT Hub</span>
+    <span class="hub-dateline" id="dateline"></span>
+    <span class="hub-sp"></span>
+  </div>
+</header>
+
+<main class="hub-page" style="position:relative">
+  <h1 class="hub-h1">Money</h1>
+  <div class="hub-marginal hub-plate thorax" data-plate="matejko-rejtan matejko-grunwald" aria-hidden="true"></div>
+
+  <div class="hub-tabs" role="tablist" id="tabs"></div>
+
+  <div id="panel-targets"   role="tabpanel"><header class="top">
+  <span class="mark">CT Hub</span>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">The Ledger</span>
+  <a href="Standing.html">← the standing</a>
+</header>
+
+<main>
+
+  <div class="kicker">The Ledger</div>
+  <h1>What you are aiming at, and whether it is still true.</h1>
+  <p class="lede">A target you revised on purpose is a decision. A target you stopped
+  looking at is a rut. This page exists so that the first one is easier than the second.</p>
+
+  
+  <section>
+    <h2>Open target</h2>
+    <div class="target">
+      <div class="name">Summer earnings · set 1 June · closes 30 September</div>
+      <div class="verdict" id="targets-verdict">—</div>
+      <div class="working" id="targets-working"></div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>What the arithmetic is standing on <span style="text-transform:none;letter-spacing:.04em;color:var(--faint);font-weight:400">— edit any of these</span></h2>
+    <div class="inputs">
+      <div class="fld">
+        <label for="targets-i-target">Target</label>
+        <input id="targets-i-target" type="number" value="20000" step="500" inputmode="numeric">
+        <small>PLN, by 30 Sept</small>
+      </div>
+      <div class="fld">
+        <label for="targets-i-earned">Earned so far</label>
+        <input id="targets-i-earned" type="number" value="8300" step="100" inputmode="numeric">
+        <small>PLN, 1 Jun – today</small>
+      </div>
+      <div class="fld">
+        <label for="targets-i-weeks">Weeks left</label>
+        <input id="targets-i-weeks" type="number" value="6" step="1" inputmode="numeric">
+        <small>to 30 September</small>
+      </div>
+      <div class="fld">
+        <label for="targets-i-hours">Hours / week</label>
+        <input id="targets-i-hours" type="number" value="25" step="1" inputmode="numeric">
+        <small>what you actually work</small>
+      </div>
+      <div class="fld">
+        <label for="targets-i-rate">Rate</label>
+        <input id="targets-i-rate" type="number" value="30" step="1" inputmode="numeric">
+        <small>PLN per hour, net</small>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>What the original target stood on</h2>
+    <div class="asm" id="targets-asm"></div>
+    <div class="punch" id="targets-punch"></div>
+  </section>
+
+  
+  <section>
+    <h2>What is reachable from here</h2>
+    <div class="reach" id="targets-reach"></div>
+    <div class="acts-row">
+      <button class="act" id="targets-do-revise">Revise the target to the honest number</button>
+      <button class="act ghost" id="targets-do-hold">Keep it and accept the hours</button>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>The record</h2>
+    <div class="chain" id="targets-chain"></div>
+    <p style="font-size:13.5px;color:var(--mid);max-width:60ch;margin:0">
+      Nothing is deleted here. The chain is the point: it is how you tell a target
+      you corrected once, with a reason, from one you have quietly walked down
+      four times in a summer.
+    </p>
+  </section>
+
+  <footer>The Ledger · goal-revision prototype · assumptions are re-checked, not just progress</footer>
+
+</main></div>
+  <div id="panel-debt"      class="pv" role="tabpanel" hidden></div>
+  <div id="panel-daybudget" role="tabpanel" hidden><header class="top">
+  <span class="mark">CT Hub</span>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">The Day Budget</span>
+  <a href="Standing.html">← the standing</a>
+</header>
+
+<main>
+
+  <div class="kicker">The Day Budget</div>
+  <h1>What the whole hub costs, and which currency you are short of.</h1>
+  <p class="lede">Anki settled its own argument the moment it was priced: sixty cards is twenty
+  minutes. This prices the other nine and sums them against the day that actually exists — and
+  the answer turned out not to be the one I expected.</p>
+
+  
+  <section>
+    <h2>The day you actually have</h2>
+    <div class="daybar" id="daybudget-daybar"></div>
+    <div class="daykey">
+      <span><i style="background:var(--sleep)"></i> sleep</span>
+      <span><i style="background:var(--job)"></i> the job</span>
+      <span><i style="background:var(--fixed)"></i> meals, transit, admin</span>
+      <span><i style="background:var(--ok);opacity:.5"></i> free</span>
+    </div>
+    <div class="dials">
+      <div class="dial">
+        <label for="daybudget-r-sleep">Sleep</label>
+        <div class="v"><span id="daybudget-v-sleep">7.5</span> h</div>
+        <input id="daybudget-r-sleep" type="range" min="4" max="11" step="0.5" value="7.5">
+      </div>
+      <div class="dial">
+        <label for="daybudget-r-job">The job</label>
+        <div class="v"><span id="daybudget-v-job">25</span> h/wk</div>
+        <input id="daybudget-r-job" type="range" min="0" max="70" value="25">
+      </div>
+      <div class="dial">
+        <label for="daybudget-r-fixed">Meals, transit, admin</label>
+        <div class="v"><span id="daybudget-v-fixed">2</span> h</div>
+        <input id="daybudget-r-fixed" type="range" min="0" max="6" step="0.5" value="2">
+      </div>
+      <div class="dial">
+        <label for="daybudget-r-starts">Starts you have in you</label>
+        <div class="v"><span id="daybudget-v-starts">3</span></div>
+        <input id="daybudget-r-starts" type="range" min="1" max="12" value="3">
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>The bill <span class="aside">— toggle a system off to hold it, as a condition would</span></h2>
+    <div class="bill" id="daybudget-bill"></div>
+  </section>
+
+  
+  <section>
+    <h2>Two budgets, two answers</h2>
+    <div class="verdicts" id="daybudget-verdicts"></div>
+    <div class="punch" id="daybudget-punch"></div>
+  </section>
+
+  
+  <section>
+    <h2>The same bill, in blocks</h2>
+    <p>If starts are the scarce thing, then the fix is not doing less — it is beginning fewer
+    times. Systems that share a posture and a place can share one start. These four blocks hold
+    every system above.</p>
+    <div class="blocks" id="daybudget-blocks"></div>
+  </section>
+
+  
+  <section>
+    <h2>Which stopwatch to run first</h2>
+    <p>Only one figure on this page was measured — the twenty minutes you gave me. Everything
+    else is my estimate or my guess, and a budget built on guesses is exactly the failure the
+    Ledger exists to catch. So the page ranks its own uncertainty: these are the systems whose
+    real cost would move the verdict most.</p>
+    <div class="mq" id="daybudget-mq"></div>
+    <div class="note" id="daybudget-conf"></div>
+  </section>
+
+  <footer>The Day Budget · minutes and starts · only one number here has been measured</footer>
+
+</main></div>
+  <div id="panel-networth"  role="tabpanel" hidden></div>
+</main>
+
+<script>
+/* The tab bar. Same contract as the Plan's: the panel is in the hash, so a
+   tab is linkable and the folded pages' stubs can point straight at it. */
+(function () {
+  'use strict';
+  var PANELS = [
+    ['targets',   'Targets'],
+    ['debt',      'Debt'],
+    ['daybudget', 'Day budget'],
+    ['networth',  'Net worth']
+  ];
+  var KNOWN = {}; PANELS.forEach(function (p) { KNOWN[p[0]] = 1; });
+  var bar = document.getElementById('tabs');
+
+  function show(id) {
+    if (!KNOWN[id]) id = 'targets';
+    PANELS.forEach(function (p) {
+      var el = document.getElementById('panel-' + p[0]);
+      if (el) el.hidden = p[0] !== id;
+      var t = document.getElementById('tab-' + p[0]);
+      if (t) t.setAttribute('aria-selected', String(p[0] === id));
+    });
+    try { history.replaceState(null, '', '#' + id); } catch (e) { location.hash = id; }
+  }
+  PANELS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.className = 'hub-tab'; b.id = 'tab-' + p[0]; b.type = 'button';
+    b.setAttribute('role', 'tab'); b.textContent = p[1];
+    b.addEventListener('click', function () { show(p[0]); });
+    bar.appendChild(b);
+  });
+  window.addEventListener('hashchange', function () {
+    show((location.hash || '').replace('#', ''));
+  });
+
+  var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var d = new Date();
+  document.getElementById('dateline').textContent =
+    DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  window.__moneyShow = show;
+})();
+</script>
+
+<!-- ══ panel: targets — from Ledger.html, ids and CSS namespaced ══ -->
+<script>
+
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function pln(n) { return Math.round(n).toLocaleString('en-US').replace(/,/g, ' ') + ' zł'; }
+  function h1dp(n) { return (Math.round(n * 10) / 10).toString(); }
+
+  /* The original target's stated assumptions, from 1 June. These are
+     what makes the diagnosis possible: without them the only story
+     available is "you underperformed". */
+  var ORIGINAL = { low: 25000, high: 50000, rate: 30, hours: 65, weeks: 16 };
+  ORIGINAL.plan = ORIGINAL.weeks * ORIGINAL.hours * ORIGINAL.rate;   // 32 000 zł
+
+  var CHAIN = [
+    { date: '1 June',   n: '25 000 – 50 000 zł', why: 'Opening assumption, before a rate was known or a contract signed.', cls: 'was' },
+    { date: '20 August', n: '20 000 zł', why: 'First correction. Still assumed the hours would somehow arrive, so it inherited the error rather than fixing it.', cls: 'was' }
+  ];
+
+  function readInputs() {
+    return {
+      target: +$('#targets-i-target').value || 0,
+      earned: +$('#targets-i-earned').value || 0,
+      weeks:  Math.max(0, +$('#targets-i-weeks').value || 0),
+      hours:  Math.max(0, +$('#targets-i-hours').value || 0),
+      rate:   Math.max(0, +$('#targets-i-rate').value || 0)
+    };
+  }
+
+  function compute() {
+    var v = readInputs();
+    var perWeek   = v.hours * v.rate;
+    var projected = v.earned + v.weeks * perWeek;
+    var shortfall = v.target - projected;
+    var capacity  = v.weeks * v.rate;                       // PLN per weekly-hour remaining
+    var needHours = capacity > 0 ? (v.target - v.earned) / capacity : Infinity;
+    var extra     = needHours - v.hours;
+    return { v: v, perWeek: perWeek, projected: projected, shortfall: shortfall, needHours: needHours, extra: extra };
+  }
+
+  function paint() {
+    var c = compute(), v = c.v;
+
+    // ── the verdict ──
+    var reach;
+    if (c.needHours <= v.hours + 2)        reach = 'on track';
+    else if (c.needHours <= 45)            reach = 'a stretch';
+    else                                   reach = 'out of reach';
+
+    var vd = $('#targets-verdict');
+    if (reach === 'out of reach') {
+      vd.innerHTML = pln(v.target) + ' by 30 September is <em>out of reach</em> — it needs ' +
+        h1dp(c.needHours) + ' h a week, and you work ' + v.hours + '.';
+    } else if (reach === 'a stretch') {
+      vd.innerHTML = pln(v.target) + ' is <em>a stretch</em> — ' + h1dp(c.needHours) +
+        ' h a week, up from ' + v.hours + '.';
+    } else {
+      vd.innerHTML = pln(v.target) + ' is <em style="color:var(--ok)">on track</em> at ' + v.hours + ' h a week.';
+    }
+
+    // ── the working ──
+    var W = $('#targets-working'); W.innerHTML = '';
+    function row(k, val, note, cls) {
+      var r = el('div', 'wrow' + (cls ? ' ' + cls : ''));
+      r.appendChild(el('span', 'k', k));
+      r.appendChild(el('span', 'v', val));
+      if (note) r.appendChild(el('span', 'm', note));
+      W.appendChild(r);
+    }
+    row('You earn, per week', pln(c.perWeek), v.hours + ' h × ' + v.rate + ' zł');
+    row('So the summer lands at', pln(c.projected),
+        pln(v.earned) + ' earned + ' + v.weeks + ' weeks × ' + pln(c.perWeek),
+        c.shortfall > 0 ? '' : 'good');
+    if (c.shortfall > 0) {
+      row('Short of the target by', pln(c.shortfall), 'which is ' + Math.round(c.shortfall / v.rate) + ' more hours of work', 'hot');
+      row('So the target needs', h1dp(c.needHours) + ' h / week',
+          pln(v.target - v.earned) + ' ÷ (' + v.weeks + ' weeks × ' + v.rate + ' zł) — that is ' +
+          h1dp(c.extra) + ' h a week on top of what you do now', 'hot');
+    }
+
+    // ── assumptions ──
+    var A = $('#targets-asm'); A.innerHTML = '';
+    function asmRow(what, sub, was, now, unit) {
+      var broke = Math.abs(now - was) / (was || 1) > 0.15;
+      var r = el('div', 'asm-row');
+      var w = el('div', 'what');
+      w.appendChild(el('b', null, what));
+      w.appendChild(el('span', null, sub));
+      r.appendChild(w);
+      var p = el('span', 'pair');
+      p.innerHTML = '<s>' + was + ' ' + unit + '</s> &nbsp;→&nbsp; <b>' + now + ' ' + unit + '</b>';
+      r.appendChild(p);
+      var f = el('span', 'flag ' + (broke ? 'broke' : 'held'), broke
+        ? (now < was ? 'off by ' + Math.round((1 - now / was) * 100) + '%' : 'better than assumed')
+        : 'held');
+      r.appendChild(f);
+      A.appendChild(r);
+      return broke ? (was / (now || 1)) : 1;
+    }
+    var mRate  = asmRow('The rate', 'what an hour actually pays', ORIGINAL.rate, v.rate, 'zł/h');
+    var mHours = asmRow('The hours', '13 h days in the USA — the whole plan rested here', ORIGINAL.hours, v.hours, 'h/wk');
+    asmRow('The window', 'weeks of summer to work with', ORIGINAL.weeks, v.weeks + Math.round(v.earned / (c.perWeek || 1)), 'wks');
+
+    var total = mRate * mHours;
+    var pRate  = Math.round((1 - v.rate / ORIGINAL.rate) * 100);
+    var pHours = Math.round((1 - v.hours / ORIGINAL.hours) * 100);
+    $('#targets-punch').innerHTML =
+      'The rate came in within ' + Math.abs(pRate) + '% of what June assumed — <b>that assumption held</b>. ' +
+      'The hours came in <b>' + pHours + '% under</b>: 65 a week expected, ' + v.hours + ' actual. ' +
+      'That one number is ' + (Math.round(ORIGINAL.hours / (v.hours || 1) * 100) / 100) + '×, which is ' +
+      'essentially the whole ' + (Math.round(ORIGINAL.plan / c.projected * 100) / 100) + '× gap between the ' +
+      'June plan (' + pln(ORIGINAL.plan) + ') and where the summer now lands (' + pln(c.projected) + '). ' +
+      '<b>Nothing here was missed by effort. One assumption broke — the 13-hour days — and every ' +
+      'number downstream of it was wrong from the day it broke.</b> ' +
+      'A hub can watch an assumption for you. You cannot be expected to feel one.';
+
+    // ── what is reachable ──
+    var R = $('#targets-reach'); R.innerHTML = '';
+    [[v.hours, 'at what you work now'], [v.hours + 8, 'one extra day a week'], [v.hours + 15, 'a hard push']].forEach(function (o, i) {
+      var got = v.earned + v.weeks * o[0] * v.rate;
+      var d = el('div', 'opt' + (i === 1 ? ' pick' : ''));
+      d.appendChild(el('div', 'h', o[0] + ' h / week'));
+      d.appendChild(el('div', 'n', pln(got)));
+      d.appendChild(el('div', 's', o[1] + (i === 1 ? ' — the honest number' : '')));
+      R.appendChild(d);
+    });
+
+    paintChain();
+  }
+
+  function paintChain() {
+    var c = compute(), v = c.v;
+    var honest = v.earned + v.weeks * (v.hours + 8) * v.rate;
+    var C = $('#targets-chain'); C.innerHTML = '';
+    CHAIN.forEach(function (e) {
+      var d = el('div', 'ent ' + (e.cls || ''));
+      d.appendChild(el('div', 'd', e.date));
+      d.appendChild(el('div', 'n', e.n));
+      d.appendChild(el('div', 'why', e.why));
+      C.appendChild(d);
+    });
+    var now = el('div', 'ent next');
+    now.appendChild(el('div', 'd', 'today · proposed'));
+    now.appendChild(el('div', 'n', pln(Math.round(honest / 500) * 500)));
+    now.appendChild(el('div', 'why',
+      'Second correction, and the first one that fixes the assumption rather than the number: rate re-measured at ' +
+      v.rate + ' zł/h, hours set to ' + (v.hours + 8) + ' — one extra day a week, not a second job. ' +
+      'Re-checks itself every fortnight.'));
+    C.appendChild(now);
+  }
+
+  ['#targets-i-target', '#targets-i-earned', '#targets-i-weeks', '#targets-i-hours', '#targets-i-rate'].forEach(function (s) {
+    $(s).addEventListener('input', paint);
+  });
+
+  $('#targets-do-revise').addEventListener('click', function () {
+    var c = compute(), v = c.v;
+    var honest = Math.round((v.earned + v.weeks * (v.hours + 8) * v.rate) / 500) * 500;
+    CHAIN.push({ date: 'today', n: pln(honest), why: 'Rate re-measured, hours set to one extra day a week. Re-checks itself every fortnight.', cls: 'now' });
+    $('#targets-i-target').value = honest;
+    this.disabled = true;
+    this.textContent = 'Revised — and the reason is on the record';
+    paint();
+  });
+
+  $('#targets-do-hold').addEventListener('click', function () {
+    var c = compute();
+    var n = document.getElementById('targets-hold-note') || el('div', 'punch');
+    n.id = 'targets-hold-note';
+    n.innerHTML = 'Target kept at <b>' + pln(c.v.target) + '</b>. The hub will hold you to ' +
+      h1dp(c.needHours) + ' h a week and say so every morning — plainly, without turning the ' +
+      'board red. It asks again in a fortnight whether that is still the plan.';
+    this.parentNode.parentNode.appendChild(n);
+    this.disabled = true;
+  });
+
+  paint();
+})();
+
+</script>
+
+<!-- ══ panel: debt — from Debt.html, a plan-v2 renderer ══ -->
+<script>
+
+(function () {
+  var P = window.PlanV2, D = P.plan(), F = D.finance, esc = P.esc, m = P.money;
+  var H = [];
+
+  H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+  H.push('<div class="pv-kick">Finance</div>');
+  H.push('<h1 class="pv-h1">The Debt</h1>');
+  H.push('<p class="pv-lede">Not part of the 2027 plan — every item in Phases 0–2 costs email, time and one plane ticket. ' +
+    'This page exists so the number is known and re-checked, not so it generates drag.</p>');
+
+  /* ── position ────────────────────────────────────────────────── */
+  H.push('<div class="pv-ff" style="background:var(--bad-bg);border-color:var(--bad-ln);border-left-color:var(--bad)">' +
+    '<div class="pv-ff-lab" style="color:var(--bad)">Net worth today</div>' +
+    '<div class="pv-ff-n" style="color:var(--bad)">' + m(F.position.netWorth) + '</div>' +
+    '<div class="pv-ff-d">' + esc(F.position.note) + '</div></div>');
+  H.push('<p class="pv-p">' + esc(F.changes) + '</p>');
+
+  /* ── the break: caps ─────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Why the math no longer closes</h2>');
+  H.push('<div class="pv-sub">Federal borrowing capacity from 1 July 2026</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  F.caps.forEach(function (c) {
+    H.push('<tr class="' + (c.bad ? '' : '') + '"><td><b>' + esc(c.k) + '</b></td><td class="num" style="' +
+      (c.bad ? 'color:var(--bad);font-weight:600' : '') + '">' + esc(c.v) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule pv-kill">' + esc(F.gapNote) + '</div>');
+  H.push('<p class="pv-small"><b>Grandfathering.</b> ' + esc(F.grandfathering) + '</p>');
+
+  /* ── cost model ──────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Cost model</h2>');
+  H.push('<div class="pv-sub">Five years, corrected</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Phase</th><th>Years</th><th>Per year</th><th>Total</th></tr></thead><tbody>');
+  F.costModel.forEach(function (c) {
+    H.push('<tr><td><b>' + esc(c.phase) + '</b></td><td>' + esc(c.years) + '</td><td>' + esc(c.per) +
+      '</td><td class="num"><b>' + m(c.total) + '</b></td></tr>');
+  });
+  H.push('<tr class="hot"><td colspan="3"><b>Total need</b></td><td class="num"><b>' + m(F.costTotal) + '</b></td></tr>');
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule"><b>Correction.</b> ' + esc(F.costCorrection) + '</div>');
+  H.push('<div class="pv-rule"><b>The biggest lever you control.</b> ' + esc(F.livingLever) + '</div>');
+
+  /* ── the locked decision ─────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The financing decision</h2>');
+  H.push('<div class="pv-sub">Locked · ' + esc(P.fmtDate(D.recalibrated)) + '</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Source</th><th>Amount</th><th>Forgivable</th><th>Rate</th><th></th></tr></thead><tbody>');
+  F.sources.forEach(function (s) {
+    H.push('<tr><td><b>' + esc(s.k) + '</b></td><td class="num">' + m(s.amt) + '</td>' +
+      '<td>' + (s.pslf ? '<span class="pv-chip c-ok">yes</span>' : '<span class="pv-chip c-bad">never</span>') + '</td>' +
+      '<td class="num">' + esc(s.rate) + '</td><td>' + esc(s.note) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+
+  H.push('<div class="pv-card acc" style="border-left-color:var(--warn)">' +
+    '<div class="pv-h3" style="margin-top:0">⚠ ' + esc(F.keyMove.t) + '</div>' +
+    '<div class="pv-it-d">' + esc(F.keyMove.d) + '</div>' +
+    '<div class="pv-rule">' + esc(F.keyMove.rule) + '</div></div>');
+
+  H.push('<div class="pv-h3">Before accepting private debt as final</div><ul class="pv-steps">');
+  F.exhaustFirst.forEach(function (x) { H.push('<li>' + esc(x) + '</li>'); });
+  H.push('</ul>');
+  H.push('<p class="pv-small"><b>Funding summer 2027, in order:</b> ' + F.funding2027.map(esc).join(' → ') +
+    '. ' + esc(F.fundingNote) + '</p>');
+
+  /* ── at graduation ───────────────────────────────────────────── */
+  var G = F.atGraduation;
+  H.push('<h2 class="pv-h2">Debt at graduation</h2>');
+  H.push('<div class="pv-sub">Unsubsidised interest accrues from disbursement — nothing is free during deferment</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th></th><th>Borrowed</th><th>Balance, Jun 2031</th></tr></thead><tbody>');
+  H.push('<tr><td><b>Federal</b></td><td class="num">' + m(F.sources[0].amt) + '</td><td class="num">~' + m(G.federal) + '</td></tr>');
+  H.push('<tr><td><b>Private</b></td><td class="num">' + m(F.sources[1].amt) + '</td><td class="num">~' + m(G.private) + '</td></tr>');
+  H.push('<tr class="hot"><td><b>Total</b></td><td class="num"><b>' + m(F.costTotal) + '</b></td><td class="num"><b>~' + m(G.total) + '</b></td></tr>');
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-punch">~' + m(G.interest) + ' of interest accrues before you earn a dollar as a physician.</p>');
+
+  /* ── residency repayment ─────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Residency — the federal half</h2>');
+  H.push('<div class="pv-sub">Income-driven repayment, 2031 – 2038</div>');
+  H.push('<p class="pv-p">' + esc(F.rap.note) + '</p>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Year</th><th>AGI</th><th>Rate</th><th>Payment</th></tr></thead><tbody>');
+  F.rap.rows.forEach(function (r) {
+    H.push('<tr><td><b>' + esc(r.y) + '</b></td><td class="num">' + m(r.agi) + '</td><td class="num">' + esc(r.rate) +
+      '</td><td class="num">' + m(r.pay) + '/mo</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-small">' + esc(F.rap.total) + '</p>');
+  H.push('<div class="pv-rule pv-kill"><b>Bracket cliffs.</b> ' + esc(F.rap.cliff) + '</div>');
+
+  H.push('<div class="pv-h3">Forgiveness timeline</div><ul class="pv-steps">');
+  F.forgiveness.steps.forEach(function (s) { H.push('<li>' + esc(s) + '</li>'); });
+  H.push('</ul>');
+  H.push('<div class="pv-rule pv-kill"><b>The condition.</b> ' + esc(F.forgiveness.condition) + '</div>');
+
+  /* ── private half ────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The private half — the real problem</h2>');
+  H.push('<div class="pv-sub">No forgiveness, ever</div>');
+  H.push('<p class="pv-p">' + esc(F.privateHalf.note) + '</p>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Strategy</th><th>Balance Jul 2038</th><th>Payoff</th><th>Cleared</th></tr></thead><tbody>');
+  F.privateHalf.strategies.forEach(function (s) {
+    H.push('<tr class="' + (s.best ? 'hot' : '') + '"><td><b>' + esc(s.s) + '</b></td><td class="num">' + esc(s.bal) +
+      '</td><td class="num">' + esc(s.payoff) + '</td><td class="num"><b>' + esc(s.clear) + '</b></td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-small">' + esc(F.privateHalf.delta) + '</p>');
+  H.push('<div class="pv-rule"><b>Refinancing.</b> ' + esc(F.privateHalf.refi) + '</div>');
+
+  /* ── scenarios ───────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Scenarios</h2>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th></th><th>Path</th><th>Debt free</th><th>Total paid on ' + m(F.costTotal) + '</th></tr></thead><tbody>');
+  F.scenarios.forEach(function (s) {
+    H.push('<tr class="' + (s.best ? 'hot' : '') + '"><td class="num">' + s.n + '</td><td><b>' + esc(s.path) +
+      '</b></td><td class="num">' + esc(s.free) + '</td><td class="num">' + esc(s.paid) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule">' + esc(F.scenarioNote) + '</div>');
+
+  /* ── rules ───────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The nine rules</h2>');
+  H.push('<div class="pv-card">');
+  F.rules.forEach(function (r, i) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-it-t">' + (i + 1) + '. ' + esc(r) + '</div></div></div>');
+  });
+  H.push('</div>');
+  H.push('<p class="pv-foot">' + esc(F.revisit) + ' The open financing questions are tracked on <a href="Verify.html"><b>Verify</b></a>.</p>');
+
+  document.getElementById('panel-debt').innerHTML = H.join('');
+})();
+
+</script>
+
+<!-- ══ panel: day budget — from Day Budget.html, ids and CSS namespaced ══ -->
+<script>
+
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function hm(min) {
+    min = Math.round(min);
+    if (min < 60) return min + ' min';
+    var h = Math.floor(min / 60), m = min % 60;
+    return h + ' h' + (m ? ' ' + m + ' min' : '');
+  }
+
+  /* Every cost carries where it came from. `measured` is a figure that came
+     from a stopwatch or from you; `estimate` is reasoned from something known;
+     `guess` is exactly that, and is flagged so it can never quietly become a
+     fact the way the 13-hour days did. */
+  var SYSTEMS = [
+    { id:'anki',    name:'Anki',                 min:20, prov:'measured', block:'recall',
+      note:'60 cards at 20 s — the one number you gave me' },
+    { id:'anatomy', name:'Anatomy · closure log', min:20, prov:'estimate', block:'recall',
+      note:'a Core run, from the hub’s own description' },
+    { id:'study',   name:'Study Engine',          min:15, prov:'estimate', block:'recall',
+      note:'errors re-asked on a schedule' },
+    { id:'reading', name:'Reading list',          min:30, prov:'guess',    block:'deep',
+      note:'a paper is 30–90 min; this assumes the short end' },
+    { id:'research',name:'Research plan',         min:30, prov:'guess',    block:'deep',
+      note:'one card moved, not a whole session' },
+    { id:'network', name:'Network touches',       min:10, prov:'guess',    block:'deep',
+      note:'one message, most days' },
+    { id:'grind',   name:'Grind board',           min:45, prov:'estimate', block:'body',
+      note:'5 lifts + runs a week, averaged across seven days' },
+    { id:'record',  name:'Life Log',              min:3,  prov:'estimate', block:'close',
+      note:'one line' },
+    { id:'journal', name:'Journal',               min:10, prov:'estimate', block:'close',
+      note:'one entry' },
+    { id:'weekly',  name:'Weekly review',         min:6,  prov:'estimate', block:'close',
+      note:'45 min once a week, amortised over seven' }
+  ];
+  var BLOCKS = {
+    recall: { name: 'Recall',  when: 'sitting or standing, phone or desk' },
+    deep:   { name: 'Deep',    when: 'one uninterrupted stretch' },
+    body:   { name: 'Body',    when: 'gym or road' },
+    close:  { name: 'Closing', when: 'last thing, five minutes' }
+  };
+  var off = {};
+
+  function budget() {
+    var sleep = +$('#daybudget-r-sleep').value * 60;
+    var job   = +$('#daybudget-r-job').value * 60 / 7;      // a weekly figure, spread over seven days
+    var fixed = +$('#daybudget-r-fixed').value * 60;
+    return { sleep: sleep, job: job, fixed: fixed,
+             free: Math.max(0, 1440 - sleep - job - fixed),
+             starts: +$('#daybudget-r-starts').value };
+  }
+
+  function live() { return SYSTEMS.filter(function (s) { return !off[s.id]; }); }
+
+  function paint() {
+    var b = budget();
+    $('#daybudget-v-sleep').textContent = (+$('#daybudget-r-sleep').value).toFixed(1).replace('.0', '');
+    $('#daybudget-v-job').textContent   = $('#daybudget-r-job').value;
+    $('#daybudget-v-fixed').textContent = (+$('#daybudget-r-fixed').value).toFixed(1).replace('.0', '');
+    $('#daybudget-v-starts').textContent = b.starts;
+
+    // ── the day as one bar ──
+    var bar = $('#daybudget-daybar'); bar.innerHTML = '';
+    [['s', b.sleep, 'sleep'], ['j', b.job, 'the job'], ['f', b.fixed, 'fixed'], ['free', b.free, 'free']]
+      .forEach(function (p) {
+        var i = el('i', p[0]); i.style.width = (p[1] / 1440 * 100) + '%';
+        i.title = p[2] + ' — ' + hm(p[1]); bar.appendChild(i);
+      });
+
+    // ── the bill ──
+    var billNode = $('#daybudget-bill'); billNode.innerHTML = '';
+    SYSTEMS.forEach(function (s) {
+      var r = el('div', 'brow' + (off[s.id] ? ' off' : ''));
+      var t = el('button', 'tog'); t.type = 'button';
+      t.setAttribute('aria-pressed', String(!off[s.id]));
+      t.setAttribute('aria-label', (off[s.id] ? 'Resume ' : 'Hold ') + s.name);
+      t.addEventListener('click', function () { off[s.id] = !off[s.id]; paint(); });
+      r.appendChild(t);
+
+      var nm = el('div', 'nm'); nm.appendChild(document.createTextNode(s.name));
+      nm.appendChild(el('small', null, s.note));
+      r.appendChild(nm);
+      r.appendChild(el('span', 'blk', BLOCKS[s.block].name.toLowerCase()));
+      r.appendChild(el('span', 'prov ' + s.prov, s.prov));
+
+      var inp = document.createElement('input');
+      inp.className = 'mins'; inp.type = 'number'; inp.min = 0; inp.max = 600;
+      inp.value = s.min; inp.setAttribute('aria-label', s.name + ' minutes per day');
+      inp.addEventListener('input', function () {
+        s.min = Math.max(0, +inp.value || 0);
+        if (s.prov !== 'measured') s.prov = 'measured';   // you typed it, so now it is measured
+        paint();
+      });
+      r.appendChild(inp);
+      r.appendChild(el('span', 'unit', 'min/day'));
+      billNode.appendChild(r);
+    });
+
+    // ── the two verdicts ──
+    var L = live();
+    var mins   = L.reduce(function (a, s) { return a + s.min; }, 0);
+    var starts = L.length;
+    var V = $('#daybudget-verdicts'); V.innerHTML = '';
+
+    function verdict(cls, head, n, sub, used, cap, colour) {
+      var v = el('div', 'vd ' + cls);
+      v.appendChild(el('div', 'h', head));
+      v.appendChild(el('div', 'n', n));
+      var s2 = el('div', 's'); s2.innerHTML = sub; v.appendChild(s2);
+      var m = el('div', 'meter'), f = el('i');
+      f.style.width = Math.min(100, used / (cap || 1) * 100) + '%';
+      f.style.background = colour;
+      m.appendChild(f); v.appendChild(m);
+      V.appendChild(v);
+    }
+
+    var minsOk = mins <= b.free;
+    verdict(minsOk ? 'good' : 'bad', 'Budget one · minutes',
+      hm(mins) + ' of ' + hm(b.free),
+      minsOk
+        ? 'The whole hub fits <b>' + (mins ? (b.free / mins).toFixed(1) : '∞') +
+          '×</b> over in the time you have. Minutes are not what you are short of, ' +
+          'and no amount of trimming this column will fix a rut.'
+        : 'Over by <b>' + hm(mins - b.free) + '</b>. Here trimming genuinely is the answer.',
+      mins, b.free, minsOk ? 'var(--ok)' : 'var(--owed)');
+
+    var startsOk = starts <= b.starts;
+    verdict(startsOk ? 'good' : 'bad', 'Budget two · starts',
+      starts + ' of ' + b.starts,
+      startsOk
+        ? 'Every system gets its own beginning and you have beginnings to spare.'
+        : '<b>' + (starts - b.starts) + ' more separate beginnings</b> than you have in you today. ' +
+          'This is the budget that is actually blown, and it does not appear anywhere in the hub.',
+      starts, b.starts, startsOk ? 'var(--ok)' : 'var(--owed)');
+
+    $('#daybudget-punch').innerHTML = minsOk && !startsOk
+      ? 'The hub asks for <b>' + hm(mins) + '</b> out of <b>' + hm(b.free) + '</b> free — it fits ' +
+        (b.free / mins).toFixed(1) + ' times over. And you have still been doing eight minutes of it. ' +
+        '<b>Time was never the constraint. Ten systems is ten separate decisions to begin, and on a ' +
+        'flat day you have about ' + b.starts + '.</b> That is the whole mechanism of a rut, and it is ' +
+        'invisible to every dashboard that counts hours.'
+      : minsOk && startsOk
+        ? 'Both budgets clear: <b>' + hm(mins) + '</b> of <b>' + hm(b.free) + '</b>, in ' + starts +
+          ' starts against ' + b.starts + '. On a day like this the hub can ask for everything.'
+        : 'The minutes are over budget by <b>' + hm(mins - b.free) + '</b>. Hold something, or ' +
+          'accept that the day does not contain the plan.';
+
+    // ── blocks ──
+    var K = $('#daybudget-blocks'); K.innerHTML = '';
+    Object.keys(BLOCKS).forEach(function (k) {
+      var mem = L.filter(function (s) { return s.block === k; });
+      var c = el('div', 'blk-card' + (mem.length ? '' : ' empty'));
+      c.appendChild(el('div', 'h', BLOCKS[k].name + ' · 1 start'));
+      c.appendChild(el('div', 't', mem.length ? hm(mem.reduce(function (a, s) { return a + s.min; }, 0)) : '—'));
+      var ul = el('ul');
+      (mem.length ? mem : [{ name: 'nothing here today' }]).forEach(function (s) {
+        ul.appendChild(el('li', null, s.name));
+      });
+      c.appendChild(ul);
+      c.appendChild(el('div', 'when', BLOCKS[k].when));
+      K.appendChild(c);
+    });
+    var usedBlocks = Object.keys(BLOCKS).filter(function (k) {
+      return L.some(function (s) { return s.block === k; });
+    }).length;
+    var bnote = document.getElementById('daybudget-blocknote') || el('div', 'note');
+    bnote.id = 'daybudget-blocknote';
+    bnote.innerHTML = '<b>' + starts + ' starts become ' + usedBlocks + '.</b> Same minutes, same systems — ' +
+      'the only thing that changed is how many times you have to overcome beginning. ' +
+      (usedBlocks <= b.starts
+        ? 'At ' + usedBlocks + ' blocks this now fits inside the ' + b.starts + ' starts you said you have, ' +
+          'which is the difference between a plan and a wish.'
+        : 'Still ' + (usedBlocks - b.starts) + ' over — hold a block, and the floor day picks the one that survives.');
+    $('#daybudget-blocks').parentNode.appendChild(bnote);
+
+    // ── measurement queue ──
+    var Q = $('#daybudget-mq'); Q.innerHTML = '';
+    var unsure = SYSTEMS.filter(function (s) { return s.prov !== 'measured'; })
+      .map(function (s) { return { s: s, swing: s.min * (s.prov === 'guess' ? 1.0 : 0.4) }; })
+      .sort(function (a, b2) { return b2.swing - a.swing; });
+    if (!unsure.length) {
+      Q.appendChild(el('div', 'mq-row', 'Everything on this page has been measured. The verdict is yours now, not mine.'));
+    } else {
+      unsure.forEach(function (u, i) {
+        var r = el('div', 'mq-row');
+        r.appendChild(el('span', 'rank', String(i + 1)));
+        var nm = el('div', 'nm'); nm.appendChild(document.createTextNode(u.s.name));
+        nm.appendChild(el('small', null, ''));
+        r.appendChild(nm);
+        r.appendChild(el('span', 'prov ' + u.s.prov, u.s.prov));
+        r.appendChild(el('span', 'sw' + (u.swing < 8 ? ' lo' : ''), '±' + Math.round(u.swing) + ' min at stake'));
+        Q.appendChild(r);
+      });
+    }
+
+    var guessMin = SYSTEMS.filter(function (s) { return s.prov === 'guess'; })
+      .reduce(function (a, s) { return a + s.min; }, 0);
+    var measured = SYSTEMS.filter(function (s) { return s.prov === 'measured'; })
+      .reduce(function (a, s) { return a + s.min; }, 0);
+    var total = SYSTEMS.reduce(function (a, s) { return a + s.min; }, 0);
+    $('#daybudget-conf').innerHTML =
+      '<b>How much of this to trust:</b> ' + Math.round(measured / (total || 1) * 100) + '% of the bill is measured, ' +
+      Math.round(guessMin / (total || 1) * 100) + '% is outright guesswork. ' +
+      'Type a real number into any row and it reclassifies itself as measured — which is the only ' +
+      'way this page stops being mine and starts being yours. ' +
+      '<b>The starts verdict, though, does not depend on any of it:</b> ten systems is ten beginnings ' +
+      'whether each takes three minutes or thirty.';
+  }
+
+  ['#daybudget-r-sleep', '#daybudget-r-job', '#daybudget-r-fixed', '#daybudget-r-starts'].forEach(function (s) {
+    $(s).addEventListener('input', paint);
+  });
+  paint();
+})();
+
+</script>
+
+<!-- ══ panel: net worth — a door, because the Vault is React ══ -->
+<script>
+(function () {
+  document.getElementById('panel-networth').innerHTML =
+    '<div class="hub-card"><div class="hub-kicker">The Vault</div>' +
+    '<p class="hub-lede">Snapshots, runway, and the line they make.</p>' +
+    '<p class="hub-p">Net worth keeps its own page: it is built on a different ' +
+    'engine from the three panels here, and rewriting it to fold would risk the ' +
+    'one number on this site you cannot reconstruct from anything else.</p>' +
+    '<p><a class="hub-btn" href="Vault.dc.html">Open the Vault \u2192</a></p></div>';
+})();
+</script>
+
+<script>
+(function () {
+  var want = (location.hash || '').replace('#', '');
+  if (window.__moneyShow) window.__moneyShow(want || 'targets');
+})();
+</script>
+</body>
+</html>

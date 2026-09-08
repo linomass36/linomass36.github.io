@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guide · CT Hub</title>
+<link rel="stylesheet" href="./hub.css">
+<link rel="stylesheet" href="./mobile.css">
+<script src="./sitemap.js"></script>
+<script src="./backup.js"></script>
+<script src="./tour.js"></script>
+<script src="./plates.js"></script>
+<script src="./day.js"></script>
+</head>
+<body class="hub">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     GUIDE — what this is and how to use it.
+
+     Written because the honest answer to "how does this work" used to be
+     "you wrote it, you remember". Thirty-one pages with written rather than
+     descriptive names, no index that said what anything was for, and one
+     guide in the whole site — Network Map's.
+
+     THE LIST OF PLACES IS GENERATED, not typed. It comes from sitemap.js, so
+     a guide that describes a structure the hub no longer has is not possible.
+     That is the same rule the Archive now follows, for the same reason: the
+     two things that go stale silently are lists of pages and descriptions of
+     lists of pages.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<header class="hub-top">
+  <div class="hub-top-in">
+    <span class="hub-mark">CT Hub</span>
+    <span class="hub-dateline" id="dateline"></span>
+    <span class="hub-sp"></span>
+  </div>
+</header>
+
+<main class="hub-page" style="position:relative">
+  <h1 class="hub-h1">The Guide</h1>
+  <p class="hub-lede">What this hub is, where everything lives, and how to get
+    it back if the browser forgets.</p>
+  <div class="hub-marginal hub-plate" data-plate="agnew-clinic vesalius-fabrica" aria-hidden="true"></div>
+
+  <div class="hub-row-btns" style="margin-top:var(--s5)">
+    <button class="hub-btn pri" id="run-tour" type="button">Run the tour</button>
+    <a class="hub-btn" href="Settings.html#recalibrate">Settings</a>
+  </div>
+
+  <div class="hub-kicker">Ten places<span class="end">every page is one of these</span></div>
+  <div class="hub-list" id="places"></div>
+
+  <div class="hub-kicker">How it is put together</div>
+  <div class="hub-card">
+    <h3 class="hub-h3">A place can hold several panels</h3>
+    <p class="hub-p">Tabs across the top of a place move between its panels. Some places keep all
+      their panels in one file; others keep them as separate pages and show the same tab bar on
+      each. You cannot tell from using it, which is the point — the difference exists because
+      merging some of them would have risked breaking them, not because it means anything to you.</p>
+  </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">Red means owed</h3>
+    <p class="hub-p">Arterial red means something wants you today, and it means nothing else here.
+      Links are the blue-grey. The previous version used one colour for both, which is why a board
+      of thirteen tiles read as an emergency in which nothing could be prioritised.</p>
+  </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">Names, two ways</h3>
+    <p class="hub-p">The pages have written names — the Standing, the Examiner, Recalibrate. The
+      drawer has a <b>Plain names</b> switch that swaps them for plain ones and keeps the written
+      name underneath, so you can learn one from the other. It syncs between your devices.</p>
+  </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">Nothing was deleted</h3>
+    <p class="hub-p">Pages that were folded into a place still exist at their old address and send
+      you to the right panel, so an old bookmark or a link in a journal entry still works. The v1
+      planning documents are kept and labelled in <a href="Settings.html#archive">the Archive</a>.</p>
+  </div>
+
+  <div class="hub-kicker">If something goes wrong</div>
+  <div class="hub-card t-owed">
+    <h3 class="hub-h3">Back it up, and know what a backup holds</h3>
+    <p class="hub-p"><b>Settings → Backup</b> writes every store in this browser to one file, and
+      reads one back. It reads what is actually there rather than a list someone has to remember
+      to update.</p>
+    <p class="hub-p" id="bk-line"></p>
+    <p class="hub-p">Three things are deliberately left out: sync bookkeeping, the device-only vault
+      key, and your calendar token. A downloaded file is less private than the cloud, not more, and
+      a credential does not belong in one. Sign in to the calendar again after a restore.</p>
+    <p class="hub-p">Restoring is two steps. The file is described first — how many stores, from
+      when, how many would be overwritten and which — and only then are the buttons offered.
+      <b>Merge</b> adds only what is missing; <b>Replace</b> overwrites. Neither deletes a store the
+      file does not mention.</p>
+  </div>
+
+  <div class="hub-kicker">The pictures</div>
+  <div class="hub-card">
+    <h3 class="hub-h3">The paintings are opt-in, and the slots are already cut</h3>
+    <p class="hub-p">The margins of the wide pages hold a plate. Until a painting is installed that
+      plate is a drawn engraving — the heart and its great vessels, the opened thorax, the bronchial
+      tree. Put a file in <span class="hub-mono">plates/</span> with one of the names below and the
+      painting takes its place, captioned, wherever that slot asked for it. Remove the file and the
+      engraving comes back. There is nothing to configure.</p>
+    <p class="hub-p">Every one is public domain — the painters have been dead well over a century —
+      so Wikimedia Commons has a high-resolution scan of each. Resize to about 1600px on the long
+      edge and save as JPEG; a 4000px museum scan is eight megabytes and nothing here displays
+      wider than about 1200.</p>
+    <div class="hub-list" id="plates"></div>
+  </div>
+
+  <footer class="hub-foot">
+    <span>The Guide</span>
+    <span id="ver"></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  /* The places, from sitemap.js. Generated so this page cannot describe a
+     structure the hub has moved on from — and it says so plainly if the
+     sitemap did not load, rather than rendering an empty guide. */
+  var m = window.SITEMAP;
+  var host = $('#places');
+  if (!m || !m.byDestination) {
+    host.innerHTML = '<div class="hub-row"><span class="grow"><span class="t">' +
+      'The page index did not load.</span><span class="d">This list is generated from ' +
+      'sitemap.js. Reload; if it persists, that is the file to look at.</span></span></div>';
+  } else {
+    var mode = m.naming ? m.naming() : 'named';
+    host.innerHTML = m.byDestination().map(function (d) {
+      var lbl = m.destLabel ? m.destLabel(d, mode) : { title: d.name, sub: d.blurb };
+      var panels = (d.panels || []).map(function (p) { return p.panel; }).join(' · ');
+      return '<a class="hub-row" href="' + esc(d.lands) + '">' +
+        '<span class="grow"><span class="t">' + esc(lbl.title) + '</span>' +
+        '<span class="d">' + esc(lbl.sub || '') + '</span>' +
+        (panels ? '<span class="d" style="color:var(--faint);font-style:normal;' +
+                  'font-family:var(--mono);font-size:11.5px">' + esc(panels) + '</span>' : '') +
+        '</span></a>';
+    }).join('');
+  }
+
+  /* Counted live rather than described, so this page cannot overstate what a
+     backup holds — which is exactly how the old one came to omit half of it. */
+  var B = window.Backup;
+  if (B) {
+    try {
+      var man = B.collect();
+      $('#bk-line').innerHTML = 'Right now that is <b>' + man.count + ' stores</b>, ' +
+        esc(B.human(man.bytes)) + '.';
+    } catch (e) { $('#bk-line').textContent = ''; }
+  } else {
+    $('#bk-line').textContent = 'backup.js did not load, so the count is unavailable here.';
+  }
+
+  /* Probed, not asserted. The list below says what is actually sitting in
+     plates/ right now, so it cannot claim a painting that was never added
+     or go stale against one that was. */
+  var P = window.Plates;
+  var ph = $('#plates');
+  if (!P) {
+    ph.innerHTML = '<div class="hub-row"><span class="grow"><span class="t">' +
+      'plates.js did not load.</span><span class="d">The engravings still show; the ' +
+      'inventory does not.</span></span></div>';
+  } else {
+    P.inventory().then(function (rows) {
+      ph.innerHTML = rows.map(function (r) {
+        return '<div class="hub-row"><span class="grow">' +
+          '<span class="t">' + esc(r.title) + '</span>' +
+          '<span class="d">' + esc(r.who) + ', ' + r.year + '</span>' +
+          '<span class="d" style="font-style:normal;font-family:var(--mono);' +
+          'font-size:11.5px;color:var(--faint)">plates/' + esc(r.file) + '</span></span>' +
+          '<span class="hub-chip' + (r.have ? ' ok' : '') + '">' +
+          (r.have ? 'installed' : 'not yet') + '</span></div>';
+      }).join('');
+    });
+  }
+
+  $('#run-tour').addEventListener('click', function () {
+    if (window.__hbTour) window.__hbTour.run();
+    else alert('tour.js did not load — reload the page.');
+  });
+
+  var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var dt = new Date();
+  $('#dateline').textContent = DAYS[dt.getDay()] + ' ' + dt.getDate() + ' ' + MON[dt.getMonth()];
+  $('#ver').textContent = (window.APP_CONFIG && window.APP_CONFIG.version)
+    ? 'v' + window.APP_CONFIG.version : '';
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+})();
+</script>
+</body>
+</html>

@@ -99,6 +99,8 @@ jobs:
       - name: Check the site map
         run: |
           node tools/sitemap.test.js
+          node tools/backup.test.js
+          node tools/vault-dirs.test.js
           node tools/upbar.test.js
           node tools/plan-source.test.js
           node tools/board.test.js

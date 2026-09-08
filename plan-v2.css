@@ -7,48 +7,62 @@
    v2 page and a v1 page sitting next to each other in the drawer
    look like the same product.
    ───────────────────────────────────────────────────────────── */
+/* ── PALETTE: aliases onto hub.css ────────────────────────────────────────
+   This file used to declare its own three palette blocks — light, dark and
+   the forced-dark class — with values close to but not identical to every
+   other page's. That is exactly the drift the file's own header complains
+   about, one level up: six pages stopped duplicating a palette by sharing
+   this one, and this one then duplicated the hub's.
+
+   So the names below are now aliases. hub.css owns the values; the ninety
+   `pv-*` component rules underneath are untouched and pick up the v5 look
+   for free, in both themes, because a token swap is all a theme is here.
+
+   Requires hub.css to be loaded first. If it is not, these resolve to
+   nothing and the page renders unstyled rather than wrongly styled, which
+   is the failure you notice. */
 :root {
-  --ground:#F7F5F1; --card:#FFFDF8; --raise:#FFFFFF;
-  --ink:#1A1B1A; --mid:#55564F; --muted:#8A8B82; --faint:#B4B2A9;
-  --rule:#E4E2DD; --rust:#993C1D; --rust-dim:#FBF2EE;
-  --live:#993C1D; --live-bg:#FBF2EE; --live-ln:#EBCFC3;
-  --ok:#0F6E56; --ok-bg:#EEF5F1; --ok-ln:#C9E0D6;
-  --warn:#854F0B; --warn-bg:#FBF6EA; --warn-ln:#EFE4CB;
-  --bad:#A32E27; --bad-bg:#FBEDE8; --bad-ln:#E8C4B6;
-  --cool:#185FA5; --cool-bg:#EDF3FA; --cool-ln:#C9DCEF;
-  --deep:#534AB7; --deep-bg:#F0EFFA;
-  --grey:#8A8B84; --grey-bg:#F1EFEA;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
-  --serif:"Newsreader",Georgia,serif;
-  --shadow:0 1px 2px rgba(26,27,26,.04),0 8px 24px rgba(26,27,26,.05);
+  --ground: var(--canvas);
+  --card:   var(--surface);
+  --raise:  var(--raised);
+  --mid:    var(--body);
+  --rule:   var(--line);
+
+  /* `rust` was both the link colour and the alarm colour, which is most of
+     why the old pages read as urgent throughout. It is the alarm now; the
+     accent is what you can click. */
+  --rust:     var(--owed);
+  --rust-dim: var(--owed-w);
+  --live:     var(--owed);
+  --live-bg:  var(--owed-w);
+  --live-ln:  var(--owed-l);
+
+  --ok-bg:   var(--ok-w);
+  --ok-ln:   var(--ok-l);
+  --warn-bg: var(--warn-w);
+  --warn-ln: var(--warn-l);
+
+  --bad:    var(--owed);
+  --bad-bg: var(--owed-w);
+  --bad-ln: var(--owed-l);
+
+  --cool:    var(--info);
+  --cool-bg: var(--info-w);
+  --cool-ln: var(--info-l);
+
+  --deep:    var(--accent);
+  --deep-bg: var(--accent-w);
+
+  --grey:    var(--muted);
+  --grey-bg: var(--sunken);
+
+  /* NOT --serif. hub.css owns that name for the BODY face; this file used it
+     for headings, and aliasing it here overrode the body face site-wide —
+     `--sans: var(--serif)` resolves at use time, so every page inherited the
+     display italic. The heading rules below point at --display directly. */
+  --shadow: var(--sh1);
 }
-@media (prefers-color-scheme:dark){:root:not(.hb-light){
-  --ground:#15161A; --card:#1D1F24; --raise:#24262C;
-  --ink:#ECEAE4; --mid:#B6B4AC; --muted:#8B8A83; --faint:#6A6963;
-  --rule:#2E3037; --rust:#D9714A; --rust-dim:#2A1E19;
-  --live:#D9714A; --live-bg:#2A1E19; --live-ln:#4A3227;
-  --ok:#5FBFA0; --ok-bg:#16241F; --ok-ln:#27453A;
-  --warn:#D9A441; --warn-bg:#26200F; --warn-ln:#453A1D;
-  --bad:#E0736A; --bad-bg:#2A1816; --bad-ln:#4A2A26;
-  --cool:#6BA6E0; --cool-bg:#141F2B; --cool-ln:#26384A;
-  --deep:#9A92E0; --deep-bg:#1C1A2E;
-  --grey:#8B8A83; --grey-bg:#212227;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
-}}
-html.hb-dark{
-  --ground:#15161A; --card:#1D1F24; --raise:#24262C;
-  --ink:#ECEAE4; --mid:#B6B4AC; --muted:#8B8A83; --faint:#6A6963;
-  --rule:#2E3037; --rust:#D9714A; --rust-dim:#2A1E19;
-  --live:#D9714A; --live-bg:#2A1E19; --live-ln:#4A3227;
-  --ok:#5FBFA0; --ok-bg:#16241F; --ok-ln:#27453A;
-  --warn:#D9A441; --warn-bg:#26200F; --warn-ln:#453A1D;
-  --bad:#E0736A; --bad-bg:#2A1816; --bad-ln:#4A2A26;
-  --cool:#6BA6E0; --cool-bg:#141F2B; --cool-ln:#26384A;
-  --deep:#9A92E0; --deep-bg:#1C1A2E;
-  --grey:#8B8A83; --grey-bg:#212227;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
-}
+
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
@@ -59,10 +73,12 @@ a{color:inherit}
   padding:calc(20px + env(safe-area-inset-top,0px)) 18px 140px}
 .pv-kick{font-family:var(--mono);font-size:11px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--rust);font-weight:600}
-.pv-h1{font-family:var(--serif);font-size:34px;font-weight:500;line-height:1.1;margin:5px 0 10px}
-.pv-lede{font-size:16px;line-height:1.62;color:var(--mid);max-width:60ch;margin:0 0 26px}
+.pv-h1{font-family:var(--display);font-size:34px;font-weight:500;line-height:1.1;margin:5px 0 10px}
+/* The manuscript hand: a lede is an annotation beside the plate, not part
+   of its lettering. Same rule for pull quotes and marginal notes. */
+.pv-lede{font-size:19px;font-style:italic;line-height:1.55;color:var(--mid);max-width:60ch;margin:0 0 26px}
 
-.pv-h2{font-family:var(--serif);font-size:23px;font-weight:500;line-height:1.2;
+.pv-h2{font-family:var(--display);font-size:23px;font-weight:500;line-height:1.2;
   margin:38px 0 6px;padding-top:22px;border-top:1px solid var(--rule)}
 .pv-h2:first-of-type{border-top:0;padding-top:0}
 .pv-sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
@@ -70,14 +86,14 @@ a{color:inherit}
 .pv-h3{font-family:var(--sans);font-size:15px;font-weight:600;margin:22px 0 7px}
 .pv-p{font-size:15.4px;line-height:1.63;color:var(--mid);max-width:64ch;margin:0 0 12px}
 .pv-p b,.pv-p strong{color:var(--ink);font-weight:600}
-.pv-small{font-size:13.5px;line-height:1.6;color:var(--muted);max-width:64ch}
+.pv-small{font-style:italic;font-size:13.5px;line-height:1.6;color:var(--muted);max-width:64ch}
 
 /* the one number that matters, at the top of the plan */
 .pv-ff{background:var(--live-bg);border:1px solid var(--live-ln);border-left:4px solid var(--live);
   border-radius:16px;padding:18px 20px;margin:0 0 26px}
 .pv-ff-lab{font-family:var(--mono);font-size:10px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--live);font-weight:600}
-.pv-ff-n{font-family:var(--serif);font-size:44px;line-height:1;font-weight:500;
+.pv-ff-n{font-family:var(--display);font-size:44px;line-height:1;font-weight:500;
   color:var(--live);margin:8px 0 2px}
 .pv-ff-t{font-size:15px;color:var(--ink);font-weight:600}
 .pv-ff-d{font-size:13.5px;line-height:1.55;color:var(--mid);margin-top:8px;max-width:58ch}
@@ -117,14 +133,14 @@ a{color:inherit}
 .pv-steps{margin:9px 0 0;padding-left:18px}
 .pv-steps li{font-size:13.8px;line-height:1.62;color:var(--mid);margin-bottom:4px}
 
-.pv-quote{font-family:var(--serif);font-size:15.5px;line-height:1.6;font-style:italic;
+.pv-quote{font-style:italic;font-family:var(--display);font-size:15.5px;line-height:1.6;font-style:italic;
   color:var(--ink);background:var(--warn-bg);border:1px solid var(--warn-ln);
   border-radius:12px;padding:13px 16px;margin:11px 0;max-width:64ch}
 .pv-rule{font-family:var(--mono);font-size:12.5px;line-height:1.62;color:var(--warn);
   background:var(--warn-bg);border:1px solid var(--warn-ln);border-radius:11px;
   padding:11px 14px;margin:11px 0;max-width:66ch}
 .pv-kill{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-ln)}
-.pv-punch{font-family:var(--serif);font-size:19px;line-height:1.4;color:var(--bad);
+.pv-punch{font-family:var(--display);font-size:19px;line-height:1.4;color:var(--bad);
   font-weight:500;margin:14px 0;max-width:58ch}
 
 /* tables */
@@ -147,7 +163,7 @@ tr.dim td{color:var(--faint)}
   border-left:4px solid var(--rule);border-radius:14px;padding:15px 17px;margin-bottom:10px;
   text-decoration:none;box-shadow:var(--shadow)}
 .pv-ph-n{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted)}
-.pv-ph-t{font-family:var(--serif);font-size:20px;font-weight:500;margin:3px 0 4px;color:var(--ink)}
+.pv-ph-t{font-family:var(--display);font-size:20px;font-weight:500;margin:3px 0 4px;color:var(--ink)}
 .pv-ph-o{font-size:14.4px;line-height:1.55;color:var(--mid)}
 .pv-ph-f{font-family:var(--mono);font-size:12px;line-height:1.5;color:var(--bad);margin-top:8px}
 

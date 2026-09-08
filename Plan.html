@@ -3,32 +3,143 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>The Plan</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<title>Plan · CT Hub</title>
+<link rel="stylesheet" href="./hub.css">
 <link rel="stylesheet" href="./mobile.css">
 <link rel="stylesheet" href="./plan-v2.css">
+<style>
+  /* The shell supplies the page title and the back path; a folded panel must
+     not also supply them. */
+  .pv > .pv-h1, .pv > .pv-back { display: none; }
+  .pv { max-width: none; padding: 0; }
+  .pv > .pv-kick:first-child { margin-top: var(--s4); }
+</style>
 <script src="./plan-v2-data.js"></script>
 <script src="./plan-v2.js"></script>
+<script src="./sitemap.js"></script>
 <script src="./day.js"></script>
 </head>
-<body>
-<!-- ─────────────────────────────────────────────────────────────
-     The Plan — v2's front door, and the page that replaces the
-     CT Master Plan as the thing you open.
+<body class="hub">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PLAN — the destination, v5.
 
-     v1 showed 371 steps across 13 branches. That is an inventory,
-     and an inventory of 371 things is a document you stop opening.
-     This page shows ONE date, the ten items that serve it, and a
-     door to each phase. Everything else in v2 lives one tap away
-     on a page of its own.
-     ───────────────────────────────────────────────────────────── -->
-<div class="pv" id="app"></div>
+     Five pages became five panels: The Plan, The Campaign, Verify, Pipeline
+     and the write-up. They were always one subject read at five URLs, and
+     four of them were thin renderers over the same plan-v2-data.js — which
+     is why this is the first fold. If the pattern is wrong, it is cheapest
+     to find out here.
+
+     HOW THE FOLD WORKS, and why it is done this way. Each panel keeps its own
+     container and its own script, moved across unedited except for the
+     element it renders into. The alternative — merging four IIFEs into one
+     render function — would have meant reconciling four `render()`
+     definitions and four sets of document-level click handlers, and
+     re-running them on every tab switch would stack listeners. Rendering all
+     four once into separate containers and toggling visibility gives the
+     identical page with none of that risk.
+
+     So a panel's behaviour is exactly what it was at its old URL. What is new
+     is that there is one URL, one tab bar, and one page's worth of chrome.
+
+     The write-up is a link rather than a panel: it is a Markdown document
+     rendered at deploy time, not an interactive board, and inlining it would
+     mean fetching a file the vault encrypts and deletes.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<header class="hub-top">
+  <div class="hub-top-in">
+    <span class="hub-mark">CT Hub</span>
+    <span class="hub-dateline" id="dateline"></span>
+    <span class="hub-sp"></span>
+  </div>
+</header>
+
+<main class="hub-page" style="position:relative">
+  <h1 class="hub-h1" id="ptitle">The Plan</h1>
+
+  <!-- The plate in the margin, as an atlas repeats its figure beside the text.
+       Desktop only — a phone has no margin to put it in. -->
+  <div class="hub-marginal hub-plate" data-plate="gross-clinic agnew-clinic" aria-hidden="true"></div>
+
+  <div class="hub-tabs" role="tablist" id="tabs"></div>
+
+  <!-- Each panel keeps its own kicker and lede — they are authored copy, not
+       chrome, and the Plan's ("this is not an edit of v1, it is a replacement
+       of its operating logic") is the most useful sentence on the page. What
+       the panels lose is their own <h1>: five pages each titled inside a page
+       already titled "The Plan" is the duplication this fold exists to end.
+       Hidden in CSS rather than deleted from the render, so a panel viewed on
+       its own — which is how they are still tested — is unchanged. -->
+
+  <div id="panel-now"      class="pv" role="tabpanel"></div>
+  <div id="panel-campaign" class="pv" role="tabpanel" hidden></div>
+  <div id="panel-verify"   class="pv" role="tabpanel" hidden></div>
+  <div id="panel-research" class="pv" role="tabpanel" hidden></div>
+  <div id="panel-writeup"  class="pv" role="tabpanel" hidden></div>
+</main>
+
 <script>
+/* ── the tab bar ───────────────────────────────────────────────────────────
+   The panel is in the URL hash, so a tab is linkable, survives a reload and
+   goes in a bookmark — Plan.html#verify is a real address. The old pages
+   redirect to their hash, which is what keeps every existing link working.  */
+(function () {
+  'use strict';
+  var PANELS = [
+    ['now',      'Now',      'What is live, and the date forcing it.'],
+    ['campaign', 'Campaign', 'The phase map: what happens when, through 2027.'],
+    ['verify',   'Verify',   'Assumptions nothing should be planned around until they resolve.'],
+    ['research', 'Research', 'Every output, and whether it will finish.'],
+    ['writeup',  'Write-up', 'The cancer-research paper, stage by stage.']
+  ];
+  var KNOWN = {};
+  PANELS.forEach(function (p) { KNOWN[p[0]] = 1; });
+
+  var bar = document.getElementById('tabs');
+
+  function show(id) {
+    if (!KNOWN[id]) id = 'now';
+    PANELS.forEach(function (p) {
+      var el = document.getElementById('panel-' + p[0]);
+      if (el) el.hidden = p[0] !== id;
+      var t = document.getElementById('tab-' + p[0]);
+      if (t) t.setAttribute('aria-selected', String(p[0] === id));
+    });
+    try { history.replaceState(null, '', '#' + id); } catch (e) { location.hash = id; }
+  }
+
+  PANELS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.className = 'hub-tab'; b.id = 'tab-' + p[0];
+    b.type = 'button'; b.setAttribute('role', 'tab');
+    b.textContent = p[1];
+    b.addEventListener('click', function () { show(p[0]); });
+    bar.appendChild(b);
+  });
+
+  window.addEventListener('hashchange', function () {
+    show((location.hash || '').replace('#', ''));
+  });
+
+  var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var d = new Date();
+  document.getElementById('dateline').textContent =
+    DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+
+  /* Deferred to the end of the file so every panel has rendered before one is
+     chosen — a panel hidden before it paints measures nothing correctly. */
+  window.__planShow = show;
+})();
+</script>
+
+<!-- ══ panel: now — moved from Plan.html, unedited but for its container ══ -->
+<script>
+
 (function () {
   var P = window.PlanV2, D = P.plan(), esc = P.esc;
-  var app = document.getElementById('app');
+  var app = document.getElementById('panel-now');
   var H = [];
 
   /* ── the forcing function, and nothing above it ───────────────── */
@@ -225,6 +336,379 @@
     var b = e.target.closest && e.target.closest('.pv-box');
     if (b) { e.preventDefault(); hit(b.closest('.pv-item')); }
   });
+})();
+</script>
+
+<!-- ══ panel: campaign — moved from Campaign.html, unedited but for its container ══ -->
+<script>
+
+(function () {
+  var P = window.PlanV2, D = P.plan(), esc = P.esc;
+  var p1 = D.phase1, p2 = D.phase2, p3 = D.phase3, p4 = D.phase4, p5 = D.phase5;
+  var H = [];
+
+  H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+  H.push('<div class="pv-kick">Phases 1 – 5</div>');
+  H.push('<h1 class="pv-h1">The Campaign</h1>');
+  H.push('<p class="pv-lede">' + esc(p1.lede) + '</p>');
+
+  /* ── the mechanic first: it is the thing people get wrong ────── */
+  H.push('<h2 class="pv-h2">The mechanic that decides it</h2>');
+  H.push('<div class="pv-sub">Phase 1 · Oct 2026 – Jun 2027</div>');
+  H.push('<p class="pv-p">' + esc(p1.piProtocol.lede) + '</p>');
+  H.push('<p class="pv-punch">' + esc(p1.piProtocol.punch) + '</p>');
+  H.push('<div class="pv-card"><div class="pv-h3" style="margin-top:0">The PI outreach protocol</div><ul class="pv-steps">');
+  p1.piProtocol.steps.forEach(function (s) { H.push('<li>' + esc(s) + '</li>'); });
+  H.push('</ul><div class="pv-it-d" style="margin-top:9px">' + esc(p1.piProtocol.note) + '</div></div>');
+
+  /* ── target list ─────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">The target list</h2>');
+  H.push('<div class="pv-sub">Every eligibility note must be confirmed before it is planned around</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>#</th><th>Program</th><th>Field</th><th>Paid</th><th>Opens</th><th>Closes</th><th>Eligibility</th></tr></thead><tbody>');
+  p1.targets.forEach(function (t) {
+    H.push('<tr class="' + (t.n === 1 || t.n === 12 ? 'hot' : '') + '">' +
+      '<td class="num">' + t.n + '</td><td><b>' + esc(t.name) + '</b></td><td>' + esc(t.field) + '</td>' +
+      '<td>' + esc(t.paid) + '</td><td class="num">' + esc(t.opens) + '</td><td class="num">' + esc(t.closes) + '</td>' +
+      '<td>' + (t.verified ? '' : '<span class="pv-chip c-verify">verify</span> ') + esc(t.note) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-rule">' + esc(p1.applyRule) + '</div>');
+
+  /* ── the year, quarter by quarter ────────────────────────────── */
+  H.push('<h2 class="pv-h2">The year</h2>');
+  H.push('<div class="pv-sub">Build the machine, run the campaign, convert</div>');
+  p1.quarters.forEach(function (q) {
+    H.push('<div class="pv-card"><div class="pv-h3" style="margin-top:0">' + esc(q.label) + '</div><ul class="pv-steps">');
+    q.items.forEach(function (i) { H.push('<li>' + esc(i) + '</li>'); });
+    H.push('</ul></div>');
+  });
+
+  H.push('<div class="pv-h3">Fallback ladder — if no US position by March 2027</div>');
+  H.push('<div class="pv-card">');
+  p1.fallback.forEach(function (f) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-it-t">' + f.n + '. ' + esc(f.t) + '</div>' +
+      (f.d ? '<div class="pv-it-d">' + esc(f.d) + '</div>' : '') + '</div></div>');
+  });
+  H.push('</div>');
+
+  /* ── Phase 2 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 2 — the summer itself</h2>');
+  H.push('<div class="pv-sub">' + esc(p2.lede) + '</div>');
+  H.push('<div class="pv-card">');
+  p2.deliverables.forEach(function (d) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-it-t">' + esc(d.t) + '</div>' +
+      '<div class="pv-it-d">' + esc(d.d) + '</div></div></div>');
+  });
+  H.push('</div>');
+  H.push('<ul class="pv-steps">');
+  p2.rules.forEach(function (r) { H.push('<li>' + esc(r) + '</li>'); });
+  H.push('</ul>');
+  H.push('<div class="pv-rule"><b>Thesis bend.</b> ' + esc(p2.bend) + '</div>');
+
+  /* ── Phase 3 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 3 — Step 1</h2>');
+  H.push('<div class="pv-sub">A threshold, not a differentiator</div>');
+  H.push('<p class="pv-p">' + esc(p3.step1.what) + '</p>');
+  H.push('<div class="pv-rule">' + esc(p3.step1.consequence) + '</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  p3.step1.plan.forEach(function (r) {
+    H.push('<tr><td><b>' + esc(r.k) + '</b></td><td>' + esc(r.v) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<div class="pv-h3">In parallel, 2027/28</div><div class="pv-card">');
+  p3.parallel.forEach(function (x) {
+    H.push('<div class="pv-item"><div class="pv-grow"><div class="pv-row">' +
+      '<span class="pv-it-t">' + esc(x.t) + '</span><span class="pv-chip c-' + esc(x.s) + '">' + esc(x.s) + '</span></div>' +
+      (x.d ? '<div class="pv-it-d">' + esc(x.d) + '</div>' : '') + '</div></div>');
+  });
+  H.push('</div>');
+
+  /* ── Phase 4 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 4 — NYC clinical years</h2>');
+  H.push('<div class="pv-sub">' + esc(p4.lede) + '</div>');
+  H.push('<div class="pv-h3">Step 2 CK — the only number</div>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  p4.step2.forEach(function (r) {
+    H.push('<tr class="' + (r.hot ? 'hot' : '') + '"><td class="num"><b>' + esc(r.k) + '</b></td><td>' + esc(r.v) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+  H.push('<p class="pv-p">' + esc(p4.step2Note) + '</p>');
+
+  H.push('<div class="pv-h3">ECFMG certification</div>');
+  H.push('<p class="pv-p">' + esc(p4.ecfmg) + '</p>');
+  H.push('<div class="pv-rule pv-kill"><b>Verify now.</b> ' + esc(p4.ecfmgVerify) + '</div>');
+
+  H.push('<div class="pv-h3">US clinical experience and letters</div>');
+  H.push('<p class="pv-small">This is where an IMG application is won or lost.</p><ul class="pv-steps">');
+  p4.letters.forEach(function (l) { H.push('<li>' + esc(l) + '</li>'); });
+  H.push('</ul>');
+  H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+  p4.timeline.forEach(function (r) {
+    H.push('<tr><td class="num"><b>' + esc(r.w) + '</b></td><td>' + esc(r.d) + '</td></tr>');
+  });
+  H.push('</tbody></table></div>');
+
+  /* ── Phase 5 ─────────────────────────────────────────────────── */
+  H.push('<h2 class="pv-h2">Phase 5 — residency targets</h2>');
+  H.push('<div class="pv-sub">Three tiers, and the rule that keeps the year safe</div>');
+  H.push('<p class="pv-p">' + esc(p5.picture) + '</p>');
+  H.push('<div class="pv-row" style="gap:10px;margin:12px 0">');
+  H.push('<div class="pv-card" style="flex:1;min-width:210px;margin:0;border-left:4px solid var(--ok)">' +
+    '<div class="pv-ph-n">ADVANTAGES</div><div class="pv-it-d">' + esc(p5.advantages) + '</div></div>');
+  H.push('<div class="pv-card" style="flex:1;min-width:210px;margin:0;border-left:4px solid var(--bad)">' +
+    '<div class="pv-ph-n">DISADVANTAGES</div><div class="pv-it-d">' + esc(p5.disadvantages) + '</div></div>');
+  H.push('</div>');
+  p5.tiers.forEach(function (t) {
+    H.push('<div class="pv-card acc" style="border-left-color:' + t.color + '">' +
+      '<div class="pv-row"><span class="pv-chip c-live">TIER ' + esc(t.id) + '</span>' +
+      '<span class="pv-lane-t">' + esc(t.label) + '</span></div>' +
+      '<div class="pv-it-d" style="margin-top:8px">' + esc(t.d) + '</div>' +
+      '<div class="pv-rule">' + esc(t.rule) + '</div></div>');
+  });
+  H.push('<div class="pv-rule pv-kill"><b>Rule.</b> ' + esc(p5.gateRule) + '</div>');
+
+  H.push('<p class="pv-foot">Every gate above is opened by a named human — see the <a href="Plan.html">network rule</a>. ' +
+    'The eligibility questions that could end Phase 1 live on <a href="Verify.html"><b>Verify</b></a>, ' +
+    'and every output this campaign produces is tracked on <a href="Pipeline.html"><b>Pipeline</b></a>.</p>');
+
+  document.getElementById('panel-campaign').innerHTML = H.join('');
+})();
+</script>
+
+<!-- ══ panel: verify — moved from Verify.html, unedited but for its container ══ -->
+<script>
+
+(function () {
+  var P = window.PlanV2, D = P.plan(), esc = P.esc;
+  var app = document.getElementById('panel-verify');
+
+  function render() {
+    var H = [];
+    var open = D.verification.filter(function (v) { return !v.done && !P.verifyResult(v.n); });
+    var fatal = open.filter(function (v) { return v.sev.indexOf('fatal') === 0; });
+
+    H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+    H.push('<div class="pv-kick">Assumptions & risk</div>');
+    H.push('<h1 class="pv-h1">Verify</h1>');
+    H.push('<p class="pv-lede">Nothing downstream should be planned around an unresolved row. ' +
+      'Tap <b>record</b> to write an answer — it is stored with today’s date and stops the question counting as open.</p>');
+
+    H.push('<div class="pv-row" style="gap:10px;margin-bottom:20px">');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">OPEN QUESTIONS</div><div class="pv-ff-n" style="font-size:34px;color:' +
+      (open.length ? 'var(--warn)' : 'var(--ok)') + '">' + open.length + '</div>' +
+      '<div class="pv-count">of ' + D.verification.length + '</div></div>');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">PHASE-ENDING</div><div class="pv-ff-n" style="font-size:34px;color:' +
+      (fatal.length ? 'var(--bad)' : 'var(--ok)') + '">' + fatal.length + '</div>' +
+      '<div class="pv-count">still unanswered</div></div>');
+    H.push('</div>');
+
+    H.push('<h2 class="pv-h2">The queue</h2>');
+    H.push('<div class="pv-sub">In order of consequence</div>');
+    D.verification.forEach(function (v) {
+      var saved = P.verifyResult(v.n);
+      var settled = v.done || saved;
+      var sevCls = v.sev.indexOf('fatal') === 0 ? 'c-bad' : v.sev === 'high' ? 'c-verify' : 'c-queued';
+      H.push('<div class="pv-lane" data-n="' + esc(v.n) + '"' + (settled ? ' style="opacity:.68"' : '') + '>');
+      H.push('<div class="pv-row"><span class="pv-ph-n">' + esc(v.n) + '</span>' +
+        '<span class="pv-lane-t pv-grow">' + esc(v.q) + '</span>' +
+        '<span class="pv-chip ' + (settled ? 'c-ok' : sevCls) + '">' + (settled ? 'settled' : esc(v.sev)) + '</span></div>');
+      H.push('<div class="pv-lane-m"><span>' + esc(v.how) + '</span><span>by ' + esc(v.by) + '</span></div>');
+      if (v.result) H.push('<div class="pv-it-d" style="margin-top:7px;color:var(--ok)">' + esc(v.result) + '</div>');
+      if (saved) H.push('<div class="pv-it-d" style="margin-top:7px;color:var(--ok)"><b>' + esc(saved.result) +
+        '</b> <span style="color:var(--muted)">· recorded ' + esc(P.fmtDate(saved.at)) + '</span></div>');
+      if (!v.done) {
+        H.push('<div class="pv-lane-m" style="margin-top:9px">' +
+          '<span data-act="record" style="cursor:pointer;color:var(--cool)">' + (saved ? 'edit answer' : 'record answer') + '</span>' +
+          (saved ? ' <span data-act="clear" style="cursor:pointer;color:var(--muted)">clear</span>' : '') + '</div>');
+      }
+      H.push('</div>');
+    });
+
+    /* ── risk register ───────────────────────────────────────────── */
+    H.push('<h2 class="pv-h2">Risk register</h2>');
+    H.push('<div class="pv-sub">The signal that it is happening, and the move that answers it</div>');
+    H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Risk</th><th>Severity</th><th>Signal</th><th>Mitigation</th></tr></thead><tbody>');
+    D.risks.forEach(function (r) {
+      H.push('<tr><td><b>' + esc(r.r) + '</b></td><td>' + esc(r.sev) + '</td><td>' + esc(r.sig) + '</td><td>' + esc(r.mit) + '</td></tr>');
+    });
+    H.push('</tbody></table></div>');
+
+    H.push('<h2 class="pv-h2">Pre-mortem</h2>');
+    H.push('<div class="pv-sub">' + esc(D.premortem.q) + '</div>');
+    H.push('<div class="pv-card"><ul class="pv-steps">');
+    D.premortem.causes.forEach(function (c) { H.push('<li>' + esc(c) + '</li>'); });
+    H.push('</ul><div class="pv-rule pv-kill">' + esc(D.premortem.note) + '</div></div>');
+
+    H.push('<p class="pv-foot">A recorded answer lives in your own store and syncs across devices. ' +
+      'It does not edit the shipped plan file — to change the plan itself, use <a href="Settings.html"><b>Plan Settings</b></a>.</p>');
+
+    app.innerHTML = H.join('');
+  }
+
+  app.addEventListener('click', function (e) {
+    var hit = e.target.closest('[data-act]');
+    if (!hit) return;
+    var n = hit.closest('.pv-lane').getAttribute('data-n');
+    if (hit.getAttribute('data-act') === 'clear') { P.setVerify(n, null); return render(); }
+    var cur = P.verifyResult(n);
+    var ans = window.prompt('What is the answer? (recorded with today’s date)', cur ? cur.result : '');
+    if (ans === null) return;
+    P.setVerify(n, ans.trim() || null);
+    render();
+  });
+
+  render();
+})();
+</script>
+
+<!-- ══ panel: research — moved from Pipeline.html, unedited but for its container ══ -->
+<script>
+
+(function () {
+  var P = window.PlanV2, D = P.plan(), PL = D.pipeline, esc = P.esc;
+  var app = document.getElementById('panel-research');
+  var BALLS = ['you', 'co-author', 'PI', 'journal'];
+
+  function render() {
+    var H = [];
+    H.push('<a class="pv-back" href="Plan.html">← The Plan</a>');
+    H.push('<div class="pv-kick">Research</div>');
+    H.push('<h1 class="pv-h1">Pipeline</h1>');
+    H.push('<p class="pv-lede">Every output in one place, with the two fields that actually predict whether it finishes. ' +
+           'Tap a stage or a ball to move an item; moving the stage restamps the clock.</p>');
+
+    /* ── the two metrics, computed from the board itself ────────── */
+    var items = PL.board.map(P.pipeItem);
+    var live = items.filter(function (i) { return i.priority !== 'dormant'; });
+    var accepted = items.filter(function (i) { return i.stage === 'Accepted'; }).length;
+    var withDays = live.filter(function (i) { return i.days !== null; }).map(function (i) { return i.days; }).sort(function (a, b) { return a - b; });
+    var med = withDays.length ? withDays[Math.floor(withDays.length / 2)] : null;
+    var stale = live.filter(function (i) { return i.stale; });
+
+    H.push('<div class="pv-row" style="gap:10px;margin-bottom:20px">');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">ACCEPTED / 6 MO</div>' +
+      '<div class="pv-ff-n" style="font-size:34px;color:' + (accepted >= 2 ? 'var(--ok)' : 'var(--muted)') + '">' + accepted + '</div>' +
+      '<div class="pv-count">target 2</div></div>');
+    H.push('<div class="pv-card" style="flex:1;min-width:150px;margin:0">' +
+      '<div class="pv-ph-n">MEDIAN DAYS IN STAGE</div>' +
+      '<div class="pv-ff-n" style="font-size:34px;color:' + (med !== null && med >= PL.redFlagDays ? 'var(--bad)' : 'var(--ok)') + '">' +
+      (med === null ? '—' : med) + '</div>' +
+      '<div class="pv-count">red flag at ' + PL.redFlagDays + '</div></div>');
+    H.push('</div>');
+
+    if (stale.length) {
+      H.push('<div class="pv-rule pv-kill"><b>' + stale.length + ' item' + (stale.length > 1 ? 's' : '') +
+        ' past ' + PL.redFlagDays + ' days.</b> ' +
+        stale.map(function (i) {
+          return esc(i.title) + ' — ' + i.days + 'd, ball with ' + esc(i.ball);
+        }).join(' · ') +
+        '. If the ball is not yours, send the nudge now; if it is, this is the next hour of work.</div>');
+    }
+
+    /* ── the board ───────────────────────────────────────────────── */
+    H.push('<h2 class="pv-h2">The board</h2>');
+    H.push('<div class="pv-sub">' + PL.wip.inFlight + ' in flight max · ' + PL.wip.offThesis + ' off-thesis max</div>');
+
+    items.forEach(function (i) {
+      var dim = (i.priority === 'dormant' || i.priority === 'optional');
+      H.push('<div class="pv-lane" data-id="' + esc(i.id) + '"' + (dim ? ' style="opacity:.62"' : '') + '>');
+      H.push('<div class="pv-row"><span class="pv-lane-t pv-grow">' + esc(i.title) + '</span>' +
+        (i.priority ? '<span class="pv-chip ' + (i.priority === 'P0' ? 'c-live' : i.priority === 'dormant' ? 'c-dormant' : 'c-queued') + '">' + esc(i.priority) + '</span>' : '') + '</div>');
+
+      H.push('<div class="pv-lane-m">');
+      H.push('<span>' + esc(i.tier) + '</span>');
+      H.push('<span class="pv-ball ' + (i.ball === 'you' ? 'b-you' : 'b-other') + '" data-act="ball">ball: ' + esc(i.ball) + '</span>');
+      H.push('<span data-act="stage" style="cursor:pointer;color:var(--cool)">' + esc(i.stage) + ' ▸</span>');
+      if (i.days !== null) {
+        H.push('<span style="color:' + (i.stale ? 'var(--bad)' : 'var(--muted)') + '">' + i.days + 'd in stage</span>');
+      } else {
+        H.push('<span data-act="touch" style="cursor:pointer;color:var(--muted)">start clock</span>');
+      }
+      if (i.due) H.push('<span style="color:var(--warn)">due ' + esc(P.fmtDate(i.due)) + '</span>');
+      H.push('<span>' + (i.onThesis ? 'on-thesis' : 'off-thesis') + '</span>');
+      if (i.blocker) H.push('<span style="color:var(--bad)">blocked: ' + esc(i.blocker) + '</span>');
+      H.push('</div>');
+      if (i.note) H.push('<div class="pv-it-d" style="margin-top:7px">' + esc(i.note) + '</div>');
+      H.push('</div>');
+    });
+
+    /* ── the method, so the board is legible in six months ──────── */
+    H.push('<h2 class="pv-h2">Stages</h2>');
+    H.push('<div class="pv-sub">' + esc(PL.stageNote) + '</div>');
+    H.push('<p class="pv-p">' + PL.stages.map(function (s, n) {
+      return '<b>' + esc(s) + '</b>' + (n < PL.stages.length - 1 ? ' → ' : '');
+    }).join('') + '</p>');
+
+    H.push('<div class="pv-rule">' + esc(PL.ballNote) + '</div>');
+
+    H.push('<h2 class="pv-h2">Tiers</h2>');
+    H.push('<div class="pv-sub">Cost in your hours, not in importance</div>');
+    H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Tier</th><th>Your hours</th><th>Cycle</th><th>Use for</th></tr></thead><tbody>');
+    PL.tiers.forEach(function (t) {
+      H.push('<tr class="' + (t.hot ? 'hot' : '') + '"><td><b>' + esc(t.t) + '</b></td><td class="num">' + esc(t.hrs) +
+        '</td><td class="num">' + esc(t.cyc) + '</td><td>' + esc(t.use) + '</td></tr>');
+    });
+    H.push('</tbody></table></div>');
+
+    H.push('<div class="pv-rule"><b>Authorship.</b> ' + esc(PL.authorshipRule) + '</div>');
+    H.push('<div class="pv-rule"><b>WIP.</b> ' + esc(PL.wip.note) + '</div>');
+
+    H.push('<p class="pv-foot">The weekly sweep is 20 minutes on a Sunday: one question per item — whose court, ' +
+      'how long, what is the smallest move that returns the ball? Anything stalled in someone else’s court past ' +
+      PL.redFlagDays + ' days gets the nudge sent <em>during</em> the sweep, not after it.</p>');
+
+    app.innerHTML = H.join('');
+  }
+
+  /* Cycling rather than a dropdown: on a phone a stage change is one
+     tap, and the only two fields that move are ordered lists anyway. */
+  function cycle(list, cur, back) {
+    var i = list.indexOf(cur);
+    if (i < 0) return list[0];
+    return list[(i + (back ? -1 : 1) + list.length) % list.length];
+  }
+
+  app.addEventListener('click', function (e) {
+    var hit = e.target.closest('[data-act]');
+    if (!hit) return;
+    var lane = hit.closest('.pv-lane');
+    if (!lane) return;
+    var id = lane.getAttribute('data-id');
+    var cur = P.pipeItem(PL.board.filter(function (b) { return b.id === id; })[0]);
+    var act = hit.getAttribute('data-act');
+    if (act === 'stage')      P.setPipe(id, 'stage', cycle(PL.stages, cur.stage, e.shiftKey));
+    else if (act === 'ball')  P.setPipe(id, 'ball',  cycle(BALLS, cur.ball, e.shiftKey));
+    else if (act === 'touch') P.touchPipe(id);
+    render();
+  });
+
+  render();
+})();
+</script>
+
+<!-- ══ panel: write-up — a document, so it is a door rather than a board ══ -->
+<script>
+(function () {
+  var P = window.PlanV2, esc = P.esc;
+  document.getElementById('panel-writeup').innerHTML =
+    '<h2 class="pv-h2">The write-up</h2>' +
+    '<div class="pv-sub">Cancer research \u2014 status and publication pipeline</div>' +
+    '<p class="pv-p">The paper\u2019s own document: where each manuscript stands, what is blocking it, ' +
+    'and what the next move on each one is. It is prose rather than a board, so it keeps its own page ' +
+    'and opens full width.</p>' +
+    '<div class="pv-row" style="gap:9px"><a class="pv-btn" href="Publication%20Pipeline.html">' +
+    'Open the write-up \u2192</a></div>';
+})();
+</script>
+
+<script>
+/* Chosen last, once all five panels exist. */
+(function () {
+  var want = (location.hash || '').replace('#', '');
+  if (window.__planShow) window.__planShow(want || 'now');
 })();
 </script>
 </body>

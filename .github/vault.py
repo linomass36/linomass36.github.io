@@ -38,7 +38,19 @@ PLAINTEXT = {
     "vault.js", "vault.json", "manifest.json", "sw.js", "version.txt",
     "robots.txt", ".nojekyll",
 }
-PLAINTEXT_DIRS = {"icons"}
+# `fonts` and `plates` join `icons` for the same reason, and this list must
+# stay identical to ALLOWED_DIRS in verify_vault.py — the verifier permits,
+# but this list is what actually decides, and when the two disagreed the
+# fonts were deleted at build time and silently fell back to a system serif
+# on the live site. tools/vault-dirs.test.js now fails if they drift again.
+#
+# A woff2 holds glyph outlines and a plate holds a public-domain painting.
+# Neither is your content, so there is nothing for the vault to protect, and
+# both must ship as files: hub.css is INLINED INTO EVERY PAGE by the pass
+# below, so base64 would repeat every face and every canvas thirty-one times.
+#
+# Nothing of yours goes in these directories. They ship in the clear.
+PLAINTEXT_DIRS = {"icons", "fonts", "plates"}
 
 SCRIPT_RE = re.compile(
     r'<script([^>]*?)\ssrc="(?!https?:|//)([^"?]+)(\?[^"]*)?"([^>]*)>\s*</script>',

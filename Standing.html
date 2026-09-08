@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Standing</title>
+<link rel="stylesheet" href="./hub.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
@@ -42,57 +43,36 @@
    system to all ten.
    ───────────────────────────────────────────────────────────── */
 
+/* ── PALETTE: aliases onto hub.css ────────────────────────────────────────
+   Three palette blocks lived here — light, the dark media query, and the
+   forced-dark class — with values close to but not identical to plan-v2.css's
+   three, and to the four other pages that inlined the same idea. hub.css owns
+   them now; these are names this page's four hundred rules already use,
+   pointed at the v5 tokens. Nothing below this block changed.
+
+   `--rust` was both the link colour and the alarm colour here, which is most
+   of why a board of thirteen tiles read as an emergency. It is the alarm; the
+   accent is what you can click. */
 :root {
-  --ground:   #F7F5F1;
-  --card:     #FFFDF8;
-  --raise:    #FFFFFF;
-  --ink:      #1A1B1A;
-  --mid:      #55564F;
-  --muted:    #8A8B82;
-  --faint:    #B4B2A9;
-  --rule:     #E4E2DD;
-  --rust:     #993C1D;
-  --rust-dim: #FBF2EE;
-
-  /* State is its own axis — never the accent hue. */
-  --owed:     #A32E27;
-  --owed-bg:  #FBEDE8;
-  --owed-ln:  #E8C4B6;
-  --ok:       #0F6E56;
-  --ok-bg:    #EEF5F1;
-  /* Held is deliberately quiet: a system under a condition is not
-     failing, and must not read as failing. */
-  --held:     #7A6A4E;
-  --held-bg:  #F4F0E6;
-  --held-ln:  #DED4BE;
-
-  --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
-  --serif: "Newsreader", Georgia, serif;
-
-  --shadow: 0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+  --ground:   var(--canvas);
+  --card:     var(--surface);
+  --raise:    var(--raised);
+  --mid:      var(--body);
+  --rule:     var(--line);
+  --rust:     var(--owed);
+  --rust-dim: var(--owed-w);
+  --owed-bg:  var(--owed-w);
+  --owed-ln:  var(--owed-l);
+  --ok-bg:    var(--ok-w);
+  --ok-ln:    var(--ok-l);
+  --held:     var(--warn);
+  --held-bg:  var(--warn-w);
+  --held-ln:  var(--warn-l);
+  --shadow:   var(--sh1);
+  --sans:     var(--serif);
+  --serif-f:  var(--display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ground: #131315; --card: #1B1B1D; --raise: #212124;
-    --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
-    --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
-    --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
-    --ok: #5FBF9B; --ok-bg: #14231E;
-    --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
-  }
-}
-:root[data-theme="dark"] {
-  --ground: #131315; --card: #1B1B1D; --raise: #212124;
-  --ink: #EDEBE5; --mid: #B0AEA5; --muted: #8A8880; --faint: #6A6862;
-  --rule: #2E2E31; --rust: #D9744C; --rust-dim: #2A1A13;
-  --owed: #E8776D; --owed-bg: #2C1614; --owed-ln: #4A2320;
-  --ok: #5FBF9B; --ok-bg: #14231E;
-  --held: #B9A77E; --held-bg: #23201A; --held-ln: #3C3628;
-  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
-}
 
 * { box-sizing: border-box; }
 /* A display rule on a component beats the hidden attribute, which left the
@@ -670,7 +650,12 @@ footer {
 <body>
 
 
-<main>
+<main style="position:relative">
+
+  <!-- The plate in the margin, as an atlas repeats its figure beside the text.
+       Desktop only — a phone has no margin to put it in. The front door asks
+       for the long view, so it asks for the Hudson River School first. -->
+  <div class="hub-marginal hub-plate" data-plate="church-andes bierstadt-rockies cole-oxbow" aria-hidden="true"></div>
 
   <div class="cond" id="cond-bar">
     <span class="pip"></span>

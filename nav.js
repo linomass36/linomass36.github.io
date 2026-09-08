@@ -36,6 +36,37 @@
     try { if (m) return m.groups(); } catch (e) {}
     return FALLBACK_GROUPS;
   }
+  /* Every one of these degrades to the old behaviour if sitemap.js failed to
+     load: a drawer that throws leaves a page with no way out, which is worse
+     than a drawer that is merely out of date. */
+  function dests() {
+    var m = SM();
+    try { if (m && m.byDestination) return m.byDestination(); } catch (e) {}
+    return groups().map(function (g) {
+      return { id: g[0], name: g[0], plain: g[0], blurb: '',
+               panels: g[1].map(function (p) { return { href: p[0], panel: p[1] }; }) };
+    });
+  }
+  function SMnaming() {
+    var m = SM();
+    try { if (m && m.naming) return m.naming(); } catch (e) {}
+    return 'named';
+  }
+  function setNaming(mode) {
+    var m = SM();
+    try { if (m && m.setNaming) m.setNaming(mode); } catch (e) {}
+  }
+  function destLabel(d, mode) {
+    var m = SM();
+    try { if (m && m.destLabel) return m.destLabel(d, mode); } catch (e) {}
+    return { title: d.name || d.id, sub: d.blurb || '' };
+  }
+  function pageLabel(file, mode) {
+    var m = SM();
+    try { if (m && m.label) return m.label(file, mode); } catch (e) {}
+    return { title: file, sub: '' };
+  }
+
   function behindReference(file) {
     var m = SM();
     try { return !!(m && m.isArchived(file)); } catch (e) { return false; }
@@ -130,6 +161,14 @@
     '.hbnav-sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .18s;}' +
     '.hbnav-toggle.on .hbnav-sw{background:#3B6D11;}' +
     '.hbnav-toggle.on .hbnav-sw::after{transform:translateX(14px);}' +
+    '.hbnav-pl{flex-direction:column;align-items:flex-start;gap:1px;}' +
+    '.hbnav-pn{font-size:14.5px;color:#26271F;}' +
+    '.hbnav-dest{padding:13px 10px 5px;}' +
+    '.hbnav-dt{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;' +
+    'text-transform:uppercase;color:#993C1D;}' +
+    '.hbnav-db{font-size:11.5px;color:#8a8577;line-height:1.45;margin-top:3px;}' +
+    '.hbnav-was{font-family:"IBM Plex Mono",monospace;font-size:9.5px;' +
+    'color:#B4B2A9;letter-spacing:.04em;}' +
     '@media (max-width:640px){#hbnav-panel{width:86%;}}';
 
   function build() {
@@ -147,7 +186,7 @@
     var btn = document.createElement('button');
     btn.id = 'hbnav-btn';
     btn.type = 'button';
-    btn.setAttribute('aria-label', 'Open bookmarks');
+    btn.setAttribute('aria-label', 'Open navigation');
     btn.innerHTML = '&#9776;';
 
     var back = document.createElement('div');
@@ -160,16 +199,40 @@
     root.appendChild(panel);
 
     function render() {
-      var pageLinks = groups().map(function (g) {
-        var links = g[1].map(function (p) {
-          /* Standing on one of the archived v1 documents, the drawer
-             highlights the door you came through rather than nothing at
-             all — you are inside the Archive, and the drawer should say
-             so, which also makes it obvious you are not on a live page. */
-          var on = (p[0] === here || (p[0] === 'Archive.html' && behindReference(here))) ? ' on' : '';
-          return '<a class="hbnav-lnk' + on + '" href="' + esc(p[0]) + '">' + esc(p[1]) + '</a>';
+      /* ── the drawer, by destination ─────────────────────────────────────
+         It used to be a flat list of thirty-one names under eight themed
+         headings, which is a directory rather than a way of getting anywhere:
+         to open the grind board you had to know it lived under "Body", and
+         nothing on screen said what "Recalibrate" or "The Examiner" were.
+
+         Now it is the ten places v5 has, each with a sentence saying what it
+         is for, and its panels underneath. The pages have not moved — every
+         panel is still its own file — so this is the whole navigation change
+         arriving before any content does. */
+      var mode = SMnaming();
+      var pageLinks = dests().map(function (d) {
+        var lbl = destLabel(d, mode);
+        var panels = (d.panels || []).map(function (p) {
+          /* `p.href` may carry a hash once a page is folded, so compare on the
+             file it came from — otherwise standing on Plan.html lights nothing. */
+          var pf = p.file || p.href;
+          var on = (pf === here || p.href === here ||
+                    (pf === 'Archive.html' && behindReference(here))) ? ' on' : '';
+          /* The panel name and the page's own name are usually the same word —
+             "Verify" is "Verify" — and printing both is noise that makes the
+             drawer look broken. The second line appears only when it actually
+             tells you something, which is where a panel was renamed: Session
+             was the Grind board, Log was the Life Log. */
+          var pl = pageLabel(p.href, mode);
+          var alt = (pl.title && pl.title.toLowerCase() !== String(p.panel).toLowerCase())
+                    ? '<span class="hbnav-was">' + esc(pl.title) + '</span>' : '';
+          return '<a class="hbnav-lnk hbnav-pl' + on + '" href="' + esc(p.href) + '">' +
+                 '<span class="hbnav-pn">' + esc(p.panel) + '</span>' + alt + '</a>';
         }).join('');
-        return '<div class="hbnav-grp">' + g[0] + '</div>' + links;
+        return '<div class="hbnav-dest">' +
+                 '<div class="hbnav-dt">' + esc(lbl.title) + '</div>' +
+                 (lbl.sub ? '<div class="hbnav-db">' + esc(lbl.sub) + '</div>' : '') +
+               '</div>' + panels;
       }).join('');
 
       var bms = readBookmarks();
@@ -184,17 +247,27 @@
       if (!bms.length) bmLinks = '<div style="padding:6px 10px;font-size:12px;color:#A6A79F;font-style:italic;">No bookmarks yet.</div>';
 
       panel.innerHTML =
-        '<div class="hbnav-hd"><b>Bookmarks</b><span>' + (VERSION ? 'v' + esc(VERSION) : '') + '</span></div>' +
+        '<div class="hbnav-hd"><b>Go to</b><span>' + (VERSION ? 'v' + esc(VERSION) : '') + '</span></div>' +
         '<div class="hbnav-scroll">' +
           '<button class="hbnav-toggle' + (isDark() ? ' on' : '') + '" id="hbnav-theme">' +
             '<span>Dark mode</span><span class="hbnav-sw"></span></button>' +
-          '<div class="hbnav-sec">Pages</div>' + pageLinks +
+          '<button class="hbnav-toggle' + (mode === 'plain' ? ' on' : '') + '" id="hbnav-naming">' +
+            '<span>Plain names</span><span class="hbnav-sw"></span></button>' +
+          '<div class="hbnav-sec">Where things are</div>' + pageLinks +
           '<div class="hbnav-sec">Saved</div>' + bmLinks +
           '<button class="hbnav-add" id="hbnav-add">+ Add bookmark</button>' +
         '</div>';
 
       panel.querySelector('#hbnav-theme').addEventListener('click', function () {
         applyTheme(!isDark());
+        render();
+      });
+      /* The names on this site are written rather than descriptive, which reads
+         well and tells a newcomer nothing. Rather than choosing for you, both
+         are here: the toggle swaps which one is big and which is the subtitle,
+         and the choice syncs like any other preference. */
+      panel.querySelector('#hbnav-naming').addEventListener('click', function () {
+        setNaming(SMnaming() === 'plain' ? 'named' : 'plain');
         render();
       });
       panel.querySelector('#hbnav-add').addEventListener('click', function () {
@@ -261,10 +334,36 @@
   /* The five things actually used day to day, declared in sitemap.js beside
      everything else. Deliberately not the spine: the spine is an ownership
      model and this is a usage one. */
+  /* The tab bar is destinations now, not pages. tabLinks() resolves each one
+     to whatever page it currently lands on, so when a destination is folded
+     into a single file this keeps working with no edit here. Falls back to the
+     raw pairs, and then to two hardcoded links, because a phone with no tab
+     bar and no visible drawer button is a phone with no navigation at all. */
   function tabs() {
     var m = SM();
-    try { if (m && m.tabs && m.tabs.length) return m.tabs; } catch (e) {}
+    try {
+      if (m && m.tabLinks) {
+        var t = m.tabLinks();
+        if (t && t.length) return t.map(function (x) { return [x.href, x.label, x.icon]; });
+      }
+      if (m && m.tabs && m.tabs.length && m.tabs[0].length === 3 &&
+          /\.html$/.test(m.tabs[0][0])) return m.tabs;
+    } catch (e) {}
     return [['Standing.html', 'Standing', '\u25C6'], ['Today.dc.html', 'Today', '\u25F7']];
+  }
+
+  /* A tab is "on" for its whole destination, not just its landing page: open
+     the Rest panel and the Body tab should still be lit. */
+  function tabActive(href, here) {
+    if (href === here) return true;
+    var m = SM();
+    try {
+      if (m && m.destOf) {
+        var a = m.destOf(href), b = m.destOf(here);
+        return !!a && a === b;
+      }
+    } catch (e) {}
+    return false;
   }
 
   function buildTabs() {
@@ -297,7 +396,7 @@
     tabs().forEach(function (t) {
       var a = document.createElement('a');
       a.href = t[0];
-      if (t[0] === here) { a.className = 'on'; a.setAttribute('aria-current', 'page'); }
+      if (tabActive(t[0], here)) { a.className = 'on'; a.setAttribute('aria-current', 'page'); }
       a.innerHTML = '<span class="g"></span><span class="l"></span>';
       a.firstChild.textContent = t[2];
       a.lastChild.textContent = t[1];
