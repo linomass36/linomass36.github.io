@@ -34,14 +34,16 @@ function plannedWeek() {
              blocks: [{ title: 'Clinic', kind: 'work', from: '8:00', to: '17:00', hours: 9, allDay: false }] },
     [TUE]: { session: 'Engine', slot: 'tue', done: false, committed: 5, free: 10,
              blocks: [{ title: 'Smoothie bar', kind: 'work', from: '9:00', to: '14:00', hours: 5, allDay: false }] },
-    [WED]: { session: 'Strength A', slot: 'mon', done: false, committed: 0, free: 15, blocks: [] },
+    [WED]: { session: 'Strength A', slot: 'mon', done: false, committed: 6, free: 9,
+             blocks: [{ title: 'Smoothie bar', kind: 'other', from: '9:00', to: '15:00', hours: 6, allDay: false }] },
     [THU]: { session: 'Strength B', slot: 'wed', done: true, committed: 2, free: 13,
              blocks: [{ title: 'Lecture', kind: 'class', from: '10:00', to: '12:00', hours: 2, allDay: false }] },
     '2026-09-11': { session: 'Strength C + shadow', slot: 'fri', done: false, committed: 0, free: 15, blocks: [] },
     '2026-09-12': { session: 'Long easy', slot: 'sat', done: false, committed: 4, free: 11,
                     blocks: [{ title: 'Shift', kind: 'work', from: '8:00', to: '12:00', hours: 4, allDay: false }] },
-    '2026-09-13': { session: null, slot: null, done: false, committed: 6, free: 9,
-                    blocks: [{ title: 'Shift', kind: 'work', from: '9:00', to: '15:00', hours: 6, allDay: false }] },
+    /* A Sunday the calendar has nothing on — the template still assumes the
+       9:00 shift, and the board must not print an hour nobody booked. */
+    '2026-09-13': { session: null, slot: null, done: false, committed: 0, free: 15, blocks: [] },
   } };
 }
 
@@ -134,10 +136,82 @@ group('The timetable stops printing a shift that is not happening');
   ok(/calendar/.test(v.shapeNote), 'and the page says where those hours came from');
   ok(v.dayTitle === 'Non-impact work capacity', 'Monday is carrying the Thursday session');
 
-  b.state.day = 'wed';                       // Wednesday, nothing on the calendar
+  b.state.day = 'sun';                       // the template assumes a 9:00 shift; the calendar has none
   const w = b.renderVals();
-  ok(w.slots.filter(s => s.kind === 'work').length === 0, 'a clear day prints no shift');
+  ok(w.slots.filter(s => s.kind === 'work').length === 0, 'a day your calendar left clear prints no shift');
   ok(/dropped/.test(w.shapeNote), 'and says the template’s shift was dropped, not that the day is empty');
+}
+
+group('A job the classifier cannot name is still an hour you are busy');
+{
+  /* The classifier reads titles — clinic, ward, shift, lecture — and colours
+     by them. Filtering the timetable through it meant the clinical rota
+     appeared and the job did not, because "Smoothie bar" is none of those
+     words. It is six hours either way. */
+  const b = board({ ct_week_v1: JSON.stringify(plannedWeek()), ct_grind_v1: JSON.stringify(GRIND) });
+  b.state.day = 'wed';
+  const v = b.renderVals();
+  const booked = v.slots.filter(s => /Smoothie bar/.test(s.label));
+  ok(booked.length === 1 && booked[0].time === '9:00–15:00',
+     'the shift is on the timetable, whatever the classifier made of its name');
+  ok(/6h booked/.test(v.shapeNote), 'and the hours are counted (' + v.shapeNote.slice(0, 60) + '…)');
+}
+
+group('Nothing is booked twice');
+{
+  /* The template kept its hardcoded times, so breakfast, the shower, the
+     cardio and the posture resets sat on top of the hours you were at work.
+     A timetable that double-books you cannot be followed, and it hides the
+     real problem, which is that the day is short. */
+  const b = board({ ct_week_v1: JSON.stringify(plannedWeek()), ct_grind_v1: JSON.stringify(GRIND) });
+  b.state.day = 'wed';
+  const v = b.renderVals();
+  const m = (t) => { const p = t.split(':'); return (+p[0]) * 60 + (+p[1]); };
+  const span = (s) => { const p = s.time.split('–'); return [m(p[0]), m(p[1])]; };
+  const shift = span(v.slots.filter(s => /Smoothie bar/.test(s.label))[0]);
+  const over = v.slots.filter(s => !/Smoothie bar/.test(s.label))
+                      .filter(s => { const [a, z] = span(s); return a < shift[1] && z > shift[0]; });
+  const real = over.filter(s => { const [a, z] = span(s); return z - a > 10; });
+  ok(real.length === 0, 'no block of the day sits on the shift (' +
+     real.map(c => c.label + ' ' + c.time).join(', ') + ')');
+  /* The one deliberate exception: the programme puts a two-minute posture
+     reset mid-shift, at the bar. Moving that one out of the shift would be
+     obeying the rule and losing the point of it. */
+  ok(over.length === 1 && /Posture reset/.test(over[0].label),
+     'except the mid-shift posture reset, which is meant to be done there');
+
+  const moved = v.slots.filter(s => s.cls === 'shifted');
+  ok(moved.length > 0, moved.length + ' blocks moved to clear it');
+  ok(/moved from/.test(moved[0].sub), 'and each says where it was (' + moved[0].sub.slice(0, 30) + '…)');
+  const times = v.slots.map(s => span(s)[0]);
+  ok(times.every((t, i) => i === 0 || t >= times[i - 1]), 'the day still runs forwards');
+
+  /* Same blocks, same lengths — the day is pushed, not rewritten. */
+  const plain = board({}).renderVals();
+  const len = (rows) => { const o = {}; rows.forEach(s => { o[s.label] = span(s)[1] - span(s)[0]; }); return o; };
+  const was = len(plain.slots), now = len(v.slots);
+  ok(Object.keys(now).filter(k => !/Smoothie bar/.test(k)).every(k => was[k] === now[k]),
+     'nothing was shortened to make room');
+  ok(v.slots.map(s => s.label).indexOf('Strength B') < v.slots.map(s => s.label).indexOf('Shower, food'),
+     'and the order the day was written in survives');
+
+  /* An appointment with other people is a time you have given away. */
+  const gathering = v.slots.filter(s => /gathering/i.test(s.label))[0];
+  ok(gathering && gathering.time === '19:00–23:00', 'the evening gathering holds its hour (' +
+     (gathering ? gathering.time : 'missing') + ')');
+  ok(!gathering.cls, 'and is not described as moved');
+}
+
+group('What will not fit is named rather than dropped');
+{
+  const week = plannedWeek();
+  week.days[WED].blocks = [{ title: 'Double shift', kind: 'other', from: '6:00', to: '22:00', hours: 16, allDay: false }];
+  const b = board({ ct_week_v1: JSON.stringify(week), ct_grind_v1: JSON.stringify(GRIND) });
+  b.state.day = 'wed';
+  const v = b.renderVals();
+  ok(v.hasSpill === true, 'a sixteen-hour day cannot hold the template');
+  ok(/did not fit/.test(v.spillNote), 'and the page says which blocks (' + v.spillNote.slice(0, 60) + '…)');
+  ok(v.slots.filter(s => s.time === '6:00–22:00').length === 1, 'the shift itself is drawn once');
 }
 
 group('A tick on the board is a tick on the week, on the right date');
@@ -191,9 +265,11 @@ group('The week view is dated, and reads off the calendar');
   ok(rows[0].day === 'Mon 7 Sep', 'rows carry their date (' + rows[0].day + ')');
   ok(/8:00–17:00 · Clinic/.test(rows[0].shift), 'and the shift is the calendar’s (' + rows[0].shift + ')');
   ok(rows[0].focus === 'Non-impact work capacity', 'Monday is showing the session it actually holds');
+  ok(/9:00–15:00 · Smoothie bar/.test(rows[2].shift),
+     'and a job the classifier cannot name is on the week too (' + rows[2].shift + ')');
   ok(/Moved here/.test(rows[2].sub), 'a moved session says where it came from');
   ok(/6h free/.test(rows[0].sub), 'and the row says how much of the day is left (' + rows[0].sub.slice(0, 40) + '…)');
-  ok(rows[6].shift === 'Clear' || /·/.test(rows[6].shift), 'Sunday still renders with no session placed');
+  ok(rows[6].shift === 'Clear', 'a day with nothing booked says so plainly (' + rows[6].shift + ')');
 }
 
 console.log(failed ? '\n' + failed + ' FAILED' : '\nall green');

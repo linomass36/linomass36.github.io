@@ -82,6 +82,8 @@
   .gb-slot.k-people .gb-bar { background: #993C1D; }
   .gb-slot.k-faith .gb-bar { background: #6E4B8A; }
   .gb-slot.k-upkeep .gb-bar { background: #DEDBD3; }
+  /* A block that had to move to clear a booked hour. */
+  .gb-slot.shifted .gb-time { color: #7d5713; }
   .gb-label { font-size: 14px; color: #26271F; line-height: 1.35; }
   .gb-sub { font-size: 12px; color: #8a8577; line-height: 1.5; margin-top: 2px; }
 
@@ -220,9 +222,12 @@
         <sc-if value="{{ hasShapeNote }}" hint-placeholder-val="{{ false }}">
           <div class="gb-note" style="margin-top: 6px;">{{ shapeNote }}</div>
         </sc-if>
+        <sc-if value="{{ hasSpill }}" hint-placeholder-val="{{ false }}">
+          <div class="gb-moved">{{ spillNote }}</div>
+        </sc-if>
         <div style="margin-top: 12px;">
           <sc-for list="{{ slots }}" as="s" hint-placeholder-count="12">
-            <div class="gb-slot k-{{ s.kind }}">
+            <div class="gb-slot k-{{ s.kind }} {{ s.cls }}">
               <span class="gb-time">{{ s.time }}</span>
               <span class="gb-bar"></span>
               <span>
@@ -599,24 +604,96 @@ class Component extends DCLogic {
     return !!d.sessions[d.week + '|' + slot];
   }
 
-  /* The timetable is grind-data's and it hardcodes the shift each weekday
-     used to carry. Where the calendar disagrees the calendar wins: its blocks
-     REPLACE the template's work rows rather than sitting beside them, because
-     two different shift times on one page is exactly the confusion this join
-     exists to end. */
+  /* ── the day, laid around what is actually booked ───────────────────────
+     The timetable is grind-data's, and it hardcodes the shift each weekday
+     used to carry. Two things went wrong when the real day differed.
+
+     ONE: only events the classifier called work or class were shown. That
+     rule reads titles — clinic, ward, shift, lecture — so the clinical
+     timetable appeared and the job did not, because "Smoothie bar" matches
+     none of those words. A commitment is a commitment however it is named,
+     so EVERY timed event on the day is drawn now, and the classifier is left
+     to do the one job it is good at: colouring them.
+
+     TWO: the template's own rows kept their hardcoded times, so breakfast,
+     the shower, the cardio and the posture resets sat on top of the hours
+     you were at work. A timetable that double-books you is worse than no
+     timetable: it cannot be followed and it hides the real problem, which is
+     that the day is short.
+
+     So the calendar's blocks are the spine and everything else flows around
+     them: same order, same durations, pushed later when — and only when — a
+     block would land on top of a commitment. What runs off the end of the
+     day is not silently dropped, it is listed. That is the day telling you
+     something, in the same voice the Week page uses when a session will not
+     fit. */
   mins(t) { const p = String(t == null ? '' : t).split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); }
+  hhmm(m) { return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
+
   dayShape(G, dayId, week, slotId, pday) {
     const rows = (G.build(dayId, week, slotId) || []).slice();
-    if (!pday || !pday.planned) return { rows, source: '' };
-    const real = (pday.blocks || []).filter(b => b && b.from && b.to && (b.kind === 'work' || b.kind === 'class'));
-    const kept = rows.filter(r => r[2] !== 'work');
-    const dropped = rows.length - kept.length;
-    real.forEach(b => kept.push([b.from, b.to, 'work', b.title, 'from your calendar', null, null]));
-    kept.sort((a, b2) => this.mins(a[0]) - this.mins(b2[0]));
-    const source = real.length
-      ? 'The shift rows are your calendar, not the template.'
-      : (dropped ? 'Nothing on your calendar this day — the template\u2019s shift has been dropped rather than shown.' : '');
-    return { rows: kept, source };
+    if (!pday || !pday.planned) return { rows, source: '', spill: [], moved: 0 };
+
+    const LATE = 180;        // a block pushed more than three hours is not that block
+    const blocks = pday.blocks || [];
+    const timed = blocks.filter(b => b && !b.allDay && b.from && b.to)
+                        .map(b => ({ a: this.mins(b.from), b: this.mins(b.to), t: b.title, k: b.kind }))
+                        .filter(b => b.b > b.a)
+                        .sort((x, y) => x.a - y.a);
+    const allDay = blocks.filter(b => b && b.allDay);
+
+    /* The template's own shift rows go: the calendar's are the real ones. */
+    const own = rows.filter(r => r[2] !== 'work');
+    const droppedOwn = rows.length - own.length;
+
+    /* Two kinds of block, and only one of them may be moved. An appointment
+       with other people — the gathering, church — is a time you have given
+       away, so it holds its hour and the day flows round it exactly as it
+       flows round the calendar. Everything else is yours to move. */
+    const ANCHOR = { people: 1, faith: 1 };
+    const busy = timed.slice();
+    own.forEach(r => { if (ANCHOR[r[2]]) busy.push({ a: this.mins(r[0]), b: this.mins(r[1]), t: r[3] }); });
+
+    /* Flow the rest around them, in order, keeping durations. A block only
+       moves as far as it must, and never earlier — the day runs late, it is
+       not rewritten. */
+    const END = 24 * 60;
+    const out = [], spill = [];
+    let cursor = 0, moved = 0;
+    own.forEach((r, idx) => {
+      const s0 = this.mins(r[0]), dur = Math.max(5, this.mins(r[1]) - s0);
+      const row = r.slice();
+      row[8] = idx;        // its place in the TEMPLATE — what its ticks are keyed by
+      if (ANCHOR[r[2]]) { out.push(row); return; }   // held, not flowed
+      /* A posture reset is two minutes and the programme puts one mid-shift,
+         at the bar, on purpose. Blocks this short do not need a free hour and
+         are not moved out of one. */
+      if (dur <= 10) { out.push(row); return; }
+      let s = Math.max(s0, cursor), guard = 0;
+      for (let i = 0; i < busy.length && guard < 128; i++) {
+        if (s < busy[i].b && s + dur > busy[i].a) { s = busy[i].b; i = -1; guard++; }
+      }
+      /* Drawn at 23:10, "eat before people arrive" is not that block any
+         more — it is a lie with a time on it. Past three hours late, say it
+         did not fit and let the day be the thing that is wrong. */
+      if (s + dur > END || s - s0 > LATE) { spill.push(r[3]); return; }
+      row[0] = this.hhmm(s); row[1] = this.hhmm(s + dur);
+      if (s !== s0) { row[7] = 'moved from ' + this.hhmm(s0); moved++; }
+      out.push(row);
+      busy.push({ a: s, b: s + dur, t: r[3] });
+      cursor = s + dur;
+    });
+
+    timed.forEach(b => out.push([this.hhmm(b.a), this.hhmm(b.b), 'work', b.t, 'on your calendar', null, null]));
+    out.sort((a, b2) => this.mins(a[0]) - this.mins(b2[0]));
+    allDay.forEach(b => out.unshift(['all', 'day', 'work', b.title, 'all day, on your calendar', null, null]));
+
+    const hrs = Math.round(timed.reduce((t, b) => t + (b.b - b.a), 0) / 6) / 10;
+    const source = timed.length
+      ? 'Your calendar has ' + hrs + 'h booked today' + (moved ? ', so ' + moved + ' block' +
+          (moved === 1 ? '' : 's') + ' moved to fit round ' + (timed.length === 1 ? 'it' : 'them') : ', and nothing collided with it') + '.'
+      : (droppedOwn ? 'Nothing on your calendar this day — the template\u2019s shift has been dropped rather than shown.' : '');
+    return { rows: out, source, spill, moved };
   }
 
   /* The week is done when all six sessions and the week's cardio row are
@@ -735,6 +812,7 @@ class Component extends DCLogic {
                noChecks: true, checkHead: '', sessionCls: '', sessionLabel: '', toggleSession: () => {},
                hasMoved: false, movedNote: '', hasDayFree: false, dayFree: '',
                hasPlanLine: false, planLine: '', hasShapeNote: false, shapeNote: '',
+               hasSpill: false, spillNote: '',
                weekRows: [], lifts: [], runRows: [], bmRows: [], hasToast: false, toast: '' };
     }
     this.converge();
@@ -767,21 +845,27 @@ class Component extends DCLogic {
     const shape = this.dayShape(G, dayId, d.week, slotId, pday);
     const slotsRaw = shape.rows;
     const slots = slotsRaw.map(s => ({
-      time: s[0] + '–' + s[1], kind: s[2] || 'rest', label: s[3],
-      sub: s[4] || '', hasSub: !!s[4],
+      time: s[0] === 'all' ? 'all day' : s[0] + '–' + s[1],
+      kind: s[2] || 'rest', label: s[3],
+      cls: s[7] ? 'shifted' : '',
+      sub: s[7] ? (s[4] ? s[7] + ' · ' + s[4] : s[7]) : (s[4] || ''),
+      hasSub: !!(s[7] || s[4]),
     }));
 
     // Checklist items, grouped by the slot they belong to — the same ids the
     // standalone board used, so a group keeps its identity week to week.
     const checks = d.checks[d.week + '|' + slotId] || {};
     const groups = [];
-    slotsRaw.forEach((s, i) => {
+    slotsRaw.forEach((s, n) => {
+      /* The row's index in the template, so a block that moved to clear a
+         booked hour keeps the ticks it already had. */
+      const i = s[8] != null ? s[8] : n;
       const items = [];
       if (s[6]) s[6].forEach(x => items.push({ id: 'x:' + i + ':' + x, label: x, sets: '' }));
       if (s[5] && s[5].b) s[5].b.forEach((b, bi) => (b.l || []).forEach((e, ei) =>
         items.push({ id: 'e:' + i + ':' + bi + ':' + ei, label: e.n, sets: e.s || '' })));
       if (!items.length) return;
-      const gid = slotId + '|' + s[0] + '|' + s[3];
+      const gid = slotId + '|' + i + '|' + s[3];
       const doneN = items.filter(it => checks[it.id]).length;
       groups.push({
         title: s[0] + ' · ' + s[3],
@@ -819,11 +903,16 @@ class Component extends DCLogic {
        day's real commitments and the session the planner could fit around
        them; where none has, the block's own timetable, unchanged. */
     const MONN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    /* EVERY commitment, not the ones whose titles the classifier recognises.
+       Filtering this by kind is what showed the clinical rota and hid the job:
+       "Smoothie bar" is not one of the words the rule looks for, and it is
+       still six hours you are not free. */
     const shiftOf = (p) => {
-      const b = (p.blocks || []).filter(x => x.kind === 'work' || x.kind === 'class');
+      const b = (p.blocks || []).slice()
+        .sort((x, y) => this.mins(x.from || '0:00') - this.mins(y.from || '0:00'));
       if (!b.length) return p.planned ? 'Clear' : '—';
       const first = b[0], last = b[b.length - 1];
-      return (first.allDay ? 'all day' : first.from + '–' + last.to) +
+      return (first.allDay ? 'all day' : first.from + '–' + (last.to || first.to)) +
              ' · ' + first.title + (b.length > 1 ? ' +' + (b.length - 1) : '');
     };
     const weekRows = G.WEEK.map(x => {
@@ -969,6 +1058,12 @@ class Component extends DCLogic {
                      ' of them moved off the day the grid would have used. ' + wp.done + ' done.'
         : wp.placed + ' of 6 sessions placed, and your calendar left every one on its usual day. ' + wp.done + ' done.',
       hasShapeNote: !!shape.source, shapeNote: shape.source,
+      hasSpill: !!(shape.spill && shape.spill.length),
+      spillNote: (shape.spill && shape.spill.length)
+        ? shape.spill.length + ' block' + (shape.spill.length === 1 ? '' : 's') +
+          ' did not fit round what is booked: ' + shape.spill.join(', ') +
+          '. That is the day being full, not the list being wrong.'
+        : '',
 
       slots, slotCount: slots.length + ' blocks, ' +
         (pday ? shiftOf(pday) === 'Clear' ? 'no shift on your calendar' : 'your calendar\u2019s shift'

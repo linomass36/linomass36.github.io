@@ -955,7 +955,21 @@ draw that: dated rows, your calendar's shift rather than the template's, and a
 line saying what moved. It also makes a tick one fact in three places: the
 board's store, the dated week the Trends table reads as `trained`, and the Life
 Log's gym flag **for the day the session was actually done** — which the board
-used to stamp on today whichever day you were looking at. It owns no store of
+used to stamp on today whichever day you were looking at.
+
+The day itself is laid **around what is booked**. Every timed event on the
+calendar is drawn, whatever the classifier made of its title — filtering that by
+kind is what showed the clinical rota and hid the job, since "Smoothie bar"
+matches none of the words the rule looks for and is six hours either way. The
+template's own blocks then flow round those hours in their own order, at their
+own lengths, moving later only as far as they must: a timetable that puts the
+shower and the cardio on top of a shift cannot be followed, and it hides the
+real problem, which is that the day is short. Two exceptions, both deliberate: a
+block under ten minutes stays where it is, because the programme puts a posture
+reset mid-shift on purpose; and an appointment with other people — the gathering,
+church — holds its hour and is flowed round like the calendar's own. What would
+land more than three hours late, or past midnight, is **named** under the
+timetable rather than drawn at an hour that makes it a different block. It owns no store of
 its own; every write lands in a store that already existed, in the shape it
 already had, so `facts.js`, `systems.js`, Today and the backup keep reading
 what they read. Load the two pages without it and each behaves exactly as it
