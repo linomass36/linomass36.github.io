@@ -71,5 +71,42 @@ if (fs.existsSync(plates)) {
   });
 }
 
+/* Every catalogued picture declares which of the three groups it belongs to.
+   The Guide renders the list group by group, and the grouping used to be
+   worked out from the file name against a hardcoded list of the Polish ones —
+   so every painting added after that list was written landed silently in
+   "American". An entry with no group, or a group the Guide does not render,
+   is now a build failure rather than a quiet miscategorisation. */
+const GROUPS = ['anatomy', 'polish', 'american'];
+{
+  const vm = require('vm');
+  const doc = { readyState: 'complete', querySelectorAll: () => [],
+                addEventListener: () => {}, createElement: () => ({}) };
+  const ctx = { window: {}, document: doc, Image: function () {},
+                fetch: () => Promise.reject(new Error('no network in tests')),
+                Promise, Object, Array, String, Math, Number, console, setTimeout };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'plates.js'), 'utf8'), ctx,
+                  { filename: 'plates.js' });
+  const cat = ctx.window.Plates.catalogue;
+
+  Object.keys(cat).forEach(function (k) {
+    const g = cat[k].group;
+    ok(GROUPS.indexOf(g) !== -1, k + ' declares one of ' + GROUPS.join('/') + ' (got ' + g + ')');
+    ok(!!cat[k].who && !!cat[k].title && !!cat[k].year,
+       k + ' has an artist, a title and a year to caption it with');
+  });
+
+  /* And the catalogue and the directory agree in both directions — a
+     catalogued picture with no file shows as "not yet" forever. */
+  const onDisk = fs.existsSync(plates)
+    ? fs.readdirSync(plates).filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+        .map((f) => f.replace(/\.[^.]+$/, ''))
+    : [];
+  Object.keys(cat).forEach(function (k) {
+    ok(onDisk.indexOf(k) !== -1, 'catalogued picture ' + k + ' has a file in plates/');
+  });
+}
+
 if (fails) { console.error('vault-dirs: ' + fails + ' failure(s)'); process.exit(1); }
 console.log('vault-dirs: ok');

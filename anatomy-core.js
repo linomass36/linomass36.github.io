@@ -474,7 +474,12 @@
        block had closed that week. Each line now says what is actually the case.
        What fires is untouched — only the wording turns. */
     var cardsPer = w.closed > 0 ? Math.round(w.cardsNew / w.closed) : null;
-    var pastGate = !!gate() && t >= gate();
+    /* Strictly after. The gate is the date the thorax has to be closed BY,
+       so on the gate day itself you are not past it — you are on it. `>=`
+       here said "Past 2026-09-08" on 2026-09-08, which is both untrue and
+       the one day the line most needs to be believed. */
+    var pastGate  = !!gate() && t > gate();
+    var gateToday = !!gate() && t === gate();
 
     return [
       { fired: open.length > 5,
@@ -509,8 +514,11 @@
           : pastGate
             ? (thoraxStarted ? 'Past ' + gate() + ' and thorax has started.'
                              : 'Past ' + gate() + ' and thorax has not started. Move unfinished regions to closure-track and begin.')
-            : (thoraxStarted ? 'Thorax has started, ahead of the ' + gate() + ' gate.'
-                             : daysBetween(t, gate()) + ' days to the thorax gate on ' + gate() + '.') },
+            : gateToday
+              ? (thoraxStarted ? 'The thorax gate is today, and thorax has started.'
+                               : 'The thorax gate is today, and thorax has not started.')
+              : (thoraxStarted ? 'Thorax has started, ahead of the ' + gate() + ' gate.'
+                               : daysBetween(t, gate()) + ' days to the thorax gate on ' + gate() + '.') },
     ];
   }
 

@@ -39,7 +39,7 @@
   <h1 class="hub-h1">The Guide</h1>
   <p class="hub-lede">What this hub is, where everything lives, and how to get
     it back if the browser forgets.</p>
-  <div class="hub-marginal hub-plate" data-plate="agnew-clinic vesalius-fabrica" aria-hidden="true"></div>
+  <div class="hub-marginal hub-plate" data-plate="maclise-thorax-ii church-twilight" aria-hidden="true"></div>
 
   <div class="hub-row-btns" style="margin-top:var(--s5)">
     <button class="hub-btn pri" id="run-tour" type="button">Run the tour</button>
@@ -94,16 +94,36 @@
 
   <div class="hub-kicker">The pictures</div>
   <div class="hub-card">
-    <h3 class="hub-h3">The paintings are opt-in, and the slots are already cut</h3>
-    <p class="hub-p">The margins of the wide pages hold a plate. Until a painting is installed that
-      plate is a drawn engraving — the heart and its great vessels, the opened thorax, the bronchial
-      tree. Put a file in <span class="hub-mono">plates/</span> with one of the names below and the
-      painting takes its place, captioned, wherever that slot asked for it. Remove the file and the
-      engraving comes back. There is nothing to configure.</p>
-    <p class="hub-p">Every one is public domain — the painters have been dead well over a century —
-      so Wikimedia Commons has a high-resolution scan of each. Resize to about 1600px on the long
-      edge and save as JPEG; a 4000px museum scan is eight megabytes and nothing here displays
-      wider than about 1200.</p>
+    <h3 class="hub-h3">What is on the walls, and why those</h3>
+
+    <figure class="hub-figure" id="fig-thorax">
+      <div class="frame"></div>
+      <figcaption id="fig-thorax-cap"></figcaption>
+    </figure>
+
+    <p class="hub-p">Three groups, because the brief asked for three things. The anatomy is Joseph
+      Maclise's <em>Surgical Anatomy</em> of 1859 — hand-tinted lithographs of the opened thorax,
+      drawn from dissection at a time when nobody could yet operate inside one. The heart in Plate I
+      is the organ this whole hub is pointed at, drawn eighty years before anyone learned to stop it
+      and start it again. Then the Polish history painting, and then the Hudson River School for the
+      long view — including Cole's <em>Course of Empire</em>, five canvases about a republic that
+      grows, gorges and is pulled down.</p>
+
+    <p class="hub-p">Each wide page carries one in the margin, chosen to suit it: the thorax on
+      the Plan, Grunwald on Money, Che&#322;mo&#324;ski's girl in the late-summer field on Rest.
+      They appear on a desktop, where there is a margin to put them in, and not on a phone, where
+      there is not.</p>
+
+    <div class="hub-strip" id="empire"></div>
+    <p class="hub-small" id="empire-note" hidden>Cole painted these five as one argument — a republic
+      that grows, gorges, and is pulled down — and they are kept in his order rather than sorted
+      into the rest.</p>
+
+    <p class="hub-p">All thirty are public domain — the painters and the anatomist have been
+      dead well over a century — and they ship as files rather than sealed with the rest of the
+      site, because a public painting is not your content. To add another, put the file in
+      <span class="hub-mono">plates/</span> and name it in a slot; there is no CSS to edit.</p>
+
     <div class="hub-list" id="plates"></div>
   </div>
 
@@ -169,16 +189,64 @@
       'plates.js did not load.</span><span class="d">The engravings still show; the ' +
       'inventory does not.</span></span></div>';
   } else {
+    var HEADS = {
+      anatomy:  'Cardiothoracic and anatomy \u2014 Maclise, Surgical Anatomy, 1859',
+      polish:   'Polish',
+      american: 'American \u2014 the Hudson River School'
+    };
+
     P.inventory().then(function (rows) {
-      ph.innerHTML = rows.map(function (r) {
-        return '<div class="hub-row"><span class="grow">' +
-          '<span class="t">' + esc(r.title) + '</span>' +
-          '<span class="d">' + esc(r.who) + ', ' + r.year + '</span>' +
-          '<span class="d" style="font-style:normal;font-family:var(--mono);' +
-          'font-size:11.5px;color:var(--faint)">plates/' + esc(r.file) + '</span></span>' +
-          '<span class="hub-chip' + (r.have ? ' ok' : '') + '">' +
-          (r.have ? 'installed' : 'not yet') + '</span></div>';
-      }).join('');
+      /* The big plate at the top of this section is whichever thoracic figure
+         is actually installed, so the figure and the list can never disagree. */
+      var lead = null;
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].group === 'anatomy' && rows[i].have) { lead = rows[i]; break; }
+      }
+      var fig = $('#fig-thorax');
+      if (lead) {
+        fig.querySelector('.frame').style.backgroundImage = 'url("' + lead.url + '")';
+        fig.querySelector('.frame').style.aspectRatio = '3 / 4';
+        $('#fig-thorax-cap').innerHTML = esc(lead.who) + ', <em>' + esc(lead.title) +
+          '</em>, ' + esc(lead.from || '') + (lead.plate ? ', Plate ' + esc(lead.plate) : '') +
+          ', ' + lead.year;
+      } else {
+        fig.hidden = true;
+      }
+
+      /* The Course of Empire, in Cole's order, as a strip rather than five
+         entries a page apart. Driven off the catalogue's own `from`, so it
+         picks up a sixth canvas if one is ever added and disappears if the
+         files are removed. */
+      var cycle = rows.filter(function (r) { return r.from === 'The Course of Empire' && r.have; });
+      if (cycle.length) {
+        $('#empire').innerHTML = cycle.map(function (r) {
+          return '<figure><div class="frame" style="background-image:url(&quot;' +
+            esc(r.url) + '&quot;)"></div><figcaption>' + esc(r.title) + '</figcaption></figure>';
+        }).join('');
+        $('#empire-note').hidden = false;
+      }
+
+      var out = '';
+      ['anatomy', 'polish', 'american'].forEach(function (g) {
+        var group = rows.filter(function (r) { return r.group === g; });
+        if (!group.length) return;
+        out += '<div class="hub-row" style="background:var(--sunken)">' +
+               '<span class="grow"><span class="d" style="font-style:normal;' +
+               'font-family:var(--sc);font-variant:small-caps;text-transform:lowercase;' +
+               'letter-spacing:.09em;color:var(--mid);margin:0">' + esc(HEADS[g]) +
+               '</span></span></div>';
+        out += group.map(function (r) {
+          return '<div class="hub-row"><span class="grow">' +
+            '<span class="t">' + esc(r.title) + '</span>' +
+            '<span class="d">' + esc(r.who) + ', ' + r.year +
+            (r.plate ? ', Plate ' + esc(r.plate) : '') + '</span>' +
+            '<span class="d" style="font-style:normal;font-family:var(--mono);' +
+            'font-size:11.5px;color:var(--faint)">plates/' + esc(r.file) + '</span></span>' +
+            '<span class="hub-chip' + (r.have ? ' ok' : '') + '">' +
+            (r.have ? 'installed' : 'not yet') + '</span></div>';
+        }).join('');
+      });
+      ph.innerHTML = out;
     });
   }
 

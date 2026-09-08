@@ -279,13 +279,29 @@ html.hb-dark .hub-plate { filter: invert(1) sepia(.35); opacity: .30; }
 .hub-plate.has-plate { background-image: none; opacity: 1; filter: none; }
 html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
 .hub-plate.has-plate::before {
-  content: ''; display: block; aspect-ratio: 1;
+  content: ''; display: block; aspect-ratio: var(--plate-ar, 1);
   background-image: var(--plate-figure);
   background-size: cover; background-position: center;
   border: 1px solid var(--line-2);
   box-shadow: 0 2px 7px rgba(36, 27, 16, .16);
 }
 .hub-marginal.has-plate { height: auto; }
+
+/* A cycle shown as a cycle. Cole painted the five Course of Empire canvases
+   as one argument, in order, and five separate figures scattered down a page
+   is not that argument. Wraps on a narrow screen; never scrolls the body. */
+.hub-strip { display: grid; gap: var(--s2); margin: var(--s4) 0;
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); }
+.hub-strip figure { margin: 0; }
+.hub-strip .frame {
+  border: 1px solid var(--line-2); background: var(--surface);
+  aspect-ratio: 3 / 2; background-size: cover; background-position: center;
+}
+.hub-strip figcaption {
+  font-family: var(--sc); font-size: 11px; letter-spacing: .07em;
+  font-variant: small-caps; text-transform: lowercase;
+  color: var(--muted); margin-top: 5px; text-align: center; line-height: 1.3;
+}
 
 /* The lettering under a plate, at the size an atlas actually sets it. */
 .plate-cap {
@@ -300,9 +316,14 @@ html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
 .hub-figure { margin: var(--s6) 0; }
 .hub-figure .frame {
   border: 1px solid var(--line-2); background: var(--surface);
-  padding: var(--s3); aspect-ratio: 4 / 3;
+  padding: var(--s3); aspect-ratio: var(--plate-ar-true, 4 / 3);
+  /* A full plate is shown whole: `contain`, never `cover`. Cropping a
+     figure to fill a box is what a stock photo is for, not an atlas. */
   background-image: var(--plate-figure, none);
-  background-size: cover; background-position: center;
+  background-size: contain; background-repeat: no-repeat;
+  background-position: center;
+  /* And it never takes more than a screenful, however tall the plate. */
+  max-height: 78vh;
 }
 .hub-figure.drawn .frame { background-size: 62%; background-repeat: no-repeat;
   background-position: center; }
@@ -383,9 +404,12 @@ html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
 .hub-row:first-child { border-top: none; }
 .hub-row:hover { background: var(--sunken); }
 .hub-row .grow { flex: 1; min-width: 0; }
-.hub-row .t { font-size: 17px; color: var(--ink); }
-.hub-row .d { font-size: 14.5px; color: var(--muted); font-style: italic;
-  margin-top: 1px; line-height: 1.45; }
+/* Each stacks. They are spans rather than blocks so a row can hold as many
+   as it needs, and without this a three-line row runs together into one
+   paragraph — title, credit and filename all on the same line. */
+.hub-row .t { display: block; font-size: 17px; color: var(--ink); }
+.hub-row .d { display: block; font-size: 14.5px; color: var(--muted);
+  font-style: italic; margin-top: 1px; line-height: 1.45; }
 .hub-row .v { font-family: var(--mono); font-size: 12px; color: var(--faint); flex: none; }
 
 /* ── controls ────────────────────────────────────────────────────────────── */
