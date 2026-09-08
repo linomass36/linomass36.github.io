@@ -940,12 +940,26 @@ columns the things that might explain them — the asymmetry keeps it readable
 on a phone, where an N x N grid of everything against everything is a wall.
 Cells below eight paired days are hatched and report nothing.
 
-**`Week.html` and `calendar.js`** make the week elastic. The Grind board is a
+**`Week.html` and `calendar.js`** make the week elastic. The Grind board was a
 fixed grid keyed `week|day` — `3|wed` — so a week where clinic
-eats Tuesday cannot be expressed: there is nowhere to put "moved to
+eats Tuesday could not be expressed: there was nowhere to put "moved to
 Thursday". That keying is also why training was invisible to the trends
-table. The new week reads what is already committed and lays the sessions
+table. The week reads what is already committed and lays the sessions
 into what is left, stored **by date**.
+
+**`training.js`** is the join, and it is what stops those being two accounts of
+the same six sessions. The board's key is read as *week and SESSION* rather
+than *week and weekday* — `1|mon` is Strength A's record, wherever the week
+puts Strength A — so the board can ask which day is carrying which session and
+draw that: dated rows, your calendar's shift rather than the template's, and a
+line saying what moved. It also makes a tick one fact in three places: the
+board's store, the dated week the Trends table reads as `trained`, and the Life
+Log's gym flag **for the day the session was actually done** — which the board
+used to stamp on today whichever day you were looking at. It owns no store of
+its own; every write lands in a store that already existed, in the shape it
+already had, so `facts.js`, `systems.js`, Today and the backup keep reading
+what they read. Load the two pages without it and each behaves exactly as it
+did before.
 
 Google Calendar reaches a static site three ways, and they differ in whether
 the week arrives on its own.
@@ -1400,6 +1414,9 @@ reading eight weeks in the past.
 - `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
 - `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
 - `calendar.js` + `Week.html` — the week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
+- `training.js` — the join between the planned week and the board: which slot a session label names, which date that slot landed on, and the one writer every "mark done" goes through. See **The rest of it** above.
+- `tools/training.test.js` — a session named two ways resolves to one slot, a date knows its week of the block, one tick reaches all three stores, a session moved to another day keeps its own record, the Life Log is stamped on the day it was done, and two stores filled in separately converge without resurrecting a session you cleared.
+- `tools/grind-board.test.js` — the board's own logic class, run for real: it falls back to the block's grid when no week has been pulled and says so, shows the session the calendar actually put on the day, prints your shift instead of the template's, and a tick on either page counts on both.
 - `tools/calendar.test.js` — the named calendars are the ones read and their events merged, an event on two of them is counted once, one calendar failing does not cost the others, the week you are standing in can be asked for rather than only the next one, every failure is named as itself rather than all of them as an expired token, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`, then the four tests that try to knock each pair down. See **Ruling things out** above.

@@ -107,6 +107,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 <script src="./day.js"></script>
 <script src="./config.js"></script>
 <script src="./calendar.js"></script>
+<script src="./training.js"></script>
 </head>
 <body>
 <header class="top">
@@ -141,10 +142,12 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 
   <div class="kicker">Why this is dated</div>
   <div class="note-box">
-    The Grind board keys its sessions <b>week|slot</b> — <b>3|push</b> — which cannot
-    be joined to a date, and is why training has never been visible to the trends
-    table. These are stored by date, so a session done on the 3rd is a fact about the
-    3rd, and <b>trained</b> becomes a column the correlations can read.
+    The Grind board keys its sessions <b>week|slot</b> — <b>3|mon</b> — which says
+    what was done but not when. These are stored by date, so a session done on the
+    3rd is a fact about the 3rd, and <b>trained</b> becomes a column the correlations
+    can read. The two are joined now rather than merely both existing: ticking a
+    session here marks it on the <b>board</b> and on the <b>Life Log</b> for the same
+    day, and the board lays its week out on the days this page found for it.
   </div>
 
   <footer>
@@ -158,6 +161,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
   var $ = function (s) { return document.querySelector(s); };
   function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
   var C = window.CTCalendar;
+  var T = window.CTTraining;
   var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var lastPlan = null;
 
@@ -195,7 +199,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     plan.days.forEach(function (d) {
       var st = saved[d.key] || {};
       var full = d.free < 1.5;
-      var row = el('div', 'day' + (st.done ? ' is-done' : full ? ' is-full' : ''));
+      var row = el('div', 'day' + ((T ? T.isDone(d.key, d.slot) : st.done) ? ' is-done' : full ? ' is-full' : ''));
       var hd = el('div', 'hd');
       hd.appendChild(el('span', 'dn', d.name));
       hd.appendChild(el('span', 'dd', MON[d.date.getMonth()] + ' ' + d.date.getDate()));
@@ -218,9 +222,13 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
         var btn = el('button');
         btn.type = 'button';
         btn.appendChild(el('span', null, d.session));
-        btn.appendChild(el('span', 'tick', st.done ? 'done ✓' : 'mark done'));
+        var isDone = T ? T.isDone(d.key, d.slot) : !!st.done;
+        btn.appendChild(el('span', 'tick', isDone ? 'done ✓' : 'mark done'));
         btn.addEventListener('click', function () {
-          C.markDone(d.key, !C.readWeek().days[d.key] || !C.readWeek().days[d.key].done);
+          /* Through the bridge, so the board's week|slot record and the Life
+             Log's gym tick for this date move with it. */
+          if (T) T.setDone(d.key, !T.isDone(d.key, d.slot), { slot: d.slot, label: d.session });
+          else C.markDone(d.key, !st.done);
           render(lastPlan);
         });
         s.appendChild(btn);
@@ -382,7 +390,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       var dt = new Date(k + 'T12:00:00');
       return { idx: i, name: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(dt.getDay() + 6) % 7],
                date: dt, key: k, committed: d.committed || 0, free: d.free || 0,
-               session: d.session || null,
+               session: d.session || null, slot: d.slot || null,
                blocks: (d.blocks || []).map(function (b) {
                  return { title: b.title, kind: b.kind, hours: b.hours, allDay: b.allDay,
                           from: b.from, to: b.to,
@@ -433,6 +441,9 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 
   try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
   dateline();
+  /* A session ticked on the board before this page was opened is still a
+     session done. Take the union of the two records first, then draw. */
+  if (T) { try { T.reconcile(); } catch (e) {} }
   restore();
   auto();
 })();

@@ -539,8 +539,13 @@
     /* Month 1's six sessions, in the order the block runs them. Generic
        Push/Pull/Legs labels were left over from before the programme was
        written down; the planner deals what the block actually asks for. */
-    var sessions = opts.sessions ||
-      ['Strength A', 'Engine', 'Strength B', 'Intervals', 'Strength C + shadow', 'Long easy'];
+    /* training.js owns the list, because it also owns the slot each label
+       belongs to — the join the Grind board keys its record under. Without
+       it loaded (opening this file straight from the repo) the six are
+       still here, in the same order. */
+    var T = w.CTTraining;
+    var sessions = opts.sessions || (T ? T.sessions() :
+      ['Strength A', 'Engine', 'Strength B', 'Intervals', 'Strength C + shadow', 'Long easy']);
     var wakeFrom = opts.wakeFrom == null ? 7 : opts.wakeFrom;   // 07:00
     var wakeTo = opts.wakeTo == null ? 22 : opts.wakeTo;        // 22:00
     var range = opts.range || planningRange();
@@ -581,8 +586,14 @@
     var placed = [], unplaced = [];
     sessions.forEach(function (s, n) {
       var d = order[n];
-      if (d && d.free >= 1.5) { d.session = s; placed.push({ day: d.key, name: d.name, session: s }); }
-      else unplaced.push(s);
+      /* The SLOT travels with the label. "Intervals" here is "Non-impact
+         work capacity" in the programme, so a string is not enough to say
+         which session moved to Thursday — and the board records by slot. */
+      var slot = T ? T.slotOf(s) : null;
+      if (d && d.free >= 1.5) {
+        d.session = s; d.slot = slot;
+        placed.push({ day: d.key, name: d.name, session: s, slot: slot });
+      } else unplaced.push(s);
     });
 
     return {
@@ -602,7 +613,8 @@
     if (!store.days || typeof store.days !== 'object') store.days = {};
     plan.days.forEach(function (d) {
       store.days[d.key] = {
-        session: d.session, done: (store.days[d.key] || {}).done || false,
+        session: d.session, slot: d.slot || null,
+        done: (store.days[d.key] || {}).done || false,
         committed: Math.round(d.committed * 10) / 10,
         free: Math.round(d.free * 10) / 10,
         blocks: d.blocks.map(function (b) {
@@ -620,7 +632,14 @@
     try { var d = JSON.parse(localStorage.getItem(WKEY)); return (d && d.days) ? d : { days: {} }; }
     catch (e) { return { days: {} }; }
   }
+  /* Ticking a session is not a fact about this page. The Grind board records
+     the same six sessions under its own key and the Life Log counts the gym
+     from a third, so a tick that wrote only this store left two pages
+     disagreeing about the same afternoon. training.js writes all three; this
+     stays the local fallback for a page that does not have it. */
   function markDone(dayKey, on) {
+    var T = w.CTTraining;
+    if (T && typeof T.setDone === 'function') { T.setDone(dayKey, !!on); return; }
     var s = readWeek();
     if (!s.days[dayKey]) s.days[dayKey] = {};
     s.days[dayKey].done = !!on;
