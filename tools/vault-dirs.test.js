@@ -71,5 +71,109 @@ if (fs.existsSync(plates)) {
   });
 }
 
+/* Every catalogued picture declares which of the three groups it belongs to.
+   The Guide renders the list group by group, and the grouping used to be
+   worked out from the file name against a hardcoded list of the Polish ones —
+   so every painting added after that list was written landed silently in
+   "American". An entry with no group, or a group the Guide does not render,
+   is now a build failure rather than a quiet miscategorisation. */
+const GROUPS = ['anatomy', 'polish', 'american'];
+{
+  const vm = require('vm');
+  const doc = { readyState: 'complete', querySelectorAll: () => [],
+                addEventListener: () => {}, createElement: () => ({}) };
+  const ctx = { window: {}, document: doc, Image: function () {},
+                fetch: () => Promise.reject(new Error('no network in tests')),
+                Promise, Object, Array, String, Math, Number, console, setTimeout };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'plates.js'), 'utf8'), ctx,
+                  { filename: 'plates.js' });
+  const cat = ctx.window.Plates.catalogue;
+
+  Object.keys(cat).forEach(function (k) {
+    const g = cat[k].group;
+    ok(GROUPS.indexOf(g) !== -1, k + ' declares one of ' + GROUPS.join('/') + ' (got ' + g + ')');
+    ok(!!cat[k].who && !!cat[k].title && !!cat[k].year,
+       k + ' has an artist, a title and a year to caption it with');
+  });
+
+  /* And the catalogue and the directory agree in both directions — a
+     catalogued picture with no file shows as "not yet" forever. */
+  const onDisk = fs.existsSync(plates)
+    ? fs.readdirSync(plates).filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+        .map((f) => f.replace(/\.[^.]+$/, ''))
+    : [];
+  Object.keys(cat).forEach(function (k) {
+    ok(onDisk.indexOf(k) !== -1, 'catalogued picture ' + k + ' has a file in plates/');
+  });
+}
+
+/* EVERY SLOT ON EVERY PAGE ASKS FOR A PICTURE THAT EXISTS. A slot naming a
+   file that is not there falls back to the drawn engraving and looks like a
+   design choice, so a typo in a data-plate list is invisible: the page still
+   renders, just without the painting nobody knows was meant to be there. */
+{
+  const vm = require('vm');
+  const doc = { readyState: 'complete', querySelectorAll: () => [],
+                addEventListener: () => {}, createElement: () => ({}) };
+  const ctx = { window: {}, document: doc, Image: function () {},
+                fetch: () => Promise.reject(new Error('no network in tests')),
+                Promise, Object, Array, String, Math, Number, console, setTimeout };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'plates.js'), 'utf8'), ctx,
+                  { filename: 'plates.js' });
+  const cat = ctx.window.Plates.catalogue;
+  const onDisk = fs.existsSync(plates)
+    ? fs.readdirSync(plates).filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+        .map((f) => f.replace(/\.[^.]+$/, ''))
+    : [];
+
+  const pages = fs.readdirSync(ROOT).filter((f) => /\.html$/i.test(f));
+  const GROUPS = ['anatomy', 'polish', 'american', 'any'];
+  let slots = 0, rotating = 0, withPictures = 0;
+  pages.forEach(function (f) {
+    const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    let onPage = 0;
+
+    /* A named list: every name has to be a picture that exists. */
+    const re = /data-plate="([^"]+)"/g;
+    let m;
+    while ((m = re.exec(html))) {
+      const names = m[1].split(/\s+/).filter(Boolean);
+      slots++; onPage++;
+      names.forEach(function (n) {
+        ok(!!cat[n], f + ' asks for a catalogued picture (' + n + ')');
+      });
+      ok(names.some((n) => onDisk.indexOf(n) !== -1),
+         f + ' has at least one of ' + names.join('/') + ' installed');
+    }
+
+    /* A rotation: the group has to exist and have files in it, or the slot
+       silently draws nothing for ever. */
+    const rot = /data-plate-rotate="([^"]*)"/g;
+    while ((m = rot.exec(html))) {
+      const want = m[1].split(/[\s,]+/).filter(Boolean);
+      slots++; rotating++; onPage++;
+      want.forEach(function (g) {
+        ok(GROUPS.indexOf(g) !== -1, f + ' rotates a group that exists (' + g + ')');
+      });
+      const pool = Object.keys(cat).filter((k) =>
+        want.indexOf('any') !== -1 || want.indexOf(cat[k].group) !== -1);
+      ok(pool.some((k) => onDisk.indexOf(k) !== -1),
+         f + ' rotates a group with pictures in it (' + want.join('/') + ')');
+    }
+
+    /* And a page that shows one has to load the file that fills it. */
+    if (onPage) {
+      withPictures++;
+      ok(/plates\.js/.test(html) || /data-dc-script/.test(html),
+         f + ' loads plates.js, or is a page the deploy shim injects it into');
+    }
+  });
+  ok(withPictures >= 20, 'the pictures are on the site rather than on a page or two (' +
+     withPictures + ' pages, ' + slots + ' slots)');
+  ok(rotating >= 20, 'and they turn over rather than hanging there (' + rotating + ' rotating)');
+}
+
 if (fails) { console.error('vault-dirs: ' + fails + ' failure(s)'); process.exit(1); }
 console.log('vault-dirs: ok');

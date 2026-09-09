@@ -64,6 +64,28 @@
   .gb-day.on { border-color: #A8761F; background: #FAF3E6; color: #7d5713; font-weight: 600; }
   .gb-day.today { box-shadow: inset 0 0 0 2px #26271F; }
   .gb-day small { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #A6A79F; }
+  /* Where a session came from, when it is not where the grid would put it. */
+  /* A plate at the foot of the day. plates.js dresses any element carrying
+     data-plate — it sets --plate-figure and the has-plate class — so a page
+     with its own stylesheet can have one without importing the hub's. Until
+     a file is installed this is an empty box that draws nothing, which is why
+     it is only shown once dressed. */
+  .gb-plate { display: none; }
+  /* Bounded by the screen rather than the column: a portrait plate sized to
+     the text column is most of a laptop screen, and twice that when zoomed. */
+  .gb-plate { --plate-h: clamp(150px, 26vh, 300px); }
+  .gb-plate.has-plate { display: block; margin: 26px auto 0;
+    width: min(100%, 30rem, calc(var(--plate-h) * var(--plate-ar-true, 1.333))); }
+  .gb-plate.has-plate::before {
+    content: ''; display: block; aspect-ratio: var(--plate-ar-true, 4 / 3);
+    max-height: var(--plate-h);
+    background-image: var(--plate-figure); background-size: cover; background-position: center;
+    border: 1px solid #E4E2DD; box-shadow: 0 2px 7px rgba(36, 27, 16, .16); }
+  .gb-plate .plate-cap { display: block; margin-top: 7px; text-align: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .06em;
+    color: #A6A79F; line-height: 1.4; }
+  .gb-moved { margin-top: 8px; padding: 8px 10px; border-radius: 9px; background: #FAF3E6;
+              border: 1px solid #EADFC4; color: #7d5713; font-size: 12.5px; line-height: 1.55; }
 
   /* The timeline */
   .gb-slot { display: grid; grid-template-columns: 96px 4px 1fr; gap: 12px; padding: 9px 0;
@@ -79,6 +101,12 @@
   .gb-slot.k-people .gb-bar { background: #993C1D; }
   .gb-slot.k-faith .gb-bar { background: #6E4B8A; }
   .gb-slot.k-upkeep .gb-bar { background: #DEDBD3; }
+  /* Unclaimed time, and the evenings you have held yourself: not prescribed,
+     so not drawn as if it were. */
+  .gb-slot.k-open .gb-bar { background: transparent; border-left: 2px dashed #C9A227; width: 4px; }
+  .gb-slot.k-open .gb-label { color: #7d5713; }
+  /* A block that had to move to clear a booked hour. */
+  .gb-slot.shifted .gb-time { color: #7d5713; }
   .gb-label { font-size: 14px; color: #26271F; line-height: 1.35; }
   .gb-sub { font-size: 12px; color: #8a8577; line-height: 1.5; margin-top: 2px; }
 
@@ -197,17 +225,32 @@
         <div class="gb-eyebrow">{{ dayShift }}</div>
         <div class="gb-h2">{{ dayTitle }}</div>
         <div class="gb-note">{{ dayFocus }}</div>
+        <sc-if value="{{ hasMoved }}" hint-placeholder-val="{{ true }}">
+          <div class="gb-moved">{{ movedNote }}</div>
+        </sc-if>
+        <sc-if value="{{ hasDayFree }}" hint-placeholder-val="{{ false }}">
+          <div class="gb-note" style="margin-top: 6px;">{{ dayFree }}</div>
+        </sc-if>
         <div class="gb-row" style="margin-top: 12px;">
           <button onClick="{{ toggleSession }}" class="gb-btn {{ sessionCls }} wide">{{ sessionLabel }}</button>
         </div>
+        <sc-if value="{{ hasPlanLine }}" hint-placeholder-val="{{ true }}">
+          <div class="gb-note" style="margin-top: 10px;">{{ planLine }} <a href="Week.html">The Week →</a></div>
+        </sc-if>
       </div>
 
       <div class="gb-panel">
         <div class="gb-eyebrow">The shape of it</div>
         <div class="gb-h2">{{ slotCount }}</div>
+        <sc-if value="{{ hasShapeNote }}" hint-placeholder-val="{{ false }}">
+          <div class="gb-note" style="margin-top: 6px;">{{ shapeNote }}</div>
+        </sc-if>
+        <sc-if value="{{ hasSpill }}" hint-placeholder-val="{{ false }}">
+          <div class="gb-moved">{{ spillNote }}</div>
+        </sc-if>
         <div style="margin-top: 12px;">
           <sc-for list="{{ slots }}" as="s" hint-placeholder-count="12">
-            <div class="gb-slot k-{{ s.kind }}">
+            <div class="gb-slot k-{{ s.kind }} {{ s.cls }}">
               <span class="gb-time">{{ s.time }}</span>
               <span class="gb-bar"></span>
               <span>
@@ -220,6 +263,10 @@
           </sc-for>
         </div>
       </div>
+
+      <figure class="gb-plate" data-plate-cap="1"
+              data-plate-rotate="anatomy" data-plate-slot="grind-foot"
+          data-plate="maclise-heart-deep maclise-thorax maclise-great-vessels"></figure>
 
       <div class="gb-panel">
         <div class="gb-eyebrow">Today's list</div>
@@ -278,6 +325,13 @@
           <a href="Rest.html" class="gb-btn">The rest protocol →</a>
         </div>
       </div>
+
+      <sc-if value="{{ hasPlanLine }}" hint-placeholder-val="{{ true }}">
+        <div class="gb-panel">
+          <div class="gb-eyebrow">The week, as it actually is</div>
+          <div class="gb-note">{{ planLine }} <a href="Week.html">The Week →</a></div>
+        </div>
+      </sc-if>
 
       <sc-for list="{{ weekRows }}" as="w" hint-placeholder-count="7">
         <div class="gb-panel" style="margin-top: 10px;">
@@ -473,6 +527,20 @@
 
    Everything else — the lifts, the cardio, the posture and calf blocks, the
    diet and the timetable — lives in grind-data.js and never enters the store.
+
+   THE WEEK IS NOT A GRID ANY MORE. It used to be: Monday was Strength A
+   because it was a Monday, and a clinic that ate Monday cost you the session
+   with the board none the wiser. Week.html reads the real calendar and lays
+   the six sessions into the hours that are actually free — so this board now
+   asks it, through training.js, which day is carrying which session, and
+   draws that. The slot ids are unchanged (`1|mon` is still Strength A's
+   record in week 1) because the slot is the SESSION, not the weekday.
+
+   And a tick is one fact in three places: this store, the dated week the
+   Trends table reads, and the Life Log's gym flag for the day it was done —
+   which used to be stamped on today whichever day you were looking at.
+   training.js writes all three; without it loaded the board behaves exactly
+   as it did before.
    ───────────────────────────────────────────────────────────────────────── */
 class Component extends DCLogic {
   KEY = 'ct_grind_v1';
@@ -517,6 +585,183 @@ class Component extends DCLogic {
 
   todayId() { return this.DAYS[new Date().getDay()]; }
   curDay(d) { return this.state.day || this.todayId(); }
+
+  /* ── what the calendar did with this week ───────────────────────────────
+     training.js reads the week Week.html pulled and says, per date, which
+     session landed there. Null when nothing has been pulled, or when the
+     board is parked on a different week of the block than the one that was
+     planned — in both cases the honest thing to draw is the programme's own
+     timetable, and to say so rather than quietly showing a stale week. */
+  T() { return window.CTTraining || null; }
+  plan(d) {
+    const T = this.T();
+    if (!T) return null;
+    let wp = null;
+    try { wp = T.week(); } catch (e) { wp = null; }
+    if (!wp || !wp.days) return null;
+    wp.applies = (wp.blockWeek == null || wp.blockWeek === d.week);
+    wp.byDay = {};
+    wp.days.forEach(x => { wp.byDay[x.weekday] = x; });
+    return wp;
+  }
+  /* The SESSION a weekday is carrying — the calendar's answer when there is
+     one, the weekday's own otherwise. Every key in the store is this, not the
+     weekday, so a session keeps its record wherever the week puts it. */
+  slotFor(wp, dayId) {
+    const p = wp && wp.applies ? wp.byDay[dayId] : null;
+    return (p && p.slot) || dayId;
+  }
+  planDay(wp, dayId) { return wp && wp.applies ? (wp.byDay[dayId] || null) : null; }
+
+  /* Once per mount, take the union of the two records: a session ticked on
+     the Week page has to count toward this week here, and one ticked here has
+     to reach the dated week the Trends table reads. It only ever ADDS, so a
+     session you cleared cannot come back — a clear goes through the same
+     writer, which clears both sides. */
+  converge() {
+    if (this._converged) return;
+    this._converged = true;
+    const T = this.T();
+    if (!T) return;
+    try { T.reconcile(); } catch (e) {}
+  }
+  doneFor(d, wp, dayId) {
+    const T = this.T(), p = this.planDay(wp, dayId), slot = this.slotFor(wp, dayId);
+    if (T && p) return T.isDone(p.iso, slot);
+    return !!d.sessions[d.week + '|' + slot];
+  }
+
+  /* ── the day, laid around what is actually booked ───────────────────────
+     The timetable is grind-data's, and it hardcodes the shift each weekday
+     used to carry. Two things went wrong when the real day differed.
+
+     ONE: only events the classifier called work or class were shown. That
+     rule reads titles — clinic, ward, shift, lecture — so the clinical
+     timetable appeared and the job did not, because "Smoothie bar" matches
+     none of those words. A commitment is a commitment however it is named,
+     so EVERY timed event on the day is drawn now, and the classifier is left
+     to do the one job it is good at: colouring them.
+
+     TWO: the template's own rows kept their hardcoded times, so breakfast,
+     the shower, the cardio and the posture resets sat on top of the hours
+     you were at work. A timetable that double-books you is worse than no
+     timetable: it cannot be followed and it hides the real problem, which is
+     that the day is short.
+
+     So the calendar's blocks are the spine and everything else flows around
+     them: same order, same durations, pushed later when — and only when — a
+     block would land on top of a commitment. What runs off the end of the
+     day is not silently dropped, it is listed. That is the day telling you
+     something, in the same voice the Week page uses when a session will not
+     fit. */
+  mins(t) { const p = String(t == null ? '' : t).split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); }
+  hhmm(m) { return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
+
+  dayShape(G, dayId, week, slotId, pday) {
+    const rows = (G.build(dayId, week, slotId) || []).slice();
+    if (!pday) return { rows, source: '', spill: [], moved: 0, open: [], free: 0 };
+
+    const LATE = 180;        // a block pushed more than three hours is not that block
+    const blocks = pday.blocks || [];
+    const timed = blocks.filter(b => b && !b.allDay && b.from && b.to)
+                        .map(b => ({ a: this.mins(b.from), b: this.mins(b.to), t: b.title,
+                                     k: b.kind, own: !!b.own }))
+                        .filter(b => b.b > b.a)
+                        .sort((x, y) => x.a - y.a);
+    const allDay = blocks.filter(b => b && b.allDay);
+
+    /* The template's own shift rows go — the calendar's are the real ones —
+       but only where the calendar has actually been read. A week nobody
+       pulled is not evidence that you have no shift. */
+    const own = pday.planned ? rows.filter(r => r[2] !== 'work') : rows.slice();
+    const droppedOwn = rows.length - own.length;
+
+    /* Two kinds of block, and only one of them may be moved. An appointment
+       with other people — the gathering, church — is a time you have given
+       away, so it holds its hour and the day flows round it exactly as it
+       flows round the calendar. Everything else is yours to move. */
+    const ANCHOR = { people: 1, faith: 1 };
+    /* Unless it collides with something real. Two fixed things cannot both
+       hold the same hour, and between the gathering the programme assumes and
+       the evening you actually booked, the one you booked is the one that is
+       happening. The other loses its anchor and takes its chances with
+       everything else — which usually means it is reported as not fitting,
+       and that is the true thing to say about a night you gave to someone. */
+    const anchored = (r) => ANCHOR[r[2]] &&
+      !timed.some(b => this.mins(r[0]) < b.b && this.mins(r[1]) > b.a);
+    const busy = timed.slice();
+    own.forEach(r => { if (anchored(r)) busy.push({ a: this.mins(r[0]), b: this.mins(r[1]), t: r[3] }); });
+
+    /* Flow the rest around them, in order, keeping durations. A block only
+       moves as far as it must, and never earlier — the day runs late, it is
+       not rewritten. */
+    const END = 24 * 60;
+    const out = [], spill = [];
+    let cursor = 0, moved = 0;
+    own.forEach((r, idx) => {
+      const s0 = this.mins(r[0]), dur = Math.max(5, this.mins(r[1]) - s0);
+      const row = r.slice();
+      row[8] = idx;        // its place in the TEMPLATE — what its ticks are keyed by
+      if (anchored(r)) { out.push(row); return; }   // held, not flowed
+      /* A posture reset is two minutes and the programme puts one mid-shift,
+         at the bar, on purpose. Blocks this short do not need a free hour and
+         are not moved out of one. */
+      if (dur <= 10) { out.push(row); return; }
+      let s = Math.max(s0, cursor), guard = 0;
+      for (let i = 0; i < busy.length && guard < 128; i++) {
+        if (s < busy[i].b && s + dur > busy[i].a) { s = busy[i].b; i = -1; guard++; }
+      }
+      /* Drawn at 23:10, "eat before people arrive" is not that block any
+         more — it is a lie with a time on it. Past three hours late, say it
+         did not fit and let the day be the thing that is wrong. */
+      if (s + dur > END || s - s0 > LATE) { spill.push(r[3]); return; }
+      row[0] = this.hhmm(s); row[1] = this.hhmm(s + dur);
+      if (s !== s0) { row[7] = 'moved from ' + this.hhmm(s0); moved++; }
+      out.push(row);
+      busy.push({ a: s, b: s + dur, t: r[3] });
+      cursor = s + dur;
+    });
+
+    timed.forEach(b => out.push([this.hhmm(b.a), this.hhmm(b.b),
+      b.own ? 'open' : 'work', b.t, b.own ? 'yours — held on the Week' : 'on your calendar', null, null]));
+
+    /* ── the hours nobody has claimed ──────────────────────────────────────
+       A timetable that runs 06:15 to 23:15 with every hour named looks like a
+       day with no room in it for a friend ringing up, and that is how it gets
+       abandoned. The gaps are real; they were simply never drawn. So they are
+       drawn: anything over half an hour between waking and midnight that
+       neither your calendar nor the programme has claimed, shown as what it
+       is — yours, unspoken for, and the first thing to spend when someone
+       asks you out. */
+    const OPEN = 30, DAY_A = 6 * 60, DAY_B = 23 * 60 + 30;
+    const claimed = out.map(r => [this.mins(r[0]), this.mins(r[1])])
+                       .concat(timed.map(b => [b.a, b.b]))
+                       .filter(x => x[1] > x[0]).sort((x, y) => x[0] - y[0]);
+    const gaps = [];
+    let edge = DAY_A;
+    claimed.forEach(c => {
+      if (c[0] - edge >= OPEN) gaps.push([edge, c[0]]);
+      edge = Math.max(edge, c[1]);
+    });
+    if (DAY_B - edge >= OPEN) gaps.push([edge, DAY_B]);
+    gaps.forEach(g => out.push([this.hhmm(g[0]), this.hhmm(g[1]), 'open', 'Open — yours',
+      'unclaimed: whoever asks first', null, null]));
+    const freeMin = gaps.reduce((t, g) => t + (g[1] - g[0]), 0);
+
+    out.sort((a, b2) => this.mins(a[0]) - this.mins(b2[0]));
+    allDay.forEach(b => out.unshift(['all', 'day', 'work', b.title, 'all day, on your calendar', null, null]));
+
+    const hrs = Math.round(timed.reduce((t, b) => t + (b.b - b.a), 0) / 6) / 10;
+    const free = Math.round(freeMin / 6) / 10;
+    let source = timed.length
+      ? 'Your calendar has ' + hrs + 'h booked today' + (moved ? ', so ' + moved + ' block' +
+          (moved === 1 ? '' : 's') + ' moved to fit round ' + (timed.length === 1 ? 'it' : 'them') : ', and nothing collided with it') + '.'
+      : (droppedOwn ? 'Nothing on your calendar this day — the template\u2019s shift has been dropped rather than shown.' : '');
+    source += (source ? ' ' : '') + (freeMin
+      ? free + 'h of the day is unclaimed.'
+      : 'Not half an hour of this day is unclaimed — that is worth knowing before someone asks you out.');
+    return { rows: out, source, spill, moved, open: gaps.length, free };
+  }
 
   /* The week is done when all six sessions and the week's cardio row are
      ticked. That — not the date on it — is what lets it advance. */
@@ -565,14 +810,26 @@ class Component extends DCLogic {
     try { localStorage.setItem(this.LKEY, JSON.stringify(ll)); } catch (e) {}
   }
 
-  toggleSession(dayId) {
-    let on = false, label = '';
+  /* One tick, one date. With training.js loaded the write goes through it —
+     this store, the dated week, and the Life Log's gym flag for the day the
+     session was actually done. Without it, the old local path, which can only
+     know about today. */
+  toggleSession(dayId, wp) {
+    const T = this.T(), p = this.planDay(wp, dayId), slot = this.slotFor(wp, dayId);
+    const lift = (this.G && this.G.GYM && this.G.GYM[slot]) || null;
+    const label = (lift && lift.t) || ((this.G && this.G.DAYNAME) || {})[slot] || 'session';
+    if (T && p) {
+      const on = !T.isDone(p.iso, slot);
+      T.setDone(p.iso, on, { slot: slot, label: T.label(slot) });
+      this.bump();
+      this.toast(on ? '✓ ' + T.label(slot) + ' logged, ' + p.name : 'session cleared');
+      return;
+    }
+    let on = false;
     this.mut(d => {
-      const k = d.week + '|' + dayId;
+      const k = d.week + '|' + slot;
       if (d.sessions[k]) delete d.sessions[k]; else d.sessions[k] = true;
       on = !!d.sessions[k];
-      const lift = (this.G && this.G.GYM && this.G.GYM[dayId]) || null;
-      label = (lift && lift.t) || ((this.G && this.G.DAYNAME) || {})[dayId] || 'session';
       if (!d.days || typeof d.days !== 'object') d.days = {};
       const today = this.logDay();
       if (on) d.days[today] = label; else if (d.days[today] === label) delete d.days[today];
@@ -580,9 +837,12 @@ class Component extends DCLogic {
     this.mirrorLift(label, on);
     this.toast(on ? '✓ session logged' : 'session cleared');
   }
-  toggleCheck(dayId, id) {
+  /* Keyed by the SLOT, so a checklist follows its session to whichever day
+     the week put it on. In the fixed grid the two are the same string, which
+     is why every tick made before this still reads. */
+  toggleCheck(slotId, id) {
     this.mut(d => {
-      const k = d.week + '|' + dayId;
+      const k = d.week + '|' + slotId;
       if (!d.checks[k]) d.checks[k] = {};
       if (d.checks[k][id]) delete d.checks[k][id]; else d.checks[k][id] = true;
     });
@@ -617,9 +877,14 @@ class Component extends DCLogic {
                tabs: [], isDay: false, isWeek: false, isLift: false, isRuns: false, isDiet: false, isBm: false,
                dayBtns: [], dayShift: '', dayTitle: '', dayFocus: '', slots: [], slotCount: '', groups: [],
                noChecks: true, checkHead: '', sessionCls: '', sessionLabel: '', toggleSession: () => {},
+               hasMoved: false, movedNote: '', hasDayFree: false, dayFree: '',
+               hasPlanLine: false, planLine: '', hasShapeNote: false, shapeNote: '',
+               hasSpill: false, spillNote: '',
                weekRows: [], lifts: [], runRows: [], bmRows: [], hasToast: false, toast: '' };
     }
+    this.converge();
     const d = this.read();
+    const wp = this.plan(d);
     const dayId = this.curDay(d);
     const today = this.todayId();
     const prog = this.weekProgress(d);
@@ -638,24 +903,36 @@ class Component extends DCLogic {
       .map(([k, label]) => ({ label, cls: this.state.view === k ? 'sel' : '', pick: () => this.setState({ view: k }) }));
 
     // ── the day ──
+    /* `dayId` is the weekday you are standing in. `slotId` is the session it
+       is carrying, which is the same thing only when the week left it alone. */
+    const slotId = this.slotFor(wp, dayId);
+    const pday = this.planDay(wp, dayId);
     const wd = G.WEEK.filter(x => x.id === dayId)[0] || G.WEEK[0];
-    const slotsRaw = G.build(dayId, d.week) || [];
+    const ws = G.WEEK.filter(x => x.id === slotId)[0] || wd;
+    const shape = this.dayShape(G, dayId, d.week, slotId, pday);
+    const slotsRaw = shape.rows;
     const slots = slotsRaw.map(s => ({
-      time: s[0] + '–' + s[1], kind: s[2] || 'rest', label: s[3],
-      sub: s[4] || '', hasSub: !!s[4],
+      time: s[0] === 'all' ? 'all day' : s[0] + '–' + s[1],
+      kind: s[2] || 'rest', label: s[3],
+      cls: s[7] ? 'shifted' : '',
+      sub: s[7] ? (s[4] ? s[7] + ' · ' + s[4] : s[7]) : (s[4] || ''),
+      hasSub: !!(s[7] || s[4]),
     }));
 
     // Checklist items, grouped by the slot they belong to — the same ids the
     // standalone board used, so a group keeps its identity week to week.
-    const checks = d.checks[d.week + '|' + dayId] || {};
+    const checks = d.checks[d.week + '|' + slotId] || {};
     const groups = [];
-    slotsRaw.forEach((s, i) => {
+    slotsRaw.forEach((s, n) => {
+      /* The row's index in the template, so a block that moved to clear a
+         booked hour keeps the ticks it already had. */
+      const i = s[8] != null ? s[8] : n;
       const items = [];
       if (s[6]) s[6].forEach(x => items.push({ id: 'x:' + i + ':' + x, label: x, sets: '' }));
       if (s[5] && s[5].b) s[5].b.forEach((b, bi) => (b.l || []).forEach((e, ei) =>
         items.push({ id: 'e:' + i + ':' + bi + ':' + ei, label: e.n, sets: e.s || '' })));
       if (!items.length) return;
-      const gid = dayId + '|' + s[0] + '|' + s[3];
+      const gid = slotId + '|' + i + '|' + s[3];
       const doneN = items.filter(it => checks[it.id]).length;
       groups.push({
         title: s[0] + ' · ' + s[3],
@@ -666,7 +943,7 @@ class Component extends DCLogic {
         items: items.map(it => ({
           label: it.label, sets: it.sets, on: !!checks[it.id],
           cls: checks[it.id] ? 'done' : '',
-          toggle: () => this.toggleCheck(dayId, it.id),
+          toggle: () => this.toggleCheck(slotId, it.id),
         })),
       });
     });
@@ -674,26 +951,51 @@ class Component extends DCLogic {
     const allDone = groups.reduce((n, g) => n + g.items.filter(i => i.on).length, 0);
 
     const dayBtns = G.WEEK.map(x => {
-      const on = !!d.sessions[d.week + '|' + x.id];
-      const isLiftDay = !!(G.GYM || {})[x.id];
+      const xslot = this.slotFor(wp, x.id);
+      const on = this.doneFor(d, wp, x.id);
+      const isLift = !!(G.GYM || {})[xslot];
+      const xp = this.planDay(wp, x.id);
       return {
         d: x.d, cls: (x.id === dayId ? 'on ' : '') + (x.id === today ? 'today' : ''),
-        mark: isLiftDay ? (on ? '✓' : '·') : '',
+        mark: isLift ? (on ? '✓' : (xp ? String(xp.date.getDate()) : '·')) : (xp ? String(xp.date.getDate()) : ''),
         pick: () => this.setState({ view: 'day', day: x.id }),
       };
     });
 
-    const isLiftDay = !!(G.GYM || {})[dayId];
-    const sessionOn = !!d.sessions[d.week + '|' + dayId];
+    const isLiftDay = !!(G.GYM || {})[slotId];
+    const sessionOn = this.doneFor(d, wp, dayId);
 
     // ── the week view ──
+    /* Seven rows in date order. Where a week has been pulled they carry the
+       day's real commitments and the session the planner could fit around
+       them; where none has, the block's own timetable, unchanged. */
+    const MONN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    /* EVERY commitment, not the ones whose titles the classifier recognises.
+       Filtering this by kind is what showed the clinical rota and hid the job:
+       "Smoothie bar" is not one of the words the rule looks for, and it is
+       still six hours you are not free. */
+    const shiftOf = (p) => {
+      const b = (p.blocks || []).slice()
+        .sort((x, y) => this.mins(x.from || '0:00') - this.mins(y.from || '0:00'));
+      if (!b.length) return p.planned ? 'Clear' : '—';
+      const first = b[0], last = b[b.length - 1];
+      return (first.allDay ? 'all day' : first.from + '–' + (last.to || first.to)) +
+             ' · ' + first.title + (b.length > 1 ? ' +' + (b.length - 1) : '');
+    };
     const weekRows = G.WEEK.map(x => {
-      const on = !!d.sessions[d.week + '|' + x.id];
-      const lift = !!(G.GYM || {})[x.id];
+      const p = this.planDay(wp, x.id);
+      const xslot = this.slotFor(wp, x.id);
+      const xw = G.WEEK.filter(y => y.id === xslot)[0] || x;
+      const on = this.doneFor(d, wp, x.id);
+      const lift = !!(G.GYM || {})[xslot];
       return {
-        day: x.d, shift: x.shift, focus: x.focus, sub: x.sub,
+        day: p ? x.d + ' ' + p.date.getDate() + ' ' + MONN[p.date.getMonth()] : x.d,
+        shift: p ? shiftOf(p) : x.shift,
+        focus: xw.focus,
+        sub: (p && p.moved ? 'Moved here from ' + (G.WEEK.filter(y => y.id === xslot)[0] || {}).d + ' · ' : '') +
+             (p ? p.free + 'h free · ' : '') + xw.sub,
         cls: on ? 'done' : '', mark: lift ? (on ? 'Done ✓' : 'Mark done') : 'Open',
-        pick: () => (lift ? this.toggleSession(x.id) : this.setState({ view: 'day', day: x.id })),
+        pick: () => (lift ? this.toggleSession(x.id, wp) : this.setState({ view: 'day', day: x.id })),
       };
     });
 
@@ -787,14 +1089,52 @@ class Component extends DCLogic {
       nextMonth: G.NEXT || '',
 
       dayBtns,
-      dayShift: (G.DAYNAME[dayId] || wd.d) + (wd.off ? '' : ''),
-      dayTitle: wd.focus, dayFocus: wd.sub,
+      dayShift: pday
+        ? wd.d + ' ' + pday.date.getDate() + ' ' + MONN[pday.date.getMonth()] + ' · ' + shiftOf(pday)
+        : (G.DAYNAME[dayId] || wd.d),
+      dayTitle: ws.focus, dayFocus: ws.sub,
+      /* Where the session came from, when it is not where the grid would put
+         it. Without this the board silently shows Strength A on a Wednesday
+         and you have no way to tell whether that is the plan or a bug. */
+      hasMoved: !!(pday && pday.moved),
+      movedNote: pday && pday.moved
+        ? 'The week put ' + (pday.label || ws.focus) + ' here — it is ' + wd.d +
+          '\u2019s own session that moved, not the programme. ' +
+          (pday.committed ? pday.committed + 'h is already committed today; ' : '') +
+          pday.free + 'h are free.'
+        : '',
+      hasDayFree: !!(pday && !pday.moved),
+      dayFree: pday && !pday.moved
+        ? pday.committed + 'h committed on your calendar · ' + pday.free + 'h free'
+        : '',
       sessionCls: sessionOn ? 'done' : (isLiftDay ? 'go' : ''),
       sessionLabel: !isLiftDay ? (sessionOn ? 'Recovery day marked done ✓' : 'Mark the recovery day done')
                                : (sessionOn ? 'Session done ✓' : 'Mark the session done'),
-      toggleSession: () => this.toggleSession(dayId),
+      toggleSession: () => this.toggleSession(dayId, wp),
 
-      slots, slotCount: slots.length + ' blocks, ' + (wd.shift === 'Clear' ? 'no shift' : 'shift ' + wd.shift),
+      /* The board and the planner are one record now, and the line says which
+         of the three states the board is in — laid out on the calendar,
+         nothing pulled, or parked on a week the plan is not about. */
+      hasPlanLine: true,
+      planLine: !this.T()
+        ? 'The calendar bridge is not loaded — this is the block\u2019s own timetable.'
+        : !wp ? 'No week pulled. The Week reads your calendar and lays these six sessions into the hours that are actually free — until then this is the block\u2019s default timetable.'
+        : !wp.applies ? 'A week is pulled, but it is week ' + wp.blockWeek + ' of the block and the board is on week ' +
+                        d.week + '. Showing the default timetable rather than someone else\u2019s week.'
+        : wp.moved ? wp.placed + ' of 6 sessions placed round your calendar, ' + wp.moved +
+                     ' of them moved off the day the grid would have used. ' + wp.done + ' done.'
+        : wp.placed + ' of 6 sessions placed, and your calendar left every one on its usual day. ' + wp.done + ' done.',
+      hasShapeNote: !!shape.source, shapeNote: shape.source,
+      hasSpill: !!(shape.spill && shape.spill.length),
+      spillNote: (shape.spill && shape.spill.length)
+        ? shape.spill.length + ' block' + (shape.spill.length === 1 ? '' : 's') +
+          ' did not fit round what is booked: ' + shape.spill.join(', ') +
+          '. That is the day being full, not the list being wrong.'
+        : '',
+
+      slots, slotCount: slots.length + ' blocks, ' +
+        (pday ? shiftOf(pday) === 'Clear' ? 'no shift on your calendar' : 'your calendar\u2019s shift'
+              : wd.shift === 'Clear' ? 'no shift' : 'shift ' + wd.shift),
       groups, noChecks: groups.length === 0,
       checkHead: allDone + ' of ' + allItems + ' ticked',
 

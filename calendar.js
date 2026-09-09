@@ -539,8 +539,13 @@
     /* Month 1's six sessions, in the order the block runs them. Generic
        Push/Pull/Legs labels were left over from before the programme was
        written down; the planner deals what the block actually asks for. */
-    var sessions = opts.sessions ||
-      ['Strength A', 'Engine', 'Strength B', 'Intervals', 'Strength C + shadow', 'Long easy'];
+    /* training.js owns the list, because it also owns the slot each label
+       belongs to — the join the Grind board keys its record under. Without
+       it loaded (opening this file straight from the repo) the six are
+       still here, in the same order. */
+    var T = w.CTTraining;
+    var sessions = opts.sessions || (T ? T.sessions() :
+      ['Strength A', 'Engine', 'Strength B', 'Intervals', 'Strength C + shadow', 'Long easy']);
     var wakeFrom = opts.wakeFrom == null ? 7 : opts.wakeFrom;   // 07:00
     var wakeTo = opts.wakeTo == null ? 22 : opts.wakeTo;        // 22:00
     var range = opts.range || planningRange();
@@ -575,14 +580,43 @@
       d.blocks.sort(function (a, b) { return a.start - b.start; });
     });
 
+    /* A SESSION ALREADY DONE DOES NOT MOVE. Re-planning re-deals the week —
+       that is the point of it — but a session you have already trained is not
+       a plan any more, it is a fact, and dealing it onto Thursday because
+       Thursday now has more free hours would rewrite what happened. Days
+       carrying one are out of the deal, and so are their sessions. */
+    var pinned = opts.pinned || {};
+    var held = {};
+    days.forEach(function (d) {
+      var p = pinned[d.key];
+      if (!p) return;
+      d.session = p.session || (p.slot && T ? T.label(p.slot) : null);
+      d.slot = p.slot || (T ? T.slotOf(d.session) : null);
+      if (d.session) held[d.session] = true;
+      if (d.slot) held['#' + d.slot] = true;
+    });
+
     /* Hardest days first out of the running: sort by free time descending and
        deal the sessions round. */
-    var order = days.slice().sort(function (a, b) { return b.free - a.free; });
+    var order = days.filter(function (d) { return !d.session; })
+                    .sort(function (a, b) { return b.free - a.free; });
     var placed = [], unplaced = [];
-    sessions.forEach(function (s, n) {
+    days.forEach(function (d) {
+      if (d.session) placed.push({ day: d.key, name: d.name, session: d.session, slot: d.slot, held: true });
+    });
+    sessions.filter(function (s) {
+      var slot = T ? T.slotOf(s) : null;
+      return !held[s] && !(slot && held['#' + slot]);
+    }).forEach(function (s, n) {
       var d = order[n];
-      if (d && d.free >= 1.5) { d.session = s; placed.push({ day: d.key, name: d.name, session: s }); }
-      else unplaced.push(s);
+      /* The SLOT travels with the label. "Intervals" here is "Non-impact
+         work capacity" in the programme, so a string is not enough to say
+         which session moved to Thursday — and the board records by slot. */
+      var slot = T ? T.slotOf(s) : null;
+      if (d && d.free >= 1.5) {
+        d.session = s; d.slot = slot;
+        placed.push({ day: d.key, name: d.name, session: s, slot: slot });
+      } else unplaced.push(s);
     });
 
     return {
@@ -601,11 +635,18 @@
     try { store = JSON.parse(localStorage.getItem(WKEY)) || {}; } catch (e) { store = {}; }
     if (!store.days || typeof store.days !== 'object') store.days = {};
     plan.days.forEach(function (d) {
+      /* Blocks you added yourself are not written back here — they live under
+         `own`, which this function never touches, so a re-pull cannot delete
+         your Friday. `ownHours` records how much of them this plan already
+         counted, so the free hours are not charged for them twice. */
+      var mine = d.blocks.filter(function (b) { return b.own; });
       store.days[d.key] = {
-        session: d.session, done: (store.days[d.key] || {}).done || false,
+        session: d.session, slot: d.slot || null,
+        done: (store.days[d.key] || {}).done || false,
         committed: Math.round(d.committed * 10) / 10,
         free: Math.round(d.free * 10) / 10,
-        blocks: d.blocks.map(function (b) {
+        ownHours: Math.round(mine.reduce(function (t, b) { return t + (+b.hours || 0); }, 0) * 10) / 10,
+        blocks: d.blocks.filter(function (b) { return !b.own; }).map(function (b) {
           return { title: b.title, kind: b.kind,
                    from: b.allDay ? null : b.start.getHours() + ':' + String(b.start.getMinutes()).padStart(2, '0'),
                    to: b.allDay ? null : b.end.getHours() + ':' + String(b.end.getMinutes()).padStart(2, '0'),
@@ -620,7 +661,14 @@
     try { var d = JSON.parse(localStorage.getItem(WKEY)); return (d && d.days) ? d : { days: {} }; }
     catch (e) { return { days: {} }; }
   }
+  /* Ticking a session is not a fact about this page. The Grind board records
+     the same six sessions under its own key and the Life Log counts the gym
+     from a third, so a tick that wrote only this store left two pages
+     disagreeing about the same afternoon. training.js writes all three; this
+     stays the local fallback for a page that does not have it. */
   function markDone(dayKey, on) {
+    var T = w.CTTraining;
+    if (T && typeof T.setDone === 'function') { T.setDone(dayKey, !!on); return; }
     var s = readWeek();
     if (!s.days[dayKey]) s.days[dayKey] = {};
     s.days[dayKey].done = !!on;

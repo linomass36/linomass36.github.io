@@ -940,12 +940,55 @@ columns the things that might explain them — the asymmetry keeps it readable
 on a phone, where an N x N grid of everything against everything is a wall.
 Cells below eight paired days are hatched and report nothing.
 
-**`Week.html` and `calendar.js`** make the week elastic. The Grind board is a
+**`Week.html` and `calendar.js`** make the week elastic. The Grind board was a
 fixed grid keyed `week|day` — `3|wed` — so a week where clinic
-eats Tuesday cannot be expressed: there is nowhere to put "moved to
+eats Tuesday could not be expressed: there was nowhere to put "moved to
 Thursday". That keying is also why training was invisible to the trends
-table. The new week reads what is already committed and lays the sessions
+table. The week reads what is already committed and lays the sessions
 into what is left, stored **by date**.
+
+**`training.js`** is the join, and it is what stops those being two accounts of
+the same six sessions. The board's key is read as *week and SESSION* rather
+than *week and weekday* — `1|mon` is Strength A's record, wherever the week
+puts Strength A — so the board can ask which day is carrying which session and
+draw that: dated rows, your calendar's shift rather than the template's, and a
+line saying what moved. It also makes a tick one fact in three places: the
+board's store, the dated week the Trends table reads as `trained`, and the Life
+Log's gym flag **for the day the session was actually done** — which the board
+used to stamp on today whichever day you were looking at.
+
+**Evenings you hold yourself** live under `ct_week_v1.own`, which `saveWeek`
+never touches, so a re-pull cannot delete your Friday. The site asks Google for
+a read-only token on purpose and cannot write an event back, so the Week page
+holds them instead: a date, an evening with friends, anything that is not
+training. They are counted as committed hours, handed to the planner as
+commitments, drawn on the board's timetable, and the week is dealt again from
+what is already stored — no second trip to Google. Re-dealing leaves alone any
+session already marked done: that is a fact about a day rather than a plan for
+it, and moving it would rewrite what happened.
+
+The day itself is laid **around what is booked**. Every timed event on the
+calendar is drawn, whatever the classifier made of its title — filtering that by
+kind is what showed the clinical rota and hid the job, since "Smoothie bar"
+matches none of the words the rule looks for and is six hours either way. The
+template's own blocks then flow round those hours in their own order, at their
+own lengths, moving later only as far as they must: a timetable that puts the
+shower and the cardio on top of a shift cannot be followed, and it hides the
+real problem, which is that the day is short. Two exceptions, both deliberate: a
+block under ten minutes stays where it is, because the programme puts a posture
+reset mid-shift on purpose; and an appointment with other people — the gathering,
+church — holds its hour and is flowed round like the calendar's own. What would
+land more than three hours late, or past midnight, is **named** under the
+timetable rather than drawn at an hour that makes it a different block. And the
+hours **nobody has claimed** are drawn as themselves — anything over half an
+hour between waking and midnight that neither your calendar nor the programme
+has taken. A timetable that names every hour from 06:15 to 23:15 reads as a day
+with no room in it for a friend ringing up, which is how it gets abandoned; the
+gaps were always there and were simply never shown. It owns no store of
+its own; every write lands in a store that already existed, in the shape it
+already had, so `facts.js`, `systems.js`, Today and the backup keep reading
+what they read. Load the two pages without it and each behaves exactly as it
+did before.
 
 Google Calendar reaches a static site three ways, and they differ in whether
 the week arrives on its own.
@@ -1400,6 +1443,14 @@ reading eight weeks in the past.
 - `tools/plan-source.test.js` — the next moves come off the live phase by deadline, and the daily surfaces read the current plan rather than the retired one.
 - `tools/board.test.js` — every page meant for daily use is one tap from the front door, and the board can report that a system is fine.
 - `calendar.js` + `Week.html` — the week read off Google Calendar and the training laid into what is left, stored by date. Reads itself on load when `config.calendar.apiKey` is set against a public calendar; otherwise one popup per session, or an `.ics` drop. See **The rest of it** above.
+- `plates.js` + `plates/` — thirty public-domain pictures and the slots they fall into: Maclise's `Surgical Anatomy` for the cardiothoracic half, Matejko and Chełmoński for the Polish, the Hudson River School for the American. A slot is `data-plate="first-choice second-choice"`; the first installed file wins and is captioned from the catalogue. **They were invisible until v5.5**: the marginal slot was `display:none` below 1150px, so nobody reading on a phone — which is most of the reading — ever saw one. Below that width a slot that found its painting is now a break in the text with its lettering under it, and the design-canvas pages get theirs dressed after the runtime boots rather than never.
+  **The size and the placing**, which is what made the first version unusable on a laptop: a plate sized to the text column is fine until the picture is a portrait — Maclise's plates are taller than they are wide, so 34rem of column became nearly 900px of painting, and browser zoom doubled it. The height is now capped against the viewport (`clamp(150px, 26vh, 300px)`) and the width follows from the picture's own aspect ratio, so nothing is cropped and zoom cannot inflate it. **The margin figures are placed, not declared.** No page hand-places one any more — one mechanism owns the margin, or two of them hang in the same spot. `plates.js` hangs them down the page at the section boundaries it already has, roughly one every two screens to a maximum of four, **alternating sides** as you descend and **staggered in height** by a fixed sequence so they read as marginalia rather than a column of pictures. They are absolutely positioned out of the flow, so however many there are they cannot move the text by a pixel — which is what makes several of them safe on a page a break would have interrupted four times. The **full-width plate stays in the flow, once, at the foot.** Everything is measured rather than assumed: the column's own box decides whether there is a margin at all (150px plus a gap, or the plates hide), positions are recomputed on resize, and a plate whose anchor a React re-render took away is dropped and re-hung rather than left measuring zero at the top of the page. On a phone there is no margin, so the foot plate is the whole of it.
+  **The rotation**: a slot may name a group — `data-plate-rotate="anatomy"` — instead of a picture, and the choice turns over daily. It is stable within a day (the hub's day, 05:00 boundary, so a page open at 02:00 shows yesterday's), different on every slot, and a rotation rather than a draw: the deck is shuffled per slot and advances one card a day, so any run of days as long as the group covers every picture in it exactly once. Nothing is stored — the same day and slot give the same answer on the phone and the laptop. Two slots on one page never take the same painting. `plates.js` carries the CSS for `.plate-break` itself, so a page needs one line of markup and no stylesheet of its own: that is how the Rest page had a slot, a file on disk, and no rule anywhere to draw it.
+- `training.js` — the join between the planned week and the board: which slot a session label names, which date that slot landed on, and the one writer every "mark done" goes through. See **The rest of it** above.
+- `tools/training.test.js` — a session named two ways resolves to one slot, a date knows its week of the block, one tick reaches all three stores, a session moved to another day keeps its own record, the Life Log is stamped on the day it was done, and two stores filled in separately converge without resurrecting a session you cleared.
+- `tools/plates.test.js` — the rotation is stable within a day, different per slot, and a true rotation: over any run of days as long as the group, every picture comes round exactly once, from any starting day.
+- `tools/vault-dirs.test.js` — also: every `data-plate` on every page names a catalogued picture and at least one of its choices is installed; every `data-plate-rotate` names a group that exists and has files in it; every page carrying a slot loads the file that fills it; and the pictures are on at least ten pages, so nobody can quietly go back to six. A slot with a typo in it falls back to the drawn engraving and looks like a design choice, so nothing else would ever have said.
+- `tools/grind-board.test.js` — the board's own logic class, run for real: it falls back to the block's grid when no week has been pulled and says so, shows the session the calendar actually put on the day, prints your shift instead of the template's, and a tick on either page counts on both.
 - `tools/calendar.test.js` — the named calendars are the ones read and their events merged, an event on two of them is counted once, one calendar failing does not cost the others, the week you are standing in can be asked for rather than only the next one, every failure is named as itself rather than all of them as an expired token, an event lands on its own date rather than the reader's, and a declined invitation is not your week.
 - `Recall.html` — one desk for Anki, the error cards and the resurfaced notes.
 - `Trends.html` — the correlation matrix over `facts.js`, at `CORR_MIN = 8`, then the four tests that try to knock each pair down. See **Ruling things out** above.

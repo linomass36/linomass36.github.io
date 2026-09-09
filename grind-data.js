@@ -379,8 +379,14 @@
   const REVIEW = simple('Weekly review — four passes', '90 min', '<ul class="tight" style="font-size:13.5px"><li>Week recap written into Obsidian.</li><li>Pushed to the GitHub repo.</li><li>Finances: earned, spent, card balance, family loan, savings.</li><li>Documents: what moved, what is stuck, one call to make.</li></ul>');
   const LOGLINE = simple('Log the session', '2 min', '<p style="font-size:13.5px">One line is enough: date, lifts and top sets, cardio minutes and machine, shin 0–10, sleep hours, morning weight if it is a weigh day.</p><p style="font-size:13px;color:var(--sand-dim)">If you cannot say whether last week’s squat went up, the log failed.</p>');
 
-  function build(id, WK) {
-    const H = HOUSE[id], S = session(id, WK);
+  /* `sessionId` is which SESSION the day holds, which is not always the day
+     it is named after. The week is laid onto the days the calendar left free
+     — see training.js — so a Wednesday can carry Strength A. The day's shape
+     (wake, shift, meals, the blocks around it) still comes from `id`, which
+     is the weekday you are actually standing in; only the training slot
+     moves. Called with two arguments it behaves exactly as it did. */
+  function build(id, WK, sessionId) {
+    const H = HOUSE[id], S = session(sessionId || id, WK);
     const house = simple('House task', '10 min', '<p style="font-size:15px"><b>' + H + '</b></p><p style="font-size:13px;color:var(--sand-dim)">Small, finished, done. One per day, that is the whole rule.</p>');
     const slot = S ? det(S.t, S.m, S.b) : null;
     const D = {
@@ -540,7 +546,7 @@
     RECOVERY: RECOVERY,
     session: session,           // (dayId, week) -> that week's session
     DAILYBLK: DAILYBLK, RESET: RESET,
-    build: build,               // (dayId, week) -> the day's slots
+    build: build,               // (dayId, week, sessionId?) -> the day's slots
     weeks: BLOCK.weeks,
     deloads: [],                // none: four weeks is short enough to run through
     testWeek: 4,
