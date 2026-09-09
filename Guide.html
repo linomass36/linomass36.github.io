@@ -74,6 +74,54 @@
       you to the right panel, so an old bookmark or a link in a journal entry still works. The v1
       planning documents are kept and labelled in <a href="Settings.html#archive">the Archive</a>.</p>
   </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">The source documents are kept as written</h3>
+    <p class="hub-p">Two plans were written outside the hub and are published here unedited — the
+      full life plan under <a href="Plan.html#source">the Plan</a>, and the Lublin cash-flow
+      document under <a href="Money.html#source">Money</a>. Neither is corrected to agree with the
+      dashboard. Where a figure in one of them did not survive being checked, the amendment lives
+      in the plan's <a href="Plan.html#now">Corrections</a> list instead, with the working shown.</p>
+    <p class="hub-p">That split is deliberate: a source document rewritten to match the dashboard
+      stops being a record of what was actually thought, and then there is nothing left to check
+      the dashboard against.</p>
+  </div>
+
+  <div class="hub-kicker">Money<span class="end">one number, several currencies</span></div>
+  <div class="hub-card t-info">
+    <h3 class="hub-h3">There is one answer to "what is net worth"</h3>
+    <p class="hub-p">You record it in one place — the <a href="Vault.dc.html">Net worth</a> panel,
+      one snapshot a month, five minutes on the first Sunday. Everything else reads that: the
+      figure at the top of <a href="Money.html#debt">Debt</a>, the tile on
+      <a href="Standing.html">the Standing</a>, the runway on the Vault itself.</p>
+    <p class="hub-p">It did not always. Debt printed a fixed number under the words "net worth
+      today" that had not moved since August, while the Net worth panel of the same page held the
+      real thing — so two tabs of one page disagreed. Anything that shows the figure now also shows
+      <b>which month it came from</b>, and says so plainly when it is more than a couple of months
+      old.</p>
+  </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">Every amount carries its currency</h3>
+    <p class="hub-p">Earnings are in dollars and some of what you hold stays in złoty, so a
+      snapshot records which one it is in. Rates are typed in by hand and stored
+      <b>with the date you set them</b> — there is no live feed, because a number fetched at render
+      time would quietly rewrite your history every time you opened the page. A rate more than a
+      month old says so rather than passing for current.</p>
+    <p class="hub-p">When a rate is missing, the hub refuses the sum instead of guessing. You will
+      see "that holding is not counted" rather than a total that is silently short — a quiet 1:1 is
+      how a fourfold error becomes a number you trust.</p>
+  </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">Two money pages, two different questions</h3>
+    <p class="hub-p"><a href="Money.html#debt">Debt</a> is fifteen years long and in dollars: caps,
+      forgiveness, refinancing, what the whole road costs.
+      <a href="Money.html#schoolyear">School year</a> is nine months long and in złoty: whether
+      November's paper lot can be bought without the month going red. Both are true, and neither
+      answers the other's question, which is why they are separate tabs rather than one page.</p>
+    <p class="hub-p">The pots sit under School year — <b>Cushion</b> is the Lublin operating floor,
+      <b>Nest</b> the long household buffer, <b>Move</b> the interview and relocation line. Cushion
+      and Nest are kept apart on purpose, so a bad month in Lublin cannot spend the thing that
+      exists to absorb a bad month in New York.</p>
+  </div>
 
   <div class="hub-kicker">If something goes wrong</div>
   <div class="hub-card t-owed">
@@ -124,6 +172,23 @@
       <span class="hub-mono">plates/</span> and name it in a slot; there is no CSS to edit.</p>
 
     <div class="hub-list" id="plates"></div>
+  </div>
+
+  <div class="hub-kicker">Keeping this page true</div>
+  <div class="hub-card t-warn">
+    <h3 class="hub-h3">This page is updated with every change</h3>
+    <p class="hub-p">Every change to the hub — a new panel, a new page, a rule that moves, a store
+      that starts holding something it did not — updates this Guide in the <b>same commit</b>. Not
+      afterwards, and not when someone remembers. A guide that is allowed to lag is worse than none,
+      because it is believed.</p>
+    <p class="hub-p">Two things already refuse to go stale on their own: the list of places above is
+      generated from the site map rather than typed, and the backup line counts the stores actually
+      in this browser. <b>Everything else on this page is written by hand, and a hand-written
+      description is the thing that goes quietly wrong.</b> The rule is written down for the same
+      reason the visit rule is: an intention that is not recorded is not a rule.</p>
+    <p class="hub-p"><span class="hub-chip">for whoever edits the hub</span> The convention lives in
+      <code>CLAUDE.md</code> at the repository root, and <code>tools/guide-current.test.js</code>
+      fails the deploy if a destination or a panel exists that this page has never heard of.</p>
   </div>
 
   <div class="plate-break" data-plate-cap data-plate-slot="guide"

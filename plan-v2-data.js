@@ -61,7 +61,12 @@ window.PLAN_V2 = {
     asOf: '2026-08-24',
     rows: [
       { dim: 'Summer earnings',  v1: '~$17,400',                                  actual: '~$15.15/hr + tips, 30–45 hr/wk, ~5 weeks remaining' },
-      { dim: 'Liquid capital',   v1: '~$10k by Oct',                               actual: 'Net worth ≈ −$250' },
+      /* Dated on purpose. This is what was true at the recalibration, not
+         what is true now — the live figure is the Vault's newest snapshot,
+         which the Debt panel reads through Money.position(). A ground-truth
+         row that silently ages into a claim about today is how the Debt and
+         Net worth panels came to disagree in the first place. */
+      { dim: 'Liquid capital',   v1: '~$10k by Oct',                               actual: 'Net worth ≈ −$250 (as at 24 Aug 2026 — see the Vault for the current figure)' },
       { dim: 'Investments',      v1: '15k PLN deployed, 2k/mo auto',               actual: 'Not deployed' },
       { dim: 'Patent fund',      v1: '5k PLN reserved',                            actual: 'Does not exist' },
       { dim: 'Research output',  v1: '2 GI papers banked + CAV analysis shipped',  actual: '1 abstract in progress (due Sep 7), 1 manuscript in mentors’ hands (~12 mo out), CAV not started' },

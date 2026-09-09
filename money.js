@@ -121,18 +121,27 @@
      needs migrating. */
   function holdingsOf(snap, assume) {
     if (!snap || typeof snap !== 'object') return [];
+    /* `declared` records whether the currency came from the snapshot or from
+       `assume`. An assumed currency is a guess — the Vault wrote these with
+       no currency field at all until it grew one — and position() passes the
+       distinction up so a page can say the number rests on an assumption
+       rather than printing it as fact. */
     if (Array.isArray(snap.holdings) && snap.holdings.length) {
       return snap.holdings.map(function (h) {
+        var known = CODES.indexOf(h.ccy) >= 0;
         return {
-          ccy: CODES.indexOf(h.ccy) >= 0 ? h.ccy : (assume || 'USD'),
+          ccy: known ? h.ccy : (assume || 'USD'),
+          declared: known,
           cash: parseFloat(h.cash) || 0,
           inv: parseFloat(h.inv) || 0,
           debt: parseFloat(h.debt) || 0
         };
       });
     }
+    var known = CODES.indexOf(snap.ccy) >= 0;
     return [{
-      ccy: CODES.indexOf(snap.ccy) >= 0 ? snap.ccy : (assume || 'USD'),
+      ccy: known ? snap.ccy : (assume || 'USD'),
+      declared: known,
       cash: parseFloat(snap.cash) || 0,
       inv: parseFloat(snap.inv) || 0,
       debt: parseFloat(snap.debt) || 0
@@ -160,11 +169,98 @@
     return { days: daysSince(d.at), at: d.at, isStale: daysSince(d.at) > STALE_DAYS };
   }
 
+  /* ── ONE ANSWER TO "WHAT IS NET WORTH" ────────────────────────────────────
+     The Vault page owns the snapshots. Everything else was answering the
+     question its own way:
+
+       Vault.dc.html   the real store, formatted with a design-canvas prop
+       systems.js      its own reader + conversion, inline
+       Money.html      a hardcoded −250, printed under the words "Net worth
+                       today", frozen on the day the plan was recalibrated
+       plan-v2-data.js the same −250 again, in the ground-truth table
+
+     So the Debt panel and the Net worth panel of the SAME PAGE disagreed,
+     and the front page could disagree with both. Three of the four never
+     read the store at all.
+
+     This is the reader they all use now. It returns the newest snapshot
+     converted into `display`, and — the part that matters — it says how old
+     it is and whether anything could not be converted, so a caller can
+     report "as of March, and the PLN holding is uncounted" instead of a
+     confident total that is quietly short.
+
+     `asOf` is a YYYY-MM month, because that is the grain the Vault records.
+     A null `net` means no snapshot has ever been taken; that is a different
+     thing from a net worth of zero and callers must not print it as one. */
+  var VAULT_KEY = 'ct_vault_v1';
+
+  function vault() {
+    var d = null;
+    try { d = JSON.parse(localStorage.getItem(VAULT_KEY)); } catch (e) {}
+    if (!d || typeof d !== 'object') return { snaps: [], display: null, assume: null };
+    /* `snaps` is what the Vault writes; `snapshots` is the older spelling
+       systems.js already tolerated. Reading both here is why that tolerance
+       does not have to exist in four places. */
+    var raw = Array.isArray(d.snaps) ? d.snaps
+            : (Array.isArray(d.snapshots) ? d.snapshots : []);
+    var snaps = raw.filter(function (s) { return s && typeof s === 'object'; })
+                   .slice()
+                   .sort(function (a, b) { return String(a.m) > String(b.m) ? 1 : -1; });
+    return { snaps: snaps, display: d.display || null, assume: d.assume || null };
+  }
+
+  function latest() {
+    var v = vault();
+    return v.snaps.length ? v.snaps[v.snaps.length - 1] : null;
+  }
+
+  /* The snapshot's own currency, when it has one. Snapshots written before
+     the Vault carried a currency field have none — those are read as
+     `assume`, which is the store's recorded assumption and only then the
+     display currency. Guessing silently is what made a PLN balance read back
+     as dollars on the front page. */
+  function position(display) {
+    var v = vault();
+    var disp = CODES.indexOf(display) >= 0 ? display
+             : (CODES.indexOf(v.display) >= 0 ? v.display : read().base);
+    var last = v.snaps.length ? v.snaps[v.snaps.length - 1] : null;
+    if (!last) {
+      return { net: null, ccy: disp, asOf: null, count: 0,
+               complete: true, missing: [], parts: [], assumed: false };
+    }
+    var assume = CODES.indexOf(v.assume) >= 0 ? v.assume : disp;
+    var r = netOf(last, disp, assume);
+    /* True when the figure rests on an assumption rather than on something
+       the snapshot actually says. A caller showing a bare number should say
+       so; one showing a range need not. */
+    var hs = holdingsOf(last, assume);
+    var assumed = hs.some(function (h) { return !h.declared; });
+    return {
+      net: r.complete ? r.total : null,
+      ccy: disp, asOf: last.m || null, count: v.snaps.length,
+      complete: r.complete, missing: r.missing, parts: r.parts,
+      assumed: assumed
+    };
+  }
+
+  /* How many months back the newest snapshot is. The Vault records by month,
+     so this is months rather than days, and it is what tells a page whether
+     to caveat the number it is about to print. */
+  function positionAge(nowIso) {
+    var p = position();
+    if (!p.asOf) return null;
+    var now = String(nowIso || today()).slice(0, 7);
+    var a = p.asOf.split('-'), b = now.split('-');
+    if (a.length < 2 || b.length < 2) return null;
+    return (+b[0] - +a[0]) * 12 + (+b[1] - +a[1]);
+  }
+
   w.Money = {
-    KEY: KEY, CODES: CODES, SYMBOL: SYMBOL, STALE_DAYS: STALE_DAYS,
+    KEY: KEY, VAULT_KEY: VAULT_KEY, CODES: CODES, SYMBOL: SYMBOL, STALE_DAYS: STALE_DAYS,
     read: read, write: write, setRate: setRate, setBase: setBase,
     convert: convert, known: known, fmt: fmt, symbol: symbol,
     holdingsOf: holdingsOf, netOf: netOf, stale: stale,
+    vault: vault, latest: latest, position: position, positionAge: positionAge,
     today: today, daysSince: daysSince
   };
 })(window);

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Household · CT Hub</title>
+<link rel="canonical" href="Plan.html#household">
+<meta http-equiv="refresh" content="0; url=Plan.html#household">
+<link rel="stylesheet" href="./hub.css">
+</head>
+<body class="hub">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     A PANEL WITH ITS OWN ADDRESS.
+
+     The Household is a panel of Plan.html, not a page. This file exists so it is
+     declared in sitemap.js like every other panel — which is what puts it in
+     the drawer, in the Guide's generated list of places, and on the end of a
+     link someone can send themselves.
+
+     The older stubs in this repo (Debt, Ledger, Campaign, Verify, Pipeline)
+     were pages first and became panels later. This one was a panel from the
+     start, and still gets a stub, because "reachable by its own name" is not
+     a thing the hub should offer only to pages that happen to predate a fold.
+
+     The meta refresh is the fallback; the script below runs first and does not
+     add a history entry, so Back goes where you came from rather than
+     bouncing off this file.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<main class="hub-page">
+  <h1 class="hub-h1">The Household</h1>
+  <p class="hub-lede"><b>The Household</b> is a panel of <b>The Plan</b>.</p>
+  <p class="hub-p"><a class="hub-btn pri" href="Plan.html#household">Open The Plan →</a></p>
+</main>
+<script>
+  try { location.replace('Plan.html#household'); } catch (e) { location.href = 'Plan.html#household'; }
+</script>
+</body>
+</html>

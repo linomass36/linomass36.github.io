@@ -182,12 +182,12 @@
       blurb: 'The phase map: what happens when, through 2027.',
       foldedInto: 'Plan.html#campaign' },
     'Verify.html':               { name: 'Verify',        group: 'The plan', parent: 'Plan.html', back: 'correct',
-      dest: 'plan', panel: 'Verify', ord: 3,
+      dest: 'plan', panel: 'Verify', ord: 5,
       plain: 'Verify',
       blurb: 'Assumptions nothing should be planned around until they resolve.',
       foldedInto: 'Plan.html#verify' },
     'Debt.html':                 { name: 'The Debt',      group: 'The plan', parent: 'Plan.html', back: 'correct',
-      dest: 'money', panel: 'Debt', ord: 3,
+      dest: 'money', panel: 'Debt', ord: 4,
       plain: 'Debt',
       blurb: 'What the plan costs before it earns anything.',
       foldedInto: 'Money.html#debt' },
@@ -203,14 +203,36 @@
       foldedInto: 'Money.html#daybudget' },
 
     'Pipeline.html':             { name: 'Pipeline',      group: 'Research', parent: 'Plan.html', back: 'correct',
-      dest: 'plan', panel: 'Research', ord: 4,
+      dest: 'plan', panel: 'Research', ord: 6,
       plain: 'Research',
       blurb: 'Every output, and the two fields that predict whether it finishes.',
       foldedInto: 'Plan.html#research' },
     'Publication Pipeline.html': { name: 'Pipeline · the write-up', group: 'Research', parent: 'Plan.html', back: 'none',
-      dest: 'plan', panel: 'Write-up', ord: 5,
+      dest: 'plan', panel: 'Write-up', ord: 7,
       plain: 'Write-up',
       blurb: 'The cancer-research paper, stage by stage.' },
+
+    /* ── panels added in v5.10, each with its own address ────────────────
+       These were built as panels rather than folded from pages, so they had
+       no stub and were therefore invisible to sitemap.js — which meant the
+       drawer never listed them and the Guide's generated list of places did
+       not know they existed. tools/guide-current.test.js caught it on its
+       first run, which is the whole reason that file exists. */
+    'Years.html':                { name: 'The Years',      group: 'The plan', parent: 'Plan.html', back: 'correct',
+      dest: 'plan', panel: 'Years', ord: 3,
+      plain: 'Years',
+      blurb: 'Every school year and summer to 2031, and the tail past it.',
+      foldedInto: 'Plan.html#years' },
+    'Household.html':            { name: 'The Household',  group: 'The plan', parent: 'Plan.html', back: 'correct',
+      dest: 'plan', panel: 'Household', ord: 4,
+      plain: 'Household',
+      blurb: 'The rules the money and the title are for.',
+      foldedInto: 'Plan.html#household' },
+    'School Year.html':          { name: 'The School Year', group: 'People & money', parent: 'Money.html', back: 'correct',
+      dest: 'money', panel: 'School year', ord: 3,
+      plain: 'School year',
+      blurb: 'Nine months in złoty, and the tutoring hours that decide the summer.',
+      foldedInto: 'Money.html#schoolyear' },
 
     /* ── the two source documents ────────────────────────────────────────
        Both are .md in the repo root and become .html at deploy time, the
@@ -220,11 +242,11 @@
        document that gets edited to agree with the dashboard is no longer a
        record of anything, so these are never patched in place. */
     'Life Plan.html':            { name: 'The full life plan', group: 'The plan', parent: 'Plan.html', back: 'none',
-      dest: 'plan', panel: 'Source', ord: 6,
+      dest: 'plan', panel: 'Source', ord: 8,
       plain: 'Source',
       blurb: 'Every school year and summer, as written in September 2026.' },
     'Finances 26-28.html':       { name: 'Finances 26–28', group: 'People & money', parent: 'Money.html', back: 'none',
-      dest: 'money', panel: 'Source', ord: 6,
+      dest: 'money', panel: 'Source', ord: 7,
       plain: 'Source',
       blurb: 'The Lublin cash-flow document, as written in September 2026.' },
     'Conference Radar.dc.html':  { name: 'Conference Radar', group: 'Research', parent: 'Plan.html', back: 'wrong',
@@ -256,7 +278,7 @@
       blurb: 'What you are aiming at, what the plan costs, and what a day costs.' },
 
     'Vault.dc.html':             { name: 'Vault',         group: 'People & money', parent: 'Plan.html', back: 'wrong',
-      dest: 'money', panel: 'Net worth', ord: 4,
+      dest: 'money', panel: 'Net worth', ord: 6,
       plain: 'Net worth',
       blurb: 'Snapshots, runway, and the line they make.' },
 

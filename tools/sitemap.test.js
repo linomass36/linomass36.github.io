@@ -40,7 +40,7 @@ const S = load('sitemap.js').SITEMAP;
 const onDisk = fs.readdirSync(ROOT)
   .filter((f) => /\.html$/i.test(f) || /\.md$/i.test(f))
   .filter((f) => !/^(index|index\.dc)\.html$/i.test(f))      // the gate is not a hub page
-  .filter((f) => !/^(DEPLOY|VAULT|README)\.md$/i.test(f))    // docs, not pages
+  .filter((f) => !/^(DEPLOY|VAULT|README|CLAUDE)\.md$/i.test(f))  // docs, not pages
   .map((f) => f.replace(/\.md$/i, '.html'));
 
 group('Every page is declared, and every declaration exists');

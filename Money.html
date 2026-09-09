@@ -473,10 +473,44 @@
   var ORIGINAL = { low: 25000, high: 50000, rate: 30, hours: 65, weeks: 16 };
   ORIGINAL.plan = ORIGINAL.weeks * ORIGINAL.hours * ORIGINAL.rate;   // 32 000 zł
 
-  var CHAIN = [
+  var SEED_CHAIN = [
     { date: '1 June',   n: '25 000 – 50 000 zł', why: 'Opening assumption, before a rate was known or a contract signed.', cls: 'was' },
     { date: '20 August', n: '20 000 zł', why: 'First correction. Still assumed the hours would somehow arrive, so it inherited the error rather than fixing it.', cls: 'was' }
   ];
+
+  /* ── this panel used to remember nothing ──────────────────────────────
+     Every input was a hardcoded value= in the HTML, CHAIN was an in-memory
+     array, and "Revise the target to the honest number" pushed an entry and
+     relabelled itself "Revised — and the reason is on the record". Reload
+     and the target was 20 000 again, the earned figure was 8 300 again, and
+     the record was gone. The panel was claiming durability it did not have,
+     which is worse than not offering it.
+
+     It persists now, under the same ct_* convention as every other store,
+     so sync.js carries it across devices like the rest. */
+  var TKEY = 'ct_targets_v1';
+  var DEFAULTS = { target: 20000, earned: 8300, weeks: 6, hours: 25, rate: 30 };
+
+  function tRead() {
+    var d = null;
+    try { d = JSON.parse(localStorage.getItem(TKEY)); } catch (e) {}
+    if (!d || typeof d !== 'object') d = {};
+    var v = {};
+    Object.keys(DEFAULTS).forEach(function (k) {
+      v[k] = isFinite(parseFloat(d[k])) ? parseFloat(d[k]) : DEFAULTS[k];
+    });
+    return { v: v, chain: Array.isArray(d.chain) ? d.chain : [], revised: !!d.revised, held: !!d.held };
+  }
+  function tWrite(patch) {
+    var cur = tRead();
+    var out = Object.assign({}, cur.v, { chain: cur.chain, revised: cur.revised, held: cur.held }, patch || {});
+    try { localStorage.setItem(TKEY, JSON.stringify(out)); } catch (e) {}
+    return tRead();
+  }
+  /* The seeded entries are the two corrections that actually happened; the
+     stored ones are anything decided since. Kept apart so editing the seed
+     never duplicates a decision already on the record. */
+  function chain() { return SEED_CHAIN.concat(tRead().chain); }
 
   function readInputs() {
     return {
@@ -593,7 +627,7 @@
     var c = compute(), v = c.v;
     var honest = v.earned + v.weeks * (v.hours + 8) * v.rate;
     var C = $('#targets-chain'); C.innerHTML = '';
-    CHAIN.forEach(function (e) {
+    chain().forEach(function (e) {
       var d = el('div', 'ent ' + (e.cls || ''));
       d.appendChild(el('div', 'd', e.date));
       d.appendChild(el('div', 'n', e.n));
@@ -611,14 +645,18 @@
   }
 
   ['#targets-i-target', '#targets-i-earned', '#targets-i-weeks', '#targets-i-hours', '#targets-i-rate'].forEach(function (s) {
-    $(s).addEventListener('input', paint);
+    $(s).addEventListener('input', function () { tWrite(readInputs()); paint(); });
   });
 
   $('#targets-do-revise').addEventListener('click', function () {
     var c = compute(), v = c.v;
     var honest = Math.round((v.earned + v.weeks * (v.hours + 8) * v.rate) / 500) * 500;
-    CHAIN.push({ date: 'today', n: pln(honest), why: 'Rate re-measured, hours set to one extra day a week. Re-checks itself every fortnight.', cls: 'now' });
+    var st = tRead();
+    st.chain.push({ date: new Date().toISOString().slice(0, 10), n: pln(honest),
+      why: 'Rate re-measured at ' + v.rate + ' zł/h, hours set to ' + (v.hours + 8) +
+           ' — one extra day a week, not a second job.', cls: 'now' });
     $('#targets-i-target').value = honest;
+    tWrite(Object.assign(readInputs(), { chain: st.chain, revised: true }));
     this.disabled = true;
     this.textContent = 'Revised — and the reason is on the record';
     paint();
@@ -632,8 +670,25 @@
       h1dp(c.needHours) + ' h a week and say so every morning — plainly, without turning the ' +
       'board red. It asks again in a fortnight whether that is still the plan.';
     this.parentNode.parentNode.appendChild(n);
+    tWrite({ held: true });
     this.disabled = true;
   });
+
+  /* Restore before the first paint, so what is on screen is what was stored
+     rather than the HTML's defaults. */
+  (function restore() {
+    var st = tRead();
+    Object.keys(st.v).forEach(function (k) {
+      var el2 = $('#targets-i-' + k);
+      if (el2) el2.value = st.v[k];
+    });
+    if (st.revised) {
+      var b = $('#targets-do-revise');
+      b.disabled = true;
+      b.textContent = 'Revised — and the reason is on the record';
+    }
+    if (st.held) $('#targets-do-hold').disabled = true;
+  })();
 
   paint();
 })();
@@ -653,11 +708,56 @@
   H.push('<p class="pv-lede">Not part of the 2027 plan — every item in Phases 0–2 costs email, time and one plane ticket. ' +
     'This page exists so the number is known and re-checked, not so it generates drag.</p>');
 
-  /* ── position ────────────────────────────────────────────────── */
-  H.push('<div class="pv-ff" style="background:var(--bad-bg);border-color:var(--bad-ln);border-left-color:var(--bad)">' +
-    '<div class="pv-ff-lab" style="color:var(--bad)">Net worth today</div>' +
-    '<div class="pv-ff-n" style="color:var(--bad)">' + m(F.position.netWorth) + '</div>' +
-    '<div class="pv-ff-d">' + esc(F.position.note) + '</div></div>');
+  /* ── position ─────────────────────────────────────────────────────────
+     THIS SAID "Net worth today" OVER A HARDCODED −250. The number was
+     written into plan-v2-data.js on 24 August 2026 and never moved again,
+     while the Net worth panel of this very page held real dated snapshots.
+     Two panels, one tab bar, different answers to the same question.
+
+     It reads the Vault now, through Money.position(), and says which month
+     it is looking at. The planned figure is still shown when no snapshot
+     exists — but labelled as the estimate it is, and dated, rather than
+     wearing the word "today". */
+  var M = window.Money;
+  var pos = M ? M.position() : null;
+  var age = M ? M.positionAge() : null;
+
+  if (pos && pos.net !== null) {
+    var neg = pos.net < 0;
+    H.push('<div class="pv-ff" style="background:var(--' + (neg ? 'bad' : 'ok') + '-bg);' +
+      'border-color:var(--' + (neg ? 'bad' : 'ok') + '-ln);' +
+      'border-left-color:var(--' + (neg ? 'bad' : 'ok') + ')">' +
+      '<div class="pv-ff-lab" style="color:var(--' + (neg ? 'bad' : 'ok') + ')">Net worth' +
+      (pos.asOf ? ' · as of ' + esc(pos.asOf) : '') + '</div>' +
+      '<div class="pv-ff-n" style="color:var(--' + (neg ? 'bad' : 'ok') + ')">' +
+      esc(M.fmt(pos.net, pos.ccy)) + '</div>' +
+      '<div class="pv-ff-d">From the Vault — ' + pos.count +
+      (pos.count === 1 ? ' snapshot' : ' snapshots') + ' on the ledger' +
+      (age !== null && age >= 2
+        ? '. <b>' + age + ' months old</b>; take a fresh one.' : '.') +
+      (pos.assumed
+        ? ' The snapshot records no currency, so it is read as ' + esc(pos.ccy) +
+          ' — set one on the <a href="Vault.dc.html">Net worth</a> panel.'
+        : '') +
+      '</div></div>');
+  } else if (pos && !pos.complete) {
+    H.push('<div class="pv-ff" style="background:var(--warn-bg);border-color:var(--warn-ln);' +
+      'border-left-color:var(--warn)"><div class="pv-ff-lab" style="color:var(--warn)">' +
+      'Net worth · not countable</div>' +
+      '<div class="pv-ff-n" style="color:var(--warn)">—</div>' +
+      '<div class="pv-ff-d">The latest snapshot holds ' + esc(pos.missing.join(', ')) +
+      ' and no rate is set for it. money.js will not guess 1:1 — set the rate on ' +
+      '<a href="Settings.html">Recalibrate</a> and this fills in.</div></div>');
+  } else {
+    H.push('<div class="pv-ff" style="background:var(--bad-bg);border-color:var(--bad-ln);' +
+      'border-left-color:var(--bad)">' +
+      '<div class="pv-ff-lab" style="color:var(--bad)">Net worth · planned figure, ' +
+      esc(P.fmtDate(D.recalibrated)) + '</div>' +
+      '<div class="pv-ff-n" style="color:var(--bad)">' + m(F.position.netWorth) + '</div>' +
+      '<div class="pv-ff-d">' + esc(F.position.note) +
+      ' <b>No snapshot has been taken yet</b> — take one on the ' +
+      '<a href="Vault.dc.html">Net worth</a> panel and this becomes a measurement.</div></div>');
+  }
   H.push('<p class="pv-p">' + esc(F.changes) + '</p>');
 
   /* ── the break: caps ─────────────────────────────────────────── */

@@ -96,6 +96,17 @@
         <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Cash</span><input type="text" inputmode="decimal" value="{{ fCash }}" onChange="{{ setFCash }}" placeholder="4200" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
         <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Invested</span><input type="text" inputmode="decimal" value="{{ fInv }}" onChange="{{ setFInv }}" placeholder="1500" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
         <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Debts</span><input type="text" inputmode="decimal" value="{{ fDebt }}" onChange="{{ setFDebt }}" placeholder="0" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;"></label>
+        <!-- The snapshot says what currency it is in. Until it did, this page
+             formatted with a design-canvas prop while every other page read
+             the same rows through money.js and assumed the base currency —
+             so a złoty balance was entered here as zł and read back on the
+             Standing as dollars. -->
+        <label style="display: block;"><span style="font-size: 10.5px; color: #77786F; display: block; margin-bottom: 3px;">Currency</span><select value="{{ fCcy }}" onChange="{{ setFCcy }}" style="width: 100%; min-height: 44px; font-size: 13px; padding: 6px 8px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
+          <option value="USD">USD · $</option>
+          <option value="PLN">PLN · zł</option>
+          <option value="EUR">EUR · €</option>
+          <option value="GBP">GBP · £</option>
+        </select></label>
       </div>
       <div style="display: flex; gap: 8px; margin-top: 8px;">
         <input value="{{ fNote }}" onChange="{{ setFNote }}" placeholder="note — e.g. scholarship landed, IBKR deposit, flights to WTSA" style="flex: 1; min-height: 44px; font-size: 13px; padding: 6px 12px; border: 1px solid #DAD7D0; border-radius: 9px; background: #FCFBF9;">
@@ -140,7 +151,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;currency&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;$&quot;, &quot;options&quot;: [&quot;$&quot;, &quot;€&quot;, &quot;zł&quot;, &quot;£&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;The Vault&quot;}}">
 class Component extends DCLogic {
   KEY = 'ct_vault_v1';
-  state = { tick: 0, fM: new Date().toISOString().slice(0, 7), fCash: '', fInv: '', fDebt: '', fNote: '', msg: '' };
+  state = { tick: 0, fM: new Date().toISOString().slice(0, 7), fCash: '', fInv: '', fDebt: '', fNote: '', fCcy: '', msg: '' };
 
   lsJson(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   read() { const d = this.lsJson(this.KEY, null); return (d && Array.isArray(d.snaps)) ? d : { snaps: [] }; }
@@ -153,10 +164,56 @@ class Component extends DCLogic {
      the way in, so what gets stored is always a dot. */
   dec(v) { return typeof v === 'string' ? v.replace(',', '.') : v; }
   num(v) { const n = parseFloat(this.dec(v)); return isNaN(n) ? null : n; }
-  cur() { return this.props.currency ?? '$'; }
-  fmt(n) { const c = this.cur(); const r = Math.round(n); return (r < 0 ? '−' : '') + c + Math.abs(r).toLocaleString('en-US'); }
+  /* ── currency ─────────────────────────────────────────────────────────
+     This page used to format everything with `props.currency`, a
+     design-canvas enum holding a bare symbol. That made the Vault the only
+     place on the site that did not go through money.js — so a złoty balance
+     was entered here, displayed as zł here, and read back on the Standing
+     board and in the Debt panel as dollars, because those read the same rows
+     through Money and fell back to the base currency.
+
+     A snapshot now records its own `ccy`. `defCcy()` is what a new one is
+     seeded with: the last one you saved, then the store's display setting,
+     then the Money base. Snapshots written before this field existed have no
+     currency, and are read as `assume` — the store's recorded assumption —
+     rather than silently counted as base. */
+  M() { return window.Money || null; }
+  defCcy() {
+    const d = this.read();
+    const last = (d.snaps || []).slice().sort((a, b) => (a.m > b.m ? 1 : -1)).pop();
+    const M = this.M();
+    const codes = M ? M.CODES : ['USD', 'PLN', 'EUR', 'GBP'];
+    if (last && codes.indexOf(last.ccy) >= 0) return last.ccy;
+    if (d.assume && codes.indexOf(d.assume) >= 0) return d.assume;
+    return M ? M.read().base : 'USD';
+  }
+  ccyOf(s) { const c = s && s.ccy; const M = this.M();
+    return (M && M.CODES.indexOf(c) >= 0) ? c : this.defCcy(); }
+  cur() { return this.defCcy(); }
+  /* `code` defaults to the display currency rather than to a symbol, so a
+     total and the rows under it can be formatted in different currencies
+     without either pretending to be the other. */
+  fmt(n, code) {
+    const M = this.M(); const c = code || this.defCcy();
+    if (M) return M.fmt(n, c);
+    const r = Math.round(n);
+    return (r < 0 ? '−' : '') + Math.abs(r).toLocaleString('en-US') + ' ' + c;
+  }
   mLabel(m) { return new Date(m + '-15T12:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }).replace(' ', ' ’'); }
+  /* The snapshot's own net, in its own currency. */
   netOf(s) { return (this.num(s.cash) || 0) + (this.num(s.inv) || 0) - (this.num(s.debt) || 0); }
+  /* The display currency for the headline, the delta and the chart — the
+     things that compare snapshots to each other and so cannot be a mix. */
+  disp() { const d = this.read(); const M = this.M();
+    if (M && M.CODES.indexOf(d.display) >= 0) return d.display;
+    return M ? M.read().base : this.defCcy(); }
+  /* One snapshot, converted. Null when no rate is set for its currency —
+     never a silent 1:1, which is how a 4x error becomes a line on a chart. */
+  netIn(s, code) {
+    const raw = this.netOf(s), from = this.ccyOf(s), M = this.M();
+    if (!M || from === code) return raw;
+    return M.convert(raw, from, code);
+  }
 
   renderVals() {
     const S = this.state;
@@ -164,8 +221,16 @@ class Component extends DCLogic {
     const snaps = d.snaps.slice().sort((a, b) => (a.m > b.m ? 1 : -1));
     const last = snaps[snaps.length - 1] || null;
     const prev = snaps[snaps.length - 2] || null;
-    const net = last ? this.netOf(last) : null;
-    const delta = (last && prev) ? this.netOf(last) - this.netOf(prev) : null;
+    const disp = this.disp();
+    const net = last ? this.netIn(last, disp) : null;
+    const dNow = last ? this.netIn(last, disp) : null;
+    const dPrev = prev ? this.netIn(prev, disp) : null;
+    const delta = (dNow != null && dPrev != null) ? dNow - dPrev : null;
+    /* Named so the caption can say which snapshot could not be counted,
+       rather than the card quietly dropping it. */
+    const uncounted = snaps.filter(x => this.netIn(x, disp) == null)
+                           .map(x => this.ccyOf(x))
+                           .filter((c, i, a) => a.indexOf(c) === i);
 
     // month spend + runway from life log
     const ll = this.lsJson('ct_lifelog_v1', null);
@@ -187,7 +252,10 @@ class Component extends DCLogic {
     } else if (cash != null) { runwaySub = 'log spends in the Life Log to compute burn'; }
 
     // chart
-    const pts = snaps.map(s => this.netOf(s));
+    /* A chart mixing currencies is a lie with a trend line on it, so it is
+       drawn only from snapshots that convert into one. */
+    const conv = snaps.map(s => this.netIn(s, disp));
+    const pts = conv.filter(v => v != null);
     const hasChart = pts.length >= 2;
     let linePts = '', dots = [], yMaxLabel = '', yMinLabel = '', xMinLabel = '', xMaxLabel = '';
     if (hasChart) {
@@ -197,9 +265,14 @@ class Component extends DCLogic {
       const X = i => 40 + (i / (pts.length - 1)) * 508;
       const Y = v => 130 - ((v - y0) / (y1 - y0)) * 118;
       linePts = pts.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
-      dots = pts.map((v, i) => ({ x: X(i).toFixed(1), y: Y(v).toFixed(1), tip: this.mLabel(snaps[i].m) + ' — ' + this.fmt(v) }));
-      yMaxLabel = this.fmt(y1); yMinLabel = this.fmt(y0);
-      xMinLabel = this.mLabel(snaps[0].m); xMaxLabel = this.mLabel(snaps[snaps.length - 1].m);
+      /* `plotted` is the snapshots that actually converted, so a dot's label
+         names the month it belongs to rather than the month at that index. */
+      const plotted = snaps.filter((x, i) => conv[i] != null);
+      dots = pts.map((v, i) => ({ x: X(i).toFixed(1), y: Y(v).toFixed(1),
+        tip: this.mLabel(plotted[i].m) + ' — ' + this.fmt(v, disp) }));
+      yMaxLabel = this.fmt(y1, disp); yMinLabel = this.fmt(y0, disp);
+      xMinLabel = this.mLabel(plotted[0].m);
+      xMaxLabel = this.mLabel(plotted[plotted.length - 1].m);
     }
 
     const saveSnap = () => {
@@ -207,20 +280,29 @@ class Component extends DCLogic {
       if (!m || (this.num(S.fCash) == null && this.num(S.fInv) == null && this.num(S.fDebt) == null)) { this.setState({ msg: '' }); return; }
       const nd = this.read();
       nd.snaps = nd.snaps.filter(s => s.m !== m);
-      nd.snaps.push({ m: m, cash: this.num(S.fCash) || 0, inv: this.num(S.fInv) || 0, debt: this.num(S.fDebt) || 0, note: S.fNote.trim() });
+      nd.snaps.push({ m: m, ccy: S.fCcy || this.defCcy(), cash: this.num(S.fCash) || 0, inv: this.num(S.fInv) || 0, debt: this.num(S.fDebt) || 0, note: S.fNote.trim() });
+      /* Recorded so a page reading these rows knows what an OLD currency-less
+         snapshot should be assumed to be, instead of each one guessing. */
+      nd.assume = nd.assume || (S.fCcy || this.defCcy());
       this.write(nd);
       this.setState({ fCash: '', fInv: '', fDebt: '', fNote: '', msg: this.mLabel(m) + ' saved ✓' });
       setTimeout(() => this.setState({ msg: '' }), 3500);
     };
 
+    /* A row is shown in the currency it was entered in — converting it would
+       make the ledger disagree with what was typed. Only the delta between
+       two rows is converted, because that one compares them. */
     const desc = snaps.slice().reverse();
     const snapRows = desc.map((s, i) => {
       const p = desc[i + 1] || null;
-      const dl = p ? this.netOf(s) - this.netOf(p) : null;
+      const c = this.ccyOf(s);
+      const a = this.netIn(s, disp), b = p ? this.netIn(p, disp) : null;
+      const dl = (a != null && b != null) ? a - b : null;
       return {
-        m: this.mLabel(s.m), cash: this.fmt(this.num(s.cash) || 0), inv: this.fmt(this.num(s.inv) || 0),
-        debt: (this.num(s.debt) || 0) > 0 ? this.fmt(this.num(s.debt) || 0) : '—',
-        net: this.fmt(this.netOf(s)),
+        m: this.mLabel(s.m), ccy: c,
+        cash: this.fmt(this.num(s.cash) || 0, c), inv: this.fmt(this.num(s.inv) || 0, c),
+        debt: (this.num(s.debt) || 0) > 0 ? this.fmt(this.num(s.debt) || 0, c) : '—',
+        net: this.fmt(this.netOf(s), c),
         delta: dl == null ? '' : (dl >= 0 ? '+' : '−') + Math.abs(Math.round(dl)).toLocaleString('en-US'),
         dColor: dl == null ? '#A6A79F' : (dl >= 0 ? '#3F6B3A' : '#A32E27'),
         note: s.note || '', hasNote: !!(s.note || '').trim(),
@@ -229,9 +311,14 @@ class Component extends DCLogic {
     });
 
     return {
-      netText: net == null ? '—' : this.fmt(net),
-      hasDelta: delta != null, deltaText: delta == null ? '' : (delta >= 0 ? '+' : '−') + this.cur() + Math.abs(Math.round(delta)).toLocaleString('en-US') + ' vs last', deltaColor: (delta || 0) >= 0 ? '#3F6B3A' : '#A32E27',
-      netSub: last ? ('as of ' + this.mLabel(last.m) + ' · cash ' + this.fmt(this.num(last.cash) || 0) + ' · invested ' + this.fmt(this.num(last.inv) || 0)) : 'no snapshot yet',
+      netText: net == null ? '—' : this.fmt(net, disp),
+      hasDelta: delta != null,
+      deltaText: delta == null ? '' : (delta >= 0 ? '+' : '−') + this.fmt(Math.abs(delta), disp).replace(/^−/, '') + ' vs last',
+      deltaColor: (delta || 0) >= 0 ? '#3F6B3A' : '#A32E27',
+      netSub: !last ? 'no snapshot yet'
+        : ('as of ' + this.mLabel(last.m) + ' · cash ' + this.fmt(this.num(last.cash) || 0, this.ccyOf(last))
+           + ' · invested ' + this.fmt(this.num(last.inv) || 0, this.ccyOf(last))
+           + (uncounted.length ? ' · ' + uncounted.join(', ') + ' uncounted — no rate set' : '')),
       runwayText, runwaySub,
       spendText: this.fmt(monthSpend),
       chartSub: snaps.length + ' snapshot' + (snaps.length === 1 ? '' : 's'),
@@ -241,6 +328,7 @@ class Component extends DCLogic {
       fInv: S.fInv, setFInv: (e) => this.setState({ fInv: this.dec(e.target.value) }),
       fDebt: S.fDebt, setFDebt: (e) => this.setState({ fDebt: this.dec(e.target.value) }),
       fNote: S.fNote, setFNote: (e) => this.setState({ fNote: e.target.value }),
+      fCcy: S.fCcy || this.defCcy(), setFCcy: (e) => this.setState({ fCcy: e.target.value }),
       saveSnap, msg: S.msg, hasMsg: !!S.msg,
       hasSnaps: snapRows.length > 0, noSnaps: snapRows.length === 0, snapRows
     };

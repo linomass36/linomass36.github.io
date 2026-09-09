@@ -439,8 +439,15 @@
   // ── the vault ──────────────────────────────────────────────────────────
   function vault() {
     var base = { id: 'vault', name: 'The Vault', href: 'Vault.dc.html', sort: 9 };
+    /* Reading the store is money.js's job now — Money.vault() tolerates both
+       the `snaps` and `snapshots` spellings and sorts by month, so this file
+       no longer carries its own copy of that. The Debt panel and the Vault
+       page answer "what is net worth" through the same reader, which is what
+       stops the three of them disagreeing. */
+    var Mv = w.Money;
     var d = readJSON('ct_vault_v1', {}) || {};
-    var snaps = Array.isArray(d.snaps) ? d.snaps : (Array.isArray(d.snapshots) ? d.snapshots : []);
+    var snaps = Mv ? Mv.vault().snaps
+      : (Array.isArray(d.snaps) ? d.snaps : (Array.isArray(d.snapshots) ? d.snapshots : []));
     if (!snaps.length) return Object.assign(base, { big: '—', unit: 'net worth', tone: '',
       line: 'no snapshot yet — one a month is plenty' });
     var last = snaps[snaps.length - 1] || {};
@@ -469,6 +476,10 @@
     }
     var st = M.stale();
     if (r.parts.length > 1 && st.isStale) line += ' · rate ' + st.days + 'd old';
+    /* A months-old snapshot read as "net worth" with no date on it is the
+       same failure the Debt panel had. Say how old it is. */
+    var age = M.positionAge ? M.positionAge() : null;
+    if (age !== null && age >= 2) line += ' · ' + age + ' months old';
     return Object.assign(base, {
       big: M.fmt(r.total, display), unit: 'net worth',
       tone: r.complete ? '' : 'go', line: line

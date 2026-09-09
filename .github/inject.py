@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "_site")
 
 # Files/dirs that must never ship to the live site.
-SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VAULT.md", "VERSION",
+SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VAULT.md", "CLAUDE.md", "VERSION",
             ".gitignore", "node_modules"}
 
 # The gate. It already loads config.js + firebase itself and runs the
