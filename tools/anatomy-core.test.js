@@ -54,7 +54,11 @@ function load(withSyllabus, seed) {
   vm.createContext(ctx);
   const files = withSyllabus ? ['anatomy-data.js', 'anatomy-core.js'] : ['anatomy-core.js'];
   files.forEach((f) => vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f }));
-  return { A: ctx.window.AnatomyCore, store };
+  /* `win` is handed back so a test can move the thorax gate. anatomy-core
+     reads it through data() on every call rather than capturing it at load,
+     so setting it here is enough — see the gate section below for why that
+     matters. */
+  return { A: ctx.window.AnatomyCore, store, win: ctx.window };
 }
 
 /* Days are counted back from the store's own study day, not from the calendar
@@ -211,20 +215,55 @@ ok(loops.A.openLoops(rec).filter((b) => loops.A.blockRec(rec, b.id).studied === 
 /* ── 5. the tripwire panel tells the truth at rest ── */
 group('Tripwire lines on a log with almost nothing in it');
 
-const fresh = load(true);
-const fs5 = fresh.A.blank();
-fs5.days[TODAY] = day({ tier: 'full', p0: false, minRead: 90, minDraw: 0 });
-fresh.A.write(fs5);
-const lines = fresh.A.tripwires(fresh.A.read());
+/* ── the gate is set explicitly, and that is the point ────────────────────
+   This section used to read the real calendar. THORAX_GATE is a fixed date
+   in anatomy-data.js (2026-09-08), so "does not say Past before the gate"
+   was true only for as long as that date stayed in the future — and on
+   9 Sep 2026 it inverted and took the fired-count assertion down with it,
+   because the gate line fires once it is past.
+
+   Nothing was wrong with the hub: the tripwire had started saying the gate
+   had passed, which is exactly its job. It was the test that expired, and
+   it failed the deploy step, so a stale assertion here stops the site
+   shipping.
+
+   So the gate is now driven rather than observed. Both sides of the
+   boundary are pinned, which is what the original assertion was reaching
+   for, and neither depends on what day it is. */
+function tripwiresWithGate(gateDate) {
+  const t = load(true);
+  t.win.ANATOMY_DATA.thoraxGate = gateDate;
+  const st = t.A.blank();
+  st.days[TODAY] = day({ tier: 'full', p0: false, minRead: 90, minDraw: 0 });
+  t.A.write(st);
+  return t.A.tripwires(t.A.read());
+}
+
+const AHEAD = REF.addDays(TODAY, 30);
+const BEHIND = REF.addDays(TODAY, -30);
+
+const lines = tripwiresWithGate(AHEAD);
 
 ok(lines.every((x) => !/NaN|undefined|null/.test(x.text)),
    'no line prints NaN, undefined or null');
 ok(!/above 5 \(0\)/.test(lines[0].text), 'does not claim open loops are above five when there are none');
 ok(/no d45 retest scored yet/i.test(lines[3].text), 'says nothing has been scored rather than "pass rate 0%"');
 ok(/says nothing yet/.test(lines[5].text), 'says cards per block is not measurable rather than NaN');
-ok(!/^Past /.test(lines[6].text), 'does not say "Past <gate>" before the gate: ' + JSON.stringify(lines[6].text));
+
+ok(!/^Past /.test(lines[6].text),
+   'with the gate 30 days out, does not say "Past <gate>": ' + JSON.stringify(lines[6].text));
+ok(/30 days to the thorax gate/.test(lines[6].text), 'it counts down to it instead');
+ok(!lines[6].fired, 'and a gate that has not arrived does not fire');
 ok(lines.filter((x) => x.fired).length === 2,
-   'and the two that genuinely fired still fire (nothing on paper, draw behind read)');
+   'so the two that genuinely fired still fire (nothing on paper, draw behind read)');
+
+/* The complement, which is what the calendar turned on by itself and which
+   nothing was asserting: once the gate is behind you, it has to say so. */
+const past = tripwiresWithGate(BEHIND);
+ok(/^Past /.test(past[6].text),
+   'with the gate 30 days behind, it does say "Past <gate>": ' + JSON.stringify(past[6].text));
+ok(past[6].fired, 'and a passed gate with thorax unstarted fires');
+ok(past.filter((x) => x.fired).length === 3, 'making three fired lines, not two');
 
 /* The wording turns, what fires does not. */
 const breached = load(true);
