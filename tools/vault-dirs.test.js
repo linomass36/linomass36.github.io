@@ -170,9 +170,9 @@ const GROUPS = ['anatomy', 'polish', 'american'];
          f + ' loads plates.js, or is a page the deploy shim injects it into');
     }
   });
-  ok(withPictures >= 10, 'the pictures are on the site rather than on a page or two (' +
+  ok(withPictures >= 20, 'the pictures are on the site rather than on a page or two (' +
      withPictures + ' pages, ' + slots + ' slots)');
-  ok(rotating >= 9, 'and most of them turn over (' + rotating + ' rotating)');
+  ok(rotating >= 20, 'and they turn over rather than hanging there (' + rotating + ' rotating)');
 }
 
 if (fails) { console.error('vault-dirs: ' + fails + ' failure(s)'); process.exit(1); }

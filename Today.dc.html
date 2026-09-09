@@ -334,6 +334,9 @@
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
     <div style="position: fixed; left: 50%; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 950; max-width: 92vw; font-family: var(--mono); font-size: 13px; padding: 12px 20px; border-radius: 22px; color: var(--surface); background: var(--ok); box-shadow: 0 8px 26px rgba(26,27,26,.28); animation: tdIn .2s ease;">{{ toast }}</div>
   </sc-if>
+
+  <div class="plate-break" data-plate-cap="1" data-plate-slot="today-foot"
+       data-plate-rotate="any"></div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:1400}}">
