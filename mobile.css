@@ -70,17 +70,55 @@ body {
   padding-right: var(--safe-right);
 }
 
-/* A page-level masthead pins BELOW the notch instead of under it. Matched
-   two ways because the pattern exists twice: `.hub-top` is the shared class
-   on the plain .html pages, and the .dc.html exports each carry the same
-   masthead as an inline style. Requiring `top: 0` is what keeps this off the
-   sidebars and table headers that are also sticky — those sit at top: 16px,
-   20px, 86px and want to stay there. */
+/* A page-level masthead pins BELOW the notch instead of under it.
+
+   THREE SPELLINGS, because the pattern exists three ways and the first fix
+   only caught two. `.hub-top` is the shared class on the folded pages; the
+   .dc.html exports carry the masthead as an inline style; and seven pages —
+   Standing among them, which is the installed app's start_url — declare a
+   plain `.top` class in their own <style> block, which no attribute selector
+   can reach. That is why the home screen still clipped after the insets were
+   supposedly fixed.
+
+   Requiring `top: 0` on the inline forms is what keeps this off the sidebars
+   and table headers that are also sticky — those sit at 16px, 20px and 86px
+   and want to stay there. `.top` and `.hub-top` are page mastheads by
+   definition, so they need no such guard. */
 .hub-top,
+.top,
 [style*="position: sticky"][style*="top: 0"],
 [style*="position:sticky"][style*="top:0"] {
   top: var(--safe-top) !important;
 }
+
+/* ── the strip behind the status bar ──────────────────────────────────────
+   Padding the body moves content down, and pinning the masthead moves it
+   down, but NEITHER covers the band the status bar sits in — and the page
+   scrolls through that band. Every masthead on this site is deliberately
+   translucent (`color-mix(… 88%, transparent)` over a backdrop blur), so
+   what you saw through the notch was the page sliding underneath: the clock
+   with a paragraph ghosting behind it.
+
+   So the band gets an opaque lid. It is `position: fixed` at the very top,
+   exactly as tall as the inset, painted in the page's own background — and
+   it collapses to nothing on a phone with no inset, on a desktop, and in a
+   browser tab, because that is what env() resolves to there.
+
+   Below the drawer button (2147483200) and the tab bar (2147482000) so the
+   chrome still sits on top; above every page's own z-index, which tops out
+   in the low hundreds. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--safe-top);
+  z-index: 2147481500;
+  background: var(--canvas, #F7F5F1);
+  pointer-events: none;
+}
+/* No dark-mode override: dark mode here is a global invert on <html>, so a
+   cream lid inverts to a dark one along with the page it is covering.
+   Painting it dark explicitly would invert it to white. */
 
 /* Global niceties (all sizes, no layout impact):
    - stop iOS from auto-inflating text

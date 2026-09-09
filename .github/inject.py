@@ -37,6 +37,26 @@ SKIP_TOP = {".git", ".github", "_site", "DEPLOY.md", "VAULT.md", "CLAUDE.md", "V
 GATE_SOURCE = "index.dc.html"   # renamed to index.html in the build
 GATE_OUTPUT = "index.html"
 
+# ── the phone layer, on every page ───────────────────────────────────────
+# mobile.css was linked by each page individually, and FOURTEEN never linked
+# it — Standing.html among them, which is the manifest's start_url and so the
+# first thing the installed app opens. Everything in that file was therefore
+# absent from the home-screen app: the safe-area insets that keep content out
+# from under the status bar, the tap-target floors, the 16px inputs that stop
+# iOS zooming on focus, and dark mode.
+#
+# It is injected rather than linked for the same reason the scripts are: a
+# stylesheet every page needs, added by hand to each page, is a stylesheet
+# some pages will not have. Idempotent — a page that already links it is left
+# alone, and it goes in FIRST so a page's own <style> still wins on anything
+# it deliberately overrides.
+#
+# hub.css is deliberately NOT here. It is a full visual system rather than a
+# layer, and the .dc.html exports carry their own; injecting it everywhere
+# would restyle pages that never asked for it. See tabs.js, which shipped
+# broken on exactly that assumption.
+STYLE_SHIM = '<link rel="stylesheet" href="./mobile.css">\n'
+
 # The scripts every hub page needs, in order (sync + nav depend on APP_CONFIG).
 SHIM = (
     '<script src="./config.js"></script>\n'
@@ -268,6 +288,18 @@ def process_html(path, version, is_gate):
         else:
             text = inject_shim(text)
             text = insert_head(text, THEME_BOOT)
+    # OUTSIDE the is_gate guard, deliberately. The gate is excluded from the
+    # shim because it runs its own sign-in flow and must not get the hub's
+    # sync layer — that is a reason about SCRIPTS. It is served edge-to-edge
+    # like every other page (add_viewport_fit above does not skip it), so
+    # without this the sign-in screen is the one page still sitting under the
+    # notch.
+    #
+    # Last insertion wins the parse order: insert_head puts each payload just
+    # before </head>, so this ends up after the shims in the file and a page's
+    # own <style> still overrides it where it means to.
+    if "mobile.css" not in text:
+        text = insert_head(text, STYLE_SHIM)
     text = cachebust(text)
     text = stamp_version(text, version)
     with open(path, "w", encoding="utf-8") as f:

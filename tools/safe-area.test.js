@@ -124,6 +124,100 @@ const offsets = [];
 ok(offsets.length > 0,
    'there really are non-zero sticky offsets to protect (' + offsets.join(', ') + ')');
 
+/* ── 2b. the phone layer actually reaches every phone page ─────────────────
+   THE FIX ABOVE SHIPPED AND THE HOME SCREEN STILL CLIPPED, because none of
+   it was loading. mobile.css was linked by each page by hand and FOURTEEN
+   never linked it — Standing.html among them, which is the manifest's
+   start_url and therefore the first thing the installed app opens. Every
+   safe-area rule in this file was absent from exactly the page the bug was
+   reported on.
+
+   Same shape as the tabs.js bug: a stylesheet assumed to be everywhere that
+   nothing was putting everywhere. The deploy injects it now. */
+group('mobile.css is delivered, not linked by hand');
+
+const inject = read('.github/inject.py');
+ok(/STYLE_SHIM\s*=\s*'<link rel="stylesheet" href="\.\/mobile\.css">/.test(inject),
+   'the deploy has a stylesheet shim for it');
+ok(/if "mobile\.css" not in text:\s*\n\s*text = insert_head\(text, STYLE_SHIM\)/.test(inject),
+   'it is injected into any page that does not already link it, and only those');
+ok(!/STYLE_SHIM[\s\S]{0,400}hub\.css/.test(inject),
+   'hub.css is NOT injected with it — that is a visual system, not a layer');
+
+/* The gate is kept out of the SCRIPT shim because it runs its own sign-in
+   flow. That is a reason about scripts; it is served edge-to-edge like every
+   other page, so the style shim has to reach it or the sign-in screen is the
+   one page left under the notch. */
+const proc = (inject.match(/def process_html[\s\S]*?\n\n\ndef /) || [''])[0];
+const gateGuard = proc.indexOf('if not is_gate:');
+const styleInject = proc.indexOf('text = insert_head(text, STYLE_SHIM)');
+ok(styleInject > gateGuard, 'the style shim is applied after the gate guard opens');
+/* Indentation is the whole check: `if not is_gate:` sits at four spaces, so
+   anything inside it is at eight. The style shim's own `if` must be at four
+   to be outside. */
+const guardLine = proc.split('\n').find((l) => l.includes('if not is_gate:')) || '';
+const styleIfLine = proc.split('\n').find((l) => l.includes('if "mobile.css" not in text:')) || '';
+const indent = (l) => (l.match(/^ */) || [''])[0].length;
+ok(styleIfLine !== '' && indent(styleIfLine) === indent(guardLine),
+   'and at the same indent as that guard rather than inside it (' +
+   indent(styleIfLine) + ' vs ' + indent(guardLine) +
+   ') — so the sign-in screen gets the phone layer too');
+ok(/def process_html[\s\S]*?if not is_gate:[\s\S]*?inject_shim/.test(inject),
+   'while the script shim still skips the gate, which was always the point');
+
+/* The page the bug was reported on, named explicitly: it is the start_url,
+   so if any page must carry the phone layer it is this one. */
+const manifest = JSON.parse(read('manifest.json'));
+const start = String(manifest.start_url || '').replace(/^\.\//, '');
+ok(start === 'Standing.html', 'the installed app starts on ' + start);
+const startSrc = read(start);
+const linksItself = /mobile\.css/.test(startSrc);
+ok(!linksItself || true, 'it ' + (linksItself ? 'links' : 'does not link') +
+   ' mobile.css itself — either way the deploy guarantees it');
+
+/* ── 2c. the strip behind the status bar is covered ────────────────────────
+   Padding the body and pinning the masthead both move content down. Neither
+   covers the band the status bar sits in, and the page scrolls THROUGH that
+   band — which is what the screenshot showed: the clock with a paragraph
+   ghosting behind it, because every masthead here is deliberately
+   translucent. */
+group('The status-bar band has an opaque lid');
+
+const scrim = (css.match(/body::before\s*\{[^}]*\}/) || [''])[0];
+ok(scrim.length > 0, 'body::before exists');
+ok(/position:\s*fixed/.test(scrim), 'it is fixed to the viewport');
+ok(/height:\s*var\(--safe-top\)/.test(scrim),
+   'exactly as tall as the inset — so it collapses to nothing without one');
+ok(/top:\s*0/.test(scrim), 'pinned to the very top');
+ok(/background:\s*var\(--canvas/.test(scrim), 'painted in the page background');
+ok(/pointer-events:\s*none/.test(scrim), 'and cannot swallow a tap');
+
+/* It has to sit above the page and below the chrome. */
+const z = (scrim.match(/z-index:\s*(\d+)/) || [])[1];
+ok(z && +z > 1000000, 'above any page-level z-index (' + z + ')');
+ok(z && +z < 2147482000, 'and below the tab bar, so the chrome still wins');
+
+/* Dark mode is a global invert on <html>: painting the lid dark explicitly
+   would inverted it to white. */
+ok(!/html\.hb-dark\s+body::before\s*\{[^}]*background/.test(css),
+   'no dark-mode background override — the global invert already flips it');
+
+/* ── 2d. the masthead selector covers how mastheads are actually written ── */
+group('All three spellings of a sticky masthead are matched');
+
+const stickyBlock = (css.match(/\.hub-top,[\s\S]*?\}/) || [''])[0];
+ok(/\.hub-top/.test(stickyBlock), 'the shared class on the folded pages');
+ok(/(^|\s|,)\.top(,|\s|\{)/.test(stickyBlock),
+   'the plain .top class seven pages declare in their own <style> block');
+ok(/\[style\*="position: sticky"\]/.test(stickyBlock), 'and the inline form the exports carry');
+
+/* `top` does nothing to a statically positioned element, which is what makes
+   matching a class as generic as .top safe. */
+const topUsers = fs.readdirSync(ROOT)
+  .filter((f) => /\.html$/.test(f))
+  .filter((f) => /\.top\s*\{/.test(read(f)));
+ok(topUsers.length > 0, '.top is a real masthead class here — ' + topUsers.length + ' pages');
+
 /* ── 3. the tab bar clears the home indicator without a dead band ──────── */
 group('The tab bar sits on the bottom edge');
 
