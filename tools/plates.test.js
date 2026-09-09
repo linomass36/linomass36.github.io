@@ -150,21 +150,20 @@ group('A picture is a break, not an obstacle');
   ok(/width:min\(100%,32rem,calc\(var\(--plate-h\) \* var\(--plate-ar-true/.test(decl),
      'the width follows from the height and the picture’s own shape, so nothing is cropped to fit');
 
-  const hub = fs.readFileSync(path.join(ROOT, 'hub.css'), 'utf8');
-  const marg = hub.slice(hub.indexOf('.hub-marginal {'), hub.indexOf('.hub-rule-orn'));
-  ok(/\.hub-marginal \{ display: none; \}/.test(marg), 'the margin figure is hidden by default');
-  ok(/min-width: 1280px/.test(marg), 'and drawn only where there is a margin to draw it in');
-  ok(!/max-width: 11\d\dpx/.test(marg),
-     'never re-flowed into the body of a narrow page, which is what put a painting at the top of the Plan');
+  /* The margin figures are placed by plates.js and are out of the flow, so
+     they cannot move the text however many there are. Nothing declares one
+     in markup any more: one mechanism owns the margin, or two of them end up
+     hanging in the same place, which is how this went wrong the first time. */
+  ok(/\.plate-margin\{position:absolute;display:none;width:150px/.test(decl),
+     'a margin plate is out of the flow and small');
+  ok(/max-height:230px/.test(decl), 'and cannot grow past being a margin note');
 
-  /* Every page carries one at its foot, so hiding the margin figure costs
-     nothing. */
   const pages = fs.readdirSync(ROOT).filter((f) => /\.html$/i.test(f));
-  const withMargin = pages.filter((f) => /hub-marginal/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
-  const alsoBreak = withMargin.filter((f) => /plate-break/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
-  ok(withMargin.length === alsoBreak.length,
-     'every page with a margin figure also has a plate in its flow (' +
-     alsoBreak.length + '/' + withMargin.length + ')');
+  const declaresMargin = pages.filter((f) => /hub-marginal/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  ok(declaresMargin.length === 0,
+     'no page hand-places a margin figure any more (' + declaresMargin.join(', ') + ')');
+  const withPlate = pages.filter((f) => /data-plate-rotate/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  ok(withPlate.length >= 20, 'and every page still carries the full one at its foot (' + withPlate.length + ')');
 }
 
 console.log(failed ? '\n' + failed + ' FAILED' : '\nall green');

@@ -502,7 +502,22 @@
     '.plate-break .plate-cap{display:block;margin-top:8px;text-align:center;' +
       'font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;' +
       'letter-spacing:.06em;color:#8A8B82;line-height:1.45;}' +
-    '@media print{.plate-break{display:none!important;}}';
+    /* A margin plate. Out of the flow entirely — it cannot move the text a
+       pixel, which is the whole point of a margin — and small, because a
+       margin note that competes with the column is not a margin note.
+       Positioned by placeMargins() below: the side and the height are the
+       only things that vary, and both are chosen there rather than here. */
+    '.plate-margin{position:absolute;display:none;width:150px;z-index:1;}' +
+    '.plate-margin.has-plate{display:block;}' +
+    '.plate-margin.has-plate::before{content:"";display:block;' +
+      'aspect-ratio:var(--plate-ar-true,4/3);max-height:230px;' +
+      'background-image:var(--plate-figure);' +
+      'background-size:cover;background-position:center;' +
+      'border:1px solid rgba(127,110,80,.30);box-shadow:0 1px 6px rgba(20,16,10,.11);}' +
+    '.plate-margin .plate-cap{display:block;margin-top:6px;text-align:center;' +
+      'font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:9.5px;' +
+      'letter-spacing:.05em;color:#9a9b93;line-height:1.4;}' +
+    '@media print{.plate-break,.plate-margin{display:none!important;}}';
 
   /* ── one at the end is one you never see ───────────────────────────────
      The Plan is eleven thousand pixels tall. A single plate at the foot of it
@@ -510,40 +525,45 @@
      one — and it is why the only painting anybody could find on a laptop was
      the small one in the margin.
 
-     So a long page gets its plates spread through it, at the boundaries it
-     already has: roughly one every three screens, to a maximum of four, each
-     placed before a top-level section rather than in the middle of one. They
-     rotate independently, so a page shows several different pictures rather
-     than the same one four times.
+     So a long page gets more, and they go IN THE MARGIN: out of the flow
+     entirely, alternating sides as you descend, at staggered heights so they
+     read as marginalia rather than as a column of pictures. The full-width
+     plate stays where it was, once, at the foot. A margin figure cannot move
+     the text by a pixel, which is what makes it safe to put several down a
+     page that a break would have interrupted four times.
 
      Deliberately timid about where it will do this. Only into a block-level
-     parent (never a grid or a flex row, where an extra child moves
-     everything), only before a child that is in the normal flow and actually
-     has height, and only when the page is more than three screens long. If
-     any of that does not hold it does nothing at all and the foot plate is
-     what you get. */
+     parent (never a grid or a flex row), only against a child that is in the
+     normal flow and actually has height, only when the page is more than
+     three screens long — and only when there is a margin to put one in. On a
+     phone, or a laptop held narrow, there is not, and then the foot plate is
+     the whole of it. */
+  var margins = [];        // { el, anchor, index }
+
   function spread() {
     try {
       var seed = document.querySelector('.plate-break');
-      if (!seed || !seed.parentNode || seed.getAttribute('data-plate-extra')) return;
+      if (!seed || !seed.parentNode) return;
       var parent = seed.parentNode;
       if (getComputedStyle(parent).display !== 'block') return;
 
+      /* Roughly one every two screens, to four. A margin figure costs the
+         page nothing, so this can be more generous than a break could be. */
       var vh = window.innerHeight || 800;
       var docH = document.documentElement.scrollHeight;
-      var want = Math.min(4, Math.floor(docH / (vh * 3)) - 1);
+      var want = Math.min(4, Math.round(docH / (vh * 2)));
       if (want < 1) return;
-      if (document.querySelectorAll('.plate-break[data-plate-extra]').length >= want) return;
+      if (margins.length >= want) { placeMargins(); return; }
 
       var slot = seed.getAttribute('data-plate-slot') || 'foot';
-      var want_group = seed.getAttribute('data-plate-rotate') || 'any';
+      var group = seed.getAttribute('data-plate-rotate') || 'any';
       var gap = docH / (want + 1);
 
       /* WHERE THE PAGE ACTUALLY DIVIDES. On a folded page — the Plan, the
          Money page — <main> holds a handful of panels and one of them is the
          whole eleven thousand pixels, so its own children are all in the
-         first screen and there is nothing to insert between. Descend into
-         the tall one until the boundaries span the page, then stop. */
+         first screen and there is nothing to hang a plate beside. Descend
+         into the tall one until the boundaries span the page, then stop. */
       var usable = function (el) {
         return Array.prototype.filter.call(el.children, function (k) {
           if (k === seed || k.classList.contains('plate-break')) return false;
@@ -554,7 +574,7 @@
       };
       var scan = parent, kids = usable(scan);
       for (var depth = 0; depth < 3; depth++) {
-        var last = kids.length ? kids[kids.length - 1].getBoundingClientRect().top + (window.pageYOffset || 0) : 0;
+        var last = kids.length ? docTop(kids[kids.length - 1]) : 0;
         if (kids.length >= 3 && last > docH * 0.45) break;
         var tallest = kids.slice().sort(function (a, b) {
           return b.getBoundingClientRect().height - a.getBoundingClientRect().height;
@@ -564,28 +584,99 @@
         if (deeper.length < 3) break;
         scan = tallest; kids = deeper;
       }
-      parent = scan;
-      var made = 0;
+
+      /* Two plates hung a nudge apart read as one mistake. Each has to clear
+         the last by the better part of a screen, no boundary is used twice,
+         and none of them may crowd the full plate at the foot. */
+      var made = 0, lastY = -1e9;
+      var minGap = Math.max(vh * 0.9, 420);
+      var footY = docTop(seed) - 320;
       for (var n = 1; n <= want; n++) {
         var mark = gap * n;
         for (var i = 0; i < kids.length; i++) {
-          var top = kids[i].getBoundingClientRect().top + (window.pageYOffset || 0);
-          if (top < mark) continue;
-          if (kids[i].previousElementSibling &&
-              kids[i].previousElementSibling.classList.contains('plate-break')) break;
-          var el2 = document.createElement('div');
-          el2.className = 'plate-break';
-          el2.setAttribute('data-plate-extra', '1');
-          el2.setAttribute('data-plate-cap', '1');
-          el2.setAttribute('data-plate-slot', slot + '-' + n);
-          el2.setAttribute('data-plate-rotate', want_group);
-          parent.insertBefore(el2, kids[i]);
+          var y = docTop(kids[i]);
+          if (y < mark || y < lastY + minGap || y > footY) continue;
+          lastY = y;
+          var el = document.createElement('div');
+          el.className = 'plate-margin';
+          el.setAttribute('data-plate-extra', '1');
+          el.setAttribute('data-plate-cap', '1');
+          el.setAttribute('data-plate-slot', slot + '-' + n);
+          el.setAttribute('data-plate-rotate', group);
+          document.body.appendChild(el);
+          margins.push({ el: el, anchor: kids[i], index: margins.length });
           made++;
           break;
         }
       }
-      if (made) dressAll();
+      if (made) { placeMargins(); dressAll().then(placeMargins); }
     } catch (e) {}
+  }
+
+  function docTop(el) {
+    return el.getBoundingClientRect().top + (window.pageYOffset || 0);
+  }
+
+  /* Side, height, and whether there is room for any of this at all.
+
+     ALTERNATING SIDES as you go down, starting on the side with more room, so
+     the eye is not led down one edge. Where only one side has a margin — a
+     page whose column is not centred — they all go there rather than half of
+     them going nowhere.
+
+     STAGGERED HEIGHTS: each is hung a little above or below the section it
+     belongs to, by a fixed sequence rather than a random one, so the same
+     page looks the same on every visit. They are anchored to real section
+     boundaries to begin with, so this is a nudge, not a placement.
+
+     The measuring is done against the column the foot plate sits in, and
+     redone on resize: a margin that exists at 1500px does not at 1100px, and
+     a plate half off the screen is worse than no plate. */
+  var SIDE_NUDGE = [0, 54, -34, 88, -18];
+
+  function placeMargins() {
+    if (!margins.length) return;
+    try {
+      var seed = document.querySelector('.plate-break');
+      var col = (seed && seed.parentNode) ? seed.parentNode.getBoundingClientRect() : null;
+      if (!col) return;
+      var W = 150, GAP = 26, NEED = W + GAP + 10;
+      var vw = document.documentElement.clientWidth;
+      var roomL = col.left, roomR = vw - col.right;
+      var canL = roomL >= NEED, canR = roomR >= NEED;
+
+      /* A design-canvas page rebuilds its body from React, and the section a
+         plate was hung beside goes with it. A detached anchor measures as
+         zero, which would send the plate to the top of the page — so drop it
+         and let the next pass hang a new one against whatever is there now. */
+      margins = margins.filter(function (m) {
+        if (document.documentElement.contains(m.anchor)) return true;
+        if (m.el.parentNode) m.el.parentNode.removeChild(m.el);
+        return false;
+      });
+
+      var host = document.body;
+      var hostTop = docTop(host);
+      margins.forEach(function (m, i) {
+        var el = m.el;
+        if (!canL && !canR) { el.style.display = 'none'; return; }
+        el.style.display = '';
+        var right = canL && canR ? (i % 2 === 0 ? roomR >= roomL : roomR < roomL) : canR;
+        /* Never hard against the window edge, however tight the margin. */
+        el.style.left = right
+          ? Math.round(Math.min(col.right + GAP, vw - W - 12)) + 'px'
+          : Math.round(Math.max(col.left - GAP - W, 12)) + 'px';
+        el.style.top = Math.round(docTop(m.anchor) - hostTop + SIDE_NUDGE[i % SIDE_NUDGE.length]) + 'px';
+      });
+    } catch (e) {}
+  }
+
+  var reflow = null;
+  if (typeof window.addEventListener === 'function') {
+    window.addEventListener('resize', function () {
+      clearTimeout(reflow);
+      reflow = setTimeout(placeMargins, 150);
+    });
   }
 
   function styleOnce() {
@@ -638,7 +729,7 @@
   }
 
   window.Plates = {
-    spread: spread,
+    spread: spread, place: placeMargins,
     catalogue: CATALOGUE,
     dir: DIR,
     rotation: rotation, inGroup: inGroup, dayNumber: dayNumber,
