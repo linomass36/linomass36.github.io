@@ -14,8 +14,8 @@
 body::after {
   content: "v__APP_VERSION__";
   position: fixed; z-index: 2147483000;
-  right: calc(8px + env(safe-area-inset-right, 0px));
-  bottom: calc(7px + env(safe-area-inset-bottom, 0px));
+  right: calc(8px + var(--safe-right, 0px));
+  bottom: calc(7px + var(--safe-bottom, 0px));
   font: 600 9.5px/1 'IBM Plex Mono', ui-monospace, monospace;
   letter-spacing: .12em; color: #9C9B93;
   background: rgba(255, 253, 248, .82); border: 1px solid #E4E2DD;
@@ -23,20 +23,63 @@ body::after {
   -webkit-backdrop-filter: saturate(1.1) blur(2px);
   backdrop-filter: saturate(1.1) blur(2px);
 }
-/* …and clears the phone tab bar rather than sitting on top of it. */
+/* …and clears the phone tab bar rather than sitting on top of it. Derived
+   from --hb-tabbar so the badge follows the bar if the bar ever changes
+   height, instead of the two drifting apart. */
 @media (max-width: 640px) {
-  body::after { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  body::after { bottom: calc(var(--hb-tabbar) + 6px + var(--safe-bottom, 0px)); }
 }
 
-/* Installed-app (home screen) only: with viewport-fit=cover the web view goes
-   edge-to-edge, so content would slide under the status bar / notch and clip at
-   the top. Pad the page down past the safe area. Only applies in standalone —
-   in a normal browser tab these insets are 0. */
-@media (display-mode: standalone) {
-  body {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
+/* ── the safe area, in one place ──────────────────────────────────────────
+   inject.py puts viewport-fit=cover on every page, so the web view goes
+   edge-to-edge and content slides under the status bar, the notch and the
+   home indicator. Three things used to go wrong here.
+
+   1. The top padding was inside `@media (display-mode: standalone)`, on the
+      reasoning that "in a normal browser tab these insets are 0". They are
+      not. A phone held sideways reports a left/right/top inset in an
+      ordinary tab, and a Dynamic Island reports a top inset in portrait —
+      so in every one of those cases nothing was padded and the masthead
+      was cut off above the screen edge.
+   2. The left/right insets were inside `@media (max-width: 640px)`. A phone
+      in landscape is WIDER than 640px, which is exactly when a curved edge
+      eats content — so the guard switched the fix off at the only moment it
+      was needed.
+   3. Padding the body does nothing for a `position: sticky; top: 0`
+      masthead, which pins to the viewport regardless. Every page-level
+      masthead on the site is exactly that, so the padding moved the content
+      down and the header still sat under the notch.
+
+   env() resolves to 0 where there is no inset, so none of this needs a
+   media query at all: it is inert on a desktop and on a phone with square
+   corners. The insets are hoisted to custom properties so the tab bar, the
+   version badge and the sync pill derive from one number instead of three
+   hand-copied constants. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* Kept in step with nav.js, which draws the bar. */
+  --hb-tabbar: 58px;
+}
+
+body {
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+/* A page-level masthead pins BELOW the notch instead of under it. Matched
+   two ways because the pattern exists twice: `.hub-top` is the shared class
+   on the plain .html pages, and the .dc.html exports each carry the same
+   masthead as an inline style. Requiring `top: 0` is what keeps this off the
+   sidebars and table headers that are also sticky — those sit at top: 16px,
+   20px, 86px and want to stay there. */
+.hub-top,
+[style*="position: sticky"][style*="top: 0"],
+[style*="position:sticky"][style*="top:0"] {
+  top: var(--safe-top) !important;
 }
 
 /* Global niceties (all sizes, no layout impact):
@@ -59,11 +102,8 @@ img, video { max-width: 100%; height: auto; }
   /* No accidental sideways scroll. */
   html, body { max-width: 100%; overflow-x: hidden; }
 
-  /* Respect the notch/curved edges for full-bleed content. */
-  body {
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
-  }
+  /* (The notch/curved-edge padding used to live here. It is unconditional
+     now — see the safe-area block at the top of this file.) */
 
   /* Tighter page gutters than the desktop 24–28px. */
   [style*="max-width: 1280px"], [style*="max-width: 1220px"],

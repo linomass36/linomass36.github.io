@@ -97,7 +97,39 @@ window.PLAN_V2 = {
     { was: '"Guide / storefront product, $49"',
       fix: 'Dormant unless it can be shipped in under 20 hours. It competes directly with the application campaign.', status: 'dormant' },
     { was: 'Two drifted portfolios (Research Plan 5 tracks vs CT Master Plan 4 tracks)',
-      fix: 'Reconcile to this document. Both archived.', status: 'dead' }
+      fix: 'Reconcile to this document. Both archived.', status: 'dead' },
+
+    /* ── from the two source documents, 9 Sep 2026 ──────────────────────
+       Both are kept as written (Life Plan.html, Finances 26-28.html). Where
+       a figure in one of them did not survive being checked, the amendment
+       lives here rather than in the document — a source edited to agree
+       with the dashboard stops being a record of what was actually thought.
+       Each of these was recomputed from the document's own stated
+       assumptions, not from a different model. */
+
+    { was: '"Summer 2027 acceptable: Phoenix scribe + family housing + Sunday paper" (life plan)',
+      fix: 'That is this plan’s own pre-mortem — "it is March 2027 and there is no US position" — written in as an acceptable outcome. It is the fallback rung, not the aim, and the finance document says so itself three weeks later: "one-month lab + scribe is still the fallback, not the aim." The forcing function stands: US summer research applications close 15 Feb 2027.',
+      status: 'dead' },
+
+    { was: '"Local: about 24–32 h/month self-funds a housed unpaid summer. USD: 16–20 h/month does the same job." (finances)',
+      fix: 'Recomputed from the document’s own baseline (−100 zł in June) and its own target (5 000 floor + a 9–13k pile). Clearing the BOTTOM of that range needs 31 h/month local or 21 h/month US. Clearing the top needs 27 h/month US and is unreachable at the local rate — 40 h/month is above the file’s own 32 h cap. The recommendation conflates two goals: 12 h local / 8 h US holds the floor, which is what the closing sentence actually claims and is correct.',
+      status: 'dead' },
+
+    { was: '"15 h unpaid ≈ the cash of 5 h local tutoring you did not sell." (finances)',
+      fix: '15 h at 50 zł is 750 zł — fifteen hours of local tutoring, or ten at the US rate, not five. The line understates the hospital’s price by 3×, and it is the line that makes the hospital look cheap. At 750 zł/month those 15 hours are very nearly the whole post-January deficit, bought for one December letter.',
+      status: 'dead' },
+
+    { was: '"Left for hospital + Bible + tutoring + life ≈ 100–120 h." (finances)',
+      fix: '510 awake − 180 study − 30 research leaves 300 h, not 100–120. The lower figure only works if ~190 h/month of life overhead is subtracted first, which the document never states — and every feasibility verdict in its table turns on it. Under 300 h the "everything maxed" row (122 h) fits; under 120 h it fails. The overhead is now an explicit, editable line in the School year panel.',
+      status: 'dead' },
+
+    { was: '"Attending ~2039" (life plan) against this file’s 7-year residency and Jul 2038 attending date',
+      fix: 'The life plan’s own after-school section says "eight-plus years after 2031 is normal", which makes the 7-year assumption a year optimistic. The effect splits: an extra training year moves federal money from the paid column to the forgiven column (fewer high-AGI attending payments before month 120), while the non-forgivable private balance accrues another year and the aggressive payoff slips from 2042 to about 2043. Recompute both halves rather than assuming it is simply worse.',
+      status: 'verify' },
+
+    { was: '"The gap is ~$170k in the old model" (life plan)',
+      fix: 'Superseded on 24 Aug 2026. Grad PLUS is gone and no loan was disbursed before 1 July 2026, so the gap is ~$210 000 private, ~$246 000 at graduation. The life plan’s demand survives its own number: one written figure by June 2027. That gate is now in the verification queue.',
+      status: 'dead' }
   ],
 
   /* ── §03 governing logic ─────────────────────────────────────────── */
@@ -387,6 +419,196 @@ window.PLAN_V2 = {
     gateRule: 'Always apply broadly to categorical GS regardless of I-6 confidence. An unmatched year costs more than any application fee.'
   },
 
+  /* ── §10b the year-by-year layer ──────────────────────────────────────
+     From Life Plan.html, 9 Sep 2026.
+
+     TWO RESOLUTIONS OF ONE TIMELINE, NOT TWO TIMELINES. `phases` above stay
+     the operating layer: livePhase(), the Standing board, Today and the
+     Weekly Review all read them, and tools/plan-source.test.js enforces
+     that. This is the reference layer underneath — what each September
+     through 2031 is for, and what each summer is supposed to produce.
+
+     It exists because the phases thin out badly after 2028. Phase 4 is
+     three years and one paragraph; the life plan has a page for each of
+     them. Nothing here schedules work: if an item needs doing this month it
+     belongs in a phase, not in a year.
+
+     Year 2 is deliberately thin. Phase 0 covers this term at ten times the
+     resolution, with scripts, sources and kill dates, and duplicating it
+     here at lower resolution is how two documents start disagreeing. */
+  years: [
+    { id: 'y2', n: 2, label: 'Year 2', span: '2026–27', where: 'Lublin', status: 'live',
+      objective: 'Anatomy remediates, the abstract ships, and the American-track question gets an answer in writing.',
+      seeAlso: 'phase0',
+      school: ['Anatomy remediates. The board-style bank does not sit at 68%.',
+               'Cards imported and daily.',
+               'Pass every Y2 block.',
+               'Abstract submitted, mentor revisions done.',
+               'American-track email answered: deadline, selection, competitiveness, which US hospitals, housing help, and whether a CT or cardiac elective is possible later.',
+               'A Step 1 system exists, even though the sit is after Y3.',
+               'One written ask to a named CT person — data, remote analysis, or a future summer on their service.'],
+      money: ['Max federal for the year.',
+              'Open the Nest. Park whatever is already spare.',
+              'Open a Move/interview note even at 0.',
+              'No private loans this year unless tuition fails without them.'],
+      research: ['Finish the open GI/scaffold paper — look like someone who closes loops.',
+                 'No new portfolio until the open loop closes.',
+                 'A mentor reply is a win even if the answer is "not this year."'],
+      household: ['Allowed to date.', 'Visit rule said once, early.',
+                  'Do not begin a "see you in NYC in 2029" relationship as the plan.'],
+      summer: { label: 'Summer 2027', product: 'A US research position — the thing the whole year is for.',
+        best: 'A funded US summer research post. NIH SIP pays a stipend and houses you; that is the branch this plan is built on.',
+        floor: 'If March comes with no offer: a submitted or revised paper, rest, and a small nest. Weeks with a cardiac/thoracic mentor if one can be got. Phoenix scribe with family housing and a Sunday paper is the last rung, not the aim.',
+        nest: '+$1k to $3k',
+        note: 'The pile the finance document sizes (9–13k zł) is insurance against an UNPAID position. If SIP lands, most of it is not needed and the tutoring hours go back to the paper and to sleep.' } },
+
+    { id: 'y3', n: 3, label: 'Year 3', span: '2027–28', where: 'Lublin · Step 1', status: 'queued',
+      objective: 'Pass Step 1 first attempt. Commit to the American track or decline it in writing.',
+      seeAlso: 'phase3',
+      school: ['Step 1 pass, first attempt, after Y3.',
+               'American track committed or declined. If declined: a written list of self-organised US electives and who has to approve them.',
+               'All Y3 coursework passed. No heroics that risk Step 1.',
+               'If the track is yes, the NYC living number is rewritten — a roommate target, not $3,500 as fate.'],
+      money: ['Federal max.',
+              'The Nest grows from leftover summer and work, not from skipping food.',
+              'Ask MUL International and the sites about housing, in writing.',
+              'The gap memo is due June 2027 — the $170k becomes a real figure or it dies.'],
+      research: ['Second output: a revision, a new analysis, or a CT-adjacent draft with a name on the list.',
+                 'If a PI said yes, a monthly check-in so the project survives Step 1.'],
+      household: ['By the end of this year, geography is honest. Either a cadence you can stand, or you do not carry a three-year maybe.',
+                  'Do not increase flight count to soothe exam stress. That is the ex pattern wearing Step 1.'],
+      summer: { label: 'Summer 2028', product: 'CT or cardiac surgery exposure, if Step 1 is done.',
+        best: 'Time on a CT service or with a cardiac outcomes group, US if it can be got. The last cheap summer to sit near a CT operating room as a student — spend the favour here if the door exists.',
+        floor: 'If Step 1 ate the spring: a short observership plus a paper, not a full earning season.',
+        nest: '+$2k to $4k, or hold Y2 savings' } },
+
+    { id: 'y4', n: 4, label: 'Year 4', span: '2028–29', where: 'NYC cores', status: 'queued',
+      objective: 'Be the student they would hire. One US surgeon who has watched you for months.',
+      seeAlso: 'phase4',
+      school: ['Complete cores at the assigned site.',
+               'One US surgeon who has seen you for months and can write later.',
+               'A written plan for a Y5 CT / cardiac / thoracic elective — who to email, when applications open.',
+               'One abstract or QI project from US data.',
+               'Cores are at the American Track affiliates. Those letters count — but they are not automatically CT, and a CT month is a separate ask every year.'],
+      money: ['Federal max if still under the lifetime cap.',
+              'NYC living at the rewritten number.',
+              'Nest held at $8–15k. Below $5k means spending is the problem.',
+              'Move/interview still small — do not ignore it.'],
+      research: ['Attach to an existing hospital surgery / CT / cardiology QI or outcomes group. Do not invent a basic-science empire in the August of cores.',
+                 'Keep the Lublin/CT remote project alive monthly if it still has a PI.'],
+      household: ['Same city only if she is there for her own reasons. Two gates, not one.',
+                  'If still long distance: the visit rule, or end it.',
+                  'She sees a man who has a hospital job and still keeps the hour — not one who promised Brooklyn and delivered night-float silence.'],
+      summer: { label: 'Summer 2029', product: 'Continuity with the same US group, so the letter is from July *and* the year.',
+        best: 'A research month or extra weeks with the group you already worked for.',
+        floor: 'Paid extra shifts, but only if they do not cancel the research month.',
+        nest: 'Hold. Add only if it costs zero academic product.' } },
+
+    { id: 'y5', n: 5, label: 'Year 5', span: '2029–30', where: 'NYC · Step 2 CK', status: 'queued',
+      objective: 'Step 2 CK in hand, a CT elective done, and two US letters requested while they still remember you.',
+      seeAlso: 'phase4',
+      school: ['Step 2 CK on the date you already got in writing. Score in hand before ERAS opens in September 2030 if the school allows; if not, a GS list and emails planned for a late score.',
+               'CT or cardiothoracic-adjacent elective done.',
+               'Two US letters requested — surgery plus a second.',
+               'ERAS CV and personal statement drafted in spring 2030.',
+               'The I-6 kill-switch review, spring 2030. Honest.'],
+      money: ['Last big aid year — watch the lifetime cap.',
+              'Fund Move/interview now: application fees, away-rotation housing.',
+              'The Nest is untouched except for a true emergency.'],
+      research: ['Submit what can be submitted before ERAS. "In preparation" is weaker than a real abstract.',
+                 'If I-6 is still on: an STS/AATS abstract or equivalent, on the calendar.'],
+      household: ['Warn her of the silent weeks. Keep a shorter standing time rather than vanishing.',
+                  'Do not book a make-up vacation you cannot pay for after the exam. Letter, not itinerary.'],
+      summer: { label: 'Summer 2030', product: 'Application armour.',
+        best: 'A surgery sub-I or acting internship, an away CT month if one can be got, and papers out the door.',
+        floor: 'Not a cash summer. If the Nest is empty here the earlier years failed, and a destructive job in July 2030 does not fix it.',
+        nest: 'Spend from Move/interview, not the Nest.' } },
+
+    { id: 'y6', n: 6, label: 'Year 6', span: '2030–31', where: 'ERAS · interviews · Match', status: 'queued',
+      objective: 'Match. GS is the expected result; I-6 is upside.',
+      seeAlso: 'phase5',
+      school: ['ERAS on time.',
+               'Programme list: wide GS. I-6 only where a relationship or a realistic shot exists.',
+               'Show up to interviews without disappearing from the remaining clinical work.',
+               'February 2031: the unmatched packet is complete — research-year contacts, letters, funding notes.',
+               'ECFMG and licensing paperwork not left to Match week.'],
+      money: ['Interviews spend from Move/interview, then limited Nest if that line runs dry — and it gets logged.',
+              'After the match: moving budget from that line plus whatever federal remains. Do not celebrate by emptying the Nest.'],
+      research: ['Do not start five new projects. Finish what can be cited.',
+                 'If unmatched, the research year *is* the CT file — a surgical or CT lab, not a random paid job.'],
+      household: ['Interview travel is not a secret life. Share the calendar.',
+                  'Match geography is a household decision if you are already a household.',
+                  'If engaged or married: the conversation about intern-year hours happens before Match, not after.'],
+      summer: { label: 'Summer 2031', product: 'Matched: move, rest, paperwork. No heroic third job.',
+        best: 'Rest, and the paperwork done early.',
+        floor: 'Unmatched: start the research year you already arranged.',
+        nest: 'Survive the move. Replenish from resident pay, not from panic overtime before intern year.' } }
+  ],
+
+  /* The tail, so the household conversation has an ending shape rather than
+     stopping at Match Day. */
+  afterSchool: [
+    { t: 'Intern year', span: '2031–32',
+      d: 'Survive. The Nest is not a side-hustle project. Standing time with a wife, if there is one, is shorter and still real.' },
+    { t: 'GS years 2–3', span: '2032–34',
+      d: 'Look like CT at *that* institution: their database, their clinic, their letter. STS Looking to the Future when eligible.' },
+    { t: 'Apply CT fellowship', span: '~2034',
+      d: 'From a file with US operative time and a CT chief who has watched you.' },
+    { t: 'CT fellowship ± transplant/MCS year', span: '~2036–39',
+      d: 'Eight-plus years after 2031 is normal. Children on RAP and resident/fellow pay is possible and tight — talk before a pregnancy, not after a surprise.' },
+    { t: 'Attending, academic centre', span: '2038–39',
+      d: 'The academic centre remains the building for transplant and MCS. PSLF is a side effect if policy holds, not the reason you pick the job.' }
+  ],
+
+  /* ── §10c the household ───────────────────────────────────────────────
+     From Life Plan.html, 9 Sep 2026. The largest thing this site did not
+     have: "spouse" and "Nest" appeared nowhere, and "wife" only in Rest.html
+     as something rest is not.
+
+     NOT A CRM RECORD, DELIBERATELY. The Network Map is warmth scores, owed
+     touches and angles, and the source document is explicit that she is not
+     an entry in it — "She is not the vault. Five minutes on the file, then
+     her life." So this holds rules and gates and no person: no name, no
+     dates, no per-person state, nothing that syncs. VAULT.md notes the repo
+     has been public since July 2026 and its history keeps every plaintext
+     version; naming professors is one privacy class and naming a partner is
+     another.
+
+     These are invariants, not tasks. Nothing here is a checkbox, because
+     the moment "keep the standing time" becomes a box to tick it stops
+     being kept and the dashboard gets abandoned — risk #12 on the register.  */
+  household: {
+    lede: 'The point of the money and the title is a household: a woman who lives in the real week, then marriage, then children. Not vacations as proof. Not flying 5:1 to keep the title.',
+    rules: [
+      { t: 'The love language you already have',
+        d: 'Letters, flowers, attention, gifts you can afford. Not itineraries.' },
+      { t: '"Fun doesn’t stop" means inside the week',
+        d: 'She is in it, not parked until 2039. A walk, a meal, a call that is not a lecture.' },
+      { t: 'The visit rule',
+        d: 'Trips split, or they stop. You do not recreate 5:1. Calls help; they are not the visit.' },
+      { t: 'Distance you already know you cannot stand',
+        d: 'If four days apart wrecked you, do not sign a months-apart structure unless a visit cadence you both fund is real.' },
+      { t: 'NYC is two gates, not one',
+        d: 'The American track AND her work, school or research actually in that city. Not a 2026 promise.' },
+      { t: 'The timeline, spoken early',
+        d: '2031 match, long training, moves, ugly months, attending ~2039. Marry on the trajectory.' },
+      { t: 'She is not the vault',
+        d: 'Five minutes on the file, then her life.' },
+      { t: 'Standing contact that survives exams',
+        d: 'Cancel means reschedule before the hangup, not after.' },
+      { t: 'Two rooms',
+        d: 'School in one, her in the other. Close the door.' },
+      { t: 'Do not wait, and do not start what you cannot hold',
+        d: 'Do not wait to date until the Nest or the match. Do not start long-distance you already know you cannot stand.' }
+    ],
+    /* The first quantitative link between this track and the money track. */
+    cost: { label: 'Current cost in the school-year budget', amount: 85, ccy: 'PLN', per: 'month',
+      note: 'Small enough that it never competes with the paper lot. Named here so it is a line rather than a surprise.' },
+    ring: { firstSweep: '2028-10', held: 0,
+      note: 'Deferred from Sep 2027 to Oct 2028, which puts the first sweep inside the NYC cores — the same months the Nest has to hold $8–15k. Two savings goals opening together, and neither document noticed. Nothing is allocated yet; decide which one moves before October 2028.' },
+    speech: 'I am in a six-year school, then a long US surgical road. I will use loans for school so I am not working myself into the ground every summer. I keep a small buffer so a bad month is not a crisis. I will not build us on vacations. I will not be the only one on the plane. New York is possible later if both of our maps put us there. The attending job is late. I want a marriage that survives an ugly year.'
+  },
+
   /* ── §11 research pipeline ───────────────────────────────────────── */
   pipeline: {
     stages: ['Idea', 'Question locked', 'Access', 'Analysis', 'Draft', 'Co-author review', 'Submitted', 'Revision', 'Accepted'],
@@ -511,7 +733,132 @@ window.PLAN_V2 = {
       'No aggressive investing until the private loan is dead. Paying down 10% debt is a guaranteed 10% return.',
       'Own-occupation disability insurance before residency ends. $483,000 of non-dischargeable debt against a surgeon’s hands is the exposure that ends this plan quietly.'
     ],
-    revisit: 'Assumptions to revisit annually: federal 8%, private 10%, residency 7 years (I-6 shortens it to 6 and improves everything), attending $550k, NYC living $60k/yr, RAP as legislated in 2026. Recompute when any one changes.'
+    revisit: 'Assumptions to revisit annually: federal 8%, private 10%, residency 7 years (I-6 shortens it to 6 and improves everything; the life plan’s "attending ~2039" implies 8 — see verification #13), attending $550k, NYC living $60k/yr, RAP as legislated in 2026. Recompute when any one changes.',
+
+    /* ── the pots ─────────────────────────────────────────────────────────
+       Three envelopes, two currencies, from both source documents.
+
+       Cushion and Nest are kept SEPARATE on purpose. They look like the same
+       idea — 5 000 zł is about the bottom of the Nest’s first band — but
+       they answer different questions and break at different moments. The
+       Cushion is the Lublin operating floor: whether November’s paper lot
+       can be bought without the month going red. The Nest is the long
+       buffer that has to survive a move, an interview season and an
+       intern year. Merging them means a bad month in Lublin quietly spends
+       the thing that exists to absorb a bad month in New York.
+
+       Money.convert() turns one into the other for reading; money.js keeps
+       the rate with the date it was set and refuses to guess when it is
+       missing, so a converted total says so rather than being wrong. */
+    pots: [
+      { id: 'cushion', label: 'Cushion', ccy: 'PLN', target: 5000,
+        what: 'The Lublin operating floor. What keeps a paper lot from turning a month red.',
+        source: 'Finances 26-28.html',
+        bands: [
+          { when: 'Through the school year', lo: 5000, hi: null, note: 'Holds at 12 h/month local tutoring, or 8 h US.' },
+          { when: 'June 2027', lo: 5000, hi: null, note: 'Plus the summer pile if the position is unpaid.' }
+        ] },
+      { id: 'nest', label: 'Nest', ccy: 'USD', target: null,
+        what: 'The household buffer. A bad month is not a crisis.',
+        source: 'Life Plan.html',
+        bands: [
+          { when: 'After summer 2027', lo: 1000,  hi: 3000,  note: '' },
+          { when: 'Entering Year 4',   lo: 8000,  hi: 15000, note: 'Below $5k means spending is the problem, not income.' },
+          { when: 'At match',          lo: 8000,  hi: 15000, note: 'Still in band, after the move line has its own money.' }
+        ],
+        rule: 'Do not loot the Nest in Year 6. Interviews spend from Move/interview first, and anything taken from here gets logged.' },
+      { id: 'move', label: 'Move / interview', ccy: 'USD', target: null,
+        what: 'Applications, flights, deposits, away-rotation housing.',
+        source: 'Life Plan.html',
+        bands: [
+          { when: 'Years 2–3', lo: 0, hi: null, note: 'Open the note even at $0.' },
+          { when: 'Year 5',    lo: null, hi: null, note: 'Funded now — fees and away housing land before the money does.' },
+          { when: 'Year 6',    lo: null, hi: null, note: 'The interview season spends from here.' }
+        ] }
+    ],
+    potsNote: 'The summer-2027 ticket is a fourth question neither document settles: the finance file counts it inside the May pile, the life plan would put it in Move/interview. It is left in the pile until the position is known, because an unpaid position makes it a survival cost rather than a travel cost.'
+  },
+
+  /* ── §13b the school year, in złoty ───────────────────────────────────
+     From Finances 26-28.html, 9 Sep 2026.
+
+     WHY THIS IS NOT THE DEBT MODEL. §13 above is fifteen years long, in
+     dollars, and about instruments — caps, forgiveness, refinancing. This is
+     nine months long, in złoty, and about whether November's paper lot can
+     be bought. Both are true; neither answers the other's question, and the
+     Money page keeps them as separate panels for that reason.
+
+     ONLY INPUTS LIVE HERE. Every figure the document states as a RESULT —
+     the running balances, the hours needed at each rate, whether the pile
+     clears — is recomputed by the panel from these numbers. That is what
+     caught the recommendation being one to two rows optimistic: the
+     document's own inputs do not produce its own conclusion. A model that
+     stores its outputs cannot notice that. */
+  schoolYear: {
+    window: 'Oct 2026 → Jun 2027',
+    source: 'Finances 26-28.html',
+    ccy: 'PLN',
+    start: 5000,
+    startNote: 'After Arizona.',
+    months: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+
+    /* In and out, per school month. */
+    income: [
+      { k: 'Allowance', v: 1200 },
+      { k: 'Paid research', v: 1000, hours: 30, note: '30 h — an implied 33 zł/h' }
+    ],
+    outgoings: [
+      { k: 'Rent', v: 1800 }, { k: 'Food', v: 800 }, { k: 'Extra', v: 400 }
+    ],
+
+    /* 9 months of entitlement, paid as a January lump plus five monthly
+       instalments. Written out because "700 Oct–Jun, 2 800 in January, 700
+       Feb–Jun" reads like double-counting every time you come back to it,
+       and it is not: 2 800 + 5 x 700 = 6 300 = 9 x 700. */
+    scholarship: { perMonth: 700, months: 9, total: 6300,
+      paid: [{ m: 'Jan', amt: 2800, note: 'Oct–Jan, backdated' },
+             { m: 'Feb', amt: 700, through: 'Jun', note: 'monthly from here' }] },
+
+    /* Cannot pause for lack of materials. */
+    paperLots: [ { m: 'Nov', amt: 2200 }, { m: 'Apr', amt: 2000 } ],
+    paperNote: 'Lots run every 5–6 months. No scanner. The lot already ordered is never the thing that gets cut.',
+
+    rates: [
+      { id: 'research', label: 'Paid research', zl: 33.3, fixed: true,
+        note: 'Below both tutoring rates. Kept for the CV line and the supervisor, but it is 30 hours — twice the hospital — and the document prices the hospital and not this.' },
+      { id: 'local', label: 'Local tutoring', zl: 50 },
+      { id: 'us', label: 'US tutoring', zl: 75, usd: 20,
+        note: 'The only stream that survives the flight home, and the one Phase 0 already calls the highest-value income.' }
+    ],
+    cap: { hours: 32, note: '32 h/month is 8 h/week. Stacked on 15 hospital and 30 research that is already 77 h of non-study work before the book.' },
+
+    cushion: 5000,
+    pile: { lo: 9000, hi: 13000,
+      what: 'An 8–10 week unpaid, housed US research summer.',
+      note: 'INSURANCE, NOT A BILL. NIH SIP — the campaign’s first target — pays a stipend and provides housing. This pile is what an unpaid position would cost, so it shrinks or disappears the moment a funded offer lands.' },
+
+    /* The month, at 720 h. */
+    hours: {
+      clock: 720, sleep: 210,
+      blocks: [
+        { id: 'study',    label: 'Studying',           lo: 160, hi: 200, plan: 180, rank: '#1, no comparison', locked: true },
+        { id: 'research', label: 'Paid research',      lo: 30,  hi: 30,  plan: 30,  rank: 'kept — it is the 1 000 zł', locked: true },
+        { id: 'hospital', label: 'Hospital assistant', lo: 0,   hi: 30,  plan: 15,  rank: 'unpaid; it buys the December letter' },
+        { id: 'bible',    label: 'Bible manuscript',   lo: 20,  hi: 30,  plan: 25,  rank: 'craft — skip flourishes, never the ordered lot' },
+        { id: 'tutoring', label: 'Tutoring',           lo: 0,   hi: 32,  plan: 16,  rank: 'the income lever' }
+      ],
+      /* The number the source document never states, and every one of its
+         feasibility verdicts turns on. Editable, because it is an estimate. */
+      overhead: { plan: 190,
+        label: 'Life, transit, church, meals',
+        note: 'The document says "≈100–120 h left for hospital + Bible + tutoring + life", but 510 awake − 180 study − 30 research is 300 h. The 100–120 figure only works with roughly this much overhead taken off first. It was never written down, so it is a dial here rather than a hidden constant.' }
+    },
+
+    /* The order things get cut, which is the only rule in the file that is
+       about the week rather than the month. */
+    cutOrder: ['Hospital, toward 0', 'Tutoring hours', 'Bible time — never the lot already ordered'],
+    cutNever: ['Studying', 'The exam', 'A paper lot that is already due'],
+    cutNote: 'Never cut study for 50 zł. Year 27/28 spring: hospital goes to 0 if Step 1 needs the slot.'
   },
 
   /* ── §14 risk register ───────────────────────────────────────────── */
@@ -573,7 +920,50 @@ window.PLAN_V2 = {
     { n: '6b', q: 'Same question — Texas Heart, HSS, Cleveland Clinic, Mayo', how: 'Email each', by: '2026-10-31', sev: 'high', done: false },
     { n: '6c', q: 'Is the American Track’s US clinical placement contingent on anything (GPA, exam, quota)?', how: 'American Track office', by: '2026-10-31', sev: 'high', done: false },
     { n: '7',  q: 'Confirmed 2027 dates and deadlines for targets 3–11', how: 'Program sites', by: '2026-10-31', sev: 'medium', done: false },
-    { n: '8',  q: 'Current NRMP Charting Outcomes: IMG match rates, I-6 and GS', how: 'NRMP publications', by: '2029', sev: 'medium', done: false }
+    { n: '8',  q: 'Current NRMP Charting Outcomes: IMG match rates, I-6 and GS', how: 'NRMP publications', by: '2029', sev: 'medium', done: false },
+
+    /* ── the dated gates the life plan added ────────────────────────────
+       Each of these is a decision with a date and a rule, which is the one
+       shape this queue was built for. They were the largest thing the site
+       did not have: the queue jumped from "DECIDED — private loans" in
+       Aug 2026 straight to "four lender quotes" in spring 2028, with no
+       moment in between where anyone writes the arithmetic down. */
+
+    { n: '9',  q: 'The gap memo: one written number — savings you will actually have, NYC living you will actually pay, MUL/hospital aid, and the private principal cap if anything remains',
+      how: 'One page, written. The June-savings story and the August-private story cannot both stay live.',
+      by: '2027-06-30', sev: 'high', done: false,
+      note: 'Finances 26-28 is the first honest draft of the Poland half, delivered nine months early. What it does not yet carry is the NYC half.' },
+
+    { n: '10', q: 'I-6 kill-switch review — honest',
+      how: 'Five criteria, all of them checkable. Missing two or more turns I-6 off and the file becomes GS only.',
+      by: '2030-04-30', sev: 'high', done: false, gate: 'i6',
+      criteria: ['Elite Step 2 CK score',
+                 'A US CT letter from more than two weeks on service',
+                 'A CT paper, or an STS/AATS-level abstract',
+                 'A CT or high-volume academic surgery sub-I',
+                 'A CT surgeon who will email a programme director'] },
+
+    { n: '11', q: 'The unmatched packet — named US surgical research-year labs, mentors, funding',
+      how: 'Written and complete before rank lists close. Not invented in March.',
+      by: '2031-02-01', sev: 'high', done: false },
+
+    { n: '12', q: 'Is forgiveness under RAP taxable, and does joint filing pull a spouse’s AGI into the payment?',
+      how: 'Federal student aid site + a tax preparer, once married filing jointly is a real possibility',
+      by: '2029', sev: 'high', done: false,
+      note: 'The forgiveness model in this file says "tax-free" and computes payments from a single AGI. PSLF is federally tax-free; RAP is a different instrument and the answer may differ. Both assumptions are load-bearing for ~$130k.' },
+
+    { n: '13', q: 'Residency length: 7 years or 8?',
+      how: 'GS 5 + CT 2 is seven; GS 5 + CT 3, or CT 2 plus a transplant/MCS year, is eight. The whole forgiveness timeline is anchored on seven.',
+      by: '2031', sev: 'medium', done: false,
+      note: 'The life plan says attending ~2039 and "eight-plus years after 2031 is normal". Recompute both halves — the federal side improves, the private side does not.' },
+
+    { n: '14', q: 'AATS (and similar) eligibility for a UMLub student — confirm once',
+      how: 'One email to the society. If the answer is no, never build a summer around them again.',
+      by: '2026-12-31', sev: 'low', done: false },
+
+    { n: '15', q: 'American Track cores: which affiliate sites, and is a CT or cardiac surgery elective possible?',
+      how: 'The American Track office, in writing. Letters from Brooklyn / One Brooklyn Health months count — but they are not automatically CT, and a CT month is a separate ask every year you are in the US.',
+      by: '2026-10-31', sev: 'high', done: false }
   ],
 
   /* ── §18 the one-paragraph version ───────────────────────────────── */

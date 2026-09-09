@@ -278,8 +278,130 @@
     return b;
   }
 
+  /* ── the school year, computed ────────────────────────────────────────
+     Every number the finance document states as a RESULT is derived here
+     from its inputs, and nothing is stored. That is the whole point: the
+     first time this ran it disagreed with the document's own summary, and
+     the document was wrong — its recommendation of "24–32 h/month local"
+     clears the floor but not the summer pile it is written to fund.
+
+     A model that stored its conclusions could not have noticed. */
+
+  function sy() { return (plan() || {}).schoolYear || null; }
+
+  function syPerMonth() {
+    var S = sy();
+    if (!S) return null;
+    var sum = function (rows) {
+      return (rows || []).reduce(function (a, r) { return a + (+r.v || 0); }, 0);
+    };
+    var income = sum(S.income), out = sum(S.outgoings);
+    return { income: income, out: out, hole: income - out };
+  }
+
+  /* The nine months, running. `hours` and `rateId` add tutoring on top. */
+  function syMonths(hours, rateId) {
+    var S = sy();
+    if (!S) return [];
+    var pm = syPerMonth();
+    var rate = syRate(rateId);
+    var extra = (+hours || 0) * (rate ? rate.zl : 0);
+
+    /* Scholarship: a January lump, then monthly to June. */
+    var schol = {};
+    (S.scholarship.paid || []).forEach(function (p) {
+      var from = S.months.indexOf(p.m);
+      if (from < 0) return;
+      var to = p.through ? S.months.indexOf(p.through) : from;
+      for (var i = from; i <= (to < 0 ? from : to); i++) schol[S.months[i]] = p.amt;
+    });
+    var lots = {};
+    (S.paperLots || []).forEach(function (l) { lots[l.m] = (lots[l.m] || 0) + l.amt; });
+
+    var running = S.start;
+    return S.months.map(function (m) {
+      var inc = pm.income + (schol[m] || 0) + extra;
+      var paper = lots[m] || 0;
+      var net = inc - pm.out - paper;
+      running += net;
+      return { m: m, income: inc, out: pm.out, paper: paper, net: net, running: running,
+               schol: schol[m] || 0, tutoring: extra };
+    });
+  }
+
+  function syRate(id) {
+    var S = sy();
+    if (!S) return null;
+    var hit = null;
+    (S.rates || []).forEach(function (r) { if (r.id === id) hit = r; });
+    return hit || (S.rates || [])[1] || null;
+  }
+
+  function syEnd(hours, rateId) {
+    var rows = syMonths(hours, rateId);
+    return rows.length ? rows[rows.length - 1].running : null;
+  }
+
+  /* Hours per month needed to finish June on `target`. Returns null when the
+     rate is unknown, and flags the answer as unreachable when it is above
+     the file's own 32 h cap — which is the finding: the top of the stated
+     pile range cannot be earned at the local rate inside that cap. */
+  function syHoursFor(target, rateId) {
+    var S = sy();
+    if (!S) return null;
+    var rate = syRate(rateId);
+    if (!rate || !rate.zl) return null;
+    var base = syEnd(0, rateId);
+    if (base === null) return null;
+    var need = target - base;
+    if (need <= 0) return { hours: 0, reachable: true, rate: rate };
+    var h = need / (S.months.length * rate.zl);
+    var hours = Math.ceil(h * 10) / 10;
+    return { hours: hours, reachable: hours <= S.cap.hours, cap: S.cap.hours, rate: rate };
+  }
+
+  /* The three questions the panel asks, in the order they bite. */
+  function syVerdicts(hours, rateId) {
+    var S = sy();
+    if (!S) return [];
+    var end = syEnd(hours, rateId);
+    return [
+      { id: 'floor', label: 'Holds the ' + S.cushion.toLocaleString('en-US') + ' zł cushion',
+        need: syHoursFor(S.cushion, rateId), ok: end !== null && end >= S.cushion },
+      { id: 'pile-lo', label: 'Clears the bottom of the summer pile',
+        need: syHoursFor(S.cushion + S.pile.lo, rateId),
+        ok: end !== null && end >= S.cushion + S.pile.lo },
+      { id: 'pile-hi', label: 'Clears the top of the summer pile',
+        need: syHoursFor(S.cushion + S.pile.hi, rateId),
+        ok: end !== null && end >= S.cushion + S.pile.hi }
+    ];
+  }
+
+  /* The month's hours, and whether the plan fits once the overhead the
+     document never wrote down is taken off the top. */
+  function syBudget(over) {
+    var S = sy();
+    if (!S) return null;
+    var H = S.hours;
+    var awake = H.clock - H.sleep;
+    var overhead = over == null ? H.overhead.plan : (+over || 0);
+    var planned = (H.blocks || []).reduce(function (a, b) { return a + (+b.plan || 0); }, 0);
+    var maxed = (H.blocks || []).reduce(function (a, b) { return a + (+b.hi || 0); }, 0);
+    return {
+      clock: H.clock, sleep: H.sleep, awake: awake, overhead: overhead,
+      available: awake - overhead,
+      planned: planned, maxed: maxed,
+      /* Non-study work, which is the number the document itself quotes. */
+      nonStudy: planned - (H.blocks[0] ? H.blocks[0].plan : 0),
+      fits: planned <= awake - overhead,
+      maxedFits: maxed <= awake - overhead
+    };
+  }
+
   window.PlanV2 = {
     KEY: KEY, read: read, write: write, patch: patch,
+    schoolYear: sy, syPerMonth: syPerMonth, syMonths: syMonths, syRate: syRate,
+    syEnd: syEnd, syHoursFor: syHoursFor, syVerdicts: syVerdicts, syBudget: syBudget,
     plan: plan, isImported: isImported, importedAt: importedAt,
     today: today, daysBetween: daysBetween, daysUntil: daysUntil,
     fmtDate: fmtDate, money: money, esc: esc, el: el,

@@ -211,6 +211,22 @@
       dest: 'plan', panel: 'Write-up', ord: 5,
       plain: 'Write-up',
       blurb: 'The cancer-research paper, stage by stage.' },
+
+    /* ── the two source documents ────────────────────────────────────────
+       Both are .md in the repo root and become .html at deploy time, the
+       same way Publication Pipeline does. They are kept as WRITTEN: the
+       plan and money pages carry the operating layer, and where the two
+       disagree the Corrections panel says which is current. A source
+       document that gets edited to agree with the dashboard is no longer a
+       record of anything, so these are never patched in place. */
+    'Life Plan.html':            { name: 'The full life plan', group: 'The plan', parent: 'Plan.html', back: 'none',
+      dest: 'plan', panel: 'Source', ord: 6,
+      plain: 'Source',
+      blurb: 'Every school year and summer, as written in September 2026.' },
+    'Finances 26-28.html':       { name: 'Finances 26–28', group: 'People & money', parent: 'Money.html', back: 'none',
+      dest: 'money', panel: 'Source', ord: 6,
+      plain: 'Source',
+      blurb: 'The Lublin cash-flow document, as written in September 2026.' },
     'Conference Radar.dc.html':  { name: 'Conference Radar', group: 'Research', parent: 'Plan.html', back: 'wrong',
       dest: 'people', panel: 'Radar', ord: 3,
       plain: 'Conferences',
