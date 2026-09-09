@@ -109,13 +109,19 @@
     var css = d.createElement('style');
     css.id = 'hb-desttabs-css';
     css.textContent =
-      /* The 62px on the right is not a margin, it is the drawer button:
-         nav.js floats a 44px circle at `right: 12px + inset`, and a strip
-         that scrolls under it hides its own last control. 62px is the same
-         clearance the hand-written mastheads on this site already use. */
+      /* WIDTH, not padding. This row scrolls sideways, and padding only
+         holds the last chip clear when you have scrolled to the end — at any
+         other scroll position a chip slides straight under the drawer
+         button, which is how the Workshop tab came to be hidden. Taking the
+         button's lane out of the row's WIDTH means no chip is ever under it,
+         wherever the row is scrolled to.
+
+         Only where they could actually meet: above ~1100px the row is
+         centred inside its 980px cap and the button is out at the viewport
+         edge, with the gutter between them. */
       '.hb-desttabs{display:flex;gap:6px;align-items:center;' +
-      'max-width:980px;margin:0 auto;' +
-      'padding:10px max(62px,calc(50px + env(safe-area-inset-right,0px))) 10px 16px;' +
+      'max-width:980px;margin:0 auto;box-sizing:border-box;' +
+      'padding:10px max(16px,env(safe-area-inset-right,0px)) 10px 16px;' +
       'overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;' +
       'border:0;background:none;}' +
       '.hb-desttabs::-webkit-scrollbar{display:none;}' +
@@ -132,6 +138,8 @@
       'background:#993C1D;border-color:#993C1D;color:#FFFDF8;font-weight:600;}' +
       /* The tap target is 34px of chip inside a 44px row, so the row — not
          the chip — is what a thumb has to hit. */
+      '@media(max-width:1100px){.hb-desttabs{' +
+      '  width:calc(100% - var(--hb-btn-clear,72px));margin-left:0;margin-right:0;}}' +
       '@media(max-width:640px){.hb-desttabs{padding:9px 12px;gap:5px;}' +
       '  .hb-desttabs .hub-tab{min-height:36px;font-size:12px;padding:0 14px;}}';
     d.head.appendChild(css);

@@ -107,11 +107,39 @@
     return u;
   }
 
+  /* ── where the drawer button sits, and why it moved ──────────────────────
+     It was at `12px + inset` from the top, which put it on the page
+     masthead — and every masthead here reserves 58–68px of right padding
+     for exactly that (see the comment on `.top` in Standing.html).
+
+     Then tabs.js began inserting the destination chip row ABOVE the
+     masthead, and the button landed on that instead: it covered the last
+     chip, and since the row scrolls sideways, WHICH chip it covered depended
+     on where the row happened to be scrolled. On the Review pages that was
+     the Workshop tab.
+
+     Moving the BUTTON down was the obvious fix and it was wrong twice over.
+     The row sits above the masthead on some pages and below it on others, so
+     a fixed offset landed the button back on the row half the time; and once
+     it was low enough to clear the row it covered the page's headline
+     instead. A floating control pushed down the page just finds something
+     else to sit on.
+
+     So the button stays here, in the lane, and the ROW gets shorter — see
+     .hb-desttabs in tabs.js, which carves --hb-btn-clear out of its own
+     width. A row that does not extend under the button cannot have a chip
+     under the button at any scroll position, which padding could never
+     promise.
+
+     52px rather than 44px because it is the most-pressed control on the site
+     and 44px is the floor, not a target. */
   var CSS =
-    '#hbnav-btn{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));' +
-    'top:calc(12px + env(safe-area-inset-top,0px));z-index:2147483200;' +
-    'width:44px;height:44px;border-radius:50%;border:1px solid #E4E2DD;cursor:pointer;' +
-    'background:#993C1D;color:#fff;font-size:18px;line-height:1;display:flex;' +
+    '#hbnav-btn{position:fixed;' +
+    'right:calc(12px + var(--safe-right, env(safe-area-inset-right,0px)));' +
+    'top:calc(12px + var(--safe-top, env(safe-area-inset-top,0px)));' +
+    'z-index:2147483200;' +
+    'width:52px;height:52px;border-radius:50%;border:1px solid #E4E2DD;cursor:pointer;' +
+    'background:#993C1D;color:#fff;font-size:21px;line-height:1;display:flex;' +
     'align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(26,27,26,.22);' +
     '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}' +
     '#hbnav-btn:hover{background:#7f3016;}' +
@@ -121,7 +149,8 @@
     'background:#F7F5F1;border-left:1px solid #E4E2DD;box-shadow:-6px 0 28px rgba(26,27,26,.18);' +
     'transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);' +
     'display:flex;flex-direction:column;font-family:"IBM Plex Sans",system-ui,sans-serif;' +
-    'padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}' +
+    'padding-top:var(--safe-top, env(safe-area-inset-top,0px));' +
+    'padding-bottom:var(--safe-bottom, env(safe-area-inset-bottom,0px));}' +
     '#hbnav.open #hbnav-panel{transform:none;}' +
     '#hbnav.open #hbnav-back{opacity:1;visibility:visible;}' +
     '.hbnav-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;' +
@@ -384,8 +413,9 @@
          left over. */
       '#hb-tabs{position:fixed;left:0;right:0;bottom:0;z-index:2147482000;display:none;' +
       'background:rgba(255,253,248,.97);border-top:1px solid #E4E2DD;' +
-      'padding:6px max(4px,env(safe-area-inset-right,0px)) ' +
-      'max(6px,env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px));' +
+      'padding:6px max(4px,var(--safe-right, env(safe-area-inset-right,0px))) ' +
+      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))) ' +
+      'max(4px,var(--safe-left, env(safe-area-inset-left,0px)));' +
       '-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);}' +
       '#hb-tabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;' +
       'min-height:46px;justify-content:center;text-decoration:none;border-radius:12px;' +
@@ -399,12 +429,15 @@
          not all stay right. --hb-tabbar is declared in mobile.css; the
          fallbacks keep this correct if that file ever fails to load. */
       '@media (max-width:640px){#hb-tabs{display:flex;}' +
-      '  body{padding-bottom:calc(var(--hb-tabbar,58px) + max(6px,env(safe-area-inset-bottom,0px)));}' +
+      '  body{padding-bottom:calc(var(--hb-tabbar,58px) + ' +
+      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))));}' +
       // sync.js positions its pill and panel with inline styles, so lifting
       // them clear of the tab bar takes !important — without it the pill
       // sits on top of the Today tab.
-      '  #hub-sync{bottom:calc(var(--hb-tabbar,58px) + 6px + max(6px,env(safe-area-inset-bottom,0px)))!important;}' +
-      '  #hub-sync-panel{bottom:calc(var(--hb-tabbar,58px) + 42px + max(6px,env(safe-area-inset-bottom,0px)))!important;}}';
+      '  #hub-sync{bottom:calc(var(--hb-tabbar,58px) + 6px + ' +
+      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))))!important;}' +
+      '  #hub-sync-panel{bottom:calc(var(--hb-tabbar,58px) + 42px + ' +
+      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))))!important;}}';
     document.head.appendChild(css);
 
     var bar = document.createElement('nav');

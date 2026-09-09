@@ -499,7 +499,9 @@ html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
 @media (max-width: 640px) {
   body.hub { font-size: 17px; }
   .hub-page { padding: 0 var(--s3) 96px; }
-  .hub-top-in { padding: var(--s2) 58px var(--s2) var(--s3); }
+    /* 12px margin + a 52px drawer button + 6px of air. Was 58px, which
+     was right for the 44px button and six pixels short of the new one. */
+  .hub-top-in { padding: var(--s2) 70px var(--s2) var(--s3); }
   .hub-h1 { margin-top: var(--s5); }
   .hub-lede { font-size: 18px; }
   .hub-card { padding: var(--s3); }

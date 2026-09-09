@@ -223,10 +223,22 @@ group('The tab bar sits on the bottom edge');
 
 ok(!/calc\(6px \+ env\(safe-area-inset-bottom/.test(nav),
    'nav.js no longer adds its own padding to the OS inset');
-ok(/padding:6px max\(4px,env\(safe-area-inset-right/.test(nav),
+ok(/padding:6px max\(4px,var\(--safe-right/.test(nav),
    'it takes max() of the two instead');
-ok(/max\(6px,env\(safe-area-inset-bottom,0px\)\)/.test(nav),
+ok(/max\(6px,var\(--safe-bottom/.test(nav),
    'so the bar keeps 6px on a square phone and exactly clears a home indicator');
+
+/* The insets are hoisted to custom properties in mobile.css, and nav.js was
+   still reading env() directly — so the body and the chrome could disagree
+   about where the safe area was. They read the same thing now, with env()
+   kept only as the fallback for a page that somehow loads without
+   mobile.css. */
+ok(!/env\(safe-area-inset-[a-z]+,0px\)\)?[;)]/.test(nav.replace(/var\(--safe-[a-z]+, env\([^)]*\)\)/g, '')),
+   'nav.js reads no inset except through a --safe-* variable');
+['--safe-top', '--safe-bottom', '--safe-left', '--safe-right'].forEach((v) => {
+  ok(nav.indexOf('var(' + v + ', env(') >= 0,
+     v + ' is read with env() as its fallback');
+});
 
 /* The three constants that could not all stay right. */
 ok(!/padding-bottom:calc\(58px/.test(nav), 'body clearance is no longer a hard-coded 58px');

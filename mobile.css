@@ -62,6 +62,13 @@ body::after {
   --safe-right: env(safe-area-inset-right, 0px);
   /* Kept in step with nav.js, which draws the bar. */
   --hb-tabbar: 58px;
+  /* The lane the drawer button occupies at the top right: its own 12px
+     margin, its 52px width, and 8px of air. Anything that would otherwise
+     sit under it measures from this rather than re-deriving the arithmetic
+     and drifting when the button changes size — which is what happened when
+     it went from 44px to 52px and the 58px masthead reserve became six
+     pixels short. */
+  --hb-btn-clear: calc(72px + env(safe-area-inset-right, 0px));
 }
 
 body {
@@ -89,6 +96,22 @@ body {
 [style*="position: sticky"][style*="top: 0"],
 [style*="position:sticky"][style*="top:0"] {
   top: var(--safe-top) !important;
+}
+
+/* ── the drawer button's lane ──────────────────────────────────────────────
+   Mastheads written for this hub reserve room at the top right for the
+   floating drawer button — `.top` keeps 68px, `.hub-top-in` keeps 70px. The
+   .dc.html exports predate that convention: several put their back control
+   as the LAST child of a `space-between` masthead row, which puts it exactly
+   under the button.
+
+   upbar.js already marks every back control it touches, so the ones at the
+   right edge can be pushed clear by structure rather than by naming twelve
+   pages. `:last-child` is what separates them from the pages whose back
+   control sits on the LEFT of the masthead (Weekly Review among them), where
+   a margin would only shove the rest of the row sideways. */
+[data-upbar]:last-child {
+  margin-right: var(--hb-btn-clear);
 }
 
 /* ── the strip behind the status bar ──────────────────────────────────────

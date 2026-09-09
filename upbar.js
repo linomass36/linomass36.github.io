@@ -125,7 +125,15 @@
      whole site, not this page's back control, and one of them legitimately
      points at the Workshop — so rewriting inside here turns a real
      destination into a duplicate of the back link, relabelled per page. */
-  var CHROME = '#hbnav, #hb-tabs, #hb-up';
+  /* .hb-desttabs is the destination tab bar tabs.js draws on two-level
+     pages, and it was missing from this list — so this file did to it
+     exactly what it once did to the drawer. The Review destination's
+     "Workshop" panel legitimately points at Hub.dc.html, that matches STALE,
+     and the chip is short, so on every Review page the Workshop tab was
+     silently relabelled "← The Standing" and pointed at Standing.html: the
+     panel unreachable from its own tab bar, and a second copy of the back
+     link sitting in it. Same failure, same cause, new element. */
+  var CHROME = '#hbnav, #hb-tabs, #hb-up, .hb-desttabs';
 
   function inChrome(el) {
     return !!(el.closest && el.closest(CHROME));
@@ -208,12 +216,20 @@
     var S = w.SITEMAP;
     var css = document.createElement('style');
     css.textContent =
-      '#hb-archived{position:sticky;top:0;z-index:2147483100;display:flex;align-items:center;' +
+      /* Pinned below the notch, not under it — this banner is declared in
+         a stylesheet, so the attribute selectors in mobile.css that catch
+         the inline mastheads cannot reach it. */
+      '#hb-archived{position:sticky;top:var(--safe-top,0px);z-index:2147483100;' +
+      'display:flex;align-items:center;' +
       'gap:10px;flex-wrap:wrap;padding:10px 16px;background:#FBEDE8;border-bottom:1px solid #E8C4B6;' +
       'font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;color:#7d2a24;}' +
       '#hb-archived b{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;' +
       'text-transform:uppercase;color:#A32E27;}' +
-      '#hb-archived a{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;' +
+      /* margin-left:auto puts this at the right edge, which is the drawer
+         button's lane. --hb-btn-clear is what that lane is worth; the 0px
+         fallback keeps the old look if mobile.css did not load. */
+      '#hb-archived a{margin-left:auto;margin-right:var(--hb-btn-clear,0px);' +
+      'font-family:"IBM Plex Mono",monospace;font-size:11px;' +
       'color:#A32E27;border:1px solid #A32E27;border-radius:16px;padding:5px 12px;text-decoration:none;}' +
       '#hb-archived a:hover{background:#A32E27;color:#fff;}';
     document.head.appendChild(css);

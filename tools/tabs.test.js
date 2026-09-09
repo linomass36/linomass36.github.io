@@ -154,6 +154,54 @@ const unscoped = selectors.filter((s) => !/hb-desttabs/.test(s));
 ok(unscoped.length === 0,
    'every rule is scoped to .hb-desttabs' + (unscoped.length ? ' — ' + unscoped.join(', ') : ''));
 
+/* ── 2b. the bar is chrome, and upbar.js has to know that ──────────────────
+   upbar.js rewrites any link pointing at Hub.dc.html — the retired front
+   door — into the current page's back control. It skips the chrome it knows
+   about, and this bar was not on that list.
+
+   The Review destination's Workshop panel legitimately points at
+   Hub.dc.html. So on every Review page the Workshop chip was silently
+   relabelled "← The Standing" and repointed at Standing.html: the panel
+   unreachable from its own tab bar, and a second copy of the back link
+   sitting inside it. That is the exact failure upbar.test.js was written to
+   pin for the drawer, reintroduced by a new element. */
+group('The destination bar is chrome, not a page back link');
+
+const upbar = read('upbar.js');
+const chrome = (upbar.match(/var CHROME = '([^']+)'/) || [])[1] || '';
+ok(/\.hb-desttabs/.test(chrome),
+   'upbar.js counts .hb-desttabs as chrome (' + chrome + ')');
+['#hbnav', '#hb-tabs', '#hb-up'].forEach((sel) => {
+  ok(chrome.indexOf(sel) >= 0, 'and still counts ' + sel);
+});
+
+/* The bar really does carry such a link, so this is not theoretical. */
+const smSrc = read('sitemap.js');
+ok(/'Hub\.dc\.html':[\s\S]{0,200}dest: 'review'/.test(smSrc),
+   'the Workshop panel really does point at Hub.dc.html');
+
+/* ── 2c. the row leaves the drawer button a lane ───────────────────────────
+   The button floats at the top right of every page. Padding the row was not
+   enough: the row scrolls sideways, so padding only holds the last chip
+   clear once you have scrolled to the end — at any other position a chip
+   slides under the button. Taking the lane out of the row's WIDTH is what
+   makes that impossible at every scroll position. */
+group('The row cannot put a chip under the drawer button');
+
+ok(/width:calc\(100% - var\(--hb-btn-clear/.test(css),
+   'the row subtracts --hb-btn-clear from its own width');
+ok(/@media\(max-width:1100px\)/.test(css),
+   'only where the two could actually meet — above that the row is centred and the button is at the edge');
+ok(/box-sizing:border-box/.test(css), 'with border-box, so the padding is inside that width');
+
+const mobile = read('mobile.css');
+ok(/--hb-btn-clear:/.test(mobile), '--hb-btn-clear is declared once, in mobile.css');
+const nav = read('nav.js');
+const btnRule = (nav.match(/#hbnav-btn\{[\s\S]*?\}/) || [''])[0];
+ok(/width:52px;height:52px/.test(btnRule), 'the button is 52px, comfortably over the 44px floor');
+ok(!/var\(--hb-btn-top/.test(nav),
+   'and is NOT pushed down the page — a floating control moved down just lands on something else');
+
 /* ── 3. the claim that started it does not come back ───────────────────── */
 group('The comment that caused this is gone');
 
