@@ -211,7 +211,20 @@ ok(loops.A.openLoops(rec).filter((b) => loops.A.blockRec(rec, b.id).studied === 
 /* ── 5. the tripwire panel tells the truth at rest ── */
 group('Tripwire lines on a log with almost nothing in it');
 
+/* The gate is set here rather than left to the calendar, for the reason the
+   gateLine() section at the foot of this file goes into: THORAX_GATE is a
+   fixed date, so "does not say Past" held only while that date was in the
+   future. On 2026-09-09 it inverted and took the fired-count assertion with
+   it, because a passed gate with thorax unstarted is supposed to fire.
+
+   Nothing was wrong with the hub — the tripwire had started reporting a gate
+   that had genuinely passed. But the deploy runs this suite before it
+   builds, so an assertion that expires stops the site shipping. This block
+   is about the OTHER five lines; it holds the gate 30 days out so it is not
+   the subject, and the three cases that are about the gate live at the foot
+   of the file where they are driven deliberately. */
 const fresh = load(true);
+fresh.ctx.window.ANATOMY_DATA.thoraxGate = REF.addDays(TODAY, 30);
 const fs5 = fresh.A.blank();
 fs5.days[TODAY] = day({ tier: 'full', p0: false, minRead: 90, minDraw: 0 });
 fresh.A.write(fs5);
@@ -222,7 +235,8 @@ ok(lines.every((x) => !/NaN|undefined|null/.test(x.text)),
 ok(!/above 5 \(0\)/.test(lines[0].text), 'does not claim open loops are above five when there are none');
 ok(/no d45 retest scored yet/i.test(lines[3].text), 'says nothing has been scored rather than "pass rate 0%"');
 ok(/says nothing yet/.test(lines[5].text), 'says cards per block is not measurable rather than NaN');
-ok(!/^Past /.test(lines[6].text), 'does not say "Past <gate>" before the gate: ' + JSON.stringify(lines[6].text));
+ok(!/^Past /.test(lines[6].text),
+   'with the gate held 30 days out, does not say "Past <gate>": ' + JSON.stringify(lines[6].text));
 ok(lines.filter((x) => x.fired).length === 2,
    'and the two that genuinely fired still fire (nothing on paper, draw behind read)');
 

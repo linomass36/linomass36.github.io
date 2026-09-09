@@ -371,9 +371,21 @@
     var here = currentFile();
     var css = document.createElement('style');
     css.textContent =
+      /* ── why max() and not + ──────────────────────────────────────────
+         This was `calc(6px + env(safe-area-inset-bottom))`. On a phone with
+         a home indicator that inset is ~34px, so the buttons floated 40px
+         above the bottom of the screen with a band of empty bar underneath
+         them — the bar was flush, the controls were not.
+
+         The inset is not a margin to add to your own padding; it is the
+         distance the OS needs kept clear. max() honours whichever is
+         larger, so the bar keeps its 6px on a square-cornered phone and
+         exactly clears the home indicator on a rounded one, with nothing
+         left over. */
       '#hb-tabs{position:fixed;left:0;right:0;bottom:0;z-index:2147482000;display:none;' +
       'background:rgba(255,253,248,.97);border-top:1px solid #E4E2DD;' +
-      'padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));' +
+      'padding:6px max(4px,env(safe-area-inset-right,0px)) ' +
+      'max(6px,env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px));' +
       '-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);}' +
       '#hb-tabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;' +
       'min-height:46px;justify-content:center;text-decoration:none;border-radius:12px;' +
@@ -381,13 +393,18 @@
       '-webkit-tap-highlight-color:transparent;}' +
       '#hb-tabs a .g{font-size:15px;line-height:1;}' +
       '#hb-tabs a.on{color:#993C1D;background:#FBF2EE;}' +
+      /* Everything that has to sit above the bar measures from the same two
+         numbers — the bar's height and whatever the OS is keeping clear —
+         rather than from 58/64/100, three hand-copied constants that could
+         not all stay right. --hb-tabbar is declared in mobile.css; the
+         fallbacks keep this correct if that file ever fails to load. */
       '@media (max-width:640px){#hb-tabs{display:flex;}' +
-      '  body{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));}' +
+      '  body{padding-bottom:calc(var(--hb-tabbar,58px) + max(6px,env(safe-area-inset-bottom,0px)));}' +
       // sync.js positions its pill and panel with inline styles, so lifting
       // them clear of the tab bar takes !important — without it the pill
       // sits on top of the Today tab.
-      '  #hub-sync{bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;}' +
-      '  #hub-sync-panel{bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;}}';
+      '  #hub-sync{bottom:calc(var(--hb-tabbar,58px) + 6px + max(6px,env(safe-area-inset-bottom,0px)))!important;}' +
+      '  #hub-sync-panel{bottom:calc(var(--hb-tabbar,58px) + 42px + max(6px,env(safe-area-inset-bottom,0px)))!important;}}';
     document.head.appendChild(css);
 
     var bar = document.createElement('nav');

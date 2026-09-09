@@ -79,21 +79,62 @@
     else if (host.firstChild) host.insertBefore(bar, host.firstChild);
     else host.appendChild(bar);
 
-    /* The bar uses hub.css, which the deploy injects everywhere. These are the
-       few rules it needs that are specific to being a standalone strip rather
-       than part of a page's own layout — and a minimal fallback so a page
-       served without hub.css still gets something legible rather than a row
-       of naked links. */
-    if (!d.getElementById('hb-desttabs-css')) {
-      var css = d.createElement('style');
-      css.id = 'hb-desttabs-css';
-      css.textContent =
-        '.hb-desttabs{max-width:760px;margin:0 auto;padding:0 16px;}' +
-        '.hb-desttabs .hub-tab{text-decoration:none;border-bottom:2px solid transparent;}' +
-        '.hb-desttabs .hub-tab[aria-selected="true"]{border-bottom-color:currentColor;}' +
-        '@media(max-width:640px){.hb-desttabs{padding:0 12px;}}';
-      d.head.appendChild(css);
-    }
+    style();
+  }
+
+  /* ── the bar's own styling, and why it is all here ───────────────────────
+     THIS USED TO SAY "the bar uses hub.css, which the deploy injects
+     everywhere". It does not. inject.py ships PWA_HEAD, the script SHIM and
+     THEME_BOOT — no stylesheet. The plain .html pages link hub.css
+     themselves; the .dc.html pages carry their own styles in <helmet> and
+     never load it. Six of the seven two-level destinations land on .dc.html
+     pages, so on the Body, Study, People and Review boards `.hub-tabs` and
+     `.hub-tab` matched nothing at all and the four rules below — which set
+     no display, no gap, no font and no padding — left the bar as a row of
+     naked anchors: "SessionRestLogBodyTrendsWeek", run together in the
+     browser's default link blue, the current one underlined by the only
+     rule that did land.
+
+     So the strip styles itself completely and depends on no other file.
+     Every rule is scoped under .hb-desttabs, which also puts it at (0,2,0)
+     — above hub.css's own (0,1,0) `.hub-tab` — so the two agree on the
+     pages that do load it instead of half-cascading into each other.
+
+     Chips rather than an underline row: this bar is dropped into pages that
+     were written independently and share no masthead, so it has to read as
+     a control on its own rather than as the bottom edge of a header it does
+     not have. */
+  function style() {
+    if (d.getElementById('hb-desttabs-css')) return;
+    var css = d.createElement('style');
+    css.id = 'hb-desttabs-css';
+    css.textContent =
+      /* The 62px on the right is not a margin, it is the drawer button:
+         nav.js floats a 44px circle at `right: 12px + inset`, and a strip
+         that scrolls under it hides its own last control. 62px is the same
+         clearance the hand-written mastheads on this site already use. */
+      '.hb-desttabs{display:flex;gap:6px;align-items:center;' +
+      'max-width:980px;margin:0 auto;' +
+      'padding:10px max(62px,calc(50px + env(safe-area-inset-right,0px))) 10px 16px;' +
+      'overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;' +
+      'border:0;background:none;}' +
+      '.hb-desttabs::-webkit-scrollbar{display:none;}' +
+      '.hb-desttabs .hub-tab{flex:none;display:inline-flex;align-items:center;' +
+      'min-height:34px;padding:0 13px;border-radius:18px;' +
+      'border:1px solid #E4E2DD;background:#FFFDF8;' +
+      'font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;' +
+      'font-weight:500;letter-spacing:.04em;color:#55564F;' +
+      'text-decoration:none;white-space:nowrap;cursor:pointer;' +
+      'text-transform:none;font-variant:normal;' +
+      '-webkit-tap-highlight-color:transparent;transition:border-color .12s,color .12s;}' +
+      '.hb-desttabs .hub-tab:hover{border-color:#993C1D;color:#993C1D;}' +
+      '.hb-desttabs .hub-tab[aria-selected="true"]{' +
+      'background:#993C1D;border-color:#993C1D;color:#FFFDF8;font-weight:600;}' +
+      /* The tap target is 34px of chip inside a 44px row, so the row — not
+         the chip — is what a thumb has to hit. */
+      '@media(max-width:640px){.hb-desttabs{padding:9px 12px;gap:5px;}' +
+      '  .hb-desttabs .hub-tab{min-height:36px;font-size:12px;padding:0 14px;}}';
+    d.head.appendChild(css);
   }
 
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', build);

@@ -102,7 +102,10 @@ jobs:
           node tools/backup.test.js
           node tools/vault-dirs.test.js
           node tools/upbar.test.js
+          node tools/tabs.test.js
+          node tools/safe-area.test.js
           node tools/plan-source.test.js
+          node tools/school-year.test.js
           node tools/board.test.js
           node tools/contact-angles.test.js
           node tools/weekly-review.test.js

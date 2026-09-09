@@ -309,6 +309,7 @@
   <div class="plate-break" data-plate-cap data-plate-slot="money"
        data-plate-rotate="polish"></div>
 </main></div>
+  <div id="panel-schoolyear" class="pv" role="tabpanel" hidden></div>
   <div id="panel-debt"      class="pv" role="tabpanel" hidden></div>
   <div id="panel-daybudget" role="tabpanel" hidden><header class="top">
   <span class="mark">CT Hub</span>
@@ -402,18 +403,25 @@
    tab is linkable and the folded pages' stubs can point straight at it. */
 (function () {
   'use strict';
+  /* A third element makes the tab a LINK to another page rather than a panel
+     of this one. Finances 26-28 is markdown rendered at deploy time, so it
+     cannot be a panel here — but it belongs to this destination, and a
+     folded page draws its own bar, so tabs.js will never add it. */
   var PANELS = [
-    ['targets',   'Targets'],
-    ['debt',      'Debt'],
-    ['daybudget', 'Day budget'],
-    ['networth',  'Net worth']
+    ['targets',    'Targets'],
+    ['schoolyear', 'School year'],
+    ['debt',       'Debt'],
+    ['daybudget',  'Day budget'],
+    ['networth',   'Net worth'],
+    ['source',     'Source', 'Finances 26-28.html']
   ];
-  var KNOWN = {}; PANELS.forEach(function (p) { KNOWN[p[0]] = 1; });
+  var KNOWN = {}; PANELS.forEach(function (p) { if (!p[2]) KNOWN[p[0]] = 1; });
   var bar = document.getElementById('tabs');
 
   function show(id) {
     if (!KNOWN[id]) id = 'targets';
     PANELS.forEach(function (p) {
+      if (p[2]) return;                       // a link, not a panel
       var el = document.getElementById('panel-' + p[0]);
       if (el) el.hidden = p[0] !== id;
       var t = document.getElementById('tab-' + p[0]);
@@ -422,10 +430,17 @@
     try { history.replaceState(null, '', '#' + id); } catch (e) { location.hash = id; }
   }
   PANELS.forEach(function (p) {
-    var b = document.createElement('button');
-    b.className = 'hub-tab'; b.id = 'tab-' + p[0]; b.type = 'button';
-    b.setAttribute('role', 'tab'); b.textContent = p[1];
-    b.addEventListener('click', function () { show(p[0]); });
+    var b;
+    if (p[2]) {
+      b = document.createElement('a');
+      b.href = p[2];
+      b.setAttribute('aria-selected', 'false');
+    } else {
+      b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'tab');
+      b.addEventListener('click', function () { show(p[0]); });
+    }
+    b.className = 'hub-tab'; b.id = 'tab-' + p[0]; b.textContent = p[1];
     bar.appendChild(b);
   });
   window.addEventListener('hashchange', function () {
@@ -990,6 +1005,249 @@
     'engine from the three panels here, and rewriting it to fold would risk the ' +
     'one number on this site you cannot reconstruct from anything else.</p>' +
     '<p><a class="hub-btn" href="Vault.dc.html">Open the Vault \u2192</a></p></div>';
+})();
+</script>
+
+<!-- ══ panel: school year — the Lublin cash model, in złoty ═══════════════ -->
+<script>
+/* From Finances 26-28.html.
+
+   WHY THIS IS NOT THE DEBT PANEL. Debt is fifteen years long, in dollars,
+   and about instruments — caps, forgiveness, refinancing. This is nine
+   months long, in złoty, and about whether November's paper lot can be
+   bought without the month going red. Both are true and neither answers the
+   other's question, which is why they are two tabs.
+
+   NOTHING HERE IS STORED. Every figure is recomputed by PlanV2.sy* from the
+   inputs in plan-v2-data.js, and the dial is the tutoring hours. That is
+   how the source document's closing recommendation was found not to follow
+   from its own numbers: 24 h/month local holds the floor but leaves the
+   summer pile a third short. A model that stored its conclusions would have
+   reprinted them. */
+(function () {
+  'use strict';
+  var P = window.PlanV2;
+  var host = document.getElementById('panel-schoolyear');
+  if (!P || !host || !P.schoolYear()) return;
+  var S = P.schoolYear(), esc = P.esc;
+  var M = window.Money;
+
+  var state = { hours: 16, rate: 'us', overhead: S.hours.overhead.plan };
+
+  var zl = function (n) {
+    if (n == null || !isFinite(n)) return '—';
+    return M ? M.fmt(Math.round(n), 'PLN') : (Math.round(n).toLocaleString('en-US') + ' zł');
+  };
+  /* money.js keeps the rate with the date it was set and returns null rather
+     than guessing, so a missing rate says so instead of being wrong by 4x. */
+  var usd = function (n) {
+    if (!M || n == null) return '';
+    var v = M.convert(n, 'PLN', 'USD');
+    if (v === null) return '';
+    return ' <span class="sy-usd">≈ ' + M.fmt(Math.round(v), 'USD') + '</span>';
+  };
+
+  function paint() {
+    var rows = P.syMonths(state.hours, state.rate);
+    var end = P.syEnd(state.hours, state.rate);
+    var verdicts = P.syVerdicts(state.hours, state.rate);
+    var b = P.syBudget(state.overhead);
+    var rate = P.syRate(state.rate);
+    var H = [];
+
+    H.push('<h2 class="pv-h2">The school year</h2>');
+    H.push('<div class="pv-sub">' + esc(S.window) + ' · nine months, two paper lots, in złoty</div>');
+    H.push('<p class="pv-p">Guaranteed income is ' + zl(P.syPerMonth().income) + ' against ' +
+           zl(P.syPerMonth().out) + ' of living, so every school month opens ' +
+           '<b>' + zl(P.syPerMonth().hole) + '</b> down before the scholarship. The scholarship is ' +
+           'nine months of ' + zl(S.scholarship.perMonth) + ' — ' + zl(S.scholarship.total) + ' in ' +
+           'all — paid as a ' + zl(2800) + ' January backpayment and then monthly. It is not ' +
+           'double-counted; it just reads that way.</p>');
+
+    /* ── the dial ── */
+    H.push('<div class="sy-dial">');
+    H.push('<div class="sy-d"><label for="sy-h">Tutoring</label>' +
+           '<div class="v"><span id="sy-hv">' + state.hours + '</span> h/month' +
+           ' <small>· ' + (state.hours / 4).toFixed(1).replace('.0', '') + ' h/week</small></div>' +
+           '<input id="sy-h" type="range" min="0" max="' + S.cap.hours + '" step="1" value="' +
+           state.hours + '"></div>');
+    H.push('<div class="sy-d"><label>Rate</label><div class="sy-seg" id="sy-rate">');
+    S.rates.filter(function (r) { return !r.fixed; }).forEach(function (r) {
+      H.push('<button type="button" data-r="' + esc(r.id) + '"' +
+             (state.rate === r.id ? ' aria-pressed="true"' : ' aria-pressed="false"') + '>' +
+             esc(r.label.replace(' tutoring', '')) + ' · ' + r.zl + ' zł</button>');
+    });
+    H.push('</div></div>');
+    H.push('<div class="sy-d"><label>June 2027</label>' +
+           '<div class="v ' + (end >= S.cushion ? 'ok' : 'bad') + '">' + zl(end) + '</div>' +
+           '<small>' + usd(end).replace(/<[^>]+>/g, '') + '</small></div>');
+    H.push('</div>');
+
+    /* ── the three questions, in the order they bite ── */
+    H.push('<h2 class="pv-h2">What that buys</h2>');
+    H.push('<div class="sy-vs">');
+    verdicts.forEach(function (v) {
+      var n = v.need;
+      H.push('<div class="sy-v ' + (v.ok ? 'good' : 'bad') + '">');
+      H.push('<div class="h">' + esc(v.label) + '</div>');
+      H.push('<div class="n">' + (v.ok ? 'yes' : 'not yet') + '</div>');
+      if (n && !n.reachable) {
+        H.push('<div class="s">Needs <b>' + n.hours + ' h/month</b> at ' + esc(n.rate.label) +
+               ' — above the ' + n.cap + ' h cap this file sets itself. ' +
+               '<b>Not reachable at this rate.</b></div>');
+      } else if (n) {
+        H.push('<div class="s">Needs <b>' + n.hours + ' h/month</b> at ' + esc(n.rate.label) + '.</div>');
+      }
+      H.push('</div>');
+    });
+    H.push('</div>');
+    H.push('<div class="pv-note">' + esc(S.pile.note) + '</div>');
+
+    /* ── the nine months ── */
+    H.push('<h2 class="pv-h2">The nine months</h2>');
+    H.push('<div class="pv-sub">Running balance, at ' + state.hours + ' h/month of ' +
+           esc(rate.label.toLowerCase()) + '</div>');
+    H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Month</th><th>In</th>' +
+           '<th>Out</th><th>Paper</th><th>Net</th><th>Running</th></tr></thead><tbody>');
+    rows.forEach(function (r) {
+      var low = r.running < S.cushion;
+      H.push('<tr' + (low ? ' class="sy-low"' : '') + '><td><b>' + esc(r.m) + '</b></td>' +
+             '<td>' + zl(r.income) + '</td><td>' + zl(-r.out) + '</td>' +
+             '<td>' + (r.paper ? zl(-r.paper) : '—') + '</td>' +
+             '<td>' + zl(r.net) + '</td><td><b>' + zl(r.running) + '</b></td></tr>');
+    });
+    H.push('</tbody></table></div>');
+    H.push('<p class="pv-small">Shaded rows are months that finish under the ' +
+           zl(S.cushion) + ' cushion. ' + esc(S.paperNote) + '</p>');
+
+    /* ── the month, in hours ── */
+    H.push('<h2 class="pv-h2">The month, in hours</h2>');
+    H.push('<div class="pv-sub">' + b.clock + ' h on the clock · ' + b.sleep +
+           ' asleep · ' + b.awake + ' awake</div>');
+    H.push('<div class="sy-dial"><div class="sy-d" style="grid-column:1/-1">' +
+           '<label for="sy-o">Life, transit, church, meals</label>' +
+           '<div class="v"><span id="sy-ov">' + b.overhead + '</span> h/month</div>' +
+           '<input id="sy-o" type="range" min="120" max="260" step="5" value="' + b.overhead + '">' +
+           '<small>' + esc(S.hours.overhead.note) + '</small></div></div>');
+    H.push('<div class="pv-tw"><table class="pv-t"><thead><tr><th>Block</th><th>Planned</th>' +
+           '<th>Range</th><th>Rank</th></tr></thead><tbody>');
+    S.hours.blocks.forEach(function (bl) {
+      H.push('<tr><td><b>' + esc(bl.label) + '</b></td><td>' + bl.plan + ' h</td>' +
+             '<td>' + bl.lo + '–' + bl.hi + ' h</td><td>' + esc(bl.rank) + '</td></tr>');
+    });
+    H.push('</tbody></table></div>');
+    H.push('<div class="sy-vs">');
+    H.push('<div class="sy-v ' + (b.fits ? 'good' : 'bad') + '"><div class="h">The planned month</div>' +
+           '<div class="n">' + b.planned + ' h of ' + b.available + '</div>' +
+           '<div class="s">Non-study work comes to <b>' + b.nonStudy + ' h</b>. ' +
+           (b.fits ? 'It fits.' : 'It does not fit — something is coming out of study or sleep.') +
+           '</div></div>');
+    H.push('<div class="sy-v ' + (b.maxedFits ? 'good' : 'bad') + '">' +
+           '<div class="h">Everything at its ceiling</div>' +
+           '<div class="n">' + b.maxed + ' h of ' + b.available + '</div>' +
+           '<div class="s">' + (b.maxedFits ? 'Still fits.' :
+             '30 hospital + 30 Bible + 32 tutoring + 30 research does not fit, which is what the ' +
+             'source document concludes — derived here rather than asserted.') + '</div></div>');
+    H.push('</div>');
+
+    /* ── the cut order ── */
+    H.push('<div class="pv-rule"><b>If a block score is in danger, cut in this order.</b> ' +
+           S.cutOrder.map(esc).join(' → ') + '</div>');
+    H.push('<div class="pv-rule pv-kill"><b>Never.</b> ' + S.cutNever.map(esc).join(' · ') +
+           '. ' + esc(S.cutNote) + '</div>');
+
+    /* ── the pots ── */
+    var pots = (P.plan().finance || {}).pots || [];
+    if (pots.length) {
+      H.push('<h2 class="pv-h2">The pots</h2>');
+      H.push('<div class="pv-sub">Three envelopes, two currencies</div>');
+      pots.forEach(function (p) {
+        H.push('<div class="pv-card"><div class="pv-row">' +
+               '<span class="pv-it-t">' + esc(p.label) + '</span>' +
+               '<span class="pv-chip">' + esc(p.ccy) + '</span>' +
+               '<span class="pv-grow"></span>' +
+               (p.target ? '<span class="pv-ph-n">target ' +
+                 (M ? M.fmt(p.target, p.ccy) : p.target) + '</span>' : '') + '</div>');
+        H.push('<div class="pv-it-d">' + esc(p.what) + '</div>');
+        H.push('<ul class="pv-steps">');
+        p.bands.forEach(function (bd) {
+          var band = bd.lo == null && bd.hi == null ? ''
+            : ' — ' + (M ? M.fmt(bd.lo || 0, p.ccy) : bd.lo) +
+              (bd.hi ? ' to ' + (M ? M.fmt(bd.hi, p.ccy) : bd.hi) : '');
+          H.push('<li><b>' + esc(bd.when) + '</b>' + band +
+                 (bd.note ? ' · ' + esc(bd.note) : '') + '</li>');
+        });
+        H.push('</ul>');
+        if (p.rule) H.push('<div class="pv-rule">' + esc(p.rule) + '</div>');
+        H.push('</div>');
+      });
+      H.push('<p class="pv-small">' + esc((P.plan().finance || {}).potsNote || '') + '</p>');
+    }
+
+    H.push('<div class="pv-row" style="gap:9px;margin-top:18px">' +
+           '<a class="pv-btn" href="Finances%2026-28.html">Read the source document →</a>' +
+           '<a class="pv-btn" href="Plan.html#verify">The gap memo is due June 2027 →</a></div>');
+
+    host.innerHTML = H.join('');
+
+    var hs = document.getElementById('sy-h');
+    if (hs) hs.addEventListener('input', function () {
+      state.hours = +hs.value; paint();
+      var f = document.getElementById('sy-h'); if (f) f.focus();
+    });
+    var os = document.getElementById('sy-o');
+    if (os) os.addEventListener('input', function () {
+      state.overhead = +os.value; paint();
+      var f = document.getElementById('sy-o'); if (f) f.focus();
+    });
+    var seg = document.getElementById('sy-rate');
+    if (seg) seg.addEventListener('click', function (e) {
+      var b2 = e.target.closest && e.target.closest('button[data-r]');
+      if (!b2) return;
+      state.rate = b2.getAttribute('data-r'); paint();
+    });
+  }
+
+  var css = document.createElement('style');
+  css.textContent =
+    '#panel-schoolyear{max-width:900px;margin:0 auto;padding:30px 20px 90px;}' +
+    '#panel-schoolyear .sy-dial{display:grid;gap:12px;' +
+    'grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:16px 0 6px;}' +
+    '#panel-schoolyear .sy-d{padding:11px 13px;background:var(--card);' +
+    'border:1px solid var(--rule);border-radius:11px;}' +
+    '#panel-schoolyear .sy-d label{display:block;font-family:var(--mono);font-size:9.5px;' +
+    'letter-spacing:.12em;text-transform:uppercase;color:var(--faint);}' +
+    '#panel-schoolyear .sy-d .v{margin-top:4px;font-family:var(--serif);font-size:21px;' +
+    'font-weight:500;font-variant-numeric:tabular-nums;}' +
+    '#panel-schoolyear .sy-d .v.ok{color:var(--ok);} #panel-schoolyear .sy-d .v.bad{color:var(--owed);}' +
+    '#panel-schoolyear .sy-d .v small{font-family:var(--mono);font-size:10px;color:var(--faint);}' +
+    '#panel-schoolyear .sy-d small{display:block;margin-top:6px;font-size:11.5px;' +
+    'color:var(--faint);line-height:1.5;}' +
+    '#panel-schoolyear .sy-d input[type=range]{width:100%;margin-top:3px;accent-color:var(--rust);}' +
+    '#panel-schoolyear .sy-seg{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}' +
+    '#panel-schoolyear .sy-seg button{flex:1;min-height:34px;padding:0 10px;border-radius:9px;' +
+    'border:1px solid var(--rule);background:var(--surface,#FFFDF8);font-family:var(--mono);' +
+    'font-size:11px;color:var(--mid);cursor:pointer;white-space:nowrap;}' +
+    '#panel-schoolyear .sy-seg button[aria-pressed="true"]{background:var(--rust);' +
+    'border-color:var(--rust);color:#FFFDF8;font-weight:600;}' +
+    '#panel-schoolyear .sy-vs{display:grid;gap:12px;' +
+    'grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:14px;}' +
+    '#panel-schoolyear .sy-v{padding:16px 18px;border-radius:12px;border:1px solid var(--rule);' +
+    'border-left:3px solid var(--faint);background:var(--card);}' +
+    '#panel-schoolyear .sy-v.good{border-color:var(--ok-l);border-left-color:var(--ok);}' +
+    '#panel-schoolyear .sy-v.bad{border-color:var(--owed-l);border-left-color:var(--owed);}' +
+    '#panel-schoolyear .sy-v .h{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;' +
+    'text-transform:uppercase;color:var(--faint);}' +
+    '#panel-schoolyear .sy-v .n{margin-top:8px;font-family:var(--serif);font-size:26px;' +
+    'font-weight:500;line-height:1.05;}' +
+    '#panel-schoolyear .sy-v.good .n{color:var(--ok);} #panel-schoolyear .sy-v.bad .n{color:var(--owed);}' +
+    '#panel-schoolyear .sy-v .s{margin-top:9px;font-size:13.5px;color:var(--mid);line-height:1.5;}' +
+    '#panel-schoolyear .sy-low td{background:var(--owed-w);}' +
+    '#panel-schoolyear .sy-usd{font-family:var(--mono);font-size:11px;color:var(--faint);}' +
+    '@media(max-width:640px){#panel-schoolyear{padding:24px 16px 80px;}}';
+  document.head.appendChild(css);
+
+  paint();
 })();
 </script>
 

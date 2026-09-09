@@ -70,11 +70,13 @@
        Hidden in CSS rather than deleted from the render, so a panel viewed on
        its own — which is how they are still tested — is unchanged. -->
 
-  <div id="panel-now"      class="pv" role="tabpanel"></div>
-  <div id="panel-campaign" class="pv" role="tabpanel" hidden></div>
-  <div id="panel-verify"   class="pv" role="tabpanel" hidden></div>
-  <div id="panel-research" class="pv" role="tabpanel" hidden></div>
-  <div id="panel-writeup"  class="pv" role="tabpanel" hidden></div>
+  <div id="panel-now"       class="pv" role="tabpanel"></div>
+  <div id="panel-campaign"  class="pv" role="tabpanel" hidden></div>
+  <div id="panel-years"     class="pv" role="tabpanel" hidden></div>
+  <div id="panel-household" class="pv" role="tabpanel" hidden></div>
+  <div id="panel-verify"    class="pv" role="tabpanel" hidden></div>
+  <div id="panel-research"  class="pv" role="tabpanel" hidden></div>
+  <div id="panel-writeup"   class="pv" role="tabpanel" hidden></div>
   <div class="plate-break" data-plate-cap data-plate-slot="plan"
        data-plate-rotate="anatomy"></div>
 </main>
@@ -86,21 +88,31 @@
    redirect to their hash, which is what keeps every existing link working.  */
 (function () {
   'use strict';
+  /* A fourth element makes the tab a LINK to another page rather than a
+     panel of this one. The two source documents are their own pages — they
+     are markdown rendered at deploy time and cannot be a panel here — but
+     they belong to this destination, so they belong on this bar. Without
+     that, a folded page's tab bar silently hides half its own destination:
+     tabs.js draws the destination bar only on pages that do NOT have one. */
   var PANELS = [
-    ['now',      'Now',      'What is live, and the date forcing it.'],
-    ['campaign', 'Campaign', 'The phase map: what happens when, through 2027.'],
-    ['verify',   'Verify',   'Assumptions nothing should be planned around until they resolve.'],
-    ['research', 'Research', 'Every output, and whether it will finish.'],
-    ['writeup',  'Write-up', 'The cancer-research paper, stage by stage.']
+    ['now',      'Now',       'What is live, and the date forcing it.'],
+    ['campaign', 'Campaign',  'The phase map: what happens when, through 2027.'],
+    ['years',    'Years',     'Every school year and summer to 2031, and the tail past it.'],
+    ['household','Household', 'The rules the money and the title are for.'],
+    ['verify',   'Verify',    'Assumptions nothing should be planned around until they resolve.'],
+    ['research', 'Research',  'Every output, and whether it will finish.'],
+    ['writeup',  'Write-up',  'The cancer-research paper, stage by stage.'],
+    ['source',   'Source',    'The life plan as written.', 'Life Plan.html']
   ];
   var KNOWN = {};
-  PANELS.forEach(function (p) { KNOWN[p[0]] = 1; });
+  PANELS.forEach(function (p) { if (!p[3]) KNOWN[p[0]] = 1; });
 
   var bar = document.getElementById('tabs');
 
   function show(id) {
     if (!KNOWN[id]) id = 'now';
     PANELS.forEach(function (p) {
+      if (p[3]) return;                       // a link, not a panel
       var el = document.getElementById('panel-' + p[0]);
       if (el) el.hidden = p[0] !== id;
       var t = document.getElementById('tab-' + p[0]);
@@ -110,11 +122,19 @@
   }
 
   PANELS.forEach(function (p) {
-    var b = document.createElement('button');
+    var b;
+    if (p[3]) {
+      b = document.createElement('a');
+      b.href = p[3];
+      b.setAttribute('aria-selected', 'false');
+    } else {
+      b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'tab');
+      b.addEventListener('click', function () { show(p[0]); });
+    }
     b.className = 'hub-tab'; b.id = 'tab-' + p[0];
-    b.type = 'button'; b.setAttribute('role', 'tab');
+    b.title = p[2];
     b.textContent = p[1];
-    b.addEventListener('click', function () { show(p[0]); });
     bar.appendChild(b);
   });
 
@@ -706,8 +726,143 @@
 })();
 </script>
 
+<!-- \u2550\u2550 panel: years \u2014 the reference layer under the phases \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
 <script>
-/* Chosen last, once all five panels exist. */
+/* Every school year and summer to 2031, from Life Plan.html.
+
+   READ-ONLY ON PURPOSE. Nothing here has a checkbox. The phases are the
+   operating layer \u2014 they are what livePhase(), the Standing board and the
+   Sunday review read \u2014 and a second place to tick things off is a second
+   place for the two to disagree. This answers "what is 2029 for", which the
+   phases stopped answering somewhere around 2028. */
+(function () {
+  'use strict';
+  var P = window.PlanV2, D = P && P.plan();
+  var host = document.getElementById('panel-years');
+  if (!P || !D || !D.years || !host) return;
+  var esc = P.esc, H = [];
+
+  H.push('<h2 class="pv-h2">Every year, and every summer</h2>');
+  H.push('<div class="pv-sub">The reference layer. What is scheduled is in ' +
+         '<a href="#campaign">the phases</a>.</div>');
+  H.push('<p class="pv-p">Two resolutions of one timeline, not two timelines. A phase says what is ' +
+         'being worked on now; a year says what the year is <i>for</i> and what its summer has to ' +
+         'produce. Kept apart because the moment both schedule work, they start disagreeing.</p>');
+
+  var LIST = [['school', 'The year'], ['money', 'Money'], ['research', 'Research'],
+              ['household', 'Household']];
+
+  D.years.forEach(function (y) {
+    var live = y.status === 'live';
+    H.push('<div class="pv-card acc" style="border-left-color:' +
+           (live ? 'var(--rust)' : 'var(--rule)') + '">');
+    H.push('<div class="pv-row">' +
+           '<span class="pv-ph-n">' + esc(y.label.toUpperCase()) + ' \u00b7 ' + esc(y.span) + '</span>' +
+           '<span class="pv-chip ' + (live ? 'c-live' : 'c-queued') + '">' + esc(y.status) + '</span>' +
+           '<span class="pv-grow"></span>' +
+           '<span class="pv-ph-n">' + esc(y.where) + '</span></div>');
+    H.push('<div class="pv-ph-t">' + esc(y.objective) + '</div>');
+
+    LIST.forEach(function (pair) {
+      var rows = y[pair[0]];
+      if (!rows || !rows.length) return;
+      H.push('<div class="pv-h3">' + esc(pair[1]) + '</div>');
+      H.push('<ul class="pv-steps">');
+      rows.forEach(function (r) { H.push('<li>' + esc(r) + '</li>'); });
+      H.push('</ul>');
+    });
+
+    if (y.summer) {
+      var s = y.summer;
+      H.push('<div class="pv-rule"><b>' + esc(s.label) + '.</b> ' + esc(s.product) + '</div>');
+      H.push('<p class="pv-small"><b>Best:</b> ' + esc(s.best) + '<br>' +
+             '<b>Floor:</b> ' + esc(s.floor) + '<br>' +
+             '<b>Nest:</b> ' + esc(s.nest) + '</p>');
+      if (s.note) H.push('<div class="pv-note">' + esc(s.note) + '</div>');
+    }
+    H.push('</div>');
+  });
+
+  if (D.afterSchool) {
+    H.push('<h2 class="pv-h2">After school</h2>');
+    H.push('<div class="pv-sub">So the household conversation has an ending shape</div>');
+    H.push('<div class="pv-tw"><table class="pv-t"><tbody>');
+    D.afterSchool.forEach(function (a) {
+      H.push('<tr><td style="white-space:nowrap"><b>' + esc(a.t) + '</b><br>' +
+             '<span class="pv-ph-n">' + esc(a.span) + '</span></td>' +
+             '<td>' + esc(a.d) + '</td></tr>');
+    });
+    H.push('</tbody></table></div>');
+  }
+
+  H.push('<div class="pv-row" style="gap:9px;margin-top:18px">' +
+         '<a class="pv-btn" href="Life%20Plan.html">Read the source document \u2192</a></div>');
+
+  host.innerHTML = H.join('');
+})();
+</script>
+
+<!-- \u2550\u2550 panel: household \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
+<script>
+/* From Life Plan.html.
+
+   NO PERSON IS STORED HERE, and that is the design rather than an omission.
+   The Network Map is a CRM \u2014 warmth, owed touches, angles \u2014 and the source
+   document is explicit that she is not an entry in it: "She is not the
+   vault. Five minutes on the file, then her life." So this page holds rules
+   and two gates and nothing that identifies anybody, nothing dated, nothing
+   that syncs. VAULT.md is the other half of the reason: the repository has
+   been public since July 2026 and its history keeps every plaintext version,
+   so naming a partner is a different privacy class from naming a professor.
+
+   And nothing here is a checkbox. "Keep the standing time" stops being kept
+   the moment it becomes a box to tick, and a dashboard of unticked boxes
+   about your marriage is how the whole hub gets abandoned \u2014 risk #12. */
+(function () {
+  'use strict';
+  var P = window.PlanV2, D = P && P.plan();
+  var host = document.getElementById('panel-household');
+  if (!P || !D || !D.household || !host) return;
+  var esc = P.esc, h = D.household, H = [];
+
+  H.push('<h2 class="pv-h2">The household</h2>');
+  H.push('<div class="pv-sub">What the money and the title are for</div>');
+  H.push('<p class="pv-lede">' + esc(h.lede) + '</p>');
+
+  H.push('<h2 class="pv-h2">Standing rules</h2>');
+  H.push('<div class="pv-sub">Invariants, not tasks \u2014 there is nothing here to tick</div>');
+  h.rules.forEach(function (r) {
+    H.push('<div class="pv-card"><div class="pv-it-t">' + esc(r.t) + '</div>' +
+           '<div class="pv-it-d">' + esc(r.d) + '</div></div>');
+  });
+
+  H.push('<h2 class="pv-h2">Where it touches the money</h2>');
+  H.push('<div class="pv-sub">The first two places these two tracks meet</div>');
+  if (h.cost) {
+    H.push('<div class="pv-card"><div class="pv-it-t">' + esc(h.cost.label) + ' \u2014 ' +
+           '<b>' + (window.Money ? window.Money.fmt(h.cost.amount, h.cost.ccy) :
+             (h.cost.amount + ' ' + h.cost.ccy)) + ' / ' + esc(h.cost.per) + '</b></div>' +
+           '<div class="pv-it-d">' + esc(h.cost.note) + '</div></div>');
+  }
+  if (h.ring) {
+    H.push('<div class="pv-card acc" style="border-left-color:var(--warn)">' +
+           '<div class="pv-it-t">The ring \u2014 first sweep ' + esc(h.ring.firstSweep) + '</div>' +
+           '<div class="pv-it-d">' + esc(h.ring.note) + '</div></div>');
+  }
+
+  H.push('<h2 class="pv-h2">The version you can say out loud</h2>');
+  H.push('<div class="pv-quote">' + esc(h.speech) + '</div>');
+  H.push('<p class="pv-small">If she needs a different speech, you have the data.</p>');
+
+  H.push('<div class="pv-row" style="gap:9px;margin-top:18px">' +
+         '<a class="pv-btn" href="Life%20Plan.html">Read the source document \u2192</a></div>');
+
+  host.innerHTML = H.join('');
+})();
+</script>
+
+<script>
+/* Chosen last, once every panel exists. */
 (function () {
   var want = (location.hash || '').replace('#', '');
   if (window.__planShow) window.__planShow(want || 'now');
