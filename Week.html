@@ -118,9 +118,14 @@ h1 { font-family:var(--serif); font-weight:500; font-size:32px; line-height:1.08
    data-plate, so no shared stylesheet is needed — and the slot draws nothing
    at all until a painting is actually installed. */
 .wk-plate { display:none; }
-.wk-plate.has-plate { display:block; margin:26px auto 0; width:min(100%, 30rem); }
+/* Bounded by the screen rather than the column — a portrait plate sized to
+   the text is most of a laptop screen, and twice that when zoomed. */
+.wk-plate { --plate-h:clamp(150px, 26vh, 300px); }
+.wk-plate.has-plate { display:block; margin:30px auto 0;
+  width:min(100%, 30rem, calc(var(--plate-h) * var(--plate-ar-true, 1.333))); }
 .wk-plate.has-plate::before { content:''; display:block; aspect-ratio:var(--plate-ar-true, 4 / 3);
-  background-image:var(--plate-figure); background-size:cover; background-position:center;
+  max-height:var(--plate-h); background-image:var(--plate-figure); background-size:cover;
+  background-position:center;
   border:1px solid var(--rule); box-shadow:0 2px 7px rgba(26,27,26,.16); }
 .wk-plate .plate-cap { display:block; margin-top:7px; text-align:center;
   font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--faint); line-height:1.4; }

@@ -322,8 +322,10 @@ html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
   background-image: var(--plate-figure, none);
   background-size: contain; background-repeat: no-repeat;
   background-position: center;
-  /* And it never takes more than a screenful, however tall the plate. */
-  max-height: 78vh;
+  /* And it never takes more than a third of the screen, however tall the
+     plate. It was 78vh, which is a screenful: you scrolled past a picture to
+     get back to the page, which is the wrong way round for a figure. */
+  max-height: 34vh;
 }
 .hub-figure.drawn .frame { background-size: 62%; background-repeat: no-repeat;
   background-position: center; }
@@ -349,20 +351,22 @@ html.hb-dark .hub-plate.has-plate { filter: none; opacity: 1; }
    found its painting: the drawn engraving is a margin ornament and would be
    a strange thing to stop the page for. */
 .hub-marginal { display: none; }
-@media (min-width: 1150px) {
+@media (min-width: 1280px) {
   .hub-marginal {
     display: block; position: absolute; right: calc(50% + var(--page) / 2 + var(--s5));
-    width: 150px; height: 150px;
+    width: 140px; height: 140px;
+    /* Dropped below its own line rather than sitting level with it: a margin
+       note beside the page's title reads as part of the masthead. */
+    margin-top: var(--s5);
   }
 }
-@media (max-width: 1149px) {
-  .hub-marginal.has-plate {
-    display: block; position: static; width: min(100%, 34rem); height: auto;
-    margin: var(--s6) auto;
-  }
-  .hub-marginal.has-plate::before { aspect-ratio: var(--plate-ar-true, 4 / 3); }
-  .hub-marginal.has-plate .plate-cap { text-align: center; font-size: 12px; }
-}
+/* AND NOWHERE ELSE. Turning it into a break on a narrow screen was worse
+   than hiding it: a margin note sits wherever the text needed it, which on
+   the Plan is the second paragraph — so on a zoomed-in laptop the page
+   opened with a full screen of Maclise and you had to scroll past a painting
+   to reach the plan. Every page now carries a plate at its foot, which is
+   where a picture can be tall without being in the way, so below the width
+   that has a margin the margin figure is simply not drawn. */
 
 .hub-rule-orn {
   display: flex; align-items: center; gap: var(--s3);

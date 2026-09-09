@@ -134,5 +134,38 @@ group('A missing file costs one picture, not the slot');
   ok(new Set(list).size === list.length, 'each of them once');
 }
 
+group('A picture is a break, not an obstacle');
+{
+  /* What went wrong on a laptop: a portrait plate sized to the text column
+     came out nearly 900px tall, and at browser zoom the margin figure — which
+     sits wherever the text needed it, near the top of the Plan — became a
+     full-width one. You scrolled past a painting to reach the page. Both
+     caps are in the stylesheet plates.js ships, so they are checked here
+     rather than left to a screenshot nobody takes again. */
+  const css = fs.readFileSync(path.join(ROOT, 'plates.js'), 'utf8');
+  const decl = css.slice(css.indexOf('var BREAK_CSS'), css.indexOf('function styleOnce'));
+  ok(/--plate-h:clamp\(150px,26vh,300px\)/.test(decl),
+     'the height is capped against the viewport, so zoom cannot inflate it');
+  ok(/max-height:var\(--plate-h\)/.test(decl), 'and the picture obeys the cap');
+  ok(/width:min\(100%,32rem,calc\(var\(--plate-h\) \* var\(--plate-ar-true/.test(decl),
+     'the width follows from the height and the picture’s own shape, so nothing is cropped to fit');
+
+  const hub = fs.readFileSync(path.join(ROOT, 'hub.css'), 'utf8');
+  const marg = hub.slice(hub.indexOf('.hub-marginal {'), hub.indexOf('.hub-rule-orn'));
+  ok(/\.hub-marginal \{ display: none; \}/.test(marg), 'the margin figure is hidden by default');
+  ok(/min-width: 1280px/.test(marg), 'and drawn only where there is a margin to draw it in');
+  ok(!/max-width: 11\d\dpx/.test(marg),
+     'never re-flowed into the body of a narrow page, which is what put a painting at the top of the Plan');
+
+  /* Every page carries one at its foot, so hiding the margin figure costs
+     nothing. */
+  const pages = fs.readdirSync(ROOT).filter((f) => /\.html$/i.test(f));
+  const withMargin = pages.filter((f) => /hub-marginal/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  const alsoBreak = withMargin.filter((f) => /plate-break/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  ok(withMargin.length === alsoBreak.length,
+     'every page with a margin figure also has a plate in its flow (' +
+     alsoBreak.length + '/' + withMargin.length + ')');
+}
+
 console.log(failed ? '\n' + failed + ' FAILED' : '\nall green');
 process.exit(failed ? 1 : 0);

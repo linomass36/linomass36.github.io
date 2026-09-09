@@ -71,9 +71,14 @@
      a file is installed this is an empty box that draws nothing, which is why
      it is only shown once dressed. */
   .gb-plate { display: none; }
-  .gb-plate.has-plate { display: block; margin: 22px auto 0; width: min(100%, 30rem); }
+  /* Bounded by the screen rather than the column: a portrait plate sized to
+     the text column is most of a laptop screen, and twice that when zoomed. */
+  .gb-plate { --plate-h: clamp(150px, 26vh, 300px); }
+  .gb-plate.has-plate { display: block; margin: 26px auto 0;
+    width: min(100%, 30rem, calc(var(--plate-h) * var(--plate-ar-true, 1.333))); }
   .gb-plate.has-plate::before {
     content: ''; display: block; aspect-ratio: var(--plate-ar-true, 4 / 3);
+    max-height: var(--plate-h);
     background-image: var(--plate-figure); background-size: cover; background-position: center;
     border: 1px solid #E4E2DD; box-shadow: 0 2px 7px rgba(36, 27, 16, .16); }
   .gb-plate .plate-cap { display: block; margin-top: 7px; text-align: center;

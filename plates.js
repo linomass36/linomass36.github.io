@@ -370,13 +370,20 @@
     }
     if (!names.length) return Promise.resolve(false);
     /* Already dressed — a re-render creates a new element, so this only ever
-       short-circuits the one that is genuinely finished. */
+       short-circuits the one that is genuinely finished. It still declares
+       what it took: the slots added to a long page are dressed in a second
+       pass, and without this they could pick the painting already hanging at
+       the foot of the same page. */
     if (el.classList.contains('has-plate') &&
-        el.style.getPropertyValue('--plate-figure')) return Promise.resolve(true);
+        el.style.getPropertyValue('--plate-figure')) {
+      if (used) used[el.getAttribute('data-plate-picked') || ''] = true;
+      return Promise.resolve(true);
+    }
 
     return pick(names).then(function (hit) {
       if (!hit) return false;
       if (used) used[hit.base] = true;
+      el.setAttribute('data-plate-picked', hit.base);
       el.style.setProperty('--plate-figure', 'url("' + hit.url + '")');
       el.classList.add('has-plate');
 
@@ -420,6 +427,14 @@
     var els = Array.prototype.slice.call(
       (root || document).querySelectorAll('[data-plate],[data-plate-rotate]'));
     var used = {};
+    /* What this page has already hung, before anything is chosen: the second
+       pass over a long page runs in document order, so without this the slot
+       near the top could take the painting already at the foot — which it
+       would not learn about until it had passed it. */
+    els.forEach(function (el) {
+      var had = el.getAttribute('data-plate-picked');
+      if (had) used[had] = true;
+    });
     return els.reduce(function (chain, el) {
       return chain.then(function (acc) {
         return dress(el, used).then(function (r) { acc.push(r); return acc; });
@@ -461,17 +476,117 @@
 
      Neutral colours on purpose — this sheet is shared by fourteen palettes
      and must not assume any of them. */
+  /* THE SIZE IS THE WHOLE PROBLEM. A plate sized by the text column looks
+     right until the picture is a portrait: Maclise's plates are taller than
+     they are wide, so 34rem of column became nearly 900px of painting — a
+     full laptop screen — and at browser zoom it became two. A picture you
+     have to scroll past is not a break in the page, it is an obstacle.
+
+     So the height is capped against the VIEWPORT and the width follows from
+     it: about a quarter of the screen tall whatever the picture's shape, and
+     never wider than the column or 32rem. Because the cap is in vh it
+     survives zoom — a quarter of the screen is a quarter of the screen at
+     any magnification — with a floor and a ceiling in px so it stays a
+     picture rather than a thumbnail on a short window or a poster on a tall
+     one. The width follows the true aspect ratio, so nothing is cropped to
+     fit: a tall plate simply comes out narrow. */
   var BREAK_CSS =
-    '.plate-break{display:none;margin:44px auto 10px;width:min(100%,34rem);}' +
+    '.plate-break{display:none;--plate-h:clamp(150px,26vh,300px);margin:40px auto 12px;' +
+      'width:min(100%,32rem,calc(var(--plate-h) * var(--plate-ar-true,1.333)));}' +
     '.plate-break.has-plate{display:block;}' +
     '.plate-break.has-plate::before{content:"";display:block;' +
-      'aspect-ratio:var(--plate-ar-true,4/3);background-image:var(--plate-figure);' +
+      'aspect-ratio:var(--plate-ar-true,4/3);max-height:var(--plate-h);' +
+      'background-image:var(--plate-figure);' +
       'background-size:cover;background-position:center;' +
       'border:1px solid rgba(127,110,80,.34);box-shadow:0 2px 10px rgba(20,16,10,.13);}' +
     '.plate-break .plate-cap{display:block;margin-top:8px;text-align:center;' +
       'font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;' +
       'letter-spacing:.06em;color:#8A8B82;line-height:1.45;}' +
     '@media print{.plate-break{display:none!important;}}';
+
+  /* ── one at the end is one you never see ───────────────────────────────
+     The Plan is eleven thousand pixels tall. A single plate at the foot of it
+     is a picture nobody will ever scroll to, which is the same as not having
+     one — and it is why the only painting anybody could find on a laptop was
+     the small one in the margin.
+
+     So a long page gets its plates spread through it, at the boundaries it
+     already has: roughly one every three screens, to a maximum of four, each
+     placed before a top-level section rather than in the middle of one. They
+     rotate independently, so a page shows several different pictures rather
+     than the same one four times.
+
+     Deliberately timid about where it will do this. Only into a block-level
+     parent (never a grid or a flex row, where an extra child moves
+     everything), only before a child that is in the normal flow and actually
+     has height, and only when the page is more than three screens long. If
+     any of that does not hold it does nothing at all and the foot plate is
+     what you get. */
+  function spread() {
+    try {
+      var seed = document.querySelector('.plate-break');
+      if (!seed || !seed.parentNode || seed.getAttribute('data-plate-extra')) return;
+      var parent = seed.parentNode;
+      if (getComputedStyle(parent).display !== 'block') return;
+
+      var vh = window.innerHeight || 800;
+      var docH = document.documentElement.scrollHeight;
+      var want = Math.min(4, Math.floor(docH / (vh * 3)) - 1);
+      if (want < 1) return;
+      if (document.querySelectorAll('.plate-break[data-plate-extra]').length >= want) return;
+
+      var slot = seed.getAttribute('data-plate-slot') || 'foot';
+      var want_group = seed.getAttribute('data-plate-rotate') || 'any';
+      var gap = docH / (want + 1);
+
+      /* WHERE THE PAGE ACTUALLY DIVIDES. On a folded page — the Plan, the
+         Money page — <main> holds a handful of panels and one of them is the
+         whole eleven thousand pixels, so its own children are all in the
+         first screen and there is nothing to insert between. Descend into
+         the tall one until the boundaries span the page, then stop. */
+      var usable = function (el) {
+        return Array.prototype.filter.call(el.children, function (k) {
+          if (k === seed || k.classList.contains('plate-break')) return false;
+          var cs = getComputedStyle(k);
+          if (cs.position === 'fixed' || cs.position === 'absolute' || cs.display === 'none') return false;
+          return k.getBoundingClientRect().height > 40;
+        });
+      };
+      var scan = parent, kids = usable(scan);
+      for (var depth = 0; depth < 3; depth++) {
+        var last = kids.length ? kids[kids.length - 1].getBoundingClientRect().top + (window.pageYOffset || 0) : 0;
+        if (kids.length >= 3 && last > docH * 0.45) break;
+        var tallest = kids.slice().sort(function (a, b) {
+          return b.getBoundingClientRect().height - a.getBoundingClientRect().height;
+        })[0];
+        if (!tallest || getComputedStyle(tallest).display !== 'block') break;
+        var deeper = usable(tallest);
+        if (deeper.length < 3) break;
+        scan = tallest; kids = deeper;
+      }
+      parent = scan;
+      var made = 0;
+      for (var n = 1; n <= want; n++) {
+        var mark = gap * n;
+        for (var i = 0; i < kids.length; i++) {
+          var top = kids[i].getBoundingClientRect().top + (window.pageYOffset || 0);
+          if (top < mark) continue;
+          if (kids[i].previousElementSibling &&
+              kids[i].previousElementSibling.classList.contains('plate-break')) break;
+          var el2 = document.createElement('div');
+          el2.className = 'plate-break';
+          el2.setAttribute('data-plate-extra', '1');
+          el2.setAttribute('data-plate-cap', '1');
+          el2.setAttribute('data-plate-slot', slot + '-' + n);
+          el2.setAttribute('data-plate-rotate', want_group);
+          parent.insertBefore(el2, kids[i]);
+          made++;
+          break;
+        }
+      }
+      if (made) dressAll();
+    } catch (e) {}
+  }
 
   function styleOnce() {
     try {
@@ -484,10 +599,12 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { styleOnce(); dressAll(); });
+    document.addEventListener('DOMContentLoaded', function () {
+      styleOnce(); dressAll().then(spread);
+    });
   } else {
     styleOnce();
-    dressAll();
+    dressAll().then(spread);
   }
 
   /* A PAGE THAT DRAWS ITSELF AFTER LOAD. The design-canvas pages — the Grind
@@ -505,7 +622,7 @@
     var soon = function () {
       if (queued) return;
       queued = true;
-      setTimeout(function () { queued = false; styleOnce(); dressAll(); }, 60);
+      setTimeout(function () { queued = false; styleOnce(); dressAll().then(spread); }, 60);
     };
     new MutationObserver(function (recs) {
       for (var i = 0; i < recs.length; i++) {
@@ -521,6 +638,7 @@
   }
 
   window.Plates = {
+    spread: spread,
     catalogue: CATALOGUE,
     dir: DIR,
     rotation: rotation, inGroup: inGroup, dayNumber: dayNumber,
