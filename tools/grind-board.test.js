@@ -123,6 +123,17 @@ group('With a week pulled, the session follows the calendar');
      squats against Strength B's record. */
   const titles = v.groups.map(g => g.title).join(' | ');
   ok(/Back squat/.test(JSON.stringify(v.groups)), 'the checklist is Strength A’s work (' + titles.slice(0, 50) + '…)');
+
+  /* And the row it is under has to say Strength A. The heading did; the
+     timetable row underneath it kept the weekday's own hardcoded name, so
+     the page read "Strength B — deadlift, overhead press, row" directly
+     above Strength A's squats. */
+  const train = v.slots.filter(s => s.kind === 'train' && !/Daily block|Posture reset/.test(s.label));
+  ok(train.length === 1 && train[0].label === 'Strength A',
+     'the timetable row is named for the session, not the weekday (' +
+     train.map(t => t.label).join(', ') + ')');
+  ok(/Squat, hinge, pull/.test(train[0].sub),
+     'and its instruction is that session’s (' + train[0].sub.slice(0, 40) + '…)');
 }
 
 group('The timetable stops printing a shift that is not happening');
@@ -190,9 +201,15 @@ group('Nothing is booked twice');
   const plain = board({}).renderVals();
   const len = (rows) => { const o = {}; rows.forEach(s => { o[s.label] = span(s)[1] - span(s)[0]; }); return o; };
   const was = len(plain.slots), now = len(v.slots);
-  ok(Object.keys(now).filter(k => !/Smoothie bar|Open — yours/.test(k)).every(k => was[k] === now[k]),
+  /* The training row is excepted because it is NAMED by the session it is
+     carrying, and this Wednesday is carrying Strength A. Its hour is the
+     weekday's own either way, which is the next assertion. */
+  ok(Object.keys(now).filter(k => !/Smoothie bar|Open — yours|Strength [AB]/.test(k))
+       .every(k => was[k] === now[k]),
      'nothing was shortened to make room');
-  ok(v.slots.map(s => s.label).indexOf('Strength B') < v.slots.map(s => s.label).indexOf('Shower, food'),
+  ok(now['Strength A'] === was['Strength B'],
+     'the training hour is the weekday’s own 90 minutes, whichever session fills it');
+  ok(v.slots.map(s => s.label).indexOf('Strength A') < v.slots.map(s => s.label).indexOf('Shower, food'),
      'and the order the day was written in survives');
 
   /* An appointment with other people is a time you have given away. */
@@ -238,7 +255,7 @@ group('An evening you hold yourself moves the training, not the other way round'
                     .filter(s => { const [a, z] = span(s); return a < 22 * 60 && z > 17 * 60; })
                     .filter(s => span(s)[1] - span(s)[0] > 10);
   ok(on.length === 0, 'and nothing is scheduled on top of it (' + on.map(o => o.label).join(', ') + ')');
-  ok(/Strength B/.test(JSON.stringify(v.slots)) || v.spillNote.indexOf('Strength B') >= 0,
+  ok(/Strength A/.test(JSON.stringify(v.slots)) || v.spillNote.indexOf('Strength A') >= 0,
      'the session is either moved or reported as not fitting — never silently dropped');
 }
 
@@ -310,6 +327,113 @@ group('The week view is dated, and reads off the calendar');
   ok(/Moved here/.test(rows[2].sub), 'a moved session says where it came from');
   ok(/6h free/.test(rows[0].sub), 'and the row says how much of the day is left (' + rows[0].sub.slice(0, 40) + '…)');
   ok(rows[6].shift === 'Clear', 'a day with nothing booked says so plainly (' + rows[6].shift + ')');
+}
+
+group('Every binding the page reads is one the logic returns');
+{
+  /* renderVals() and the markup are one contract with nothing checking it:
+     a value the template reads and the logic never returns renders as
+     nothing at all, silently. `hasSession` — the flag that hides the "mark
+     done" button on a day the week left clear — is exactly the kind of key
+     that would fail open, and a button that writes another day's slot is
+     what this whole file is about. */
+  const html = fs.readFileSync(path.join(ROOT, 'Grind.dc.html'), 'utf8');
+  const tpl = html.slice(html.indexOf('<x-dc>'), html.indexOf('</x-dc>'));
+  const alias = new Set();
+  (tpl.match(/\bas="([^"]+)"/g) || []).forEach(m => alias.add(m.slice(4, -1)));
+  const keys = new Set();
+  (tpl.match(/\{\{\s*([^}]+?)\s*\}\}/g) || []).forEach(m => {
+    const expr = m.replace(/^\{\{\s*|\s*\}\}$/g, '');
+    if (!/^[A-Za-z_$][\w$]*(\.[\w$]+)*$/.test(expr)) return;
+    if (/^(true|false|null|undefined)$/.test(expr)) return;      // sc-if placeholder hints
+    const head = expr.split('.')[0];
+    if (!alias.has(head)) keys.add(head);
+  });
+  const vals = board({}).renderVals();
+  const missing = [...keys].filter(k => !(k in vals));
+  ok(keys.size > 30, keys.size + ' bindings read from the markup');
+  ok(missing.length === 0, 'every one of them is returned (' + (missing.join(', ') || 'none missing') + ')');
+  ok(keys.has('hasSession'), 'including the flag that hides the tick on a day with no session');
+}
+
+group('No session is dealt twice in one week');
+{
+  /* WHAT SHIPPED BROKEN. The planner deals six sessions across seven days,
+     so one day always comes back empty — the busiest one. The board asked
+     that day what it was CALLED, got "fri", and drew Strength C on it. The
+     session itself was on the Sunday the planner had found room on. Two
+     Strength C workouts in one week, both offering "Mark done", both writing
+     the same week|fri key — so ticking one and clearing it cleared the
+     other's record too, on a date it had never been done.
+
+     Nothing about it looked wrong: seven rows, every one full, and the week
+     it described was one session over. */
+  const week = { at: NOW, days: {
+    [MON]: { session: 'Strength A', slot: 'mon', done: false, committed: 0, free: 15, blocks: [] },
+    [TUE]: { session: 'Engine', slot: 'tue', done: false, committed: 5, free: 10, blocks: [] },
+    [WED]: { session: 'Strength B', slot: 'wed', done: false, committed: 5.5, free: 9.5, blocks: [] },
+    [THU]: { session: 'Intervals', slot: 'thu', done: false, committed: 5.5, free: 9.5, blocks: [] },
+    /* Friday is the day the calendar ate, so the planner placed nothing. */
+    '2026-09-11': { session: null, slot: null, done: false, committed: 13, free: 2,
+                    blocks: [{ title: 'Conference', kind: 'other', from: '8:00', to: '21:00',
+                               hours: 13, allDay: false }] },
+    '2026-09-12': { session: 'Long easy', slot: 'sat', done: false, committed: 4.5, free: 10.5, blocks: [] },
+    '2026-09-13': { session: 'Strength C + shadow', slot: 'fri', done: false, committed: 6, free: 9, blocks: [] },
+  } };
+  const b = board({ ct_week_v1: JSON.stringify(week), ct_grind_v1: JSON.stringify(GRIND) });
+  const rows = b.renderVals().weekRows;
+  const focus = rows.map(r => r.focus);
+  ok(focus.filter(f => /Strength C/.test(f)).length === 1,
+     'Strength C appears once (' + focus.filter(f => /Strength C/.test(f)).join(' / ') + ')');
+  ok(new Set(focus).size === focus.length, 'and no session at all is drawn twice');
+  ok(focus[4] === 'No session — the week had no room',
+     'the day the calendar took says so (' + focus[4] + ')');
+  ok(rows[4].mark === 'Open' && /seven days/.test(rows[4].sub),
+     'and offers no tick, because there is nothing there to tick');
+  ok(focus[6] === 'Strength C + shadowboxing', 'the session is on the day the week found room on');
+
+  /* The day view is the other place it was drawn. */
+  b.state.day = 'fri';
+  const v = b.renderVals();
+  ok(v.dayTitle === 'No session today', 'the day page agrees (' + v.dayTitle + ')');
+  ok(v.hasSession === false, 'and shows no "mark the session done" button');
+  ok(v.slots.filter(s => /Strength/.test(s.label)).length === 0,
+     'the timetable has no training row invented for it');
+  ok(v.slots.filter(s => /Daily block|Posture reset/.test(s.label)).length > 0,
+     'but the daily block and the posture resets still stand — they are not the session');
+
+  /* And the tick that used to cross the two: Friday's button wrote 1|fri,
+     which is Sunday's session. */
+  b.toggleSession('fri', b.plan(b.read()));
+  ok(!b.read().sessions['1|fri'], 'a tick on the empty day writes nothing');
+  ok(b.renderVals().weekRows[6].mark === 'Mark done', 'so Sunday\u2019s session is still undone');
+}
+
+group('A day the planner never saw does not repeat a session it already placed');
+{
+  /* Only `own` blocks on a Friday the planner never wrote a row for. That
+     day still falls back to the grid — it is not evidence of anything — but
+     never onto a session this week has already spent. */
+  const week = { at: NOW, days: {
+    [MON]: { session: 'Strength C + shadow', slot: 'fri', done: false, committed: 0, free: 15, blocks: [] },
+  }, own: { '2026-09-11': [{ id: 'own-1', title: 'Held evening', from: '18:00', to: '21:00',
+                             hours: 3, allDay: false, kind: 'own', own: true }] } };
+  const b = board({ ct_week_v1: JSON.stringify(week), ct_grind_v1: JSON.stringify(GRIND) });
+  const rows = b.renderVals().weekRows;
+  ok(rows[0].focus === 'Strength C + shadowboxing', 'Monday is carrying it');
+  ok(rows[4].focus === 'No session — the week had no room', 'so Friday is not (' + rows[4].focus + ')');
+  ok(rows[1].focus === 'Engine + standing endurance',
+     'while a day whose own session is still unspent keeps it (' + rows[1].focus + ')');
+}
+
+group('With nothing pulled the grid is still the grid');
+{
+  /* The fallback is whole-week, and it has to survive: a device that has
+     never read a calendar must still get all seven cards. */
+  const rows = board({}).renderVals().weekRows;
+  ok(rows.map(r => r.focus).filter(f => /No session/.test(f)).length === 0,
+     'every weekday carries its own session when there is no week to say otherwise');
+  ok(rows[4].focus === 'Strength C + shadowboxing', 'Friday is Strength C, because it is a Friday');
 }
 
 console.log(failed ? '\n' + failed + ' FAILED' : '\nall green');

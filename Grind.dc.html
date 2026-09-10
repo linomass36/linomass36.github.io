@@ -231,9 +231,11 @@
         <sc-if value="{{ hasDayFree }}" hint-placeholder-val="{{ false }}">
           <div class="gb-note" style="margin-top: 6px;">{{ dayFree }}</div>
         </sc-if>
-        <div class="gb-row" style="margin-top: 12px;">
-          <button onClick="{{ toggleSession }}" class="gb-btn {{ sessionCls }} wide">{{ sessionLabel }}</button>
-        </div>
+        <sc-if value="{{ hasSession }}" hint-placeholder-val="{{ true }}">
+          <div class="gb-row" style="margin-top: 12px;">
+            <button onClick="{{ toggleSession }}" class="gb-btn {{ sessionCls }} wide">{{ sessionLabel }}</button>
+          </div>
+        </sc-if>
         <sc-if value="{{ hasPlanLine }}" hint-placeholder-val="{{ true }}">
           <div class="gb-note" style="margin-top: 10px;">{{ planLine }} <a href="Week.html">The Week →</a></div>
         </sc-if>
@@ -602,14 +604,34 @@ class Component extends DCLogic {
     wp.applies = (wp.blockWeek == null || wp.blockWeek === d.week);
     wp.byDay = {};
     wp.days.forEach(x => { wp.byDay[x.weekday] = x; });
+    /* Which slots this week has already spent, and where. Nothing may be
+       dealt twice — see slotFor. */
+    wp.taken = {};
+    wp.days.forEach(x => { if (x.slot) wp.taken[x.slot] = x.iso; });
     return wp;
   }
   /* The SESSION a weekday is carrying — the calendar's answer when there is
      one, the weekday's own otherwise. Every key in the store is this, not the
-     weekday, so a session keeps its record wherever the week puts it. */
+     weekday, so a session keeps its record wherever the week puts it.
+
+     THE GRID IS A WHOLE-WEEK FALLBACK, NOT A PER-DAY ONE, and reading it as
+     a per-day one is how the board came to show two Strength C workouts in
+     one week. The planner deals six sessions across seven days, so one day
+     always comes back empty — the busiest one. This asked that day what it
+     was called, got "fri", and drew Strength C on it, while the session
+     itself sat on the Sunday the planner had actually found room on. Both
+     rows offered "Mark done" and both wrote the same week|fri key, so
+     clearing one silently cleared the other.
+
+     A day the planner WROTE is answered by the plan or not at all. Only a
+     day it never saw falls back to the grid, and even then not onto a
+     session the week has already placed somewhere else. */
   slotFor(wp, dayId) {
-    const p = wp && wp.applies ? wp.byDay[dayId] : null;
-    return (p && p.slot) || dayId;
+    if (!wp || !wp.applies) return dayId;
+    const p = wp.byDay[dayId];
+    if (p && p.slot) return p.slot;
+    if (p && p.planned) return null;          // seen, and left clear on purpose
+    return wp.taken[dayId] ? null : dayId;
   }
   planDay(wp, dayId) { return wp && wp.applies ? (wp.byDay[dayId] || null) : null; }
 
@@ -627,6 +649,7 @@ class Component extends DCLogic {
   }
   doneFor(d, wp, dayId) {
     const T = this.T(), p = this.planDay(wp, dayId), slot = this.slotFor(wp, dayId);
+    if (!slot) return false;                  // no session here to have done
     if (T && p) return T.isDone(p.iso, slot);
     return !!d.sessions[d.week + '|' + slot];
   }
@@ -816,6 +839,7 @@ class Component extends DCLogic {
      know about today. */
   toggleSession(dayId, wp) {
     const T = this.T(), p = this.planDay(wp, dayId), slot = this.slotFor(wp, dayId);
+    if (!slot) return;                        // the week placed nothing here
     const lift = (this.G && this.G.GYM && this.G.GYM[slot]) || null;
     const label = (lift && lift.t) || ((this.G && this.G.DAYNAME) || {})[slot] || 'session';
     if (T && p) {
@@ -876,7 +900,7 @@ class Component extends DCLogic {
                success: [], nextMonth: '',
                tabs: [], isDay: false, isWeek: false, isLift: false, isRuns: false, isDiet: false, isBm: false,
                dayBtns: [], dayShift: '', dayTitle: '', dayFocus: '', slots: [], slotCount: '', groups: [],
-               noChecks: true, checkHead: '', sessionCls: '', sessionLabel: '', toggleSession: () => {},
+               noChecks: true, checkHead: '', hasSession: false, sessionCls: '', sessionLabel: '', toggleSession: () => {},
                hasMoved: false, movedNote: '', hasDayFree: false, dayFree: '',
                hasPlanLine: false, planLine: '', hasShapeNote: false, shapeNote: '',
                hasSpill: false, spillNote: '',
@@ -908,8 +932,11 @@ class Component extends DCLogic {
     const slotId = this.slotFor(wp, dayId);
     const pday = this.planDay(wp, dayId);
     const wd = G.WEEK.filter(x => x.id === dayId)[0] || G.WEEK[0];
-    const ws = G.WEEK.filter(x => x.id === slotId)[0] || wd;
-    const shape = this.dayShape(G, dayId, d.week, slotId, pday);
+    /* Null when the week left this day clear. Falling back to `wd` here
+       would put the weekday's own session back on the page under a different
+       name — the same second Strength C, one layer up. */
+    const ws = slotId ? (G.WEEK.filter(x => x.id === slotId)[0] || wd) : null;
+    const shape = this.dayShape(G, dayId, d.week, slotId || false, pday);
     const slotsRaw = shape.rows;
     const slots = slotsRaw.map(s => ({
       time: s[0] === 'all' ? 'all day' : s[0] + '–' + s[1],
@@ -921,7 +948,11 @@ class Component extends DCLogic {
 
     // Checklist items, grouped by the slot they belong to — the same ids the
     // standalone board used, so a group keeps its identity week to week.
-    const checks = d.checks[d.week + '|' + slotId] || {};
+    /* Ticks belong to the session. A day with none keeps its own key rather
+       than borrowing the weekday's, which is a slot id another day may be
+       carrying. */
+    const ckey = slotId || ('rest|' + dayId);
+    const checks = d.checks[d.week + '|' + ckey] || {};
     const groups = [];
     slotsRaw.forEach((s, n) => {
       /* The row's index in the template, so a block that moved to clear a
@@ -932,7 +963,7 @@ class Component extends DCLogic {
       if (s[5] && s[5].b) s[5].b.forEach((b, bi) => (b.l || []).forEach((e, ei) =>
         items.push({ id: 'e:' + i + ':' + bi + ':' + ei, label: e.n, sets: e.s || '' })));
       if (!items.length) return;
-      const gid = slotId + '|' + i + '|' + s[3];
+      const gid = ckey + '|' + i + '|' + s[3];
       const doneN = items.filter(it => checks[it.id]).length;
       groups.push({
         title: s[0] + ' · ' + s[3],
@@ -943,7 +974,7 @@ class Component extends DCLogic {
         items: items.map(it => ({
           label: it.label, sets: it.sets, on: !!checks[it.id],
           cls: checks[it.id] ? 'done' : '',
-          toggle: () => this.toggleCheck(slotId, it.id),
+          toggle: () => this.toggleCheck(ckey, it.id),
         })),
       });
     });
@@ -962,6 +993,7 @@ class Component extends DCLogic {
       };
     });
 
+    const hasSession = !!slotId;
     const isLiftDay = !!(G.GYM || {})[slotId];
     const sessionOn = this.doneFor(d, wp, dayId);
 
@@ -985,15 +1017,19 @@ class Component extends DCLogic {
     const weekRows = G.WEEK.map(x => {
       const p = this.planDay(wp, x.id);
       const xslot = this.slotFor(wp, x.id);
-      const xw = G.WEEK.filter(y => y.id === xslot)[0] || x;
+      const xw = xslot ? (G.WEEK.filter(y => y.id === xslot)[0] || x) : x;
       const on = this.doneFor(d, wp, x.id);
       const lift = !!(G.GYM || {})[xslot];
       return {
         day: p ? x.d + ' ' + p.date.getDate() + ' ' + MONN[p.date.getMonth()] : x.d,
         shift: p ? shiftOf(p) : x.shift,
-        focus: xw.focus,
-        sub: (p && p.moved ? 'Moved here from ' + (G.WEEK.filter(y => y.id === xslot)[0] || {}).d + ' · ' : '') +
-             (p ? p.free + 'h free · ' : '') + xw.sub,
+        focus: xslot ? xw.focus : 'No session — the week had no room',
+        sub: !xslot
+          ? (p ? p.committed + 'h is committed and ' + p.free + 'h free. ' : '') +
+            'Six sessions do not fill seven days, and this is the day your calendar took. ' +
+            'The daily block and the posture resets still stand.'
+          : (p && p.moved ? 'Moved here from ' + (G.WEEK.filter(y => y.id === xslot)[0] || {}).d + ' · ' : '') +
+            (p ? p.free + 'h free · ' : '') + xw.sub,
         cls: on ? 'done' : '', mark: lift ? (on ? 'Done ✓' : 'Mark done') : 'Open',
         pick: () => (lift ? this.toggleSession(x.id, wp) : this.setState({ view: 'day', day: x.id })),
       };
@@ -1092,13 +1128,16 @@ class Component extends DCLogic {
       dayShift: pday
         ? wd.d + ' ' + pday.date.getDate() + ' ' + MONN[pday.date.getMonth()] + ' · ' + shiftOf(pday)
         : (G.DAYNAME[dayId] || wd.d),
-      dayTitle: ws.focus, dayFocus: ws.sub,
+      dayTitle: ws ? ws.focus : 'No session today',
+      dayFocus: ws ? ws.sub
+        : 'The week laid its six sessions on the other days — this is the one your '
+        + 'calendar took. The daily block, the posture resets and the house task still stand.',
       /* Where the session came from, when it is not where the grid would put
          it. Without this the board silently shows Strength A on a Wednesday
          and you have no way to tell whether that is the plan or a bug. */
       hasMoved: !!(pday && pday.moved),
       movedNote: pday && pday.moved
-        ? 'The week put ' + (pday.label || ws.focus) + ' here — it is ' + wd.d +
+        ? 'The week put ' + (pday.label || (ws && ws.focus) || 'this session') + ' here — it is ' + wd.d +
           '\u2019s own session that moved, not the programme. ' +
           (pday.committed ? pday.committed + 'h is already committed today; ' : '') +
           pday.free + 'h are free.'
@@ -1107,6 +1146,10 @@ class Component extends DCLogic {
       dayFree: pday && !pday.moved
         ? pday.committed + 'h committed on your calendar · ' + pday.free + 'h free'
         : '',
+      /* No button at all on a day the week left clear. A button that writes
+         a slot this day is not carrying is how one tick cleared another
+         day's session. */
+      hasSession,
       sessionCls: sessionOn ? 'done' : (isLiftDay ? 'go' : ''),
       sessionLabel: !isLiftDay ? (sessionOn ? 'Recovery day marked done ✓' : 'Mark the recovery day done')
                                : (sessionOn ? 'Session done ✓' : 'Mark the session done'),

@@ -379,21 +379,46 @@
   const REVIEW = simple('Weekly review — four passes', '90 min', '<ul class="tight" style="font-size:13.5px"><li>Week recap written into Obsidian.</li><li>Pushed to the GitHub repo.</li><li>Finances: earned, spent, card balance, family loan, savings.</li><li>Documents: what moved, what is stuck, one call to make.</li></ul>');
   const LOGLINE = simple('Log the session', '2 min', '<p style="font-size:13.5px">One line is enough: date, lifts and top sets, cardio minutes and machine, shin 0–10, sleep hours, morning weight if it is a weigh day.</p><p style="font-size:13px;color:var(--sand-dim)">If you cannot say whether last week’s squat went up, the log failed.</p>');
 
-  /* `sessionId` is which SESSION the day holds, which is not always the day
-     it is named after. The week is laid onto the days the calendar left free
-     — see training.js — so a Wednesday can carry Strength A. The day's shape
-     (wake, shift, meals, the blocks around it) still comes from `id`, which
-     is the weekday you are actually standing in; only the training slot
-     moves. Called with two arguments it behaves exactly as it did. */
+  /* THE TRAINING ROW IS THE ONLY ROW THE WEEK MOVES.
+
+     Which session a day holds is the week's business — the calendar is read,
+     the sessions are laid into the hours that are actually free, and a
+     Wednesday can end up carrying Strength A. What is NOT the week's business
+     is the shape of the day around it: the wake, the shift, the meals, the
+     Anki block. Those come from `id`, the weekday you are standing in.
+
+     So the templates below mark their training row with SESSROW and say
+     nothing about what is in it. Everything that names the session — its
+     title, its one line of instruction, the ticks that belong to it — is
+     looked up from SESSLINE by the session, not typed into the weekday. It
+     used to be typed into the weekday, which is why a Wednesday carrying
+     Strength A printed "Strength B — deadlift, overhead press, row" as the
+     heading above Strength A's squats.
+
+     `sessionId === false` says the week placed NO session on this day, and
+     the row is dropped rather than filled with the weekday's own. Six
+     sessions do not fill seven days, and the seventh day is not a second
+     Strength C — which is exactly what it used to show. Called with two
+     arguments this behaves as it always did. */
+  const SESSROW = '#session';
+  const SESSLINE = {
+    mon: ['Strength A', 'Squat, hinge, pull. Posture block before you leave.', null],
+    tue: ['Engine + standing endurance', 'Easy cardio, then the OR circuit.', null],
+    wed: ['Strength B', 'Deadlift, overhead press, row. Brace before the bar moves.', null],
+    thu: ['Work capacity — intervals', 'The first session to cut if sleep or joints are wrecked.', null],
+    fri: ['Strength C + shadowboxing', 'Lighter full body, then the shadow rounds. Film one.', null],
+    sat: ['Long easy engine', 'Conversational. Walk-run only if the shins earned it.', ['Shin score logged']],
+    sun: ['Recovery walk or easy swim', '30–45 min. Nothing that raises the breath.', ['Recovery walk']],
+  };
   function build(id, WK, sessionId) {
-    const H = HOUSE[id], S = session(sessionId || id, WK);
+    const sid = sessionId === false ? null : (sessionId || id);
+    const H = HOUSE[id], S = sid ? session(sid, WK) : null;
     const house = simple('House task', '10 min', '<p style="font-size:15px"><b>' + H + '</b></p><p style="font-size:13px;color:var(--sand-dim)">Small, finished, done. One per day, that is the whole rule.</p>');
-    const slot = S ? det(S.t, S.m, S.b) : null;
     const D = {
       mon: [['06:15', '06:45', 'upkeep', 'Wake + weigh-in + house task', 'Weigh on waking, after the bathroom. ' + H, house, ['Weigh-in', 'House task']],
         ['06:45', '07:10', 'train', 'Daily block', 'McGill 3, posture set, mobility.', DAILYBLK, null],
         ['07:10', '07:30', 'rest', 'Breakfast', 'Oats, milk, whey, banana, peanut butter.', null, ['Breakfast']],
-        ['07:30', '09:00', 'train', 'Strength A', 'Squat, hinge, pull. Posture block before you leave.', slot, null],
+        ['07:30', '09:00', 'train', '', '', SESSROW, null],
         ['09:00', '09:40', 'upkeep', 'Shower, food', '', null, null],
         ['09:40', '11:10', 'deep', 'Anki — 200 cards', '', ANKI, ['Anki 200']],
         ['11:10', '11:15', 'train', 'Posture reset 1', 'After the Anki block.', RESET, null],
@@ -415,7 +440,7 @@
         ['07:45', '08:20', 'work', 'Scooter out', '', null, null],
         ['08:30', '13:30', 'work', 'Smoothie bar', 'Audiobook.', null, null],
         ['11:00', '11:05', 'train', 'Posture reset 1', 'Mid-shift, at the bar.', RESET, null],
-        ['13:45', '15:15', 'train', 'Engine + standing endurance', 'Easy cardio, then the OR circuit.', slot, null],
+        ['13:45', '15:15', 'train', '', '', SESSROW, null],
         ['15:15', '16:00', 'upkeep', 'Shower, food', '', null, null],
         ['16:00', '17:30', 'deep', 'Anki — 200 cards', '', ANKI, ['Anki 200']],
         ['17:30', '17:35', 'train', 'Posture reset 2', 'After the Anki block.', RESET, null],
@@ -433,7 +458,7 @@
         ['07:35', '07:55', 'work', 'Scooter out', '', null, null],
         ['08:00', '13:30', 'work', 'Smoothie bar', 'Audiobook.', null, null],
         ['11:00', '11:05', 'train', 'Posture reset 1', 'Mid-shift, at the bar.', RESET, null],
-        ['13:45', '15:15', 'train', 'Strength B', 'Deadlift, overhead press, row. Brace before the bar moves.', slot, null],
+        ['13:45', '15:15', 'train', '', '', SESSROW, null],
         ['15:15', '16:00', 'upkeep', 'Shower, food', '', null, null],
         ['16:00', '17:30', 'deep', 'Anki — 200 cards', '', ANKI, ['Anki 200']],
         ['17:30', '17:35', 'train', 'Posture reset 2', '', RESET, null],
@@ -450,7 +475,7 @@
         ['07:35', '07:55', 'work', 'Scooter out', '', null, null],
         ['08:00', '13:30', 'work', 'Smoothie bar', 'Audiobook.', null, null],
         ['11:00', '11:05', 'train', 'Posture reset 1', 'Mid-shift, at the bar.', RESET, null],
-        ['13:45', '15:00', 'train', 'Work capacity — intervals', 'The first session to cut if sleep or joints are wrecked.', slot, null],
+        ['13:45', '15:00', 'train', '', '', SESSROW, null],
         ['15:00', '15:45', 'upkeep', 'Shower, food', '', null, null],
         ['15:45', '17:15', 'deep', 'Anki — 200 cards', '', ANKI, ['Anki 200']],
         ['17:15', '17:20', 'train', 'Posture reset 2', '', RESET, null],
@@ -468,7 +493,7 @@
       fri: [['06:15', '06:40', 'upkeep', 'Wake + weigh-in + house task', 'Third weigh-in. ' + H, house, ['Weigh-in', 'House task']],
         ['06:40', '07:05', 'train', 'Daily block', '', DAILYBLK, null],
         ['07:05', '07:30', 'rest', 'Breakfast', '', null, ['Breakfast']],
-        ['07:30', '09:20', 'train', 'Strength C + shadowboxing', 'Lighter full body, then the shadow rounds. Film one.', slot, null],
+        ['07:30', '09:20', 'train', '', '', SESSROW, null],
         ['09:20', '09:55', 'upkeep', 'Shower, food', '', null, null],
         ['09:55', '11:25', 'deep', 'Anki — 200 cards', '', ANKI, ['Anki 200']],
         ['11:25', '11:30', 'train', 'Posture reset 1', '', RESET, null],
@@ -488,7 +513,7 @@
         ['07:35', '07:55', 'work', 'Scooter out', '', null, null],
         ['08:00', '12:30', 'work', 'Smoothie bar', 'Audiobook.', null, null],
         ['11:00', '11:05', 'train', 'Posture reset 1', 'Mid-shift, at the bar.', RESET, null],
-        ['12:45', '14:15', 'train', 'Long easy engine', 'Conversational. Walk-run only if the shins earned it.', slot, ['Shin score logged']],
+        ['12:45', '14:15', 'train', '', '', SESSROW, null],
         ['14:15', '15:00', 'upkeep', 'Shower, food', '', null, null],
         ['15:00', '16:30', 'deep', 'Anki — 200 cards', '', ANKI, ['Anki 200']],
         ['16:30', '16:35', 'train', 'Posture reset 2', '', RESET, null],
@@ -506,7 +531,7 @@
         ['08:15', '08:45', 'faith', 'Open — church if the trade lands', 'Currently unresolved. See the Open tab.', null, null],
         ['09:00', '15:00', 'work', 'Smoothie bar', 'The shift sitting on top of church.', null, null],
         ['12:00', '12:05', 'train', 'Posture reset 1', 'Mid-shift, at the bar.', RESET, null],
-        ['15:15', '16:00', 'train', 'Recovery walk or easy swim', '30–45 min. Nothing that raises the breath.', RECOVERY, ['Recovery walk']],
+        ['15:15', '16:00', 'train', '', '', SESSROW, null],
         ['16:00', '16:30', 'upkeep', 'Home, food', '', null, ['Protein target']],
         ['16:30', '18:00', 'deep', 'Anki — 200 cards', '', ANKI, ['Anki 200']],
         ['18:00', '18:05', 'train', 'Posture reset 2', '', RESET, null],
@@ -516,7 +541,13 @@
         ['22:00', '22:05', 'train', 'Posture reset 3', '', RESET, null],
         ['22:05', '22:30', 'upkeep', 'Phone out of the bedroom', '', PHONE, ['Phone out']]],
     };
-    return D[id];
+    const rows = D[id];
+    if (!rows) return rows;
+    /* Fill the marked row from the SESSION, or drop it when there is none. */
+    const line = SESSLINE[sid] || [];
+    return rows.filter(r => r[5] !== SESSROW || S)
+               .map(r => r[5] !== SESSROW ? r
+                    : [r[0], r[1], r[2], line[0] || S.t, line[1] || '', det(S.t, S.m, S.b), line[2] || null]);
   }
 
   const DAYNAME = {
@@ -546,7 +577,7 @@
     RECOVERY: RECOVERY,
     session: session,           // (dayId, week) -> that week's session
     DAILYBLK: DAILYBLK, RESET: RESET,
-    build: build,               // (dayId, week, sessionId?) -> the day's slots
+    build: build,               // (dayId, week, sessionId | false) -> the day's slots
     weeks: BLOCK.weeks,
     deloads: [],                // none: four weeks is short enough to run through
     testWeek: 4,
