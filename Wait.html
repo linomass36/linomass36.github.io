@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Wait · CT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./mobile.css">
+<style>
+:root {
+  --ground:#F7F5F1; --card:#FFFDF8; --raise:#FFFFFF;
+  --ink:#1A1B1A; --mid:#55564F; --muted:#8A8B82; --faint:#B4B2A9;
+  --rule:#E4E2DD; --rust:#993C1D; --rust-dim:#FBF2EE;
+  --owed:#A32E27; --owed-bg:#FBEDE8; --owed-ln:#E8C4B6;
+  --ok:#0F6E56; --ok-bg:#EEF5F1; --ok-ln:#C4DED2;
+  --warn:#8A5A12; --warn-bg:#FBF3E6; --warn-ln:#E5D2AE;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
+  --serif:"Newsreader",Georgia,serif;
+  --shadow:0 1px 2px rgba(26,27,26,.04), 0 8px 24px rgba(26,27,26,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131315; --card:#1B1B1D; --raise:#212124;
+    --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+    --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+    --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+    --ok:#5FBF9B; --ok-bg:#14231E; --ok-ln:#20392F;
+    --warn:#D9A441; --warn-bg:#28200F; --warn-ln:#453718;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+html.hb-dark {
+  --ground:#131315; --card:#1B1B1D; --raise:#212124;
+  --ink:#EDEBE5; --mid:#B0AEA5; --muted:#8A8880; --faint:#6A6862;
+  --rule:#2E2E31; --rust:#D9744C; --rust-dim:#2A1A13;
+  --owed:#E8776D; --owed-bg:#2C1614; --owed-ln:#4A2320;
+  --ok:#5FBF9B; --ok-bg:#14231E; --ok-ln:#20392F;
+  --warn:#D9A441; --warn-bg:#28200F; --warn-ln:#453718;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+a { color:var(--rust); text-decoration:none; }
+main { max-width:720px; margin:0 auto; padding:0 20px 90px; }
+.top { display:flex; align-items:center; gap:10px; padding:14px 20px 12px;
+  border-bottom:1px solid var(--rule); max-width:720px; margin:0 auto; }
+.mark { font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); }
+.dateline { font-family:var(--mono); font-size:10.5px; color:var(--faint); }
+.sp { flex:1; }
+h1 { font-family:var(--serif); font-weight:500; font-size:34px; line-height:1.08;
+  margin:24px 0 8px; letter-spacing:-.015em; }
+.lede { color:var(--mid); font-size:15px; margin:0; max-width:58ch; }
+.kicker { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--rust); margin:34px 0 10px; display:flex;
+  align-items:baseline; gap:8px; }
+.kicker .note { flex:1; font-weight:400; letter-spacing:.04em; text-transform:none;
+  color:var(--faint); font-size:10px; text-align:right; }
+p { margin:0 0 12px; }
+.box { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  padding:16px 17px; box-shadow:var(--shadow); }
+.box + .box { margin-top:10px; }
+.box h3 { font-family:var(--sans); font-size:13px; font-weight:600; margin:0 0 6px; color:var(--ink); }
+.box p:last-child { margin-bottom:0; }
+.sub { color:var(--mid); font-size:13.5px; }
+
+/* The verdict. Deliberately the loudest thing on the page and deliberately
+   not a colour that reads as failure — "hold" is the plan working. */
+.verdict { border-radius:13px; padding:17px 18px; border:1px solid var(--rule);
+  background:var(--card); box-shadow:var(--shadow); }
+.verdict .now { font-family:var(--mono); font-size:9.5px; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--muted); }
+.verdict .big { font-family:var(--serif); font-size:27px; line-height:1.12; margin-top:4px; }
+.verdict .l { font-size:14px; color:var(--mid); margin-top:7px; }
+.verdict.hold { background:var(--ok-bg); border-color:var(--ok-ln); }
+.verdict.hold .big { color:var(--ok); }
+.verdict.bump { background:var(--warn-bg); border-color:var(--warn-ln); }
+.verdict.bump .big { color:var(--warn); }
+.verdict.called { background:var(--owed-bg); border-color:var(--owed-ln); }
+.verdict.called .big { color:var(--owed); }
+
+/* Her clock. One line, and it either says a time or says it does not know. */
+.clock { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+  border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  padding:14px 16px; box-shadow:var(--shadow); }
+.clock .t { font-family:var(--mono); font-size:26px; letter-spacing:-.02em; color:var(--ink); }
+.clock .t.asleep { color:var(--faint); }
+.clock .c { flex:1; min-width:200px; font-size:13.5px; color:var(--mid); }
+.clock .c b { color:var(--ink); font-weight:500; }
+.clock .none { font-family:var(--mono); font-size:13px; color:var(--owed); }
+
+/* The gates, in order, with the one you are inside marked. */
+.gates { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  overflow:hidden; box-shadow:var(--shadow); }
+.gate { display:flex; gap:12px; align-items:baseline; padding:12px 15px;
+  border-top:1px solid var(--rule); }
+.gate:first-child { border-top:none; }
+.gate .d { font-family:var(--mono); font-size:11px; color:var(--muted); flex:none; width:118px; }
+.gate .w { flex:1; min-width:0; font-size:14px; }
+.gate .w small { display:block; color:var(--muted); font-size:12.5px; margin-top:2px; line-height:1.45; }
+.gate.past { color:var(--faint); }
+.gate.past .d, .gate.past .w small { color:var(--faint); }
+.gate.here { background:var(--rust-dim); }
+.gate.here .w { font-weight:600; }
+.gate.here .d { color:var(--rust); }
+
+/* Recording. Four dates, and the only button that sends nothing is the one
+   that matters — this page records a message, it does not deliver one. */
+.rec { border:1px solid var(--rule); background:var(--card); border-radius:13px;
+  padding:14px 16px; box-shadow:var(--shadow); }
+.rec .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  padding:10px 0; border-top:1px solid var(--rule); }
+.rec .row:first-child { border-top:none; padding-top:0; }
+.rec .lab { flex:1; min-width:170px; font-size:14px; }
+.rec .lab small { display:block; color:var(--muted); font-size:12.5px; line-height:1.45; }
+.rec input { font-family:var(--mono); font-size:16px; padding:8px 10px; border-radius:9px;
+  border:1px solid var(--rule); background:var(--raise); color:var(--ink); min-height:44px; }
+.rec button { min-height:44px; padding:0 15px; border-radius:10px; border:1px solid var(--rule);
+  background:var(--raise); color:var(--mid); font-family:var(--mono); font-size:12.5px;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.rec button.go { border-color:var(--rust); color:var(--rust); font-weight:600; }
+.rec button[disabled] { opacity:.4; cursor:default; }
+.rec .said { font-family:var(--mono); font-size:12px; color:var(--ok); }
+
+.pull { border-left:2px solid var(--rust); padding:2px 0 2px 15px; margin:14px 0;
+  color:var(--mid); font-size:14px; }
+.pull b { color:var(--ink); font-weight:500; }
+footer { display:flex; justify-content:space-between; gap:12px; margin-top:44px;
+  padding-top:16px; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:10px; color:var(--faint); }
+@media (max-width:560px) {
+  h1 { font-size:29px; }
+  .gate .d { width:96px; font-size:10.5px; }
+}
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
+</style>
+<script src="./wait.js"></script>
+</head>
+<body>
+<header class="top">
+  <span class="mark">CT Hub</span>
+  <span class="dateline" id="dateline"></span>
+  <span class="sp"></span>
+</header>
+<main>
+
+  <h1>One ask, one bump, one week.</h1>
+  <p class="lede">The rules of a wait, agreed once while calm, and computed from the day the
+    message actually went out — so the page can say what today permits rather than leaving it to
+    whoever is holding the phone at two in the morning.</p>
+
+  <!-- ══ what today permits ══════════════════════════════════════════════
+       First, loudest, and derived. A page that opened on the reasoning and
+       buried the answer would be read the way the reasoning gets read at
+       02:00: selectively. -->
+  <div class="kicker">Where the wait is <span class="note" id="phase-note"></span></div>
+  <div class="verdict" id="verdict">
+    <div class="now">Today</div>
+    <div class="big" id="v-title">—</div>
+    <div class="l" id="v-line"></div>
+  </div>
+
+  <!-- ══ her clock ═══════════════════════════════════════════════════════
+       The single most useful thing on the page. Nine hours means the worst
+       hour of the wait — waking up to nothing — is the hour she was most
+       certainly asleep for. -->
+  <div class="kicker">Her clock <span class="note">nine hours ahead in summer, eight in winter</span></div>
+  <div class="clock" id="clock"></div>
+
+  <!-- ══ the gates ═══════════════════════════════════════════════════════ -->
+  <div class="kicker">The gates <span class="note" id="gates-note">all four come from one date</span></div>
+  <div class="gates" id="gates"></div>
+
+  <!-- ══ the two rules that are not about her ════════════════════════════ -->
+  <div class="kicker">Two rules that are not about her</div>
+  <div class="box">
+    <h3>Do not soothe the wait by texting the one you let go</h3>
+    <p class="sub" id="closed-line">That door was closed on purpose and closed kindly. Reopening
+      it because this one is quiet is the hedge coming back under a different name — and it would
+      be a worse version of it, because now she knows what the first message was worth.</p>
+  </div>
+  <div class="box">
+    <h3>If she writes late, do not answer on impulse</h3>
+    <p class="sub">A reply after silence is not yet an answer. The thing to find out is whether she
+      wants to have the conversation, which is a separate question from whether she typed
+      something back — and it is not one a fast reply is capable of asking.</p>
+  </div>
+
+  <!-- ══ recording ═══════════════════════════════════════════════════════ -->
+  <div class="kicker">What happened <span class="note">store the dates, not the conclusions</span></div>
+  <div class="rec" id="rec">
+    <div class="row">
+      <div class="lab">The ask went out
+        <small>Everything above is computed from this. Nothing is assumed if it is blank.</small>
+      </div>
+      <input type="datetime-local" id="in-sent" aria-label="When the message went out">
+    </div>
+    <div class="row">
+      <div class="lab">The bump
+        <small id="bump-sub">One, inside the window, or not at all.</small>
+      </div>
+      <span class="said" id="bump-said"></span>
+      <button id="btn-bump" class="go">Bump sent</button>
+    </div>
+    <div class="row">
+      <div class="lab">She replied
+        <small>Ends the wait, whatever the calendar was about to say.</small>
+      </div>
+      <span class="said" id="reply-said"></span>
+      <button id="btn-reply">She wrote</button>
+    </div>
+    <div class="row">
+      <div class="lab">The other door closed
+        <small>The day you told her you were not in a place to date. Kept so the rule above has a
+          date attached rather than a feeling.</small>
+      </div>
+      <input type="date" id="in-closed" aria-label="When the other door was closed">
+    </div>
+    <div class="row">
+      <div class="lab"><small>Recorded here only. This page sends nothing and never has.</small></div>
+      <button id="btn-clear">Clear the bump and the reply</button>
+    </div>
+  </div>
+
+  <!-- ══ why this is written down ════════════════════════════════════════ -->
+  <div class="kicker">Why this is written down</div>
+  <p class="sub">The question that started it was whether lining up someone new while reaching
+    back to someone old was a hedge. It was — not because a date existed, but because the date was
+    being kept warm as the thing to land on if the first ask failed. Two doors held open is one
+    person deciding and two people waiting.</p>
+  <p class="sub">So one door was closed, plainly and without making her carry the reason. What is
+    left is the other one, and the only work left in it is not sending things. That is all this
+    page does: it counts, it says what the hour permits, and it refuses to invent a fifth message.</p>
+
+  <div class="pull"><b>A no arrives by silence too.</b> There is no text that converts silence into
+    a cleaner answer; every candidate for that text is another ask wearing a coat.</div>
+
+  <footer>
+    <span>The Wait</span>
+    <span>one ask, one bump, one week, then it is a no</span>
+  </footer>
+</main>
+<script>
+/* ─────────────────────────────────────────────────────────────────────────
+   Wait.html — the panel. All of the thinking is in wait.js; this draws it.
+
+   Split that way on purpose. The rules are the part worth testing and the
+   part that must not quietly drift, so they live in a module that
+   tools/wait-gate.test.js can drive the clock on. What is left here is
+   painting and four inputs — and if this file has a bug, the worst case is
+   an ugly page rather than a window that opens on the wrong night.
+
+   Repaints on a timer and on focus, because the page's whole claim is that
+   it knows what hour it is. A tab left open across Saturday evening that
+   still said "hold" would be the one lie it cannot afford.
+   ───────────────────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var W = window.Wait;
+
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  /* <input type="datetime-local"> speaks local wall time with no zone, which
+     is what is wanted — the ask went out at a time on a clock in a room. */
+  function toLocalInput(ts, dateOnly) {
+    var d = new Date(ts);
+    var s = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    return dateOnly ? s : s + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function fromLocalInput(v) {
+    if (!v) return null;
+    var t = new Date(v.length <= 10 ? v + 'T12:00' : v).getTime();
+    return isFinite(t) ? t : null;
+  }
+
+  function paintVerdict(s, now) {
+    var p = W.phase(s, now);
+    $('#verdict').className = 'verdict ' + (p.id === 'hold' || p.id === 'done' ? 'hold'
+                            : p.id === 'bump' ? 'bump'
+                            : p.id === 'called' ? 'called' : '');
+    $('#v-title').textContent = p.title;
+    $('#v-line').textContent = p.line;
+    $('#phase-note').textContent = s.sent ? 'asked ' + W.on(new Date(s.sent)) : '';
+
+    /* Disabled rather than hidden. A control you can see and cannot press
+       says the rule out loud; one that vanishes just looks like a bug, and
+       an hour spent wondering whether the page is broken is an hour spent
+       thinking about sending it. */
+    $('#btn-bump').disabled = !p.allows;
+    $('#bump-sub').textContent = p.allows
+      ? 'The window is open now. Recording it closes it.'
+      : 'One, inside the window, or not at all.';
+    return p;
+  }
+
+  /* The clock, or an honest refusal. wait.js returns null when it cannot
+     resolve the zone rather than assuming an offset — so this says "not
+     counted", exactly as the money layer does on a missing rate. */
+  function paintClock(s, now) {
+    var el = $('#clock');
+    var h = W.hers(now);
+    if (!h) {
+      el.innerHTML = '<span class="none">Her time: not counted</span>' +
+        '<span class="c">This browser cannot resolve ' + W.ZONE + ', so the page will not ' +
+        'guess an offset. Everything else on this page still holds.</span>';
+      return;
+    }
+    var hours = s.sent ? W.wakingHours(s.sent, now) : null;
+    var c = '<b>' + h.offset + ' hours ahead of you.</b> ';
+    c += h.awake ? 'She is plausibly awake. ' : 'It is the middle of her night. ';
+    if (hours == null) {
+      c += s.sent ? 'Waking hours since the ask: not counted.'
+                  : 'Nothing has been asked yet.';
+    } else {
+      c += 'Since the message went out, <b>' + hours + '</b> of her waking hours have passed — ' +
+           (hours < 16 ? 'less than one day of hers.'
+            : hours < 50 ? 'a couple of her days.'
+            : 'long enough that the silence is the answer forming.');
+    }
+    el.innerHTML = '<span class="t' + (h.awake ? '' : ' asleep') + '">' + h.hh + ':' + h.mm +
+                   '</span><span class="c">' + c + '</span>';
+  }
+
+  function paintGates(s, now) {
+    var el = $('#gates');
+    var g = W.gates(s);
+    if (!g) {
+      el.innerHTML = '<div class="gate"><span class="d">—</span><span class="w">No dates yet' +
+        '<small>Put the send date in below and the other four appear. None of them is a default.</small>' +
+        '</span></div>';
+      $('#gates-note').textContent = 'nothing stored';
+      return;
+    }
+    $('#gates-note').textContent = 'all four come from one date';
+
+    var rows = [
+      [g.sent, 'The ask', 'One message. It has been sent; it does not get sent better.'],
+      [g.bumpOpens, 'The bump window opens',
+       'Saturday evening. The morning is deliberately given away — that is the hour with the worst case for itself.'],
+      [g.bumpCloses, 'The window closes',
+       'End of the Sunday. It does not reopen the following weekend.'],
+      [g.callIt, 'Call it',
+       'About a week after the last message. Silence past here is the answer, and it needs no text to confirm it.'],
+      [g.floor, 'Nothing new before',
+       'And then only if something real has changed — which does not mean a new feeling about the same facts.']
+    ];
+
+    /* "Here" is the gate you are between, not the one you are on: the row
+       lights from the moment the previous one passed. */
+    var html = '', i, t = now;
+    for (i = 0; i < rows.length; i++) {
+      var ts = rows[i][0].getTime();
+      var prev = i === 0 ? -Infinity : rows[i - 1][0].getTime();
+      var cls = ts <= t ? 'past' : (prev <= t ? 'here' : '');
+      html += '<div class="gate ' + cls + '"><span class="d">' + W.on(rows[i][0]) + '</span>' +
+              '<span class="w">' + rows[i][1] + '<small>' + rows[i][2] + '</small></span></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function paintRec(s) {
+    $('#in-sent').value = s.sent ? toLocalInput(s.sent) : '';
+    $('#in-closed').value = s.closed ? toLocalInput(s.closed, true) : '';
+    $('#bump-said').textContent = s.bumped ? W.on(new Date(s.bumped)) : '';
+    $('#reply-said').textContent = s.replied ? W.on(new Date(s.replied)) : '';
+    $('#btn-reply').disabled = !s.sent || !!s.replied;
+    $('#closed-line').textContent = (s.closed
+      ? 'Closed ' + W.on(new Date(s.closed)) + '. '
+      : '') + 'That door was closed on purpose and closed kindly. Reopening it because this one ' +
+      'is quiet is the hedge coming back under a different name — and it would be a worse version ' +
+      'of it, because now she knows what the first message was worth.';
+  }
+
+  function paint() {
+    var s = W.read(), now = Date.now();
+    var p = paintVerdict(s, now);
+    paintClock(s, now);
+    paintGates(s, now);
+    paintRec(s);
+    return p;
+  }
+
+  function dateline() {
+    var d = new Date();
+    $('#dateline').textContent = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()] +
+                                 ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  $('#in-sent').addEventListener('change', function () {
+    W.set('sent', fromLocalInput(this.value)); paint();
+  });
+  $('#in-closed').addEventListener('change', function () {
+    W.set('closed', fromLocalInput(this.value)); paint();
+  });
+  $('#btn-bump').addEventListener('click', function () {
+    if (!W.phase(W.read(), Date.now()).allows) return;   // the button is the gate, not a suggestion
+    W.set('bumped', Date.now()); paint();
+  });
+  $('#btn-reply').addEventListener('click', function () {
+    W.set('replied', Date.now()); paint();
+  });
+  $('#btn-clear').addEventListener('click', function () {
+    var s = W.read(); s.bumped = null; s.replied = null; W.write(s); paint();
+  });
+
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+  dateline();
+  paint();
+
+  /* A minute is finer than any gate on this page, and coarse enough to cost
+     nothing. Focus and visibility cover the phone, which does not tick a
+     backgrounded tab. */
+  setInterval(function () { dateline(); paint(); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { dateline(); paint(); } });
+  window.addEventListener('focus', function () { dateline(); paint(); });
+})();
+</script>
+</body>
+</html>

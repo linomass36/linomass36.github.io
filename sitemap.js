@@ -262,6 +262,15 @@
       dest: 'people', panel: 'Files', ord: 2,
       plain: 'Files',
       blurb: 'What was said, and when.' },
+    /* The Wait is a panel of People because that is where you would look for
+       it, not because it is a contact. It holds one relationship and one
+       rule set, and it is here rather than in the Journal for the reason
+       the Journal is not a gate: a thing you write in cannot tell you to
+       stop writing. */
+    'Wait.html':                 { name: 'The Wait',      group: 'People & money', parent: 'Network Map.dc.html', back: 'none',
+      dest: 'people', panel: 'Wait', ord: 4,
+      plain: 'Wait',
+      blurb: 'One ask, one bump, one week — and what the hour permits.' },
     /* A SHELL, not a panel. Money.html hosts Targets, Debt and Day budget, all
        three of which are folded pages carrying their own panel names — so
        unlike Plan.html, which kept its own `Now` content, this file has no

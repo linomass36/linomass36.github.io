@@ -93,7 +93,9 @@ const NEEDS_PROSE = [
   { panel: 'Net worth',   word: 'net worth',
     why: 'one place records it and everything else reads that' },
   { panel: 'Debt',        word: 'Debt',
-    why: 'the fifteen-year model, as against the nine-month one' }
+    why: 'the fifteen-year model, as against the nine-month one' },
+  { panel: 'Wait',        word: 'waking hours',
+    why: 'a gate whose elapsed figure is in her hours, not in days' }
 ];
 
 const allPanels = [];
