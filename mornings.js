@@ -236,20 +236,47 @@
        controls one tap apart. On a phone capture.js sits above the tab bar
        instead, so the collision was invisible at the width it was drawn for.
 
-       So: 108, which is where the stack actually continues, and 44 to match
-       the seat above it rather than inventing a third size. Its z-index goes
-       BELOW capture's, so if the lane is ever miscounted again the older
-       control is the one that stays reachable. */
+       So: 108, which is where the stack actually continues. Only the seat
+       moved — the control itself is the pill from the prototype, label and
+       all, because the day number on the face of it is the point: you can
+       see what day of the wait it is without opening anything. */
+    ':root{--hb-morn-clear:calc(146px + var(--safe-right, env(safe-area-inset-right,0px)));}',
     '#hbm-btn{position:fixed;right:calc(12px + var(--safe-right, env(safe-area-inset-right,0px)));',
     'top:calc(108px + var(--safe-top, env(safe-area-inset-top,0px)));z-index:2147483180;',
-    'width:44px;height:44px;border-radius:50%;cursor:pointer;border:1px solid #3E4240;',
-    'background:linear-gradient(180deg,#363937,#2A2C2B);display:flex;align-items:center;',
-    'justify-content:center;box-shadow:0 5px 16px rgba(26,27,26,.26);',
-    '-webkit-tap-highlight-color:transparent;touch-action:manipulation;padding:0;}',
-    '#hbm-btn:hover{background:linear-gradient(180deg,#454a47,#363937);}',
-    '#hbm-btn .hbm-dot{position:absolute;top:-1px;right:-1px;width:11px;height:11px;',
-    'border-radius:50%;background:#C9432A;border:2px solid #1B1D1C;}',
+    'display:flex;align-items:center;gap:9px;padding:9px 13px 9px 10px;border-radius:13px;',
+    'border:1px solid #3E4240;background:linear-gradient(180deg,#363937,#2A2C2B);',
+    'color:#E9E5DA;cursor:pointer;box-shadow:0 2px 4px rgba(26,27,26,.16),0 12px 26px rgba(26,27,26,.18);',
+    '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}',
+    '#hbm-btn:hover{background:linear-gradient(180deg,#3D4240,#363937);}',
+    '#hbm-btn .hbm-glyph{display:block;width:22px;height:20px;flex:none;}',
+    '#hbm-btn .hbm-lab{font-family:"IBM Plex Mono",monospace;font-size:11px;',
+    'letter-spacing:.06em;line-height:1.25;text-align:left;}',
+    '#hbm-btn .hbm-lab b{display:block;font-weight:500;letter-spacing:.14em;',
+    'text-transform:uppercase;font-size:9.5px;color:#938F85;}',
+    '#hbm-btn .hbm-dot{width:7px;height:7px;border-radius:50%;background:#C9432A;flex:none;',
+    'box-shadow:0 0 0 3px rgba(201,67,42,.22);}',
     '#hbm-btn .hbm-dot[hidden]{display:none;}',
+
+    /* THE PILL NEEDS A LANE, AND ONE ROW DID NOT KNOW ABOUT IT.
+
+       nav.js's button carves --hb-btn-clear out of the destination tab row
+       for exactly this reason: a row that does not extend under a floating
+       control cannot have a chip under it AT ANY SCROLL POSITION, which
+       padding can never promise. That covers .hb-desttabs. It does not cover
+       .hub-tabs — the bar a FOLDED page draws for itself — and that bar sits
+       in the same band this pill occupies, so on Money two of its own tabs
+       were underneath it, and which two depended on how far the row had been
+       scrolled. Same bug, one row further down the page.
+
+       So the same fix: the row gets shorter. Its bottom rule stops short with
+       it, and the pill sits in the gap that leaves, which is the honest way
+       to draw a control that owns that corner. Only while a wait is live —
+       this whole stylesheet is injected on mount and there is no mount
+       without a send date. */
+    '.hub-tabs{width:calc(100% - var(--hb-morn-clear));}',
+    '@keyframes hbm-nudge{0%,100%{transform:none;}30%{transform:translateY(-4px);}',
+    '60%{transform:translateY(0);}}',
+    '#hbm-btn.nudge{animation:hbm-nudge .7s ease 2;}',
 
     '#hbm-wrap{position:fixed;inset:0;z-index:2147483300;background:#191B1A;overflow:auto;',
     'overscroll-behavior:contain;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;',
@@ -286,6 +313,12 @@
     'box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 -22px 40px rgba(0,0,0,.3),0 18px 40px rgba(0,0,0,.35);}',
     '.hbm-scroll{overflow-x:auto;padding:0 20px;display:flex;justify-content:center;justify-content:safe center;}',
     '.hbm-tally{display:block;height:154px;flex:none;}',
+    /* The prototype was always seeded, so it never drew a wall with nothing
+       on it — and a blank slab reads as a panel that failed to load rather
+       than as a wait one day old. */
+    '.hbm-empty{display:flex;align-items:center;justify-content:center;height:154px;',
+    'font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;',
+    'text-transform:uppercase;color:#4A4D49;text-align:center;padding:0 24px;}',
     '.hbm-tally path{fill:none;stroke:#E9E5DA;stroke-linecap:round;stroke-linejoin:round;opacity:.93;}',
     '.hbm-tally path.hbm-fresh{animation:hbm-scratch .55s cubic-bezier(.2,.75,.3,1) both;}',
     '@keyframes hbm-scratch{from{stroke-dashoffset:100;}to{stroke-dashoffset:0;}}',
@@ -387,11 +420,13 @@
     'animation-duration:.001ms !important;animation-iteration-count:1 !important;}}'
   ].join('');
 
-  var GLYPH =
-    '<svg viewBox="0 0 22 20" width="21" height="19" aria-hidden="true">' +
+  var FACE =
+    '<svg class="hbm-glyph" viewBox="0 0 22 20" aria-hidden="true">' +
     '<g fill="none" stroke="#E9E5DA" stroke-width="1.8" stroke-linecap="round">' +
     '<path d="M4 3.5 L3.4 16.5"/><path d="M8 3.2 L7.6 16.6"/><path d="M12 3.6 L11.5 16.4"/>' +
-    '<path d="M16 3.3 L15.7 16.6"/><path d="M1.8 17 L18.4 3"/></g></svg>';
+    '<path d="M16 3.3 L15.7 16.6"/><path d="M1.8 17 L18.4 3"/></g></svg>' +
+    '<span class="hbm-lab"><b>The wait</b><span id="hbm-day">\u2014</span></span>' +
+    '<span class="hbm-dot" id="hbm-dot"></span>';
 
   function ws() { return w.Wait ? w.Wait.read() : null; }
   function live() { var s = ws(); return !!(s && s.sent); }
@@ -414,7 +449,7 @@
     var btn = d.createElement('button');
     btn.id = 'hbm-btn'; btn.type = 'button';
     btn.setAttribute('aria-label', 'The mornings');
-    btn.innerHTML = GLYPH + '<span class="hbm-dot" id="hbm-dot"></span>';
+    btn.innerHTML = FACE;
     btn.addEventListener('click', open);
     d.body.appendChild(btn);
 
@@ -430,10 +465,14 @@
   }
 
   function paintBtn() {
-    var dot = d.getElementById('hbm-dot');
-    if (!dot) return;
-    var s = ws(), mine = read(), now = Date.now();
-    dot.hidden = !!outcome(s, mine, now) || mine.marks.indexOf(key(now)) >= 0;
+    var dot = d.getElementById('hbm-dot'), lab = d.getElementById('hbm-day');
+    if (!dot || !lab) return;
+    var s = ws(), mine = read(), now = Date.now(), kind = outcome(s, mine, now);
+    lab.textContent = kind ? (kind === 'yes' ? 'She wrote' : 'Answered')
+                           : 'Day ' + dayNumber(s, now);
+    /* The dot is the one thing on the face that is a demand rather than a
+       report: this morning is not on the wall yet. */
+    dot.hidden = !!kind || mine.marks.indexOf(key(now)) >= 0;
   }
 
   /* ── screens ──────────────────────────────────────────────────────────── */
@@ -451,11 +490,12 @@
     var n = dayNumber(s, now), m = mine.marks.length, wd = words(n);
     var marked = mine.marks.indexOf(key(now)) >= 0;
     var over = stretchOver(s, now);
-    /* The deadline is a DATE, not a day number, and the two stop agreeing
-       the moment the bump is used: Wait counts its week from the last
-       message, so "day 7 of 7" would have sat next to a box that was still
-       locked, and "unlocks on day 7" would have been a promise the clock did
-       not keep. Print what Wait actually computed. */
+    /* THE ONE PLACE A DAY NUMBER IS NOT ENOUGH. Wait counts its week from
+       the LAST message, so the moment the bump is used the end of the wait
+       stops being "day 7" and becomes a date two days further out. The
+       caption keeps "of 7" while that is still true and drops it once a bump
+       has moved the end; the locked box names the date either way, because
+       "unlocks on day 7" is a promise the clock does not keep. */
     var gates = w.Wait ? w.Wait.gates(s) : null;
     var due = gates ? gates.callIt : null;
 
@@ -464,10 +504,14 @@
         '</span><span class="sp"></span>' +
         '<button class="hbm-x" id="hbm-close" type="button" aria-label="Close">✕</button></div>' +
 
-      '<div class="hbm-wall"><div class="hbm-scroll">' + tallySVG(m, fresh) + '</div>' +
+      '<div class="hbm-wall"><div class="hbm-scroll">' +
+        (m ? tallySVG(m, fresh)
+           : '<div class="hbm-empty">The wall is bare. Mark it and it stops being.</div>') +
+      '</div>' +
       '<div class="hbm-cap"><span><b>' + m + '</b> morning' + (m === 1 ? '' : 's') + ' marked</span>' +
-        '<span>day ' + n + '</span>' +
-        '<span>' + (over ? 'the week is up' : due ? 'a week is up ' + on(due) : '') + '</span>' +
+        '<span>' + (over ? 'the stretch is done'
+                  : s.bumped ? 'day ' + n            /* the bump moved the end; see below */
+                  : 'day ' + n + ' of 7') + '</span>' +
         '<span>since ' + on(s.sent) + '</span></div></div>' +
 
       '<div class="hbm-today"><div class="hbm-eye">Today</div>' +
@@ -596,7 +640,13 @@
   }
 
   function open() { var el = byId('hbm-wrap'); if (!el) return; el.hidden = false; render(); }
-  function close() { var el = byId('hbm-wrap'); if (!el) return; el.hidden = true; stopWeather(); paintBtn(); }
+  function close() {
+    var el = byId('hbm-wrap');
+    if (!el) return;
+    el.hidden = true; stopWeather(); paintBtn();
+    var b = byId('hbm-btn');
+    if (b) { b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge'); }
+  }
 
   /* ── weather ────────────────────────────────────────────────────────────
      Confetti one way. The other way is not rain — that is the obvious move
@@ -635,14 +685,11 @@
     mode = kind; parts = []; sizeCanvas();
     if (!ctx() || REDUCED) { if (cx) cx.clearRect(0, 0, w.innerWidth, w.innerHeight); return; }
     if (kind === 'yes') { burst(150); return; }
-    /* Thirty, dim, and slow. Fifty-five at up to a third opacity read as
-       weather; this side of the panel wants stillness, so the motes should
-       be something you notice after the words, not instead of them. */
-    for (var i = 0; i < 30; i++) {
+    for (var i = 0; i < 55; i++) {
       parts.push({ x: Math.random() * w.innerWidth, y: Math.random() * w.innerHeight,
-        vy: 0.08 + Math.random() * 0.18, rad: 0.6 + Math.random() * 1.1,
+        vy: 0.12 + Math.random() * 0.3, rad: 0.7 + Math.random() * 1.5,
         ph: Math.random() * 6.283,
-        c: 'rgba(200,214,220,' + (0.05 + Math.random() * 0.1).toFixed(2) + ')' });
+        c: 'rgba(200,214,220,' + (0.1 + Math.random() * 0.22).toFixed(2) + ')' });
     }
     if (!raf) raf = w.requestAnimationFrame(tick);
   }
