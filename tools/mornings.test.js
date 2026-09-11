@@ -227,8 +227,37 @@ ok(/#hbm-wrap button[^{]*\{[^}]*appearance:none/.test(src8.replace(/',\s*'/g, ''
 /* Both halves of a step are spans in a flex row's child, so neither is a
    block by default — the detail ran on from the step it belongs to. */
 const flat = src8.replace(/',\s*'/g, '');
-ok(/\.hbm-step \.b \.w\{display:block/.test(flat), 'a step title is a block');
-ok(/\.hbm-step \.b \.d\{display:block/.test(flat), 'and so is its detail line');
+ok(/\.hbm-step \.hbm-bd \.hbm-w\{display:block/.test(flat), 'a step title is a block');
+ok(/\.hbm-step \.hbm-bd \.hbm-d\{display:block/.test(flat), 'and so is its detail line');
+
+/* Every class the panel uses is namespaced. The inner spans were .t, .b, .n
+   and .s until Standing.html — which has a bordered-card .t of its own —
+   drew "NO WAIT RECORDED" as one of its cards. A bare class name is a
+   collision waiting for the one page that happens to use it. */
+/* Class attributes here are built by concatenation, so read only the
+   literal token each one opens with. */
+const classes = [];
+src8.replace(/class="([a-z][a-z0-9_-]*)/g, function (_, c) { classes.push(c); return _; });
+const bare = classes.filter((c) => c.indexOf('hbm-') !== 0);
+ok(bare.length === 0,
+   'every class in the panel markup is hbm- prefixed' +
+   (bare.length ? ' — found ' + bare.join(', ') : ''));
+
+/* ── 8d. a wait that has not started ──────────────────────────────────── */
+group('With nothing recorded the panel asks rather than assumes');
+
+/* WHAT THIS CAUGHT: "doesn't show at all". The button used to mount only
+   once ct_wait_v1 carried a send date, so on a device where the store had
+   not been written the feature was invisible and indistinguishable from a
+   broken deploy. The button now always mounts; only the WALL waits for a
+   real date, and the panel offers the one field that produces it. */
+ok(/function startHTML/.test(src8), 'there is a screen for the un-started wait');
+ok(/hbm-when/.test(src8) && /datetime-local/.test(src8),
+   'carrying a date field, so the fact can be entered where it is missed');
+ok(/Wait\.set\('sent'/.test(src8), 'which writes Wait\'s own send date, not a second one');
+ok(!/if \(!live\(\)\) return/.test(src8), 'and mount() no longer refuses without one');
+ok(M.dayNumber({}, Date.now()) === null,
+   'the day number is still null with nothing stored — the screen asks, it does not guess');
 
 /* ── 9. the Guide heard about it ──────────────────────────────────────── */
 group('The Guide knows this exists');

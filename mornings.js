@@ -23,9 +23,12 @@
    marked, which of the eight steps are ticked, and the day you accepted the
    silence as an answer. Everything else is read.
 
-   NO WAIT, NO BUTTON. With no send date in ct_wait_v1 there is nothing to
-   count from, so nothing mounts — rather than a wall showing day 1 of a
-   wait that never started. This is chrome for a season, not furniture.
+   NO WAIT, NO WALL — BUT STILL A BUTTON. With no send date in ct_wait_v1
+   there is nothing to count from, so the panel asks for one instead of
+   drawing a wall that starts from an invented day. The BUTTON mounts either
+   way. Hiding it was the first version's mistake: it made the only way into
+   the feature a page you had to already know about, and "the store has not
+   synced to this device yet" looked exactly like "the deploy is broken".
 
    INJECTED BY THE DEPLOY, like nav.js and upbar.js; the pages never
    reference it. It mounts to <body> rather than into the page, because a
@@ -288,6 +291,20 @@
     'padding-top:calc(20px + var(--safe-top, env(safe-area-inset-top,0px)));',
     'padding-bottom:calc(40px + var(--safe-bottom, env(safe-area-inset-bottom,0px)));}',
     '#hbm-wrap *{box-sizing:border-box;}',
+    /* EVERY CLASS IN HERE IS hbm- PREFIXED, and that is not tidiness.
+       This panel is injected into thirty pages that wrote their own CSS
+       first. The inner spans were called .t, .b, .n, .s — and Standing.html
+       has a .t of its own, a bordered card on a cream background, which is
+       what "NO WAIT RECORDED" was wearing. A class name that is not
+       namespaced is a collision waiting for the one page that uses it.
+       Bare tags get the same treatment, at a specificity (0,0,1) our own
+       class rules still beat. */
+    ':where(#hbm-wrap) b,:where(#hbm-wrap) p,:where(#hbm-wrap) h2,',
+    ':where(#hbm-wrap) ul,:where(#hbm-wrap) li,:where(#hbm-wrap) a,',
+    ':where(#hbm-wrap) input,:where(#hbm-wrap) span,:where(#hbm-wrap) div,',
+    ':where(#hbm-btn) b,:where(#hbm-btn) span,:where(#hbm-btn) svg{',
+    'background:none;border:0;margin:0;padding:0;box-shadow:none;',
+    'text-transform:none;font-variant:normal;}',
     /* Belt and braces on a panel that is injected into thirty pages it did
        not write. The controls here are nearly transparent by design — 3%
        white over the panel, or nothing at all — which is the state where a
@@ -298,10 +315,10 @@
     '#hbm-wrap :focus-visible{outline:2px solid #C9432A;outline-offset:3px;}',
 
     '.hbm-bar{display:flex;align-items:center;gap:12px;}',
-    '.hbm-bar .t{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.17em;',
+    '.hbm-bar .hbm-t{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.17em;',
     'text-transform:uppercase;color:#938F85;}',
-    '.hbm-bar .t b{color:#E9E5DA;font-weight:500;}',
-    '.hbm-bar .sp{flex:1;}',
+    '.hbm-bar .hbm-t b{color:#E9E5DA;font-weight:500;}',
+    '.hbm-bar .hbm-sp{flex:1;}',
     '.hbm-x{width:38px;height:38px;flex:none;border-radius:11px;border:1px solid #3E4240;',
     'background:rgba(255,255,255,.03);color:#938F85;font-size:17px;line-height:1;cursor:pointer;}',
     '.hbm-x:hover{color:#E9E5DA;background:rgba(255,255,255,.07);}',
@@ -337,9 +354,12 @@
     'font-size:clamp(21px,3.6vw,27px);line-height:1.3;color:#E9E5DA;margin:0;max-width:34ch;}',
     '.hbm-adv{display:flex;gap:12px;align-items:flex-start;padding-top:2px;',
     'border-top:1px solid rgba(255,255,255,.07);}',
-    '.hbm-adv .k{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.16em;',
+    '.hbm-adv .hbm-k{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.16em;',
     'text-transform:uppercase;color:#5C5F5B;flex:none;padding-top:5px;width:52px;}',
-    '.hbm-adv .v{flex:1;min-width:0;color:#938F85;font-size:14.5px;line-height:1.5;}',
+    '.hbm-adv .hbm-v{flex:1;min-width:0;color:#938F85;font-size:14.5px;line-height:1.5;}',
+    '.hbm-when{width:100%;min-height:52px;padding:10px 14px;border-radius:12px;',
+    'border:1px solid #3E4240;background:rgba(255,255,255,.05);color:#E9E5DA;',
+    'font-family:"IBM Plex Mono",monospace;font-size:16px;}',
     '.hbm-mark{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;',
     'min-height:62px;border-radius:13px;cursor:pointer;border:1px solid #C9432A;',
     'background:rgba(201,67,42,.14);color:#E9E5DA;font-family:"IBM Plex Mono",monospace;font-size:14px;}',
@@ -350,10 +370,10 @@
     '.hbm-out{text-align:left;padding:15px 17px;border-radius:13px;cursor:pointer;',
     'border:1px solid #3E4240;background:rgba(255,255,255,.035);color:#E9E5DA;',
     'display:flex;flex-direction:column;gap:3px;}',
-    '.hbm-out .h{font-size:15px;font-weight:500;}',
-    '.hbm-out .s{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:#5C5F5B;line-height:1.45;}',
+    '.hbm-out .hbm-h{font-size:15px;font-weight:500;}',
+    '.hbm-out .hbm-s{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:#5C5F5B;line-height:1.45;}',
     '.hbm-out.yes:hover{border-color:#D9A441;background:rgba(217,164,65,.12);}',
-    '.hbm-out.yes .h{color:#D9A441;}',
+    '.hbm-out.yes .hbm-h{color:#D9A441;}',
     '.hbm-out.no:hover:not([disabled]){border-color:#7FA0AE;background:rgba(127,160,174,.1);}',
     '.hbm-out[disabled]{cursor:default;opacity:.5;}',
     '.hbm-foot{margin:0;font-family:"IBM Plex Mono",monospace;font-size:10.5px;line-height:1.6;',
@@ -372,50 +392,50 @@
     '.hbm-rh p b{color:#E9E5DA;font-weight:500;}',
     '.hbm-ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:9px;',
     'border-bottom:1px solid var(--acc-ln);}',
-    '.hbm-ph .t{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;',
+    '.hbm-ph .hbm-t{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;',
     'text-transform:uppercase;color:var(--acc);}',
-    '.hbm-ph .sp{flex:1;}',
-    '.hbm-ph .n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5C5F5B;',
+    '.hbm-ph .hbm-sp{flex:1;}',
+    '.hbm-ph .hbm-num{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5C5F5B;',
     'font-variant-numeric:tabular-nums;}',
     '.hbm-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}',
     '.hbm-step{display:flex;gap:14px;align-items:flex-start;padding:13px 4px;',
     'border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;}',
     '.hbm-step:last-child{border-bottom:none;}',
-    '.hbm-step .n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5C5F5B;flex:none;',
+    '.hbm-step .hbm-num{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5C5F5B;flex:none;',
     'width:18px;padding-top:5px;font-variant-numeric:tabular-nums;}',
-    '.hbm-step .bx{flex:none;width:24px;height:24px;margin-top:1px;border-radius:7px;',
+    '.hbm-step .hbm-bx{flex:none;width:24px;height:24px;margin-top:1px;border-radius:7px;',
     'border:1.5px solid #5C5F5B;display:grid;place-items:center;color:transparent;font-size:14px;line-height:1;}',
-    '.hbm-step .b{flex:1;min-width:0;}',
+    '.hbm-step .hbm-bd{flex:1;min-width:0;}',
     /* Both are spans, so both need saying: without it the detail ran on
        from the step it belongs to — "Eat it watching a film or a seriesThe
        Marshals." */
-    '.hbm-step .b .w{display:block;font-size:16px;line-height:1.4;color:#E9E5DA;}',
-    '.hbm-step .b .d{display:block;font-size:13.5px;color:#938F85;margin-top:3px;line-height:1.45;}',
-    '.hbm-step:hover .bx{border-color:var(--acc);}',
-    '.hbm-step.done .bx{border-color:var(--acc);background:var(--acc);color:#191B1A;}',
-    '.hbm-step.done .b .w{color:#5C5F5B;text-decoration:line-through;text-decoration-color:var(--acc-deep);}',
-    '.hbm-step.done .b .d{color:#5C5F5B;}',
+    '.hbm-step .hbm-bd .hbm-w{display:block;font-size:16px;line-height:1.4;color:#E9E5DA;}',
+    '.hbm-step .hbm-bd .hbm-d{display:block;font-size:13.5px;color:#938F85;margin-top:3px;line-height:1.45;}',
+    '.hbm-step:hover .hbm-bx{border-color:var(--acc);}',
+    '.hbm-step.done .hbm-bx{border-color:var(--acc);background:var(--acc);color:#191B1A;}',
+    '.hbm-step.done .hbm-bd .hbm-w{color:#5C5F5B;text-decoration:line-through;text-decoration-color:var(--acc-deep);}',
+    '.hbm-step.done .hbm-bd .hbm-d{color:#5C5F5B;}',
     /* step one is not a list item, it is an instruction with a clock on it */
     '.hbm-step.urgent{background:rgba(201,67,42,.09);border-left:2px solid #C9432A;',
     'padding-left:12px;border-radius:3px;}',
-    '.hbm-step.urgent .b .w{font-weight:500;}',
-    '.hbm-step.urgent .now{display:inline-block;margin-left:8px;vertical-align:2px;',
+    '.hbm-step.urgent .hbm-bd .hbm-w{font-weight:500;}',
+    '.hbm-step.urgent .hbm-now{display:inline-block;margin-left:8px;vertical-align:2px;',
     'font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.16em;padding:2px 6px;',
     'border-radius:4px;background:#C9432A;color:#fff;}',
     '.hbm-step.urgent.done{background:transparent;border-left-color:var(--acc-deep);}',
-    '.hbm-step.urgent.done .now{background:var(--acc-deep);}',
+    '.hbm-step.urgent.done .hbm-now{background:var(--acc-deep);}',
     '.hbm-closer{border:1px solid var(--acc-ln);border-radius:13px;padding:16px 18px;',
     'background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));}',
     '.hbm-closer[hidden]{display:none;}',
-    '.hbm-closer .h{font-family:"Newsreader",Georgia,serif;font-size:22px;color:var(--acc);}',
-    '.hbm-closer .s{color:#938F85;font-size:14px;margin-top:3px;}',
+    '.hbm-closer .hbm-h{font-family:"Newsreader",Georgia,serif;font-size:22px;color:var(--acc);}',
+    '.hbm-closer .hbm-s{color:#938F85;font-size:14px;margin-top:3px;}',
     '.hbm-rf{display:flex;gap:10px;flex-wrap:wrap;}',
     '.hbm-ghost{padding:11px 15px;border-radius:11px;border:1px solid #3E4240;background:transparent;',
     'color:#938F85;font-family:"IBM Plex Mono",monospace;font-size:11.5px;cursor:pointer;}',
     '.hbm-ghost:hover{color:#E9E5DA;border-color:#5C5F5B;}',
 
     '@media (max-width:560px){.hbm-outs{grid-template-columns:1fr;}',
-    '.hbm-tally{height:122px;}.hbm-today{padding:17px 16px;}.hbm-adv .k{display:none;}}',
+    '.hbm-tally{height:122px;}.hbm-today{padding:17px 16px;}.hbm-adv .hbm-k{display:none;}}',
     '@media (prefers-reduced-motion:reduce){#hbm-wrap *,#hbm-wrap *::before{',
     'animation-duration:.001ms !important;animation-iteration-count:1 !important;}}'
   ].join('');
@@ -429,15 +449,22 @@
     '<span class="hbm-dot" id="hbm-dot"></span>';
 
   function ws() { return w.Wait ? w.Wait.read() : null; }
-  function live() { var s = ws(); return !!(s && s.sent); }
 
   function ready(fn) {
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', fn);
     else fn();
   }
 
+  /* IT MOUNTS WHETHER OR NOT THERE IS A WAIT, and that is a correction.
+     The first version hid the button until ct_wait_v1 carried a send date,
+     on the reasoning that a wall counting from nothing is worse than no
+     wall. The wall part still holds — see startHTML, which asks for the date
+     rather than inventing one. Hiding the BUTTON did not: it made the only
+     way in to the feature a page you had to already know about, and the
+     symptom of a store that had not synced yet was indistinguishable from
+     the symptom of a broken deploy. A control you can see and that tells you
+     what it needs beats a control that silently is not there. */
   function mount() {
-    if (!live()) return;                       /* no ask, no wall */
     if (d.getElementById('hbm-btn')) return;
 
     if (!d.getElementById('hbm-css')) {
@@ -468,11 +495,12 @@
     var dot = d.getElementById('hbm-dot'), lab = d.getElementById('hbm-day');
     if (!dot || !lab) return;
     var s = ws(), mine = read(), now = Date.now(), kind = outcome(s, mine, now);
+    var n = dayNumber(s, now);
     lab.textContent = kind ? (kind === 'yes' ? 'She wrote' : 'Answered')
-                           : 'Day ' + dayNumber(s, now);
+                     : n == null ? 'Not started' : 'Day ' + n;
     /* The dot is the one thing on the face that is a demand rather than a
        report: this morning is not on the wall yet. */
-    dot.hidden = !!kind || mine.marks.indexOf(key(now)) >= 0;
+    dot.hidden = !!kind || (n != null && mine.marks.indexOf(key(now)) >= 0);
   }
 
   /* ── screens ──────────────────────────────────────────────────────────── */
@@ -482,8 +510,34 @@
     var s = ws(), mine = read(), now = Date.now();
     var kind = outcome(s, mine, now);
     if (kind) { cell.innerHTML = resultHTML(s, mine, kind, now); wireResult(kind); weather(kind); }
+    else if (!s || !s.sent) { cell.innerHTML = startHTML(); wireStart(); stopWeather(); }
     else { cell.innerHTML = waitHTML(s, mine, now, fresh == null ? -1 : fresh); wireWait(); stopWeather(); }
     paintBtn();
+  }
+
+  /* One field, because one fact is all this needs. Everything the wall and
+     the Wait page print is derived from it, so it is the only thing anywhere
+     in the feature that has to be typed. */
+  function startHTML() {
+    var t = new Date(), pad = p2;
+    var local = t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()) +
+                'T' + pad(t.getHours()) + ':' + pad(t.getMinutes());
+    return '' +
+      '<div class="hbm-bar"><span class="hbm-t">No wait recorded</span><span class="hbm-sp"></span>' +
+        '<button class="hbm-x" id="hbm-close" type="button" aria-label="Close">✕</button></div>' +
+      '<div class="hbm-wall"><div class="hbm-scroll">' +
+        '<div class="hbm-empty">Nothing to count from yet.</div></div></div>' +
+      '<div class="hbm-today"><div class="hbm-eye">Start the wait</div>' +
+        '<p class="hbm-line">When did the message actually go out?</p>' +
+        '<div class="hbm-adv"><span class="hbm-k">Why</span><span class="hbm-v">Every date in here comes ' +
+          'from that one — the bump window, the deadline, the floor, and which morning of the wait ' +
+          'today is. Nothing is assumed if it is blank.</span></div>' +
+        '<input class="hbm-when" type="datetime-local" id="hbm-when" value="' + local +
+          '" aria-label="When the message went out">' +
+        '<button class="hbm-mark" id="hbm-start" type="button">\u270e &nbsp;Start counting</button>' +
+      '</div>' +
+      '<p class="hbm-foot">This is the same field as <a href="Wait.html">The Wait</a>, and writes ' +
+        'the same store. Fill it in either place.</p>';
   }
 
   function waitHTML(s, mine, now, fresh) {
@@ -500,8 +554,8 @@
     var due = gates ? gates.callIt : null;
 
     return '' +
-      '<div class="hbm-bar"><span class="t">Day <b>' + p2(n) + '</b> &nbsp;·&nbsp; ' + on(now) +
-        '</span><span class="sp"></span>' +
+      '<div class="hbm-bar"><span class="hbm-t">Day <b>' + p2(n) + '</b> &nbsp;·&nbsp; ' + on(now) +
+        '</span><span class="hbm-sp"></span>' +
         '<button class="hbm-x" id="hbm-close" type="button" aria-label="Close">✕</button></div>' +
 
       '<div class="hbm-wall"><div class="hbm-scroll">' +
@@ -516,16 +570,16 @@
 
       '<div class="hbm-today"><div class="hbm-eye">Today</div>' +
         '<p class="hbm-line">' + esc(wd.l) + '</p>' +
-        '<div class="hbm-adv"><span class="k">Do this</span><span class="v">' + esc(wd.a) + '</span></div>' +
+        '<div class="hbm-adv"><span class="hbm-k">Do this</span><span class="hbm-v">' + esc(wd.a) + '</span></div>' +
         '<button class="hbm-mark" id="hbm-mark" type="button"' + (marked ? ' disabled' : '') + '>' +
           (marked ? '✓ &nbsp;Marked. The wall has today on it.'
                   : '✎ &nbsp;I woke up. Mark the wall.') + '</button></div>' +
 
       '<div class="hbm-outs">' +
-        '<button class="hbm-out yes" id="hbm-yes" type="button"><span class="h">She wrote back</span>' +
-          '<span class="s">Any point, any day</span></button>' +
+        '<button class="hbm-out yes" id="hbm-yes" type="button"><span class="hbm-h">She wrote back</span>' +
+          '<span class="hbm-s">Any point, any day</span></button>' +
         '<button class="hbm-out no" id="hbm-no" type="button"' + (over ? '' : ' disabled') + '>' +
-          '<span class="h">Seven mornings, no reply</span><span class="s">' +
+          '<span class="hbm-h">Seven mornings, no reply</span><span class="hbm-s">' +
           (over ? 'The week is up' : due ? 'Unlocks ' + on(due) : 'Unlocks when the week is up') +
           '</span></button></div>' +
 
@@ -542,15 +596,15 @@
       var st = STEPS[i];
       return '<li class="hbm-step' + (tick ? ' done' : '') + (st.urgent ? ' urgent' : '') +
         '" data-i="' + i + '" tabindex="0" role="checkbox" aria-checked="' + (tick ? 'true' : 'false') + '">' +
-        '<span class="n">' + p2(i + 1) + '</span><span class="bx">✓</span>' +
-        '<span class="b"><span class="w">' + esc(st.w) +
-        (st.urgent ? '<span class="now">NOW</span>' : '') + '</span>' +
-        (st.d ? '<span class="d">' + esc(st.d) + '</span>' : '') + '</span></li>';
+        '<span class="hbm-num">' + p2(i + 1) + '</span><span class="hbm-bx">✓</span>' +
+        '<span class="hbm-bd"><span class="hbm-w">' + esc(st.w) +
+        (st.urgent ? '<span class="hbm-now">NOW</span>' : '') + '</span>' +
+        (st.d ? '<span class="hbm-d">' + esc(st.d) + '</span>' : '') + '</span></li>';
     }).join('');
 
     return '' +
-      '<div class="hbm-bar"><span class="t">' + (yes ? 'Answered' : 'Unanswered') +
-        ' &nbsp;·&nbsp; ' + on(when || now) + '</span><span class="sp"></span>' +
+      '<div class="hbm-bar"><span class="hbm-t">' + (yes ? 'Answered' : 'Unanswered') +
+        ' &nbsp;·&nbsp; ' + on(when || now) + '</span><span class="hbm-sp"></span>' +
         '<button class="hbm-x" id="hbm-close" type="button" aria-label="Close">✕</button></div>' +
 
       '<div class="hbm-res' + (yes ? '' : ' sad') + '"><div class="hbm-rh">' +
@@ -565,12 +619,12 @@
             'cleaner answer — every candidate is another ask wearing a coat. ' +
             '<b>So do these eight.</b> Not instead of feeling it. While feeling it.') + '</p></div>' +
 
-      '<div><div class="hbm-ph"><span class="t">The eight</span><span class="sp"></span>' +
-        '<span class="n" id="hbm-n">' + done + ' of 8</span></div>' +
+      '<div><div class="hbm-ph"><span class="hbm-t">The eight</span><span class="hbm-sp"></span>' +
+        '<span class="hbm-num" id="hbm-n">' + done + ' of 8</span></div>' +
         '<ul class="hbm-steps" id="hbm-list">' + list + '</ul></div>' +
 
       '<div class="hbm-closer" id="hbm-closer"' + (done === 8 ? '' : ' hidden') + '>' +
-        '<div class="h">Eight for eight.</div><div class="s">Phone is downstairs. ' +
+        '<div class="hbm-h">Eight for eight.</div><div class="hbm-s">Phone is downstairs. ' +
         (yes ? 'You handled the best version of today without rushing it. Goodnight.'
              : 'You got the answer and you still ate, trained and washed. That is the win available today. Goodnight.') +
         '</div></div>' +
@@ -581,6 +635,17 @@
 
   /* ── wiring ───────────────────────────────────────────────────────────── */
   function byId(id) { return d.getElementById(id); }
+
+  function wireStart() {
+    byId('hbm-close').onclick = close;
+    byId('hbm-start').onclick = function () {
+      var v = byId('hbm-when').value;
+      var t = v ? new Date(v).getTime() : NaN;
+      if (!isFinite(t)) return;                 /* no date, nothing written */
+      if (w.Wait) w.Wait.set('sent', t);
+      render();
+    };
+  }
 
   function wireWait() {
     byId('hbm-close').onclick = close;
