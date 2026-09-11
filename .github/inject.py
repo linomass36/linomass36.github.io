@@ -70,6 +70,10 @@ SHIM = (
     '<script src="./screen.js"></script>\n'
     '<script src="./facts.js"></script>\n'
     '<script src="./contact.js"></script>\n'
+    # wait.js before mornings.js: the overlay reads window.Wait for the send
+    # date and the week rather than keeping a second copy of either.
+    '<script src="./wait.js"></script>\n'
+    '<script src="./mornings.js"></script>\n'
     '<script src="./calendar.js"></script>\n'
     '<script src="./training.js"></script>\n'
     '<script src="./tabs.js"></script>\n'
@@ -221,6 +225,8 @@ BUNDLER_HEAD = (
     '<script src="./sitemap.js?v=__APP_VERSION__"></script>\n'
     '<script src="./facts.js?v=__APP_VERSION__"></script>\n'
     '<script src="./contact.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./wait.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./mornings.js?v=__APP_VERSION__"></script>\n'
     '<script src="./calendar.js?v=__APP_VERSION__"></script>\n'
     '<script src="./training.js?v=__APP_VERSION__"></script>\n'
     '<script src="./tabs.js?v=__APP_VERSION__"></script>\n'

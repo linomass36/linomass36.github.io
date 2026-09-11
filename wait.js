@@ -26,6 +26,11 @@
    ───────────────────────────────────────────────────────────────────────── */
 (function (w) {
   'use strict';
+  /* Linked by Wait.html AND injected into every page by the deploy, because
+     mornings.js reads its dates on pages that never heard of it. Loading
+     twice is harmless but inlines the file twice behind the vault, so the
+     second run bows out. */
+  if (w.Wait) return;
 
   var KEY = 'ct_wait_v1';
   var ZONE = 'Europe/Warsaw';
