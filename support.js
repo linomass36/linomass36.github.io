@@ -386,11 +386,49 @@
     "gi"
   );
   var CAMEL_ATTR_RE = /(\s)([a-z]+[A-Z][A-Za-z0-9]*)(\s*=)/g;
-  function encodeCamelAttrs(html) {
+  /* A raw-text element with its body held separately. Everything between a
+     <script> or <style> open and close tag is TEXT, not markup, so it must
+     come through the attribute pass untouched. The open tag is still markup
+     and is still encoded — only the body is protected. ATTRS rather than
+     [^>]* so a `>` inside an attribute value cannot end the tag early. */
+  var RAW_TEXT_RE = new RegExp("(<(script|style)\\b" + ATTRS + ">)([\\s\\S]*?)(</\\2\\s*>)", "gi");
+  function encodeAttrsIn(html) {
     return html.replace(
       CAMEL_ATTR_RE,
       (_, sp, name, eq) => sp + CAMEL_ATTR + name.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + eq
     );
+  }
+  /* WHY THE SCRIPT BODIES ARE SKIPPED.
+
+     A page served from behind the vault carries its data files INLINE: the
+     <helmet> block is inside <x-dc>, so grind-data.js and its siblings are
+     part of the template this pass rewrites. ` sessionId =` is
+     indistinguishable from a camelCase attribute, so grind-data's
+
+         const sid = sessionId === false ? null : (sessionId || id);
+
+     shipped as `const sid = sc-camel-session-id === false ? ...`, which is
+     `sc` minus `camel` minus `session` minus `id` — and build() threw
+     "Can't find variable: sc" the first time renderVals() called it. The
+     Grind board came up as an empty page with a red line across the top.
+
+     Only on the live site. An unsealed local build inlines nothing, so the
+     template held a <script src> tag and there was no JavaScript in it to
+     mangle — which is why this reproduced on a phone and a Mac and on no
+     development copy of the site. Nine pages carried the same damage; Grind
+     was the one whose mangled identifier sat on a path renderVals takes.
+
+     This is the second time a regex here has walked out of markup and into
+     an inlined script. parseDcText learned it from the <x-dc> side; see the
+     comment there. */
+  function encodeCamelAttrs(html) {
+    let out = "", last = 0;
+    html.replace(RAW_TEXT_RE, (whole, open, _tag, body, closeTag, at) => {
+      out += encodeAttrsIn(html.slice(last, at)) + encodeAttrsIn(open) + body + closeTag;
+      last = at + whole.length;
+      return whole;
+    });
+    return out + encodeAttrsIn(html.slice(last));
   }
   function encodeCase(html) {
     html = html.replace(
