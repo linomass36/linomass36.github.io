@@ -386,27 +386,120 @@ group('No session is dealt twice in one week');
   ok(focus.filter(f => /Strength C/.test(f)).length === 1,
      'Strength C appears once (' + focus.filter(f => /Strength C/.test(f)).join(' / ') + ')');
   ok(new Set(focus).size === focus.length, 'and no session at all is drawn twice');
-  ok(focus[4] === 'No session — the week had no room',
-     'the day the calendar took says so (' + focus[4] + ')');
-  ok(rows[4].mark === 'Open' && /seven days/.test(rows[4].sub),
-     'and offers no tick, because there is nothing there to tick');
+  ok(focus[4] === 'Recovery',
+     'the day the calendar took is the rest day (' + focus[4] + ')');
+  ok(rows[4].mark === 'Open',
+     'and is not offered as a lift to mark done, because it is not one');
   ok(focus[6] === 'Strength C + shadowboxing', 'the session is on the day the week found room on');
 
   /* The day view is the other place it was drawn. */
   b.state.day = 'fri';
   const v = b.renderVals();
-  ok(v.dayTitle === 'No session today', 'the day page agrees (' + v.dayTitle + ')');
-  ok(v.hasSession === false, 'and shows no "mark the session done" button');
+  ok(v.dayTitle === 'Recovery', 'the day page agrees (' + v.dayTitle + ')');
+  ok(v.hasSession === true && /recovery day/.test(v.sessionLabel),
+     'and offers the recovery day to mark done (' + v.sessionLabel + ')');
   ok(v.slots.filter(s => /Strength/.test(s.label)).length === 0,
      'the timetable has no training row invented for it');
+  /* The recovery walk is what the day carries now — but this Friday is
+     thirteen hours of conference, so it does not FIT, and a block that does
+     not fit is reported in the spill rather than drawn on top of a booked
+     hour. Either place counts; being in neither would mean the session had
+     gone missing again. */
+  ok(v.slots.filter(s => /Recovery walk/.test(s.label)).length === 1 ||
+     /Recovery walk/.test(v.spillNote),
+     'the recovery walk is the day\u2019s session — drawn, or named in the spill');
   ok(v.slots.filter(s => /Daily block|Posture reset/.test(s.label)).length > 0,
-     'but the daily block and the posture resets still stand — they are not the session');
+     'and the daily block and the posture resets still stand — they are not the session');
 
   /* And the tick that used to cross the two: Friday's button wrote 1|fri,
      which is Sunday's session. */
   b.toggleSession('fri', b.plan(b.read()));
-  ok(!b.read().sessions['1|fri'], 'a tick on the empty day writes nothing');
+  ok(!b.read().sessions['1|fri'], 'ticking the rest day does not write Strength C\u2019s key');
+  ok(!!b.read().sessions['1|sun'], 'it writes the rest slot\u2019s own key');
   ok(b.renderVals().weekRows[6].mark === 'Mark done', 'so Sunday\u2019s session is still undone');
+}
+
+group('The day the week leaves clear is the rest day');
+{
+  /* WHAT SHIPPED BROKEN. The planner deals the block's SIX TRAINING
+     sessions. The seventh thing in the programme — Sunday's recovery walk —
+     was never in that deal, so the day the planner left clear came back with
+     nothing on it: no title, no tick, no recovery block, and the recovery
+     session absent from the week altogether. Reported as "thursday isnt
+     scheduled a block and therefore cannot be ticked as done... it could be
+     the rest day and nothing is shown", which is exactly what it was.
+
+     The board had gone as far as computing "Mark the recovery day done" for
+     that day and then hiding the button, because there was no slot to write.
+
+     Thursday here is the least-free day, so Thursday is the rest day, and
+     Sunday carries the training the planner found room for there. */
+  const week = { at: NOW, days: {
+    [MON]: { session: 'Strength A', slot: 'mon', done: false, committed: 0, free: 15, blocks: [] },
+    [TUE]: { session: 'Intervals', slot: 'thu', done: false, committed: 5, free: 10, blocks: [] },
+    [WED]: { session: 'Strength C + shadow', slot: 'fri', done: false, committed: 5.5, free: 9.5, blocks: [] },
+    [THU]: { session: null, slot: null, done: false, committed: 10.5, free: 4.5,
+             blocks: [{ title: 'Smoothie bar', kind: 'work', from: '8:00', to: '13:30', hours: 5.5, allDay: false },
+                      { title: 'Something else', kind: 'other', from: '15:00', to: '20:00', hours: 5, allDay: false }] },
+    '2026-09-11': { session: 'Engine', slot: 'tue', done: false, committed: 0, free: 15, blocks: [] },
+    '2026-09-12': { session: 'Strength B', slot: 'wed', done: false, committed: 4.5, free: 10.5, blocks: [] },
+    '2026-09-13': { session: 'Long easy', slot: 'sat', done: false, committed: 6, free: 9, blocks: [] },
+  } };
+  const b = board({ ct_week_v1: JSON.stringify(week), ct_grind_v1: JSON.stringify(GRIND) });
+  b.state.day = 'thu';
+  const v = b.renderVals();
+  ok(v.dayTitle === 'Recovery', 'Thursday is the rest day (' + v.dayTitle + ')');
+  ok(v.hasSession === true, 'and can be ticked');
+  ok(/recovery day/.test(v.sessionLabel), 'as a recovery day, not a session (' + v.sessionLabel + ')');
+  ok(v.slots.filter(s => /Recovery walk/.test(s.label)).length === 1,
+     'the recovery walk is on its timetable');
+
+  /* Exactly one. Four clear days must not become four rest days. */
+  const wp = b.plan(b.read());
+  ok(wp.days.filter(x => x.slot === 'sun').length === 1,
+     'exactly one day in the week carries the rest slot');
+
+  /* It is not one of the six, so it neither inflates the count nor is
+     something the week is waiting for. */
+  ok(wp.placed === 6, 'the six are still six (' + wp.placed + ')');
+  ok(v.weekLine.indexOf('0/6 sessions') > -1,
+     'and the week still counts six sessions (' + v.weekLine.split('.')[0] + ')');
+}
+
+group('A week the calendar ate can still be closed');
+{
+  /* WHAT SHIPPED BROKEN. The week's total was the block's six, always. The
+     planner drops a session it cannot fit above its 1.5h floor, so a week
+     with three sessions eaten offered a total of 7 that only 4 of could ever
+     be reached — every placed session ticked, the cardio row ticked, and the
+     advance button still not there. Week 1 could not be closed, and the
+     count that made it impossible and the line saying "3 of 6 sessions
+     placed" lived in different panels.
+
+     Here Monday, Saturday and Sunday carry sessions; the four weekdays
+     between them are booked solid. */
+  const solid = (iso) => ({ session: null, slot: null, done: false, committed: 14, free: 1,
+    blocks: [{ title: 'Shift', kind: 'work', from: '7:00', to: '21:00', hours: 14, allDay: false }] });
+  const week = { at: NOW, days: {
+    [MON]: { session: 'Strength A', slot: 'mon', done: true, committed: 0, free: 15, blocks: [] },
+    [TUE]: solid(TUE), [WED]: solid(WED), [THU]: solid(THU), '2026-09-11': solid('2026-09-11'),
+    '2026-09-12': { session: 'Engine', slot: 'tue', done: true, committed: 4.5, free: 10.5, blocks: [] },
+    '2026-09-13': { session: 'Strength B', slot: 'wed', done: true, committed: 6, free: 9, blocks: [] },
+  } };
+  const grind = Object.assign({}, GRIND, {
+    sessions: { '1|mon': true, '1|tue': true, '1|wed': true }, runs: { w1: true },
+  });
+  const b = board({ ct_week_v1: JSON.stringify(week), ct_grind_v1: JSON.stringify(grind) });
+  const v = b.renderVals();
+  ok(v.weekDone === true, 'the week is done once everything it had room for is ticked');
+  ok(/4 of 4 done/.test(v.weekLine), 'the total is what the week could hold (' + v.weekLine.split('.')[0] + ')');
+  ok(/had no room in this week/.test(v.weekLine),
+     'and the line says how many the calendar ate');
+  ok(!!v.advanceLabel && /week 2/.test(v.advanceLabel),
+     'so the advance button offers week 2 (' + v.advanceLabel + ')');
+
+  /* The pips are per week of the block, and only this one was pulled. */
+  ok(b.renderVals().pips.length === 4, 'four pips, one per week of the block');
 }
 
 group('A day the planner never saw does not repeat a session it already placed');

@@ -250,6 +250,10 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     heading(a);
 
     var saved = C.readWeek().days || {};
+    /* The day the plan leaves clear is the rest day, and training.js owns
+       which one that is — the board asks it the same question about the
+       stored week, and the two pages must not disagree about the answer. */
+    var restKey = T ? T.restDay(plan.days) : null;
     plan.days.forEach(function (d) {
       var st = saved[d.key] || {};
       var full = d.free < 1.5;
@@ -288,6 +292,26 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
         });
         s.appendChild(btn);
         row.appendChild(s);
+      } else if (restKey && d.key === restKey) {
+        /* Tickable, and through the bridge like any session, so a recovery
+           day marked here is marked on the board too. Not one of the six:
+           it is a day off, not work the week is waiting for. */
+        var rs = el('div', 'sess');
+        var rbtn = el('button');
+        rbtn.type = 'button';
+        rbtn.appendChild(el('span', null, T.REST.label));
+        var rdone = T.isDone(d.key, T.REST.slot);
+        rbtn.appendChild(el('span', 'tick', rdone ? 'done ✓' : 'mark done'));
+        rbtn.addEventListener('click', function () {
+          T.setDone(d.key, !T.isDone(d.key, T.REST.slot),
+                    { slot: T.REST.slot, label: T.REST.label });
+          render(lastPlan);
+        });
+        rs.appendChild(rbtn);
+        row.appendChild(rs);
+        row.appendChild(el('div', 'none', full
+          ? 'the day your calendar took — so this is the rest day'
+          : 'no training dealt here — so this is the rest day'));
       } else {
         row.appendChild(el('div', 'none', full ? 'no room — the week took this one' : 'nothing scheduled'));
       }

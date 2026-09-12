@@ -171,6 +171,34 @@
   }
   function slotFor(iso) { var p = day(iso); return p ? p.slot : null; }
 
+  /* ── which day is the rest day ──────────────────────────────────────────
+     ONE OWNER, because two pages ask. The board reads the stored week
+     through week() below; Week.html reads the plan it has just computed. If
+     each worked it out for itself they would disagree the first time they
+     were looking at different states of the same week, which is this repo's
+     oldest failure.
+
+     `days` is every day of the week in date order, each with free hours, the
+     slot it carries, and its date under `iso` or `key`. Returns the date of
+     the rest day, or null when some day already carries the rest slot —
+     a week whose Sunday kept its recovery already has exactly one.
+
+     Least free first: the rest day is the day your calendar took hardest.
+     The list is in date order and the sort is stable, so an equal-free tie
+     goes to the earlier date and the answer does not move between reads.
+
+     A day the planner never SAW is marked `planned: false` and cannot be the
+     rest day — it falls back to the weekday grid, which gives it a session
+     of its own. A freshly computed plan has seen every day it lists and so
+     does not set the flag at all. */
+  function restDay(days) {
+    var list = days || [];
+    if (list.some(function (d) { return (d.slot || null) === REST.slot; })) return null;
+    var clear = list.filter(function (d) { return d.planned !== false && !d.slot; })
+                    .sort(function (a, b) { return (+a.free || 0) - (+b.free || 0); })[0];
+    return clear ? (clear.iso || clear.key || null) : null;
+  }
+
   /* ── done, in one place ────────────────────────────────────────────────
      True if EITHER store carries it, because either page may have been the
      one you ticked on. Both are written on every change below, so they only
@@ -374,11 +402,50 @@
       });
     }
     if (!found) return null;
+
+    /* ── the rest day, derived ──────────────────────────────────────────
+       THE RECOVERY SESSION USED TO VANISH. The planner deals the block's six
+       TRAINING sessions. The seventh thing in the programme — Sunday's
+       recovery walk, REST above — was never in that deal. So when the week
+       put Long easy on a Sunday with free hours and left Thursday clear,
+       Thursday came back with nothing on it at all: no title, no tick, no
+       recovery block, and the recovery session simply absent from the week.
+       The board went as far as computing "Mark the recovery day done" for
+       that day and then hid the button, because it had no slot to write.
+
+       So the day the planner LEFT CLEAR is the rest day. Least free first,
+       because the rest day is the day your calendar took hardest; `days` is
+       in date order and the sort is stable, so an equal-free tie goes to the
+       earlier date and the answer does not move between reads.
+
+       Derived, not stored: re-plan the week and the clear day moves, and a
+       stored rest day could not notice — CLAUDE.md's rule about a stored
+       conclusion that cannot disagree with its own inputs.
+
+       Only a day the planner SAW is eligible. A day it never saw falls back
+       to the weekday grid, which gives it a session of its own. And nothing
+       is done at all if some day already carries the rest slot, so a week
+       whose Sunday kept its recovery keeps exactly one rest day. */
+    var restIso = restDay(days);
+    days.forEach(function (d) {
+      if (d.iso !== restIso) return;
+      d.slot = REST.slot;
+      d.moved = d.defaultSlot !== REST.slot;
+      d.label = label(REST.slot);
+      d.title = title(REST.slot);
+      d.done = isDone(d.iso, REST.slot);
+      d.rest = true;
+    });
+
+    /* `placed`, `moved` and `done` are about THE SIX. The board prints them
+       as "N of 6 sessions placed", so counting the rest day among them would
+       make that sentence read 7 of 6. */
+    var training = days.filter(function (d) { return d.slot && d.slot !== REST.slot; });
     return { start: r.start, end: r.end, days: days,
              blockWeek: blockWeek(days[0].iso),
-             moved: days.filter(function (d) { return d.moved; }).length,
-             placed: days.filter(function (d) { return d.slot; }).length,
-             done: days.filter(function (d) { return d.slot && d.done; }).length };
+             moved: training.filter(function (d) { return d.moved; }).length,
+             placed: training.length,
+             done: training.filter(function (d) { return d.done; }).length };
   }
 
   /* Does the store carry any day of this range? */
@@ -420,7 +487,7 @@
     slots: slots, sessions: sessions, slotOf: slotOf, label: label, title: title,
     blockWeek: blockWeek, today: today, iso: isoOf,
     day: day, slotFor: slotFor, isDone: isDone, setDone: setDone,
-    week: week, reconcile: reconcile,
+    week: week, reconcile: reconcile, restDay: restDay,
     own: own, addOwn: addOwn, dropOwn: dropOwn, blocksFor: blocksFor,
     eventsFromStore: eventsFromStore,
     KEYS: { week: WKEY, grind: GKEY, log: LKEY }

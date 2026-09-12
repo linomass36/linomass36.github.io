@@ -296,5 +296,69 @@ group('Without the programme, nothing explodes');
   ok(T.title('mon') === 'Strength A', 'the short label stands in for the programme’s title');
 }
 
+group('The rest day is one rule with one owner');
+{
+  /* WHAT SHIPPED BROKEN. The planner deals the block's SIX TRAINING
+     sessions. The seventh thing in the programme — Sunday's recovery walk —
+     was never in that deal, so the day the planner left clear came back
+     with nothing on it: no title, nothing to tick, and the recovery session
+     absent from the week. Reported as a Thursday that "isnt scheduled a
+     block and therefore cannot be ticked as done".
+
+     This lives here and not in either page because BOTH pages ask it: the
+     board asks about the stored week, Week.html about the plan it has just
+     computed. Two copies would disagree the first time those differed. */
+  const { T } = load();
+  const d = (iso, free, slot, planned) => {
+    const x = { iso: iso, free: free, slot: slot || null };
+    if (planned !== undefined) x.planned = planned;
+    return x;
+  };
+
+  /* Least free wins: the rest day is the day your calendar took hardest. */
+  ok(T.restDay([d('2026-09-07', 15, 'mon'), d('2026-09-08', 10, 'tue'),
+                d('2026-09-09', 9.5, 'wed'), d('2026-09-10', 4.5, null),
+                d('2026-09-11', 15, 'fri'), d('2026-09-12', 10.5, 'sat'),
+                d('2026-09-13', 9, 'thu')]) === '2026-09-10',
+     'the clear day is the rest day');
+
+  /* Equal free hours: the earlier date, so the answer cannot move between
+     two reads of the same week. */
+  ok(T.restDay([d('2026-09-07', 1, null), d('2026-09-08', 1, null),
+                d('2026-09-09', 1, null), d('2026-09-10', 1, null),
+                d('2026-09-11', 15, 'mon'), d('2026-09-12', 10, 'tue'),
+                d('2026-09-13', 9, 'wed')]) === '2026-09-07',
+     'an equal-free tie goes to the earlier date');
+
+  /* Four clear days are not four rest days. */
+  const four = [d('2026-09-07', 1, null), d('2026-09-08', 2, null),
+                d('2026-09-09', 3, null), d('2026-09-10', 4, null),
+                d('2026-09-11', 15, 'mon'), d('2026-09-12', 10, 'tue'),
+                d('2026-09-13', 9, 'wed')];
+  ok(four.filter(x => x.iso === T.restDay(four)).length === 1,
+     'only one day is ever named');
+
+  /* A week that already has its recovery keeps it rather than gaining a
+     second one. */
+  ok(T.restDay([d('2026-09-07', 15, 'mon'), d('2026-09-08', 10, 'tue'),
+                d('2026-09-09', 9.5, 'wed'), d('2026-09-10', 4.5, null),
+                d('2026-09-11', 15, 'fri'), d('2026-09-12', 10.5, 'sat'),
+                d('2026-09-13', 9, 'sun')]) === null,
+     'a week whose Sunday kept its recovery gains no second rest day');
+
+  /* A day the planner never saw falls back to the weekday grid, which gives
+     it a session of its own — so it cannot be the rest day. */
+  ok(T.restDay([d('2026-09-07', 15, 'mon'), d('2026-09-08', 0, null, false),
+                d('2026-09-09', 5, null, true)]) === '2026-09-09',
+     'a day the planner never saw is skipped, however little room it had');
+
+  ok(T.restDay([]) === null && T.restDay(null) === null,
+     'and nothing is named when there is no week');
+
+  /* The slot it uses is the one every reader already knows. */
+  ok(T.REST.slot === 'sun' && T.label(T.REST.slot) === 'Recovery',
+     'the rest slot is the programme\u2019s own recovery slot');
+}
+
 console.log(failed ? '\n' + failed + ' FAILED' : '\nall green');
 process.exit(failed ? 1 : 0);

@@ -786,14 +786,38 @@ class Component extends DCLogic {
     return { rows: out, source, spill, moved, open: gaps.length, free };
   }
 
-  /* The week is done when all six sessions and the week's cardio row are
-     ticked. That — not the date on it — is what lets it advance. */
-  weekKeys(week) { return Object.keys((this.G && this.G.GYM) || {}).map(id => week + '|' + id); }
-  weekProgress(d) {
-    const lifts = this.weekKeys(d.week);
+  /* The week is done when the sessions it HAD ROOM FOR and the week's cardio
+     row are ticked. That — not the date on it — is what lets it advance.
+
+     WHAT SHIPPED BROKEN. The total was the block's six, always. The planner
+     drops a session it cannot fit above its 1.5h floor, so a week where the
+     calendar ate three of them offered a total of 7 that only 4 of could
+     ever be reached: every placed session ticked, the cardio row ticked, and
+     the advance button still not there. The week could not be closed and the
+     board gave no reason, because the count that made it impossible and the
+     line that said "3 of 6 sessions placed" were in different panels.
+
+     Sunday's recovery is in neither count. It is not in GYM, and a day off
+     is not a session to finish — it can be ticked, and ticking it is not
+     what the week is waiting for. */
+  weekSlots(d, wp) {
+    const all = Object.keys((this.G && this.G.GYM) || {});
+    if (!wp || !wp.applies) return all;          // the grid places all six
+    const carried = {};
+    wp.days.forEach(x => { if (x.slot) carried[x.slot] = true; });
+    return all.filter(id => carried[id]);
+  }
+  weekProgress(d, wp) {
+    const all = Object.keys((this.G && this.G.GYM) || {});
+    const slots = this.weekSlots(d, wp);
+    const lifts = slots.map(id => d.week + '|' + id);
     const doneLifts = lifts.filter(k => d.sessions[k]).length;
     const runDone = d.runs['w' + d.week] ? 1 : 0;
-    return { done: doneLifts + runDone, total: lifts.length + 1, lifts: doneLifts, liftTotal: lifts.length, runDone: !!runDone };
+    return { done: doneLifts + runDone, total: lifts.length + 1,
+             lifts: doneLifts, liftTotal: lifts.length, runDone: !!runDone,
+             /* How many of the six the calendar ate, so the line can say so
+                rather than leaving you to wonder why the total is five. */
+             ate: all.length - slots.length };
   }
 
   setWeek(n) {
@@ -911,13 +935,16 @@ class Component extends DCLogic {
     const wp = this.plan(d);
     const dayId = this.curDay(d);
     const today = this.todayId();
-    const prog = this.weekProgress(d);
+    const prog = this.weekProgress(d, wp);
     const isDeload = G.deloads.indexOf(d.week) > -1;
     const isTest = d.week === G.testWeek;
 
     const pips = [];
     for (let i = 1; i <= G.weeks; i++) {
-      const p = this.weekProgress({ week: i, sessions: d.sessions, runs: d.runs });
+      /* The pulled week describes one week of the block, so it may only
+         narrow that week's pip. Every other pip is the block's own six. */
+      const p = this.weekProgress({ week: i, sessions: d.sessions, runs: d.runs },
+                                  i === d.week ? wp : null);
       pips.push({ cls: i === d.week ? 'now' : (p.done === p.total ? 'on' : ''),
                   title: 'Week ' + i + ' — ' + p.done + '/' + p.total });
     }
@@ -1078,7 +1105,11 @@ class Component extends DCLogic {
       pips,
       weekLine: prog.done + ' of ' + prog.total + ' done — ' + prog.lifts + '/' + prog.liftTotal
               + ' sessions and ' + (prog.runDone ? 'the cardio row' : 'no cardio row yet')
-              + '. ' + wi.head + ' The week moves when the work does, not when the date does.',
+              + '. ' + (prog.ate
+                  ? prog.ate + ' of the six had no room in this week and ' +
+                    (prog.ate === 1 ? 'is' : 'are') + ' not counted. '
+                  : '')
+              + wi.head + ' The week moves when the work does, not when the date does.',
       weekDone: prog.done === prog.total,
       advanceLabel: d.week >= G.weeks ? 'Month 1 done — 5 Oct starts month 2' : 'Week complete — go to week ' + (d.week + 1),
       advance: () => this.advance(),
