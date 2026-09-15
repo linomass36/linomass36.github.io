@@ -126,6 +126,7 @@ jobs:
           node tools/anatomy-core.test.js
           node tools/causality.test.js
           node tools/trends-page.test.js
+          node tools/todo.test.js
 
       - name: Build _site (inline, stamp version, encrypt)
         env:

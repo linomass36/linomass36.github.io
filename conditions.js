@@ -67,7 +67,12 @@
   var SCOPES = {
     body:   ['grind', 'record'],
     mind:   ['anatomy', 'study', 'reading'],
-    output: ['plan', 'research'],
+    /* `todo` is the day's own list (todo.js). It sits under output rather
+       than mind because what holds it is a week with no room in it — a work
+       spike or an exam block — not a sore back or a bad night. An ill day
+       does not hold it, deliberately: ringing the bank is still ringing the
+       bank, and it is often the only thing such a day can carry. */
+    output: ['plan', 'research', 'todo'],
     people: ['network']
   };
 
@@ -225,7 +230,7 @@
       gradeNames: { note: 'Off, but functioning', ease: 'Running on fumes', stop: 'Nothing in the tank' },
       areaLabel: 'What has gone?',
       areas: [
-        { id: 'start',  label: 'Starting anything',     holds: ['plan', 'research', 'grind'],
+        { id: 'start',  label: 'Starting anything',     holds: ['plan', 'research', 'grind', 'todo'],
           alt: 'finishing something already open, which needs no run-up' },
         { id: 'focus',  label: 'Holding attention',     holds: ['study', 'reading', 'anatomy'],
           alt: 'one card, or one page — the unit small enough to survive today' },

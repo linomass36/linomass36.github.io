@@ -61,6 +61,9 @@ STYLE_SHIM = '<link rel="stylesheet" href="./mobile.css">\n'
 SHIM = (
     '<script src="./config.js"></script>\n'
     '<script src="./conditions.js"></script>\n'
+    # todo.js before capture.js: the `!` route writes through window.CTTodo
+    # rather than re-deriving the store or the 05:00 day boundary.
+    '<script src="./todo.js"></script>\n'
     '<script src="./money.js"></script>\n'
     '<script src="./feeds.js"></script>\n'
     '<script src="./archive.js"></script>\n'
@@ -219,6 +222,7 @@ BUNDLER_HEAD = (
     '<link rel="stylesheet" href="./hub.css?v=__APP_VERSION__">\n'
     '<link rel="stylesheet" href="./mobile.css?v=__APP_VERSION__">\n'
     '<script src="./config.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./todo.js?v=__APP_VERSION__"></script>\n'
     '<script src="./archive.js?v=__APP_VERSION__"></script>\n'
     '<script src="./backup.js?v=__APP_VERSION__"></script>\n'
     '<script src="./sync.js?v=__APP_VERSION__"></script>\n'

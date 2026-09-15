@@ -10,11 +10,17 @@
    This is the text field. It is injected on every hub page alongside the
    drawer, opens with ⌘K / Ctrl-K or the ⌕ button, and routes on a prefix:
 
+     !Ring the bank about the transfer     → today's list
      @Name  said something worth keeping   → that person's dossier
      #Title, Author                        → the reading list, as a paper
      14 Oct  ACC Boston                    → the conference desk
      +Ship the abstract                    → this week's priorities
      anything else                         → the journal
+
+   `!` and `+` are two different questions and the split is the point: `!` is
+   what today wants, and it expires with today; `+` is what the WEEK is for,
+   and it is reviewed on Sunday. Collapsing them was the temptation and would
+   have produced a to-do list that quietly became a backlog — see todo.js.
 
    Everything it writes goes through localStorage.setItem, which sync.js has
    patched, so a line captured on a phone is on the laptop before you have put
@@ -49,11 +55,21 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
            String(d.getDate()).padStart(2, '0');
   }
+  /* NOT isoDay(). A week key is a label for a week, not a stamp on a moment,
+     and isoDay() routes through the hub's 05:00 boundary — so midnight on
+     Monday came back as the Sunday before it. This file wrote `+` priorities
+     under that Sunday key while the Weekly Review, which owns the tick
+     control, reads the Monday one. Nothing captured here could ever be
+     ticked off, and nothing set there ever reached Today.
+
+     Noon, so a daylight-saving shift cannot move the date either. This is
+     systems.js monday() exactly; tools/todo.test.js asserts they agree. */
   function monday() {
     var x = new Date();
     x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
-    x.setHours(0, 0, 0, 0);
-    return isoDay(x);
+    x.setHours(12, 0, 0, 0);
+    return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' +
+           String(x.getDate()).padStart(2, '0');
   }
   function uid(p) { return p + Date.now() + Math.floor(Math.random() * 999); }
 
@@ -181,6 +197,18 @@
     return { where: 'this week’s priorities', href: 'Weekly Review.dc.html' };
   }
 
+  /* `!` is today's list, and it is deliberately the shortest route in this
+     file: it is the one you reach for walking down a corridor, and a capture
+     that costs a thought costs the capture. todo.js owns the store and the
+     day boundary — nothing here re-derives either. */
+  function toTodo(line) {
+    var text = String(line).slice(1).trim();
+    if (!text) return null;
+    if (!window.CTTodo) return null;   // page did not load todo.js — fall through
+    if (!window.CTTodo.add(text)) return null;
+    return { where: 'today’s list', href: 'Today.dc.html' };
+  }
+
   function toJournal(line) {
     var body = String(line).trim();
     if (!body) return null;
@@ -202,6 +230,7 @@
     var r = null;
     if (t[0] === '@') r = toDossier(t);
     else if (t[0] === '#') r = toReading(t);
+    else if (t[0] === '!') r = toTodo(t);
     else if (t[0] === '+') r = toPriority(t);
     else {
       var d = parseDate(t);
@@ -248,9 +277,10 @@
 
   function hintFor(v) {
     var t = String(v || '');
-    if (!t.trim()) return 'Type <b>@</b> a person, <b>#</b> a paper, a <b>date</b> for a conference, <b>+</b> a priority — anything else becomes a journal entry.';
+    if (!t.trim()) return 'Type <b>!</b> for today, <b>@</b> a person, <b>#</b> a paper, a <b>date</b> for a conference, <b>+</b> a priority — anything else becomes a journal entry.';
     if (t[0] === '@') return '→ <b>that person’s file</b> · @Name, what they said';
     if (t[0] === '#') return '→ <b>the reading list</b> · #Title, Author';
+    if (t[0] === '!') return '→ <b>today’s list</b> · done with it or not, today is where it stays';
     if (t[0] === '+') return '→ <b>this week’s priorities</b>';
     if (parseDate(t)) return '→ <b>the conference desk</b>';
     return '→ <b>the journal</b>';

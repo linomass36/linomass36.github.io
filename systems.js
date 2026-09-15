@@ -421,6 +421,48 @@
   }
 
   // ── the journal ────────────────────────────────────────────────────────
+  /* ── the day's own list ────────────────────────────────────────────────
+     The one list in this hub that no system owns. Every other builder here
+     reports what a PLAN wants of you; this one reports what you said you
+     would do today, which is a different question and was previously asked
+     in a notes app the hub could not see. todo.js owns the store, the day
+     boundary and the carry — this reads, it does not re-derive.
+
+     Sorted ahead of the plan on purpose: it is the shortest list and the one
+     you wrote yourself, so it is the one that should be legible first.
+
+     An EMPTY list is deliberately toneless rather than 'ok'. Writing nothing
+     down is not an achievement, and a green tick for a day you never planned
+     is the kind of flattery that makes a dashboard stop meaning anything. */
+  function todo() {
+    var base = { id: 'todo', name: 'Today’s list', href: 'Today.dc.html', sort: -1 };
+    var T = w.CTTodo;
+    if (!T) return null;   // page did not load todo.js — say nothing rather than guess
+    var c = T.counts();
+    var back = T.carry();
+    if (!c.total && !back) {
+      return Object.assign(base, { big: '—', unit: 'nothing set', tone: '',
+        line: 'no list today · ⌘K then ! to put one line on it' });
+    }
+    if (!c.total && back) {
+      /* Nothing written today, but an earlier day is still open. This is the
+         moment the whole file exists for, so it says the number out loud and
+         still does not read as failure. */
+      return Object.assign(base, { big: String(back.open), unit: 'still open', tone: '',
+        line: back.open + ' from ' + back.days + ' day' + (back.days === 1 ? '' : 's') +
+              ' ago · bring up to ' + Math.min(back.open, T.CARRY_MAX) + ' over, or clear them' });
+    }
+    if (!c.open) {
+      return Object.assign(base, { big: '✓', unit: 'clear', tone: 'ok',
+        line: 'all ' + c.done + ' done · the day’s list is finished' });
+    }
+    return Object.assign(base, {
+      big: String(c.open), unit: c.open === 1 ? 'to do' : 'to do', tone: 'go',
+      line: c.done ? c.done + ' of ' + c.total + ' done so far'
+                   : c.total + ' on the list, none ticked yet'
+    });
+  }
+
   function journal() {
     var base = { id: 'journal', name: 'Journal', href: 'Journal.dc.html', sort: 7 };
     var list = readJSON('ct_journal_v1', []);
@@ -732,7 +774,7 @@
     return out;
   }
 
-  var BUILDERS = [plan, anatomy, grind, rest, week, recall, reading, research, record, trendsTile, journal, weekly, vault];
+  var BUILDERS = [todo, plan, anatomy, grind, rest, week, recall, reading, research, record, trendsTile, journal, weekly, vault];
 
   /* Every system, in the order you meet them in a day. A builder that throws
      is dropped rather than allowed to take the page with it — one broken

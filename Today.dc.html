@@ -187,6 +187,41 @@
        doors. Nothing was lost — the systems are one tap away and always were.
        ──────────────────────────────────────────────────────────────────── -->
 
+  <!-- ─── today's own list ───
+       Above the plan on purpose. The plan's moves are what a document wants
+       of you; these are what YOU said this morning, and the shorter list
+       should be the legible one. See todo.js for why nothing here rolls
+       over by itself. -->
+  <div class="td-card">
+    <div class="td-kicker"><b>Today's list</b><span style="flex:1"></span><span style="font-size: 11px; color: var(--faint);">{{ todoCount }}</span></div>
+
+    <sc-if value="{{ hasCarry }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-bottom: 12px; padding: 11px 13px; border-radius: 12px; background: var(--sunken); border: 1px solid var(--line);">
+        <div style="font-size: 14px; line-height: 1.5; color: var(--mid);">{{ carryLine }}</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+          <button onClick="{{ carryTake }}" style="min-height: 38px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--owed); background: var(--owed); color: var(--surface); font-family: var(--mono); font-size: 11.5px; cursor: pointer;">{{ carryTakeLabel }}</button>
+          <button onClick="{{ carryDrop }}" style="min-height: 38px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--line-2); background: none; color: var(--mid); font-family: var(--mono); font-size: 11.5px; cursor: pointer;">clear them</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-for list="{{ todos }}" as="t" hint-placeholder-count="2">
+      <div style="display: flex; align-items: flex-start; gap: 6px;">
+        <button onClick="{{ t.toggle }}" class="td-act" style="flex: 1;">
+          <span class="td-actbox" style="{{ t.boxStyle }}"></span>
+          <span class="td-acttxt" style="{{ t.textStyle }}">{{ t.text }}<span style="color: var(--faint);">{{ t.meta }}</span></span>
+        </button>
+        <button onClick="{{ t.remove }}" aria-label="remove" style="flex: none; align-self: center; min-width: 34px; min-height: 34px; border: none; background: none; color: var(--faint); font-family: var(--mono); font-size: 15px; cursor: pointer;">×</button>
+      </div>
+    </sc-for>
+
+    <div style="display: flex; gap: 8px; margin-top: 11px;">
+      <input value="{{ todoText }}" onInput="{{ setTodoText }}" onKeyDown="{{ todoKey }}" placeholder="Something to do today…" style="flex: 1; min-width: 0; min-height: 42px; font-size: 15px; padding: 6px 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); color: var(--body); font-family: inherit;">
+      <button onClick="{{ addTodo }}" style="flex: none; min-height: 42px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--sunken); color: var(--body); font-family: var(--mono); font-size: 13px; cursor: pointer;">add</button>
+    </div>
+    <div style="font-family: var(--mono); font-size: 11px; color: var(--faint); margin-top: 9px;">{{ todoLine }}</div>
+  </div>
+
   <!-- ─── what to do next ─── -->
   <div class="td-card">
     <div class="td-kicker"><b>Do these next</b><span style="flex:1"></span><a href="Plan.html" style="color: var(--owed); font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center;">the plan →</a></div>
@@ -194,7 +229,10 @@
       <div style="margin-bottom: 12px; padding: 11px 13px; border-radius: 12px; background: var(--warn-w); border: 1px solid var(--warn-l);">
         <div style="font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--warn); margin-bottom: 6px;">You said, this week</div>
         <sc-for list="{{ prios }}" as="p" hint-placeholder-count="2">
-          <div style="font-size: 15px; line-height: 1.5; color: var(--warn); padding: 2px 0;">· {{ p.text }}</div>
+          <button onClick="{{ p.toggle }}" style="display: flex; align-items: flex-start; gap: 9px; width: 100%; text-align: left; border: none; background: none; padding: 3px 0; cursor: pointer; -webkit-tap-highlight-color: transparent;">
+            <span style="flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 6px; border: 1.5px solid var(--warn-l); background: {{ p.fill }};"></span>
+            <span style="flex: 1; min-width: 0; font-size: 15px; line-height: 1.5; color: var(--warn); text-decoration: {{ p.deco }};">{{ p.text }}</span>
+          </button>
         </sc-for>
       </div>
     </sc-if>
@@ -347,7 +385,7 @@ class Component extends DCLogic {
   WKEY = 'ct_weekly_v1';
   JKEY = 'ct_journal_v1';
 
-  state = { tick: 0, noteId: null, noteBook: '', noteLoc: '', noteText: '', jotText: '', toast: '', subject: 'anatomy' };
+  state = { tick: 0, noteId: null, noteBook: '', noteLoc: '', noteText: '', jotText: '', todoText: '', toast: '', subject: 'anatomy' };
 
   readJSON(k, fb) { try { const raw = localStorage.getItem(k); if (raw) return JSON.parse(raw); } catch (e) {} return fb; }
   writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -358,6 +396,27 @@ class Component extends DCLogic {
   }
   isoDay(d) { return window.CTDay ? window.CTDay.key(d.getTime())
     : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  /* The Monday of a week, as a week key — NOT isoDay(). See the note where
+     this is used: a week key is a label for a week, not a stamp on a moment,
+     and routing it through the 05:00 boundary moved it back a day. Noon, so
+     a daylight-saving shift cannot move it either. This is systems.js
+     monday() and Weekly Review wkKey() exactly. */
+  weekKey(d) {
+    const x = new Date(d);
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    x.setHours(12, 0, 0, 0);
+    return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' +
+           String(x.getDate()).padStart(2, '0');
+  }
+
+  /* "Sat 12 Sep" — for saying WHERE a carried item came from. A bare ISO date
+     in a sentence about a day you lived is a date you have to decode. */
+  dayLabel(iso) {
+    const d = new Date(iso + 'T12:00:00');
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
 
   /* The reading store is shared with the Reading List page, so everything
      written here uses exactly the shapes that page expects. */
@@ -685,10 +744,74 @@ class Component extends DCLogic {
     }));
 
     // ── this week's priorities ──
+    /* The key is the WEEK's label, not a stamp on a moment, so it is read off
+       a NOON Monday rather than run through isoDay(). isoDay() routes via
+       CTDay.key() and the hub's 05:00 boundary, which turned midnight Monday
+       into the Sunday before it — so this card read a key the Weekly Review
+       never writes and the three priorities you set there never appeared
+       here. systems.js monday() carries the same comment for the same trap;
+       tools/todo.test.js now asserts the two agree. */
     const w = this.readJSON(this.WKEY, {}) || {};
-    const mon = new Date(now); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7)); mon.setHours(0, 0, 0, 0);
-    const wk = this.isoDay(mon);
-    const prios = ((w.priorities || {})[wk] || []).filter(Boolean).map(t => ({ text: t }));
+    const wk = this.weekKey(now);
+    const prioDone = (w.prioDone && typeof w.prioDone === 'object') ? w.prioDone : {};
+    /* Tickable here, not only on the Weekly Review. A priority you can read
+       but not tick on the page you open every morning is a priority you tick
+       nowhere, which is how `prioDone` stayed empty. */
+    const prios = ((w.priorities || {})[wk] || []).filter(Boolean).map((t, i) => {
+      const doneKey = wk + ':' + i;
+      const done = !!prioDone[doneKey];
+      return {
+        text: t, deco: done ? 'line-through' : 'none',
+        fill: done ? 'var(--warn)' : 'transparent',
+        toggle: () => {
+          const cur = this.readJSON(this.WKEY, {}) || {};
+          const pd = Object.assign({}, cur.prioDone || {});
+          pd[doneKey] = pd[doneKey] ? 0 : 1;
+          this.writeJSON(this.WKEY, Object.assign({}, cur, { prioDone: pd }));
+          this.bump();
+        }
+      };
+    });
+
+    // ── today's own list ──
+    /* todo.js owns the store, the 05:00 day boundary and the carry rule.
+       This card reads and calls; it re-derives none of them. When the file
+       has not loaded the card renders empty rather than throwing — a glance
+       that crashes takes the whole page with it. */
+    const T = window.CTTodo;
+    const items = T ? T.list() : [];
+    const tc = T ? T.counts() : { open: 0, done: 0, total: 0 };
+    const todos = items
+      .filter(it => it && !it.carried && !it.dropped)
+      .map(it => ({
+        text: it.text,
+        meta: it.from ? 'carried from ' + this.dayLabel(it.from) : '',
+        boxStyle: it.done ? 'background: var(--ok); border-color: var(--ok);' : '',
+        textStyle: it.done ? 'text-decoration: line-through; color: var(--faint);' : '',
+        toggle: () => { T.toggle(it.id); this.bump(); },
+        remove: () => { T.remove(it.id); this.bump(); }
+      }));
+    /* NOT `back` — that name is taken further down by the resurfaced item,
+       and shadowing it inside one renderVals() is a redeclaration the DC
+       runtime swallows as "logic class eval FAILED", which renders the page
+       with every binding empty and no error on screen. */
+    const carryBack = T ? T.carry() : null;
+    const carryLine = !carryBack ? '' :
+      carryBack.open + ' thing' + (carryBack.open === 1 ? '' : 's') + ' you wrote on ' + this.dayLabel(carryBack.from) +
+      ' never got ticked' + (carryBack.days > 1 ? ' — that was ' + carryBack.days + ' days ago' : '') + '.' +
+      (carryBack.dropping ? ' Bringing ' + Math.min(carryBack.open, T.CARRY_MAX) + ' over drops the other ' +
+        carryBack.dropping + ' — a list is not a debt.' : '');
+    const addTodo = () => {
+      const v = (this.state.todoText || '').trim();
+      if (!v || !T) return;
+      T.add(v);
+      this.setState({ todoText: '' });
+      this.bump();
+    };
+    const todoLine = !T ? ''
+      : tc.total ? tc.done + ' of ' + tc.total + ' done'
+                   + (tc.open ? '' : ' — that is the list finished')
+      : 'Nothing set. ⌘K then ! puts a line here from any page.';
 
     // ── today, in the life log — readable and writable ──
     const logStore = this.readL();
@@ -754,6 +877,27 @@ class Component extends DCLogic {
       cancelNote: () => this.setState({ noteId: null, noteText: '', noteLoc: '' }),
 
       hasPrios: prios.length > 0, prios,
+      todos, todoLine, addTodo,
+      todoCount: tc.total ? tc.done + '/' + tc.total : '',
+      todoText: this.state.todoText,
+      setTodoText: (e) => this.setState({ todoText: e.target.value }),
+      todoKey: (e) => { if (e.key === 'Enter') addTodo(); },
+      hasCarry: !!carryBack, carryLine,
+      carryTakeLabel: carryBack
+        ? 'bring ' + Math.min(carryBack.open, T.CARRY_MAX) + ' over'
+        : 'bring them over',
+      carryTake: () => {
+        if (!T) return;
+        const r = T.carryOver();
+        this.toast('✓ ' + r.carried + ' carried over' + (r.dropped ? ', ' + r.dropped + ' dropped' : ''));
+        this.bump();
+      },
+      carryDrop: () => {
+        if (!T) return;
+        const r = T.dismiss();
+        this.toast(r.dropped ? r.dropped + ' cleared — nothing owed' : 'cleared');
+        this.bump();
+      },
 
       ...this.anatomyVals(),
       ...this.closeDayVals(),
