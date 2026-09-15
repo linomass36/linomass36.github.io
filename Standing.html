@@ -516,6 +516,19 @@ h2.vd.calm em{color:var(--ok)}
 .floor .wy{font-size:12.5px;color:var(--mid);margin-top:7px;line-height:1.45}
 .floor .bt{margin-top:12px;display:inline-flex;align-items:center;min-height:38px;padding:0 16px;
   border-radius:8px;background:var(--ok);color:#fff;font-family:var(--mono);font-size:10.5px}
+/* The way to the thing the ask just named. A floor-day instruction you have
+   to go and find is one more decision on the day with the fewest to spare. */
+.floor .go{margin-top:10px;display:inline-flex;align-items:center;min-height:38px;padding:0 14px;
+  border-radius:8px;border:1px solid var(--held-ln);background:var(--surface);color:var(--held);
+  font-family:var(--mono);font-size:10.5px;text-decoration:none}
+.floor .go:hover{border-color:var(--held)}
+.floor .orelse{margin-top:12px;padding-top:11px;border-top:1px solid var(--held-ln);
+  display:flex;flex-direction:column;gap:7px}
+.floor .orelse span{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--held)}
+.floor .orelse a{font-size:13.5px;line-height:1.4;color:var(--mid);text-decoration:none;
+  min-height:32px;display:flex;align-items:center}
+.floor .orelse a:hover{color:var(--held)}
 .reveal{margin-top:11px;font-family:var(--mono);font-size:10px;color:var(--muted);
   text-decoration:underline;text-underline-offset:3px}
 
@@ -1143,13 +1156,45 @@ footer {
            '</span></div>';
     }
 
-    /* ── the floor day's one ask, in place of the board ── */
+    /* ── the floor day's one ask, in place of the board ──
+
+       REPORTED: "pick the smallest open loop — the problem is that I don't
+       know what that means. And there is nothing saying what to do or what
+       the loops are."
+
+       Both true. This block used to print one line of static prose from the
+       RAMPS table in conditions.js — a table that has never read a store — so
+       on the day the page is deliberately reduced to a single instruction,
+       that instruction was a term of art with no example, no count, no link
+       and nowhere to go. Conditions.onething() now resolves it against the
+       stores and hands back a real item by name; the `kind` line says what
+       kind of thing it is (including what an open loop actually IS, at the
+       point the word is used), the link goes to where it is done, and `also`
+       offers the next two so it reads as a choice rather than an order. */
     if (floorDay && !revealed) {
-      var ramp = C().ramp(all, holding);
+      /* No argument. ramp() asks anatomy-core whether you are mid-re-entry
+         rather than being told — this call site used to pass (all, holding),
+         an Array, so the old `opts.reentry` test could never be true and the
+         re-entry ramp was unreachable from the only page that renders it. */
+      var one = C().onething ? C().onething() : C().ramp();
       H += '<div class="kick">The one thing</div>';
-      H += '<div class="floor"><div class="ask">' + esc(ramp.ask) + '</div>' +
-           '<div class="wy">' + esc(ramp.why) + '</div>' +
-           '<button class="bt" id="one-did" type="button">' +
+      H += '<div class="floor"><div class="ask">' + esc(one.ask) + '</div>';
+      if (one.pick) {
+        H += '<div class="wy">' + esc(one.pick.kind) +
+             (one.pick.note ? ' · ' + esc(one.pick.note) : '') + '</div>';
+        H += '<a class="go" href="' + esc(one.pick.href) + '">' +
+             esc(one.pick.cta) + ' →</a>';
+      }
+      H += '<div class="wy">' + esc(one.why) + '</div>';
+      /* The answer to "what are the others". Naming two is enough to show the
+         shape of the list without turning the floor day back into a board. */
+      if (one.also && one.also.length) {
+        H += '<div class="orelse"><span>or, just as good</span>' +
+             one.also.map(function (o) {
+               return '<a href="' + esc(o.href) + '">' + esc(o.do) + '</a>';
+             }).join('') + '</div>';
+      }
+      H += '<button class="bt" id="one-did" type="button">' +
            (met ? 'logged — the day counted' : 'that’s the day') + '</button></div>';
       H += '<button class="reveal" id="reveal" type="button">↓ show me the numbers anyway (' +
            owed.length + ' owed, none of it accruing)</button>';

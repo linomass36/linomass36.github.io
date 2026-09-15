@@ -261,11 +261,27 @@
     flat:    { ask: 'Write one line in the Journal.',
                why: 'Not a plan, not a review. One line about today — that is the entire requirement, and it resets the clock.',
                alt: 'this condition expires by itself in three days' },
-    drift:   { ask: 'Pick the smallest open loop and shut it.',
-               why: 'Days down is a rut, not a verdict. The ramp back is one closed loop, and the hub will not ' +
-                    'show you the backlog until you ask for it.',
+    /* These two used to say "pick the smallest open loop and shut it" and
+       "two loops today". Both were unusable, for the same reason and in two
+       different ways.
+
+       "Open loop" is a TERM OF ART in this hub — anatomy-core.js defines it
+       as a block whose status is open, repeat or stale — and the ramp used it
+       as if it were plain English. So the page asked for one thing and never
+       said what the things were, never named one, and never linked anywhere.
+       If you had no open loops the instruction was not merely unclear, it was
+       impossible. A floor day is the day you are least able to decode a
+       riddle, and that is the day this sentence was reserved for.
+
+       So `ask` here is now a FALLBACK, used only when nothing concrete can be
+       found, and it is written in words that need no glossary. What the page
+       actually shows comes from onething() below: a real item, out of your own
+       stores, by its own name, with a link to where it is done. */
+    drift:   { ask: 'Do one small thing, and let it count.',
+               why: 'Days down is a rut, not a verdict. One finished thing is a full day today, ' +
+                    'and the hub will not show you the backlog until you ask for it.',
                alt: 'the backlog will keep' },
-    reentry: { ask: 'Two loops today, and log it.',
+    reentry: { ask: 'Two small things today, and log it.',
                why: 'Yesterday you did the one thing, so the ramp goes up by one — not back to the full board.',
                alt: 'still too much? → back to one. The ramp only rises when you clear it.' }
   };
@@ -531,9 +547,159 @@
   /* The ramp for today, given what is standing. Re-entry outranks a
      condition's own ask, because the point of a ramp is that it rises.
      A hold outranks an ease, and an ease outranks the drift ramp. */
+  /* ── the one thing, named ────────────────────────────────────────────────
+     REPORTED, and it is the whole reason this section exists: "pick the
+     smallest open loop — the problem is that I don't know what that means.
+     And there is nothing saying what to do or what the loops are."
+
+     Both halves were true. The ramp table above is static prose that has
+     never once looked at a store, so on the day the hub most needed to be
+     specific it produced a sentence in its own private vocabulary with no
+     example, no count and no link.
+
+     This is CLAUDE.md's own rule applied to the one place it was not: prefer
+     a thing that can describe itself over prose about it. Every candidate
+     below is read out of a real store and names a real item — the to-do you
+     wrote, the block whose loop is actually open, the number of cards
+     actually waiting — and carries the address where it is done. Prose is
+     kept only for the last two, which need no data and so cannot be wrong.
+
+     ORDER IS SMALLEST-FIRST, deliberately. The top of the list is whatever
+     takes least from you, because the only failure mode that matters on a
+     floor day is being given something you will not start.
+
+     Anything a condition HOLDS is skipped: proposing the grind board to
+     someone who has just declared a back injury is exactly the insult the
+     grades were introduced to stop.
+
+     Every read is defensive and every store is optional. This file is loaded
+     on the page you open first every morning, and none of the files it reads
+     from here are guaranteed to be loaded beside it. */
+  function offers(heldMap) {
+    var out = [], held = heldMap || heldIds();
+    function push(sys, o) { if (!held[sys]) { o.sys = sys; out.push(o); } }
+
+    /* 1 · something you wrote yourself. The most concrete thing the hub can
+           possibly say, because you chose the words. */
+    try {
+      var T = w.CTTodo;
+      if (T) {
+        var open = T.list().filter(function (it) {
+          return it && !it.done && !it.carried && !it.dropped;
+        });
+        if (open.length) {
+          push('todo', { do: open[0].text, kind: 'on today’s list',
+                         href: 'Today.dc.html', cta: 'open the list',
+                         note: open.length > 1 ? open.length - 1 + ' more under it' : '' });
+        } else {
+          var back = T.carry();
+          if (back && back.offer.length) {
+            push('todo', { do: back.offer[0].text,
+                           kind: 'left over from ' + back.days + ' day' + (back.days === 1 ? '' : 's') + ' ago',
+                           href: 'Today.dc.html', cta: 'bring it over',
+                           note: back.open > 1 ? back.open - 1 + ' other' + (back.open === 2 ? '' : 's') +
+                                                 ' you can bin in one tap' : '' });
+          }
+        }
+      }
+    } catch (e) {}
+
+    /* 2 · a retest that has come round. Named, because "a retest is due" is
+           the same riddle one level down. */
+    try {
+      var A = w.AnatomyCore;
+      if (A) {
+        /* Both of these take the STATE. Calling them bare throws inside
+           peek() on `s.blocks`, which the try/catch here would have
+           swallowed — leaving the two most specific asks in this file
+           permanently unreachable, which is the exact bug being fixed. */
+        var st = A.read();
+        var due = A.dueList(st) || [];
+        if (due.length) {
+          /* dueList returns { b, k, dd } — the block is under .b, and k says
+             which retest has come round. */
+          var d0 = due[0];
+          push('anatomy', { do: 'Retest ' + ((d0.b && d0.b.name) || (d0.b && d0.b.id) || 'the block that is due'),
+                            kind: 'a block you closed has come round again — the ' +
+                                  (d0.k === 'd45' ? 'forty-five' : 'fourteen') + '-day check',
+                            href: 'Anatomy.dc.html', cta: 'open the closure log',
+                            note: due.length > 1 ? due.length - 1 + ' more due, capped at three today' : '' });
+        }
+        /* 3 · an OPEN LOOP, named — and the word explained where it is used,
+               which is the specific thing that was reported missing. */
+        var loops = A.openLoops(st) || [];
+        if (loops.length) {
+          push('anatomy', { do: 'Close the loop on ' + (loops[0].name || loops[0].id),
+                            kind: 'an open loop is a block you studied but never scored — read it once, then score it',
+                            href: 'Anatomy.dc.html', cta: 'open the closure log',
+                            note: loops.length > 1 ? loops.length + ' are open in all' : '' });
+        }
+      }
+    } catch (e) {}
+
+    /* 4 · the queue, as a number rather than as "the queue". */
+    try {
+      var a = JSON.parse(localStorage.getItem('ct_anki_v1') || 'null');
+      if (a) {
+        var waiting = a.dueTotal != null ? parseInt(a.dueTotal, 10)
+                    : (parseInt(a.due, 10) || 0) + (parseInt(a.backlog, 10) || 0);
+        if (waiting > 0) {
+          push('anki', { do: 'Twenty cards, out of the ' + waiting + ' waiting in Anki',
+                         kind: 'twenty is a full day by this hub’s standards, not a dent in the pile',
+                         href: 'Recall.html', cta: 'open Recall' });
+        }
+      }
+    } catch (e) {}
+
+    /* 5 · the one thing already coming back to you today. */
+    try {
+      var R = w.Resurface && w.Resurface.pick ? w.Resurface.pick() : null;
+      if (R && R.text) {
+        push('journal', { do: 'Read back the one note the hub resurfaced today',
+                          kind: '“' + String(R.text).slice(0, 70) + (String(R.text).length > 70 ? '…' : '') + '”',
+                          href: 'Today.dc.html', cta: 'it is on Today' });
+      }
+    } catch (e) {}
+
+    /* 6 and 7 · the two that need no store, so they can never be empty and
+           can never be wrong. There is always something on this list. */
+    push('journal', { do: 'Write one line in the Journal about today',
+                      kind: 'not a plan and not a review — one sentence is the entire requirement',
+                      href: 'Journal.dc.html', cta: 'open the Journal' });
+    push('record', { do: 'Log today in the Life Log',
+                     kind: 'hours asleep and hours on the phone — about forty seconds',
+                     href: 'Life Log.dc.html', cta: 'open the Life Log' });
+    return out;
+  }
+
+  /* The ask for today, resolved against what you actually have. `pick` is the
+     one thing; `also` is the next two, so the page can show that there is a
+     choice rather than handing down a single instruction you may not want.
+     Falls back to the static ramp's words when every store is empty, which is
+     the only case where prose is the honest answer. */
+  function onething(opts) {
+    var r = ramp(opts);
+    var list = [];
+    try { list = offers(); } catch (e) { list = []; }
+    return {
+      ask: list.length ? list[0].do : r.ask,
+      why: r.why,
+      alt: r.alt,
+      pick: list.length ? list[0] : null,
+      also: list.slice(1, 3)
+    };
+  }
+
   function ramp(opts) {
     opts = opts || {};
+    /* Standing.html calls this as ramp(all, holding) — an Array, so the old
+       `opts.reentry` test could never be true and the re-entry ramp was
+       unreachable from the one page that renders it. Ask anatomy-core
+       directly instead of waiting to be told. */
     if (opts.reentry) return RAMPS.reentry;
+    try {
+      if (w.AnatomyCore && w.AnatomyCore.inReentry && w.AnatomyCore.inReentry()) return RAMPS.reentry;
+    } catch (e) {}
     var h = stopping();
     if (h.length && RAMPS[h[0].id]) return RAMPS[h[0].id];
     var e = easing();
@@ -565,7 +731,8 @@
     phrase: phrase,
     heldIds: heldIds, easedIds: easedIds, isHeld: isHeld, isEased: isEased,
     scopeIds: scopeIds, floorDay: floorDay, easeDay: easeDay,
-    ramp: ramp, envelope: envelope, grades: grades, gradeFor: gradeFor,
+    ramp: ramp, onething: onething, offers: offers,
+    envelope: envelope, grades: grades, gradeFor: gradeFor,
     def: def, today: today, daysBetween: daysBetween
   };
 })(window);
