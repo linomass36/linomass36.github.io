@@ -316,6 +316,20 @@ group('A season declared at night begins in the morning');
   ok(S.canReschedule(s, at(2026, 9, 25, 9, 0)) === false,
      'on day 9 moving the start is no longer a typo');
 
+  /* The page leads with the correction only when the start genuinely ate the
+     day, so the threshold is asserted rather than eyeballed. */
+  const ate = load({}).S;
+  ate.start(at(2026, 9, 16, 22, 14));
+  let na = 0;
+  ate.ROWS.forEach((r) => { if (ate.state(r.id, ate.read(), null, at(2026, 9, 16, 22, 30)) === 'na') na++; });
+  ok(na >= 3, 'a 22:14 start leaves at least three blocks it was never going to get (' + na + ')');
+
+  const early = load({}).S;
+  early.start(at(2026, 9, 17, 6, 30));
+  let naEarly = 0;
+  early.ROWS.forEach((r) => { if (early.state(r.id, early.read(), null, at(2026, 9, 17, 7, 0)) === 'na') naEarly++; });
+  ok(naEarly === 0, 'a 06:30 start eats nothing, so the page never asks the question');
+
   const fresh = load({}).S;
   fresh.start(at(2026, 9, 17, 6, 30));
   ok(fresh.state('manuscript', fresh.read(), null, at(2026, 9, 17, 7, 0)) !== 'na',

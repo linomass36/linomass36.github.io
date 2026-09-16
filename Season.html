@@ -373,6 +373,56 @@
 
     /* ── live ── */
     var nx = S.next(s, now);
+
+    /* ── THE DAY THE START TIME ATE ──────────────────────────────────────
+       Reported: "I clicked start season but I thought it would start
+       tomorrow. Instead it counts today as day 1 and the day is already
+       finished and empty."
+
+       The correction shipped in the last commit and it was BELOW a headline
+       reading "Next: prayer" — advice for a day that had four hours left in
+       it, above the one control that mattered. A fix you have to scroll past
+       a wrong answer to reach is most of the way to not shipping it.
+
+       So when the start genuinely ate the day, the page leads with the
+       question instead. It is still a question: the hub does not rewrite a
+       stored fact behind you, because a date the app quietly changed is worse
+       than one you corrected yourself, and this is the file that argues that
+       about everything else. */
+    var ateIt = false, naN = 0;
+    if (S.canReschedule(s, now) && !s.startConfirmed) {
+      S.ROWS.forEach(function (r) { if (S.state(r.id, s, null, now) === 'na') naN++; });
+      ateIt = naN >= 3;
+    }
+    if (ateIt) {
+      H += '<h2 class="vd held">Day one began at <em>' +
+        esc(new Date(s.started).toLocaleTimeString(undefined,
+          { hour: '2-digit', minute: '2-digit' })) + '</em>.</h2>' +
+        '<p class="vsub">' + naN + ' of the ' + S.ROWS.length + ' blocks had already gone by ' +
+        'then. They are marked <b>not asked</b>, not missed — but a day one that is mostly over ' +
+        'is a poor first day, and this is the last chance to move it without it counting as a ' +
+        'restart.</p>';
+      H += '<div class="hub-row-btns" style="margin-top:var(--s4)">' +
+        '<button class="hub-btn pri" id="go-tom3" type="button">Move day one to tomorrow morning' +
+        '</button>' +
+        '<button class="hub-btn" id="keep-today" type="button">No — today is day one</button></div>';
+      H += '<p class="note">Moving it stamps an amendment and archives nothing. Keeping it stops ' +
+        'this asking, and tonight\u2019s remaining blocks stay yours.</p>';
+      H += nightHTML(s, now);
+      H += declarationHTML();
+      $('#screen').innerHTML = H;
+      var g3 = document.getElementById('go-tom3');
+      if (g3) g3.onclick = function () { S.reschedule(S.tomorrow9()); paint(); };
+      var kt = document.getElementById('keep-today');
+      if (kt) kt.onclick = function () {
+        var st = S.read();
+        st.startConfirmed = true;
+        S.save(st);
+        S.amend('kept today as day one, ' + naN + ' blocks already past');
+        paint();
+      };
+      return;
+    }
     if (phase === 'checkin') {
       H += '<h2 class="vd held">Day ' + d + '. The season is <em>open</em>.</h2>' +
         '<p class="vsub">This is the one screen that can change the rules, and the only day ' +
