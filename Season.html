@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="./mobile.css">
 <script src="./sitemap.js"></script>
 <script src="./day.js"></script>
+<script src="./wait.js"></script>
 <script src="./season.js"></script>
 <script src="./plates.js"></script>
 <style>
@@ -444,9 +445,78 @@
     /* The purpose is NOT printed here as well. The declaration below already
        carries it, and the first version rendered the same paragraph twice on
        one screen — which is how prose earns the right to be skipped. */
+    /* ── the ex rule, READ from the Wait rather than restated ─────────────
+       The No list above says "closed unless she initiates". The DATE that
+       makes that concrete belongs to wait.js, which computes it from the day
+       the message actually went out — so this reads that file and links to
+       it. Two ninety-day counters with different start dates would be
+       believed selectively at 02:00, which is the whole failure this hub
+       keeps being rewritten to avoid. */
+    var W = window.Wait;
+    if (W) {
+      var wst = null, wg = null, wph = null;
+      try { wst = W.read(); wg = W.gates(wst); wph = W.phase(wst); } catch (e) {}
+      H += '<div class="kick">The ex · owned by the Wait</div><div class="hub-card">';
+      if (!wst || !wst.sent) {
+        H += '<p class="hub-p">No send date recorded, so nothing can be computed — not the ' +
+          'week, not the floor, not the date this stops being a live question. ' +
+          '<a href="Wait.html">Put it in on the Wait</a> (or on the mornings pill, which takes ' +
+          'the same field and writes the same store).</p>';
+      } else {
+        H += '<p class="hub-p">The ask went out ' +
+          esc(new Date(wst.sent).toLocaleDateString(undefined,
+            { weekday: 'long', day: 'numeric', month: 'long' })) +
+          '. <a href="Wait.html">The Wait</a> holds what today permits' +
+          (wph ? ' — currently <b>' + esc(String(wph)) + '</b>' : '') + '.</p>';
+        if (wg && wg.floor) {
+          H += '<p class="hub-p">No new reach until ' +
+            esc(new Date(wg.floor).toLocaleDateString(undefined,
+              { day: 'numeric', month: 'long', year: 'numeric' })) +
+            ' unless she initiates. That date is computed there, not decided here.</p>';
+        }
+      }
+      H += '</div>';
+    }
+
+    /* ── the amendment log ────────────────────────────────────────────────
+       Season.amend() existed with nothing able to call it, which made the
+       audit trail a promise rather than a mechanism. This is the field. It
+       records off-window changes AND the ones made in daylight, because the
+       point is not to catch you — it is that the check-in opens with what
+       actually happened rather than what you remember happening. */
+    var amendable = S.canEdit(s, now);
+    H += '<div class="kick">On the record<span class="end">' +
+      (amendable ? 'open until 21:00' : 'shut — logged as off-window') + '</span></div>';
+    H += '<div class="hub-card"><p class="hub-p">Anything that changed, or any decision taken ' +
+      'about the season, written while it is clear rather than reconstructed at the check-in.</p>' +
+      '<input id="am-what" type="text" maxlength="300" placeholder="what changed, in one line" ' +
+      'style="width:100%;min-height:44px;font-size:16px;padding:9px 11px;border:1px solid ' +
+      'var(--line-2);border-radius:var(--r4);background:var(--raised);color:var(--ink);' +
+      'font-family:var(--serif)">' +
+      '<div class="hub-row-btns" style="margin-top:9px">' +
+      '<button class="hub-btn" id="am-add" type="button">Record it</button></div>';
+    if (s.amendments.length) {
+      H += '<div class="cad" style="margin-top:12px">' + s.amendments.length + ' recorded</div><ul ' +
+        'style="margin:0;padding-left:17px;font-size:14px;line-height:1.6;color:var(--body)">' +
+        s.amendments.slice(-8).reverse().map(function (a) {
+          return '<li>day ' + a.day + (a.onCheckin ? '' : ' · off-window') + ' — ' +
+                 esc(a.what) + '</li>';
+        }).join('') + '</ul>';
+    }
+    H += '</div>';
+
     H += declarationHTML();
 
     $('#screen').innerHTML = H;
+
+    var amAdd = document.getElementById('am-add');
+    if (amAdd) amAdd.onclick = function () {
+      var f = document.getElementById('am-what');
+      var v = f && f.value.trim();
+      if (!v) return;
+      S.amend(v);
+      paint();
+    };
 
     function wire(id, fn) {
       var el = document.getElementById(id);
