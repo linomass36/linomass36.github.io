@@ -1306,7 +1306,11 @@ footer {
           /* One line, four numbers. If the phone hour has gone it says so
              rather than shaving the sleep to make the arithmetic close. */
           H += '<div class="nt' + (szn.late ? ' late' : '') + '">' +
-               (szn.gone ? '<span>the night is gone<b>' + SZ.hm(szn.left) +
+               (szn.tight && !szn.gone
+                  ? '<span>' + esc(szn.anchor.title || 'first thing') + '<b>' +
+                    SZ.hhmm(szn.anchor.mins) + '</b></span><span>morning does not fit<b>' +
+                    SZ.hhmm(szn.wakeTrimmed) + '</b> without the manuscript</span>'
+                : szn.gone ? '<span>the night is gone<b>' + SZ.hm(szn.left) +
                            '</b> to the alarm</span><span>wake stands<b>' +
                            SZ.hhmm(szn.wake) + '</b></span>'
                 : szn.late ? '<span>phone was due<b>' + SZ.hhmm(szn.phone) + '</b> \u00b7 ' +

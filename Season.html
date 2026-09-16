@@ -227,6 +227,7 @@
   var HEAVY = ['Light', 'Ordinary', 'Heavy', 'Very heavy'];
 
   function fmtHM(mins) { return S.hm(mins); }
+  function wrap2(x) { return ((x % 1440) + 1440) % 1440; }
 
   function rowHTML(r, st) {
     var mark = st === 'done' ? '✓' : st === 'floor' ? '–' : st === 'held' ? '·' : '';
@@ -244,19 +245,41 @@
 
   function nightHTML(s, now) {
     var n = S.night(s, now);
-    var chain = S.CHAIN.map(function (c) { return c[0].toLowerCase() + ' ' + c[1]; }).join(' · ');
+    var chain = S.CHAIN.map(function (c) { return c[0].toLowerCase() + ' ' + c[1]; }).join(' \u00b7 ');
     var times = '<div class="times">' +
       [['Phone away', S.hhmm(n.phone)], ['Lights out', S.hhmm(n.lights)],
        ['Wake', S.hhmm(n.wake)], ['Leave', S.hhmm(n.leave)]].map(function (r) {
         return '<div class="t"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>';
       }).join('') + '</div>';
 
-    var body;
+    /* The anchor is NAMED, so the alarm can be argued with rather than taken
+       on faith. "Wake 05:05" is a demand; "wake 05:05, because Hike is at
+       07:00" is an argument you can check against your own calendar. */
+    var src = (n.anchor && n.anchor.source === 'calendar')
+      ? esc(n.anchor.title) + ' at ' + S.hhmm(n.anchor.mins)
+      : 'an ' + S.hhmm(n.anchor ? n.anchor.mins : n.shiftStart) +
+        ' start \u00b7 nothing in the calendar';
+    var head = '<div class="kick">Tonight<span class="end">' + esc(src) + '</span></div>';
+
+    var body, tone = n.late ? ' t-warn' : '';
+
     if (n.gone) {
       body = '<p class="hub-p"><b>The night is gone.</b> ' + fmtHM(n.left) +
         ' until the alarm, so there is no bedtime left to advise. The wake time stands ' +
-        'at ' + S.hhmm(n.wake) + ' — today is a floor day, and the way back is the next ' +
+        'at ' + S.hhmm(n.wake) + ' \u2014 today is a floor day, and the way back is the next ' +
         'block, not a longer list.</p>';
+    } else if (n.tight) {
+      /* A 07:00 anchor plus a ninety-minute morning wants you up at 05:05.
+         True, and not a thing anyone does before a hike \u2014 so it is reported
+         as not fitting, with the one elastic block priced rather than cut here. */
+      tone = ' t-warn';
+      body = '<p class="hub-p"><b>The morning does not fit.</b> ' +
+        esc((n.anchor && n.anchor.title) || 'The first thing') + ' at ' +
+        S.hhmm(n.anchor ? n.anchor.mins : n.shiftStart) + ', minus the commute and ' +
+        fmtHM(n.morning) + ' of morning, wants you up at ' + S.hhmm(n.wake) + '.</p>' +
+        '<p class="hub-p">Drop the manuscript and it is <b>' + S.hhmm(n.wakeTrimmed) +
+        '</b>. Move that block to after the first thing instead \u2014 the same ' +
+        n.manuscript + ' minutes, later in the day. The rest of the chain still fits.</p>';
     } else if (!n.late) {
       body = '<p class="hub-p">' + esc(chain) + ' = ' + fmtHM(n.morning) + ', then ' + n.commute +
         ' minutes of commute. Eight hours back from ' + S.hhmm(n.wake) +
@@ -269,9 +292,7 @@
         '<p class="hub-p">Or cut the manuscript to 25 and wake at ' + S.hhmm(n.wake + 20) +
         ' for ' + fmtHM(n.bedNow + 20) + '. Those are the two. It does not round up on its own.</p>';
     }
-    return '<div class="kick">Tonight<span class="end">from an ' + S.hhmm(n.shiftStart) +
-      ' start</span></div>' +
-      '<div class="hub-card' + (n.late ? ' t-warn' : '') + '">' + times + body + '</div>';
+    return head + '<div class="hub-card' + tone + '">' + times + body + '</div>';
   }
 
   function declarationHTML() {

@@ -336,5 +336,51 @@ group('A season declared at night begins in the morning');
      'a season started in the morning asks for the morning');
 }
 
+/* ── 12. the calendar decides when you get up ─────────────────────────── */
+group('The night anchors on the first commitment, not on a stored shift');
+{
+  const seed = seeded();
+  /* The reported day: a 07:00 hike before a 13:30 shift. The shift is not
+     what decides the alarm, and a card answering 13:30 would be confidently
+     useless. */
+  seed.ct_week_v1 = JSON.stringify({
+    days: { '2026-09-24': { blocks: [
+      { title: 'Scribe shift', kind: 'work', from: '13:30', to: '19:30', allDay: false } ] } },
+    own: { '2026-09-24': [
+      { title: 'Hike', kind: 'own', from: '07:00', to: '10:30', allDay: false } ] }
+  });
+  const { S } = load(seed);
+  const s = S.read();
+
+  const n = S.night(s, at(2026, 9, 23, 23, 15));
+  ok(n.anchor.source === 'calendar', 'the anchor comes from the week, not the stored shift');
+  ok(n.anchor.title === 'Hike' && n.anchor.mins === 7 * 60,
+     'and it is the EARLIEST commitment — the hike, not the shift behind it');
+  ok(S.hhmm(n.wake) === '05:05', 'which puts the alarm at 05:05');
+  ok(n.tight === true, 'and reports that the morning chain does not fit');
+  ok(S.hhmm(n.wakeTrimmed) === '05:50',
+     'naming what dropping the manuscript actually buys, rather than deciding it');
+
+  /* Already past the hike: the next wake is governed by the NEXT day. */
+  const after = S.night(s, at(2026, 9, 24, 21, 0));
+  ok(after.anchor.source === 'default',
+     'with nothing on the following day it falls back to the stored shift, and says so');
+
+  /* An all-day event is not a time you have to be up for. */
+  const allday = seeded();
+  allday.ct_week_v1 = JSON.stringify({
+    days: { '2026-09-24': { blocks: [
+      { title: 'Birthday', kind: 'other', from: null, to: null, allDay: true } ] } }, own: {}
+  });
+  const A = load(allday).S;
+  ok(A.night(A.read(), at(2026, 9, 23, 23, 15)).anchor.source === 'default',
+     'an all-day block sets no alarm and is ignored');
+
+  /* No calendar at all still works — every existing assertion depends on it. */
+  const bare = load(seeded()).S;
+  ok(bare.night(bare.read(), at(2026, 9, 23, 19, 0)).anchor.source === 'default',
+     'and with no week stored the stored shift is still the answer');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);

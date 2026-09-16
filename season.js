@@ -267,9 +267,79 @@
   }
   function wrap(x) { return ((x % 1440) + 1440) % 1440; }
 
+  /* ── THE ANCHOR, READ FROM THE CALENDAR ─────────────────────────────────
+     The night was computed from one stored `shiftStart`, which is wrong twice
+     over: shifts vary, and the thing that actually decides when you get up is
+     not the shift — it is the FIRST fixed commitment of the day, whatever it
+     happens to be. A 07:00 hike before a 13:30 shift governs the alarm
+     completely, and a card that answered 13:30 would be confidently useless.
+
+     ct_week_v1 already holds both halves: `days[iso].blocks` are the ones
+     pulled from Google, `own[iso]` the ones typed in on the Week. Neither is
+     re-derived here — this reads the same store the Week writes, so an event
+     added there moves the bedtime here without a second place to keep it.
+
+     THE ANCHOR IS NAMED in what comes back, so the number can be argued with
+     rather than taken on faith. "Wake 05:05" is a demand; "wake 05:05,
+     because Hike is at 07:00" is an argument you can check. */
+  var WEEK_KEY = 'ct_week_v1';
+
+  function hhmmToMins(v) {
+    if (!v || typeof v !== 'string') return NaN;
+    var p = v.split(':');
+    var h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0;
+    return isNaN(h) ? NaN : h * 60 + m;
+  }
+  function blocksOn(key) {
+    var wk = readJSON(WEEK_KEY, null);
+    if (!wk || typeof wk !== 'object') return [];
+    var out = [];
+    var d = wk.days && wk.days[key];
+    if (d && Array.isArray(d.blocks)) out = out.concat(d.blocks);
+    if (wk.own && Array.isArray(wk.own[key])) out = out.concat(wk.own[key]);
+    return out.filter(function (b) { return b && !b.allDay && b.from; });
+  }
+  function anchorOn(key) {
+    var list = blocksOn(key).map(function (b) {
+      return { mins: hhmmToMins(b.from), title: b.title || '(untitled)', kind: b.kind || 'other' };
+    }).filter(function (b) { return !isNaN(b.mins); })
+      .sort(function (a, b) { return a.mins - b.mins; });
+    return list.length ? list[0] : null;
+  }
+  function nextDayKey(key) {
+    if (w.CTDay) return w.CTDay.shift(key, 1);
+    var d = new Date(key + 'T12:00:00');
+    d.setDate(d.getDate() + 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
+           String(d.getDate()).padStart(2, '0');
+  }
+
+  /* Which day's anchor governs the NEXT time you have to be up. Before
+     today's, you are already awake for it; after it, the one that matters is
+     tomorrow's. The single stored shiftStart stays the fallback for a day the
+     calendar says nothing about, and the result says which it used. */
+  function anchor(s, now) {
+    s = s || read();
+    var d = now == null ? new Date() : new Date(now);
+    var mins = d.getHours() * 60 + d.getMinutes();
+    var todayKey = dayKey(now);
+    var a = anchorOn(todayKey);
+    if (a && mins < a.mins) {
+      return { mins: a.mins, title: a.title, kind: a.kind, source: 'calendar', forDay: todayKey };
+    }
+    var b = anchorOn(nextDayKey(todayKey));
+    if (b) {
+      return { mins: b.mins, title: b.title, kind: b.kind, source: 'calendar',
+               forDay: nextDayKey(todayKey) };
+    }
+    return { mins: (s.shiftStart == null) ? DEFAULT_SHIFT : s.shiftStart,
+             title: null, kind: 'shift', source: 'default', forDay: null };
+  }
+
   function night(s, now) {
     s = s || read();
-    var start = (s.shiftStart == null) ? DEFAULT_SHIFT : s.shiftStart;
+    var anc = anchor(s, now);
+    var start = anc.mins;
     var morning = morningMins();
     var leave = start - COMMUTE;
     var wake = leave - morning;
@@ -298,8 +368,21 @@
     var GONE_FLOOR = 90;
     var left = wrap(wakeW - mins);
     var gone = late && left < GONE_FLOOR;
+
+    /* A 07:00 anchor and a ninety-minute morning wants you up at 05:05, which
+       is arithmetically true and not a thing anyone does before a hike. So the
+       chain is reported as NOT FITTING rather than demanded: the manuscript is
+       the only elastic block in it, and dropping it is named with its cost
+       instead of being decided here. Same rule as everything else on this
+       card — it does not shave to make the numbers close. */
+    var TIGHT_FLOOR = 5 * 60 + 30;
+    var manuscript = 0;
+    CHAIN.forEach(function (c) { if (c[0] === 'Manuscript') manuscript = c[1]; });
+    var tight = wakeW < TIGHT_FLOOR;
     return {
-      gone: gone, left: left, goneFloor: GONE_FLOOR,
+      anchor: anc, gone: gone, left: left, goneFloor: GONE_FLOOR,
+      tight: tight, tightFloor: TIGHT_FLOOR, manuscript: manuscript,
+      wakeTrimmed: wrap(wakeW + manuscript),
       shiftStart: start, commute: COMMUTE, morning: morning, chain: CHAIN.slice(),
       leave: wrap(leave), wake: wakeW, lights: wrap(lights), phone: phoneW,
       now: mins, late: late,
@@ -638,6 +721,7 @@
     start: start, end: end, tomorrow9: tomorrow9,
     reschedule: reschedule, canReschedule: canReschedule, notAsked: notAsked,
     night: night, hhmm: hhmm, hm: hm, morningMins: morningMins,
+    anchor: anchor, anchorOn: anchorOn, blocksOn: blocksOn,
     ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
     week: week, next: next, dayKey: dayKey
   };
