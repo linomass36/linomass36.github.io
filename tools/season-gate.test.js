@@ -182,6 +182,17 @@ group('The night is computed backwards, and does not round up on its own');
   ok(past.late === true, '01:00 is still inside the night, not a fresh morning');
   ok(past.slip === 220, 'and the slip wraps past midnight rather than going negative');
 
+  /* The third state. At 05:53 the window is technically still open, and the
+     first version said "bed now is 12m" — true, and useless. */
+  const spent = S.night(s, at(2026, 9, 24, 5, 53));
+  ok(spent.late === true, '05:53 is still inside the night by the clock');
+  ok(spent.gone === true, 'but the night is GONE — twelve minutes is not a bedtime');
+  ok(spent.left === 12, 'and what is left is reported instead of offered as sleep');
+
+  const stillReal = S.night(s, at(2026, 9, 24, 3, 0));
+  ok(stillReal.late === true && stillReal.gone === false,
+     '03:00 is late but not gone — three hours is still worth going to bed for');
+
   /* The 06:00 case: the phone hour has trivially "passed" and saying so would
      be nonsense. */
   const morning = S.night(s, at(2026, 9, 24, 6, 30));

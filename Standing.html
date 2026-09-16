@@ -530,6 +530,53 @@ h2.vd.calm em{color:var(--ok)}
 .floor .orelse a{font-size:13.5px;line-height:1.4;color:var(--mid);text-decoration:none;
   min-height:32px;display:flex;align-items:center}
 .floor .orelse a:hover{color:var(--held)}
+/* ── the season's card ─────────────────────────────────────────────────
+   The front door is the page opened most, so while a season is live the
+   day's order belongs here rather than one tap away. Deliberately compact:
+   the full declaration, the night and the week all stay on Season.html,
+   because a whole rule sheet on the front door is the motivational essay
+   you stop reading by day nine. */
+.szc{margin-top:13px}
+.szc .hd{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--rust);
+  font-variant-numeric:lining-nums tabular-nums;margin-bottom:9px}
+.szc .hd .r{margin-left:auto;color:var(--faint);letter-spacing:.1em}
+.szc .g{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint);margin:10px 0 5px}
+.szc .g:first-of-type{margin-top:0}
+.szc .rw{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);
+  border-radius:7px;background:var(--raised);margin-bottom:5px;min-height:44px;width:100%;
+  text-align:left}
+.szc .rw .bx{width:20px;height:20px;border-radius:3px;border:1.5px solid var(--line-2);
+  flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;
+  line-height:1;background:var(--surface)}
+.szc .rw .t{flex:1;min-width:0;font-size:15.5px;line-height:1.25}
+.szc .rw .m{font-family:var(--mono);font-size:10.5px;color:var(--faint);flex:0 0 auto;
+  font-variant-numeric:lining-nums tabular-nums}
+.szc .rw.read{cursor:default}
+.szc .rw.read .bx{border-style:dashed}
+.szc .rw.s-done{background:var(--ok-w);border-color:var(--ok-l)}
+.szc .rw.s-done .bx{background:var(--ok);border-color:var(--ok);color:var(--raised)}
+.szc .rw.s-done .t{color:var(--ok)}
+.szc .rw.s-floor{border-color:var(--held-ln)}
+.szc .rw.s-floor .bx{border-color:var(--held);color:var(--held)}
+.szc .rw.s-floor .t{color:var(--held)}
+.szc .rw.s-held{background:var(--held-bg);border-color:var(--held-ln)}
+.szc .rw.s-held .bx{background:var(--held);border-color:var(--held);color:var(--raised)}
+.szc .rw.s-held .t{color:var(--held)}
+.szc .nt{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding:9px 11px;
+  border:1px solid var(--line-2);border-radius:7px;background:var(--sunken);
+  font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
+.szc .nt b{font-family:var(--serif);font-size:15px;font-weight:400;color:var(--ink);
+  letter-spacing:0;text-transform:none;margin-left:5px}
+.szc .nt.late{border-color:var(--held-ln);background:var(--held-bg);color:var(--held)}
+.szc .acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.szc .acts button,.szc .acts a{flex:1 1 auto;min-height:44px;display:flex;align-items:center;
+  justify-content:center;padding:0 13px;border:1px solid var(--line-2);border-radius:7px;
+  background:var(--raised);color:var(--ink);font-size:14px;text-decoration:none}
+.szc .acts button.bad{border-color:var(--owed-ln);background:var(--owed-bg);color:var(--owed)}
+
 .reveal{margin-top:11px;font-family:var(--mono);font-size:10px;color:var(--muted);
   text-decoration:underline;text-underline-offset:3px}
 
@@ -1224,6 +1271,60 @@ footer {
            owed.length + ' owed, none of it accruing)</button>';
     }
 
+    /* ── the season's day, on the front door ──────────────────────────────
+       Skipped entirely on a floor day: that page is one ask and adding nine
+       rows under it would undo the only thing the floor day does. */
+    if (SZ && seasonDay != null && !floorDay) {
+      try {
+        var szs = SZ.read();
+        if (SZ.live(szs)) {
+          var szn = SZ.night(szs);
+          var szt = SZ.ticks(szs, null);
+          var nx = SZ.next(szs);
+          H += '<div class="szc"><div class="hd">Season \u00b7 day ' + seasonDay +
+               ' of ' + szs.days + '<span class="r">next: ' + esc(nx.ask.toLowerCase()) +
+               '</span></div>';
+          var lastG = null;
+          SZ.ROWS.forEach(function (r) {
+            var st = SZ.state(r.id, szs, null);
+            if (r.grp !== lastG) {
+              H += '<div class="g">' + esc(SZ.GROUPS[r.grp]) + '</div>';
+              lastG = r.grp;
+            }
+            var mk = st === 'done' ? '\u2713' : st === 'floor' ? '\u2013' :
+                     st === 'held' ? '\u00b7' : '';
+            var isRead = r.src !== 'tap';
+            H += '<button class="rw s-' + st + (isRead ? ' read' : '') +
+                 '" type="button" data-szrow="' + esc(r.id) + '"' +
+                 (isRead ? ' disabled' : '') + '>' +
+                 '<span class="bx">' + mk + '</span>' +
+                 '<span class="t">' + esc(r.ask) + '</span>' +
+                 (r.mins ? '<span class="m">' + r.mins + 'm</span>' : '') + '</button>';
+          });
+          /* One line, four numbers. If the phone hour has gone it says so
+             rather than shaving the sleep to make the arithmetic close. */
+          H += '<div class="nt' + (szn.late ? ' late' : '') + '">' +
+               (szn.gone ? '<span>the night is gone<b>' + SZ.hm(szn.left) +
+                           '</b> to the alarm</span><span>wake stands<b>' +
+                           SZ.hhmm(szn.wake) + '</b></span>'
+                : szn.late ? '<span>phone was due<b>' + SZ.hhmm(szn.phone) + '</b> \u00b7 ' +
+                           SZ.hm(szn.slip) + ' ago</span><span>bed now<b>' +
+                           SZ.hm(szn.bedNow) + '</b></span>'
+                : '<span>phone<b>' + SZ.hhmm(szn.phone) + '</b></span>' +
+                           '<span>lights<b>' + SZ.hhmm(szn.lights) + '</b></span>' +
+                           '<span>wake<b>' + SZ.hhmm(szn.wake) + '</b></span>' +
+                           '<span>leave<b>' + SZ.hhmm(szn.leave) + '</b></span>') +
+               '</div>';
+          H += '<div class="acts">' +
+               '<button type="button" id="sz-derail">I\u2019m already derailing</button>' +
+               (SZ.lapOpen() ? '<button type="button" class="bad" id="sz-back">Reset done</button>'
+                             : '<button type="button" class="bad" id="sz-hit">Lost that round</button>') +
+               '<a href="Season.html">The Season \u2192</a></div>';
+          H += '</div>';
+        }
+      } catch (e) {}
+    }
+
     /* ── one person a day ── */
     var person = null;
     try { person = window.CTContact ? window.CTContact.pick() : null; } catch (e) {}
@@ -1352,6 +1453,32 @@ footer {
     var od = $('#one-did');
     if (od) od.addEventListener('click', function () {
       setFloorMet(!floorMet()); paint();
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-szrow]'), function (b) {
+      b.addEventListener('click', function () {
+        try {
+          var id = b.getAttribute('data-szrow');
+          var cur = window.Season.ticks(window.Season.read(), null)[id];
+          window.Season.tick(id, cur ? false : true);
+        } catch (e) {}
+        paint();
+      });
+    });
+    var szh = $('#sz-hit');
+    if (szh) szh.addEventListener('click', function () {
+      try { window.Season.lapHit(); } catch (e) {} paint();
+    });
+    var szb = $('#sz-back');
+    if (szb) szb.addEventListener('click', function () {
+      try { window.Season.lapBack(); } catch (e) {} paint();
+    });
+    var szd = $('#sz-derail');
+    if (szd) szd.addEventListener('click', function () {
+      try {
+        var n = window.Season.next(window.Season.read());
+        alert('Next block: ' + n.ask + (n.mins ? ' \u00b7 ' + n.mins + ' minutes' : '') +
+              '\n\nChange room. Leave the phone where you are standing.');
+      } catch (e) {}
     });
     var rv = $('#reveal');
     if (rv) rv.addEventListener('click', function () { setRevealed(true); paint(); });

@@ -250,7 +250,19 @@
     var late = (phoneW < wakeW)
       ? (mins >= phoneW && mins < wakeW)
       : (mins >= phoneW || mins < wakeW);
+
+    /* THE THIRD STATE, and it is the one the first version got wrong. At 05:53
+       the window is technically still open, so the card read "the phone was
+       due eight hours ago, bed now is 12m" — true, and useless, because
+       twelve minutes before the alarm nobody is deciding whether to go to bed.
+       Advice that does not hold is the same failure as a schedule that always
+       fits, so past a floor the honest line is that the night is spent and the
+       wake time stands. */
+    var GONE_FLOOR = 90;
+    var left = wrap(wakeW - mins);
+    var gone = late && left < GONE_FLOOR;
     return {
+      gone: gone, left: left, goneFloor: GONE_FLOOR,
       shiftStart: start, commute: COMMUTE, morning: morning, chain: CHAIN.slice(),
       leave: wrap(leave), wake: wakeW, lights: wrap(lights), phone: phoneW,
       now: mins, late: late,

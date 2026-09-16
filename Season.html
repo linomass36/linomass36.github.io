@@ -248,7 +248,12 @@
       }).join('') + '</div>';
 
     var body;
-    if (!n.late) {
+    if (n.gone) {
+      body = '<p class="hub-p"><b>The night is gone.</b> ' + fmtHM(n.left) +
+        ' until the alarm, so there is no bedtime left to advise. The wake time stands ' +
+        'at ' + S.hhmm(n.wake) + ' — today is a floor day, and the way back is the next ' +
+        'block, not a longer list.</p>';
+    } else if (!n.late) {
       body = '<p class="hub-p">' + esc(chain) + ' = ' + fmtHM(n.morning) + ', then ' + n.commute +
         ' minutes of commute. Eight hours back from ' + S.hhmm(n.wake) +
         ' puts the phone down at ' + S.hhmm(n.phone) + '.</p>';
