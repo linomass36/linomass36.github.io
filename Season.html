@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Season · CT Hub</title>
+<link rel="stylesheet" href="./hub.css">
+<link rel="stylesheet" href="./mobile.css">
+<script src="./sitemap.js"></script>
+<script src="./day.js"></script>
+<script src="./season.js"></script>
+<script src="./plates.js"></script>
+<style>
+  /* Standing.html's alias block, copied rather than reinvented. --held is
+     ALREADY GOLD across this hub — conditions.js has meant that since it
+     shipped — so the floor state is gold OUTLINED and held is gold FILLED.
+     One hue, two weights, no second meaning for a colour that has one. */
+  .sn {
+    --mid: var(--body); --rust: var(--owed);
+    --owed-bg: var(--owed-w); --owed-ln: var(--owed-l);
+    --held: var(--warn); --held-bg: var(--warn-w); --held-ln: var(--warn-l);
+    font-variant-numeric: oldstyle-nums;
+  }
+  /* Lining figures on anything mono and uppercased: Fell's oldstyle 5
+     descends below the baseline and, set in caps, reads as an S. */
+  .sn .kick, .sn .src, .sn .cad, .sn .when, .sn .ct { font-variant-numeric: lining-nums tabular-nums; }
+
+  .sn .kick { font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--rust); display: flex; align-items: baseline;
+    gap: 9px; margin: var(--s5) 0 var(--s3); }
+  .sn .kick .end { margin-left: auto; color: var(--faint); letter-spacing: .1em; }
+
+  .sn .clock { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    padding: 8px 11px; border: 1px solid var(--owed-ln); background: var(--owed-bg);
+    border-radius: var(--r4); }
+  .sn .clock .n { font-family: var(--mono); font-weight: 600; font-size: 15px;
+    color: var(--rust); font-variant-numeric: lining-nums tabular-nums; }
+  .sn .clock .cw { font-size: 11.5px; color: var(--mid); }
+  .sn .clock .d { margin-left: auto; font-family: var(--mono); font-size: 9.5px;
+    color: var(--muted); white-space: nowrap; font-variant-numeric: lining-nums; }
+
+  .sn h2.vd { font-family: var(--serif); font-weight: 400; font-size: 26px; line-height: 1.12;
+    margin: var(--s4) 0 5px; }
+  .sn h2.vd em { font-style: normal; color: var(--owed); }
+  .sn h2.vd.calm em { color: var(--ok); }
+  .sn h2.vd.held em { color: var(--held); }
+  .sn .vsub { margin: 0; color: var(--mid); font-size: 14px; line-height: 1.45; }
+
+  .sn .row { display: flex; align-items: center; gap: 12px; padding: 11px 13px;
+    border: 1px solid var(--line); border-radius: var(--r4); background: var(--raised);
+    margin-bottom: 7px; min-height: var(--tap); width: 100%; text-align: left; }
+  .sn .row .box { width: 22px; height: 22px; border-radius: 3px; border: 1.5px solid var(--line-2);
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; line-height: 1; background: var(--surface); }
+  .sn .row .tx { flex: 1; min-width: 0; }
+  .sn .row .tx b { display: block; font-weight: 400; font-size: 17px; line-height: 1.25; }
+  .sn .row .tx i { display: block; font-style: normal; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .09em; color: var(--faint); margin-top: 2px; text-transform: uppercase;
+    font-variant-numeric: lining-nums; }
+  .sn .row .mins { font-family: var(--mono); font-size: 11px; color: var(--faint); flex: 0 0 auto;
+    font-variant-numeric: lining-nums tabular-nums; }
+  .sn .row.read { cursor: default; }
+  .sn .row.read .box { border-style: dashed; }
+  .sn .row.sec { opacity: .74; }
+  .sn .row.s-done { background: var(--ok-w); border-color: var(--ok-l); }
+  .sn .row.s-done .box { background: var(--ok); border-color: var(--ok); color: var(--raised); }
+  .sn .row.s-done .tx b { color: var(--ok); }
+  .sn .row.s-floor { border-color: var(--held-ln); }
+  .sn .row.s-floor .box { border-color: var(--held); color: var(--held); }
+  .sn .row.s-floor .tx b { color: var(--held); }
+  .sn .row.s-held { background: var(--held-bg); border-color: var(--held-ln); }
+  .sn .row.s-held .box { background: var(--held); border-color: var(--held); color: var(--raised); }
+  .sn .row.s-held .tx b { color: var(--held); }
+  .sn .row.s-missed { background: var(--owed-bg); border-color: var(--owed-ln); }
+  .sn .row.s-missed .tx b { color: var(--owed); }
+
+  .sn .grp { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--faint); margin: var(--s4) 0 6px; }
+  .sn .grp:first-child { margin-top: 0; }
+
+  .sn .times { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+  .sn .times .t { border: 1px solid var(--line-2); border-radius: var(--r4);
+    background: var(--raised); padding: 8px 9px; min-width: 0; }
+  .sn .times .k { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; }
+  .sn .times .v { display: block; font-family: var(--serif); font-size: 23px; line-height: 1.1;
+    margin-top: 3px; font-variant-numeric: tabular-nums; color: var(--ink); }
+  @media (max-width: 560px) { .sn .times { grid-template-columns: repeat(2, 1fr); } }
+
+  .sn .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 760px) { .sn .rules { grid-template-columns: 1fr; } }
+  .sn .bk { border: 1px solid var(--line-2); border-radius: var(--r4);
+    background: var(--surface); padding: 13px 14px; }
+  .sn .bk.full { grid-column: 1 / -1; }
+  .sn .bk.no { border-left: 3px solid var(--owed); background: var(--owed-bg); border-color: var(--owed-ln); }
+  .sn .bk.keep { border-left: 3px solid var(--ok); background: var(--ok-w); border-color: var(--ok-l); }
+  .sn .bk h4 { margin: 0 0 8px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  .sn .bk.no h4 { color: var(--owed); }
+  .sn .bk.keep h4 { color: var(--ok); }
+  .sn .bk ul { margin: 0; padding-left: 17px; font-size: 14px; line-height: 1.65; color: var(--body); }
+  .sn .cad { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--faint); margin: 9px 0 3px; }
+  .sn .purpose { font-family: var(--serif); font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0; }
+
+  .sn .heavy { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 10px; }
+  .sn .heavy button { border: 1px solid var(--line-2); border-radius: var(--r4);
+    background: var(--raised); padding: 11px 6px; text-align: center; font-size: 13.5px;
+    color: var(--mid); min-height: var(--tap); }
+  .sn .heavy button.on { border-color: var(--accent); background: var(--accent-w); color: var(--accent); }
+  @media (max-width: 560px) { .sn .heavy { grid-template-columns: repeat(2, 1fr); } }
+
+  .sn .note { font-size: 13px; color: var(--faint); line-height: 1.5; margin: 7px 2px 0; }
+  .sn .amend { border-left: 3px solid var(--held); background: var(--held-bg);
+    border: 1px solid var(--held-ln); border-radius: var(--r4); padding: 12px 13px; }
+</style>
+</head>
+<body class="hub">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     THE SEASON — a bounded posture with a start date, an edge and a review.
+
+     WHY IT IS A PAGE AND NOT A PANEL OF THE JOURNAL. The same reason the
+     Wait is not: a thing you write in cannot tell you to stop writing. This
+     page answers what today permits, and that answer has to be computed
+     rather than remembered, because the person reading it at 23:00 on day
+     forty has a better case than the one who agreed it in September.
+
+     NOTHING HERE IS STORED THAT CAN BE DERIVED. season.js owns the
+     arithmetic; this file only renders it. The day number, the check-in
+     dates, the end date, what the night costs and whether the rules may be
+     changed right now all come out of one timestamp.
+
+     WHERE THE PROSE LIVES IS PART OF THE DESIGN. The full declaration is
+     here, on a page opened weekly. One sentence of it — the purpose — is
+     what belongs on a daily surface. A whole rule sheet on the front door is
+     the motivational essay you stop reading by day nine.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<header class="hub-top">
+  <div class="hub-top-in">
+    <span class="hub-mark">CT Hub</span>
+    <span class="hub-dateline" id="dateline"></span>
+    <span class="hub-sp"></span>
+  </div>
+</header>
+
+<main class="hub-page sn" style="position:relative">
+  <div id="screen"></div>
+
+  <div class="plate-break" data-plate-cap data-plate-slot="season"
+       data-plate-rotate="polish american"></div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var S = window.Season;
+
+  function esc(x) {
+    return String(x == null ? '' : x).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  /* ── the declaration ────────────────────────────────────────────────────
+     Written here rather than in season.js because it is content, not
+     arithmetic, and because it is meant to be edited by hand — by you, in
+     this file, deliberately, rather than through a form at 23:00. */
+  var PURPOSE =
+    'Marriage has been sitting above God in my life, and that is the thing I am moving — ' +
+    'not the wanting, and not the standards. For ninety days I keep prayer, church and the ' +
+    'sabbath as fixed appointments rather than moods, I put the weight I have been putting on ' +
+    'a future wife onto the work that is actually mine, and I find out from the record whether ' +
+    'a day without her can be a good day.';
+
+  var KEEPING = [
+    ['Every day', [
+      'Prayer, before sleep and after waking',
+      'The manuscript before the day starts',
+      'Anki at work, or straight after the shift',
+      'Phone out of the bathroom',
+      'Phone down at the hour the night computes',
+      'Shower before the couch',
+      'A lap after a trigger — before the argument, not after',
+      'Name the substitution when it happens — one line, not a speech'
+    ]],
+    ['Most days', [
+      'Training, five or six — not seven, not none',
+      'Anatomy in a timed block',
+      'Spanish, fifteen minutes, attached to a block that already holds'
+    ]],
+    ['Every week', [
+      'Church — always. If not Sunday, another day',
+      'The sabbath — mandatory, and never the catch-up day',
+      'Finances, once',
+      'The review, once'
+    ]],
+    ['Once', ['One magic trick, practised short and deliberately untracked']]
+  ];
+
+  var NOTTHIS = [
+    'No contact with the ex — closed unless she initiates',
+    'No reopening the cancelled date',
+    'No apps as medicine',
+    'No new romantic chats, no friendships as auditions',
+    'No renegotiating the rules midweek — the check-in is the only place',
+    'No catch-up work on the sabbath'
+  ];
+
+  var WORTHIT = [
+    'The practices held — prayer both ends, church every week, the sabbath kept and never traded for catch-up',
+    'The substitution got named when it happened rather than reconstructed afterwards',
+    'Where the hours actually went is on the record, and day 90 reads the record rather than a mood',
+    'A wifeless day stopped needing a reason to count as a good day',
+    'The manuscript, the body and school held — so the season was a clearing, not a suspension'
+  ];
+
+  /* One tap, once, at the day-close. Asked about THE DAY, not about her:
+     "how heavy was today" rather than "how much do you miss her", because
+     the second is rumination with a number attached. No target, no streak,
+     no colour — a heavy day is not a failed day, it is Tuesday. */
+  var HEAVY = ['Light', 'Ordinary', 'Heavy', 'Very heavy'];
+
+  function fmtHM(mins) { return S.hm(mins); }
+
+  function rowHTML(r, st) {
+    var mark = st === 'done' ? '✓' : st === 'floor' ? '–' : st === 'held' ? '·' : '';
+    var read = r.src !== 'tap';
+    var tag = read ? esc(r.src) : 'tap';
+    var sub = tag + (st === 'untold' ? ' · not told' : st === 'floor' ? ' · floor' :
+                     st === 'held' ? ' · held' : '');
+    return '<button class="row s-' + st + (read ? ' read' : '') + (r.secondary ? ' sec' : '') +
+      '" type="button" data-row="' + esc(r.id) + '"' + (read ? ' disabled' : '') + '>' +
+      '<span class="box">' + mark + '</span>' +
+      '<span class="tx"><b>' + esc(r.ask) + '</b><i>' + esc(sub) + '</i></span>' +
+      (r.mins ? '<span class="mins">' + r.mins + 'm</span>' : '') +
+      '</button>';
+  }
+
+  function nightHTML(s, now) {
+    var n = S.night(s, now);
+    var chain = S.CHAIN.map(function (c) { return c[0].toLowerCase() + ' ' + c[1]; }).join(' · ');
+    var times = '<div class="times">' +
+      [['Phone away', S.hhmm(n.phone)], ['Lights out', S.hhmm(n.lights)],
+       ['Wake', S.hhmm(n.wake)], ['Leave', S.hhmm(n.leave)]].map(function (r) {
+        return '<div class="t"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>';
+      }).join('') + '</div>';
+
+    var body;
+    if (!n.late) {
+      body = '<p class="hub-p">' + esc(chain) + ' = ' + fmtHM(n.morning) + ', then ' + n.commute +
+        ' minutes of commute. Eight hours back from ' + S.hhmm(n.wake) +
+        ' puts the phone down at ' + S.hhmm(n.phone) + '.</p>';
+    } else {
+      /* Both ways out, both costed, neither chosen. It does not round up. */
+      body = '<p class="hub-p"><b>It does not fit.</b> The phone was due down at ' +
+        S.hhmm(n.phone) + ', ' + fmtHM(n.slip) + ' ago. Lights out now is <b>' +
+        fmtHM(n.bedNow) + '</b> of sleep.</p>' +
+        '<p class="hub-p">Or cut the manuscript to 25 and wake at ' + S.hhmm(n.wake + 20) +
+        ' for ' + fmtHM(n.bedNow + 20) + '. Those are the two. It does not round up on its own.</p>';
+    }
+    return '<div class="kick">Tonight<span class="end">from an ' + S.hhmm(n.shiftStart) +
+      ' start</span></div>' +
+      '<div class="hub-card' + (n.late ? ' t-warn' : '') + '">' + times + body + '</div>';
+  }
+
+  function declarationHTML() {
+    var H = '<div class="kick">The season · as declared</div><div class="rules">';
+    H += '<div class="bk full"><h4>Why it exists</h4><p class="purpose">' + esc(PURPOSE) + '</p></div>';
+
+    H += '<div class="bk keep"><h4>What I am keeping</h4>';
+    KEEPING.forEach(function (g) {
+      H += '<div class="cad">' + esc(g[0]) + '</div><ul>' +
+        g[1].map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+    });
+    H += '</div>';
+
+    H += '<div class="bk no"><h4>What I am not doing</h4><ul>' +
+      NOTTHIS.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>';
+
+    H += '<div class="bk full"><h4>What would make this worth having done</h4><ul>' +
+      WORTHIT.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
+      '<p class="note">Checked at the check-in, not felt on a Tuesday. The question is not ' +
+      '<i>am I lonely</i> — it is <i>did I keep the rules, and am I clearer</i>.</p></div>';
+    return H + '</div>';
+  }
+
+  function paint() {
+    var s = S.read();
+    var now = Date.now();
+    var phase = S.phase(s, now);
+    var H = '';
+
+    /* ── not started: one button, and the three facts it needs ── */
+    if (phase === 'none') {
+      H += '<h1 class="hub-h1">The Season</h1>';
+      H += '<p class="hub-lede">A bounded posture with a start date, an edge and a review. ' +
+        'Nothing here is a mood: the day number, the check-ins, the end date and what tonight ' +
+        'costs are all computed from the moment you press this.</p>';
+      H += '<div class="hub-row-btns"><button class="hub-btn pri" id="go" type="button">' +
+        'Start the season today</button></div>';
+      H += declarationHTML();
+      $('#screen').innerHTML = H;
+      var go = document.getElementById('go');
+      if (go) go.onclick = function () { S.start(); paint(); };
+      return;
+    }
+
+    var d = S.day(s, now);
+    var end = S.endDay(s);
+    var nextC = S.nextCheckin(s, now);
+
+    H += '<div class="clock"><span class="n">' + d + '</span><span class="cw">of ' + s.days +
+      '</span><span class="d">ends ' + esc(end) + '</span></div>';
+
+    if (phase === 'abandoned') {
+      H += '<h2 class="vd">The season <em>ran out</em>.</h2>' +
+        '<p class="vsub">Day ' + d + ' of ' + s.days + ', and no closing review. Nothing is ' +
+        'folded any more and nothing is being asked — the record is here to read, and the ' +
+        'season is over until you say otherwise.</p>';
+      H += '<div class="hub-row-btns" style="margin-top:var(--s4)">' +
+        '<button class="hub-btn" id="close" type="button">Close it out</button>' +
+        '<button class="hub-btn" id="again" type="button">Start a new one</button></div>';
+      H += '<p class="note">Starting a new one archives this one with its dates intact. ' +
+        '“Restart the season” is otherwise the loophole that eats every bad fortnight.</p>';
+      H += declarationHTML();
+      $('#screen').innerHTML = H;
+      document.getElementById('close').onclick = function () { S.end(); paint(); };
+      document.getElementById('again').onclick = function () { S.start(); paint(); };
+      return;
+    }
+
+    if (phase === 'ended') {
+      H += '<h2 class="vd calm">The season is <em>closed</em>.</h2>' +
+        '<p class="vsub">Ninety days, reviewed and ended on purpose.</p>';
+      H += declarationHTML();
+      $('#screen').innerHTML = H;
+      return;
+    }
+
+    /* ── live ── */
+    var nx = S.next(s, now);
+    if (phase === 'checkin') {
+      H += '<h2 class="vd held">Day ' + d + '. The season is <em>open</em>.</h2>' +
+        '<p class="vsub">This is the one screen that can change the rules, and the only day ' +
+        'it can happen without going on the record as an exception.</p>';
+      var off = S.offWindow(s);
+      if (off.length) {
+        H += '<div class="kick">Read this first<span class="end">' + off.length +
+          ' off-window</span></div><div class="amend"><p class="hub-p">You changed the rules ' +
+          off.length + ' time' + (off.length === 1 ? '' : 's') + ' outside a check-in:</p><ul>' +
+          off.map(function (a) {
+            return '<li>day ' + a.day + ' — ' + esc(a.what) + '</li>';
+          }).join('') + '</ul></div>';
+      }
+    } else {
+      H += '<h2 class="vd">Next: <em>' + esc(nx.ask.toLowerCase()) + '</em>.</h2>' +
+        '<p class="vsub">Day ' + d + ' of ' + s.days + '. Next check-in on day ' + nextC +
+        '. ' + (S.canEdit(s, now) ? 'The rules are open until 21:00.' :
+                'The rules are shut until then — anything changed tonight goes on the record.') +
+        '</p>';
+    }
+
+    /* the day, in order */
+    var held = 0, asked = 0;
+    var body = '';
+    var lastGrp = null;
+    S.ROWS.forEach(function (r) {
+      var st = S.state(r.id, s, null, now);
+      if (st === 'held') held++;
+      if (st !== 'done' && st !== 'held') asked += r.mins;
+      if (r.grp !== lastGrp) { body += '<div class="grp">' + esc(S.GROUPS[r.grp]) + '</div>'; lastGrp = r.grp; }
+      body += rowHTML(r, st);
+    });
+    H += '<div class="kick">Today, in order<span class="end">' + fmtHM(asked) +
+      ' left of ask</span></div>' + body;
+
+    H += nightHTML(s, now);
+
+    /* the day-close tap */
+    var t = S.ticks(s, null);
+    H += '<div class="kick">The day-close<span class="end">asked once, in the evening</span></div>' +
+      '<div class="hub-card"><h3 class="hub-h3">How heavy was today?</h3><div class="heavy">' +
+      HEAVY.map(function (l, i) {
+        return '<button type="button" data-heavy="' + i + '"' +
+          (t.heavy === i + 1 ? ' class="on"' : '') + '>' + esc(l) + '</button>';
+      }).join('') + '</div>' +
+      '<p class="hub-p">Not about her — about the day. No target and no streak, and a heavy ' +
+      'day is not a failed one.</p></div>';
+
+    /* The purpose is NOT printed here as well. The declaration below already
+       carries it, and the first version rendered the same paragraph twice on
+       one screen — which is how prose earns the right to be skipped. */
+    H += declarationHTML();
+
+    $('#screen').innerHTML = H;
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-row]'), function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute('data-row');
+        var cur = S.ticks(S.read(), null)[id];
+        S.tick(id, cur ? false : true);
+        paint();
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-heavy]'), function (b) {
+      b.onclick = function () {
+        var v = parseInt(b.getAttribute('data-heavy'), 10) + 1;
+        var st = S.read();
+        var k = S.dayKey();
+        if (!st.ticks) st.ticks = {};
+        if (!st.ticks[k]) st.ticks[k] = {};
+        st.ticks[k].heavy = (st.ticks[k].heavy === v) ? undefined : v;
+        S.save(st);
+        paint();
+      };
+    });
+  }
+
+  var dl = document.getElementById('dateline');
+  if (dl) {
+    dl.textContent = new Date().toLocaleDateString(undefined,
+      { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  paint();
+})();
+</script>
+</body>
+</html>

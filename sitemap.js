@@ -268,9 +268,19 @@
        the Journal is not a gate: a thing you write in cannot tell you to
        stop writing. */
     'Wait.html':                 { name: 'The Wait',      group: 'People & money', parent: 'Network Map.dc.html', back: 'none',
-      dest: 'people', panel: 'Wait', ord: 4,
+      dest: 'people', panel: 'Wait', ord: 5,
       plain: 'Wait',
       blurb: 'One ask, one bump, one week — and what the hour permits.' },
+    /* Filed beside the Wait for the reason the Wait is filed here: it holds
+       one rule set and answers what today permits, and a thing you write in
+       cannot tell you to stop writing. The Wait is one relationship's case of
+       it; the Season is the posture. It reads Wait rather than keeping a
+       second copy of the ex rule — two ninety-day counters with different
+       start dates would be believed selectively at 02:00. */
+    'Season.html':               { name: 'The Season',    group: 'People & money', parent: 'Network Map.dc.html', back: 'none',
+      dest: 'people', panel: 'Season', ord: 4,
+      plain: 'Season',
+      blurb: 'Ninety days with an edge and a review, and what tonight costs.' },
     /* A SHELL, not a panel. Money.html hosts Targets, Debt and Day budget, all
        three of which are folded pages carrying their own panel names — so
        unlike Plan.html, which kept its own `Now` content, this file has no

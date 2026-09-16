@@ -112,6 +112,7 @@ jobs:
           node tools/board.test.js
           node tools/contact-angles.test.js
           node tools/wait-gate.test.js
+          node tools/season-gate.test.js
           node tools/mornings.test.js
           node tools/weekly-review.test.js
           node tools/health-import.test.js
