@@ -489,5 +489,38 @@ group('The claim is read from the record, or not at all');
   ok(S.median([]) === null, 'an empty set has no median rather than a zero');
 }
 
+/* ── 17. the evening never asks for more than it has ──────────────────── */
+group('What the evening asks for fits in the evening');
+{
+  /* Reported from a screenshot: home at 20:00, phone down at 21:20, and the
+     board asking for the shower, an hour of anatomy AND Spanish. Eighty
+     minutes of room, ninety-five minutes of asks. */
+  const seed = seeded();
+  seed.ct_week_v1 = JSON.stringify({ days: { '2026-09-17': {
+    session: null, free: 2, committed: 9, blocks: [
+      { title: 'Hike', kind: 'own', from: '07:00', to: '10:30', allDay: false },
+      { title: 'Scribe shift + commute', kind: 'work', from: '13:30', to: '20:00', allDay: false }
+    ] } } });
+  const { S } = load(seed);
+  const s = S.read();
+  const evening = at(2026, 9, 17, 20, 5);
+
+  const room = S.eveningRoom(s, evening);
+  ok(room === 80, 'eighty minutes between getting home and the phone hour');
+
+  const after = S.ROWS.filter((r) => r.grp === 'after');
+  const asked = after.filter((r) => S.state(r.id, s, null, evening) !== 'na');
+  const total = asked.reduce((t, r) => t + r.mins, 0);
+  ok(total <= room,
+     'and what it asks for fits inside that (' + total + ' of ' + room + ')');
+
+  ok(S.state('arrival', s, null, evening) !== 'na',
+     'the shower is still asked — it is never evicted');
+  ok(S.state('anatomy', s, null, evening) !== 'na',
+     'and the one block that fits behind it is asked');
+  ok(S.state('spanish', s, null, evening) === 'na',
+     'the one that does not fit is not');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);

@@ -608,8 +608,15 @@
     var after = ROWS.filter(function (x) { return x.grp === 'after'; });
     for (var j = 0; j < after.length; j++) {
       if (after[j].id === 'train' && !p.session) continue;
-      if (after[j].id === 'arrival') continue;
+      /* The arrival rule cannot be EVICTED — it is how you come through the
+         door, and on a day the calendar has eaten it is the only thing left
+         that decides the night. But its minutes are still minutes. Exempting
+         it from the eviction AND from the arithmetic had an eighty-minute
+         evening cheerfully asking for ninety-five: the shower takes twenty
+         whether or not it can be dropped, so it is counted first and the
+         blocks behind it compete for what is actually left. */
       used += after[j].mins;
+      if (after[j].id === 'arrival') continue;
       if (after[j].id === id) return used > room;
     }
     return false;
