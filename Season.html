@@ -72,6 +72,9 @@
   .sn .row.s-held { background: var(--held-bg); border-color: var(--held-ln); }
   .sn .row.s-held .box { background: var(--held); border-color: var(--held); color: var(--raised); }
   .sn .row.s-held .tx b { color: var(--held); }
+  /* Not asked: quieter than held, and unmistakably not a miss. */
+  .sn .row.s-na { background: var(--sunken); border-color: var(--line); opacity: .66; }
+  .sn .row.s-na .tx b { color: var(--muted); }
   .sn .row.s-missed { background: var(--owed-bg); border-color: var(--owed-ln); }
   .sn .row.s-missed .tx b { color: var(--owed); }
 
@@ -304,12 +307,18 @@
       H += '<p class="hub-lede">A bounded posture with a start date, an edge and a review. ' +
         'Nothing here is a mood: the day number, the check-ins, the end date and what tonight ' +
         'costs are all computed from the moment you press this.</p>';
-      H += '<div class="hub-row-btns"><button class="hub-btn pri" id="go" type="button">' +
-        'Start the season today</button></div>';
+      H += '<div class="hub-row-btns">' +
+        '<button class="hub-btn pri" id="go-tom" type="button">Start tomorrow morning</button>' +
+        '<button class="hub-btn" id="go" type="button">Start now instead</button></div>';
+      H += '<p class="note">Tomorrow is the honest default: the declaration is written tonight ' +
+        'and the season is lived from the morning. Starting the clock at this hour spends day one ' +
+        'on a day that is already over.</p>';
       H += declarationHTML();
       $('#screen').innerHTML = H;
       var go = document.getElementById('go');
       if (go) go.onclick = function () { S.start(); paint(); };
+      var gt = document.getElementById('go-tom');
+      if (gt) gt.onclick = function () { S.start(S.tomorrow9()); paint(); };
       return;
     }
 
@@ -319,6 +328,23 @@
 
     H += '<div class="clock"><span class="n">' + d + '</span><span class="cw">of ' + s.days +
       '</span><span class="d">ends ' + esc(end) + '</span></div>';
+
+    /* PENDING. Declared, not begun. This branch did not exist, so a season
+       starting tomorrow fell through to the live render and drew "day 0". */
+    if (phase === 'pending') {
+      H += '<h2 class="vd calm">It starts <em>tomorrow</em>.</h2>' +
+        '<p class="vsub">Day 1 is ' + esc(new Date(s.started).toLocaleDateString(undefined,
+          { weekday: 'long', day: 'numeric', month: 'long' })) +
+        '. Nothing is owed tonight — read the rules once and go to bed at the hour below.</p>';
+      H += nightHTML(s, now);
+      H += '<div class="hub-row-btns" style="margin-top:var(--s4)">' +
+        '<button class="hub-btn" id="go-now" type="button">Actually, start it now</button></div>';
+      H += declarationHTML();
+      $('#screen').innerHTML = H;
+      var gn = document.getElementById('go-now');
+      if (gn) gn.onclick = function () { S.reschedule(Date.now()); paint(); };
+      return;
+    }
 
     if (phase === 'abandoned') {
       H += '<h2 class="vd">The season <em>ran out</em>.</h2>' +
@@ -366,6 +392,21 @@
         '. ' + (S.canEdit(s, now) ? 'The rules are open until 21:00.' :
                 'The rules are shut until then — anything changed tonight goes on the record.') +
         '</p>';
+    }
+
+    /* Day one, pressed by accident at the wrong hour. Moving the start is a
+       correction while the season has not really begun — it stamps an
+       amendment and archives nothing, because filing a season that ran for an
+       hour would make the archive a list of typos. */
+    if (S.canReschedule(s, now)) {
+      H += '<div class="hub-row-btns" style="margin-top:var(--s4)">' +
+        '<button class="hub-btn" id="go-tom2" type="button">Move the start to tomorrow morning' +
+        '</button></div>';
+      H += '<p class="note">Day one began at ' +
+        esc(new Date(s.started).toLocaleTimeString(undefined,
+          { hour: '2-digit', minute: '2-digit' })) +
+        '. Anything whose hour had already passed is marked <b>not asked</b> rather than missed — ' +
+        'it was never yours to do today.</p>';
     }
 
     /* the day, in order */
@@ -522,6 +563,7 @@
       var el = document.getElementById(id);
       if (el) el.onclick = function () { fn(); paint(); };
     }
+    wire('go-tom2', function () { S.reschedule(S.tomorrow9()); });
     wire('laphit', function () { S.lapHit(); });
     wire('lapback', function () { S.lapBack(); });
     /* Backfill: the vault passphrase stands between you and logging this at

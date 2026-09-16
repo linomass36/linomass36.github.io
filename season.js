@@ -205,6 +205,43 @@
     save(s);
     return s;
   }
+
+  /* Tomorrow morning, which is when a season declared in the evening actually
+     begins. The declaration is written tonight; the season is lived from the
+     morning, and starting the clock at 22:00 spends a third of day one on a
+     day that is already over. */
+  function tomorrow9(now) {
+    var d = now == null ? new Date() : new Date(now);
+    d.setDate(d.getDate() + 1);
+    d.setHours(9, 0, 0, 0);
+    return d.getTime();
+  }
+
+  /* MOVING THE START IS NOT RESTARTING IT, while the season has not really
+     begun. start() archives the old season, which is right for "I fell off
+     and I am going again" and absurd for "I pressed the button and meant
+     tomorrow" — that would file a season that ran for an hour, and make the
+     archive a list of typos rather than a record of attempts. So within day
+     one it is a correction: the date moves, an amendment is stamped, nothing
+     is archived. Past that it is a restart and it costs a row. */
+  function canReschedule(s, now) {
+    s = s || read();
+    if (!s.started) return false;
+    var d = day(s, now);
+    return d != null && d <= 1;
+  }
+  function reschedule(atMs, now) {
+    var s = read();
+    if (!canReschedule(s, now)) return start(atMs);
+    var was = s.started;
+    s.started = atMs;
+    s.amendments.push({
+      at: (now == null ? Date.now() : now), day: 1, onCheckin: false,
+      what: 'start moved from ' + dayKey(was) + ' to ' + dayKey(atMs) + ' before day one ran'
+    });
+    save(s);
+    return s;
+  }
   function end(atMs) {
     var s = read();
     s.ended = (atMs == null ? Date.now() : atMs);
@@ -349,10 +386,43 @@
     return out;
   }
 
+  /* ── NOT ASKED, which is different from not done ────────────────────────
+     A season started at 22:14 spent day one on a day that was already over,
+     and the card then asked for a 06:00 manuscript block — a thing the start
+     time itself had made impossible. Grey says "you did not tell me"; this
+     says "it was never yours to do", and the difference matters on exactly
+     the day a person is deciding whether the thing is worth keeping.
+
+     Same rule as the night refusing to offer a bedtime twelve minutes before
+     the alarm: advice that cannot be taken is not advice. It only ever
+     applies to the day the season began — every day after opens at the top. */
+  function windowEnd(grp, s, now) {
+    var n = night(s, now);
+    if (grp === 'morning') return n.leave;
+    if (grp === 'day')     return wrap(n.shiftStart + 9 * 60);
+    if (grp === 'after')   return n.phone;
+    return n.lights;
+  }
+  function notAsked(id, s, now) {
+    s = s || read();
+    if (!s.started) return false;
+    if (dayKey(s.started) !== dayKey(now)) return false;   // only the first day
+    var r = null;
+    for (var i = 0; i < ROWS.length; i++) if (ROWS[i].id === id) r = ROWS[i];
+    if (!r) return false;
+    var st = new Date(s.started);
+    var mins = st.getHours() * 60 + st.getMinutes();
+    var end = windowEnd(r.grp, s, now);
+    /* Windows that wrap past midnight are still open, not long closed. */
+    return end > 5 * 60 && mins > end;
+  }
+
   function state(id, s, dKey, now) {
     s = s || read();
     dKey = dKey || dayKey(now);
     if (heldIds()[id] && dKey === dayKey(now)) return 'held';
+    var t0 = ticks(s, dKey);
+    if (!t0[id] && dKey === dayKey(now) && notAsked(id, s, now)) return 'na';
     var t = ticks(s, dKey);
     if (t[id] === 1) return 'done';
     if (t[id] === 2) return 'floor';
@@ -386,7 +456,7 @@
       days.forEach(function (k) {
         var st = resolved(r.id, s, k, now);
         if (st === 'done' || st === 'floor') logged++;
-        else if (st === 'held') held++;
+        else if (st === 'held' || st === 'na') held++;
         else if (st === 'missed') missed++;
         else open++;
       });
@@ -405,6 +475,7 @@
     var mins = n.now;
     var order = ROWS.filter(function (r) {
       if (held[r.id]) return false;
+      if (notAsked(r.id, s, now)) return false;
       return !t[r.id];
     });
     if (!order.length) return { ask: 'Nothing left. Sleep is the next block.', mins: 0 };
@@ -564,7 +635,8 @@
     day: day, endDay: endDay, checkins: checkins, isCheckin: isCheckin,
     nextCheckin: nextCheckin, phase: phase, live: live,
     canEdit: canEdit, amend: amend, offWindow: offWindow,
-    start: start, end: end,
+    start: start, end: end, tomorrow9: tomorrow9,
+    reschedule: reschedule, canReschedule: canReschedule, notAsked: notAsked,
     night: night, hhmm: hhmm, hm: hm, morningMins: morningMins,
     ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
     week: week, next: next, dayKey: dayKey

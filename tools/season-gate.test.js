@@ -286,5 +286,41 @@ group('The backlog horizon comes from your own revlog, or not at all');
   ok(none === null, 'no reading at all returns null rather than a zero');
 }
 
+/* ── 11. pressed at 22:14, meant tomorrow ─────────────────────────────── */
+group('A season declared at night begins in the morning');
+{
+  const { S } = load({});
+  const night = at(2026, 9, 16, 22, 14);
+  S.start(night);
+  let s = S.read();
+
+  ok(S.day(s, at(2026, 9, 16, 22, 30)) === 1, 'pressed tonight, it is day 1 tonight');
+  ok(S.state('manuscript', s, null, at(2026, 9, 16, 22, 30)) === 'na',
+     'but the 06:05 manuscript block is NOT ASKED — the start time made it impossible');
+  ok(S.state('prayer_pm', s, null, at(2026, 9, 16, 22, 30)) === 'na',
+     'and so is the night block whose hour had already gone');
+
+  /* Moving it is a correction, not a restart: an hour-long season in the
+     archive would make that list a record of typos. */
+  ok(S.canReschedule(s, at(2026, 9, 16, 22, 30)) === true, 'day one can still be moved');
+  S.reschedule(S.tomorrow9(night), at(2026, 9, 16, 22, 30));
+  s = S.read();
+  ok(s.archive.length === 0, 'nothing is archived — it never ran');
+  ok(s.amendments.length === 1, 'and the move is on the record anyway');
+  ok(S.phase(s, at(2026, 9, 16, 23, 0)) === 'pending',
+     'tonight the season is PENDING — declared, not begun');
+  ok(S.day(s, at(2026, 9, 17, 9, 30)) === 1, 'and day 1 is tomorrow');
+  ok(S.endDay(s) === '2026-12-15', 'with the end date moved with it');
+
+  /* Past day one it is a restart again, and costs a row. */
+  ok(S.canReschedule(s, at(2026, 9, 25, 9, 0)) === false,
+     'on day 9 moving the start is no longer a typo');
+
+  const fresh = load({}).S;
+  fresh.start(at(2026, 9, 17, 6, 30));
+  ok(fresh.state('manuscript', fresh.read(), null, at(2026, 9, 17, 7, 0)) !== 'na',
+     'a season started in the morning asks for the morning');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);
