@@ -491,8 +491,36 @@
       if (r.grp !== lastGrp) { body += '<div class="grp">' + esc(S.GROUPS[r.grp]) + '</div>'; lastGrp = r.grp; }
       body += rowHTML(r, st);
     });
+    /* WHY the board went quiet. A day that asks for almost nothing and does
+       not say what ate it reads as a broken page, not an honest one. */
+    var dp = S.dayPlan(s, now);
+    var shape = '';
+    if (dp.sabbath) {
+      shape = '<p class="note">Sabbath. Training, study and the manuscript are <b>held</b> \u2014 ' +
+        'nothing accrues and no streak breaks. Prayer and church are what the day is for.</p>';
+    } else if (dp.source === 'week') {
+      var bits = [];
+      if (dp.blocks.length) {
+        bits.push(dp.blocks.map(function (b) {
+          return esc(b.title) + ' ' + S.hhmm(b.from) + '\u2013' + S.hhmm(b.to);
+        }).join(' \u00b7 '));
+      }
+      if (dp.committed != null) bits.push(dp.committed + 'h committed');
+      if (!dp.session) bits.push('no session dealt to today');
+      var room = S.eveningRoom(s, now);
+      if (room != null) bits.push(room > 0 ? fmtHM(room) + ' after the last block'
+                                           : 'nothing left after the last block');
+      shape = '<p class="note">' + bits.join(' \u00b7 ') + '. Anything marked ' +
+        '<b>not asked</b> is what the day already spent \u2014 it is not a miss, and it does not ' +
+        'count against the week.</p>';
+    } else {
+      shape = '<p class="note">Nothing in <a href="Week.html">the Week</a> for today, so the ' +
+        'board asks for the whole list. Put your shifts and shadowing in and it will ask only ' +
+        'for what the day can actually hold.</p>';
+    }
+
     H += '<div class="kick">Today, in order<span class="end">' + fmtHM(asked) +
-      ' left of ask</span></div>' + body;
+      ' left of ask</span></div>' + shape + body;
 
     /* ── the two buttons, and they are for two different moments ──────────
        "Already derailing" fires BEFORE the loss, while there is still a
@@ -590,6 +618,23 @@
       H += '</div>';
     }
 
+    /* ── the sabbath ──────────────────────────────────────────────────────
+       One declared weekday. His own rules put it highest — mandatory, and
+       never the catch-up day — and it is HELD rather than skipped: held is a
+       fact about what is owed, and the numbers still render. Nothing is
+       assumed: with none declared, nothing is held. */
+    var DAYN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    H += '<div class="kick">The sabbath<span class="end">' +
+      (s.sabbathDay == null ? 'not declared' : DAYN[s.sabbathDay]) + '</span></div>';
+    H += '<div class="hub-card"><p class="hub-p">One day a week where training, study and the ' +
+      'manuscript are held \u2014 nothing accrues, no streak breaks, the numbers still render. ' +
+      'Prayer and church are what the day is for, so they are still asked.</p><div class="heavy" ' +
+      'style="grid-template-columns:repeat(4,1fr)">' +
+      DAYN.map(function (n, i) {
+        return '<button type="button" data-sab="' + i + '"' +
+          (s.sabbathDay === i ? ' class="on"' : '') + '>' + n.slice(0, 3) + '</button>';
+      }).join('') + '</div></div>';
+
     /* ── the amendment log ────────────────────────────────────────────────
        Season.amend() existed with nothing able to call it, which made the
        audit trail a promise rather than a mechanism. This is the field. It
@@ -620,6 +665,17 @@
     H += declarationHTML();
 
     $('#screen').innerHTML = H;
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-sab]'), function (b) {
+      b.onclick = function () {
+        var v = parseInt(b.getAttribute('data-sab'), 10);
+        var st = S.read();
+        st.sabbathDay = (st.sabbathDay === v) ? null : v;
+        S.save(st);
+        S.amend(st.sabbathDay == null ? 'sabbath cleared' : 'sabbath set to ' + DAYN[st.sabbathDay]);
+        paint();
+      };
+    });
 
     var amAdd = document.getElementById('am-add');
     if (amAdd) amAdd.onclick = function () {

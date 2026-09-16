@@ -382,5 +382,64 @@ group('The night anchors on the first commitment, not on a stored shift');
      'and with no week stored the stored shift is still the answer');
 }
 
+/* ── 13. the day's own shape decides what is asked ────────────────────── */
+group('A day the calendar has eaten does not ask for what it spent');
+{
+  const seed = seeded({ sabbathDay: 0 });
+  /* A scribe shift then clinical shadowing, and the week dealt no session. */
+  seed.ct_week_v1 = JSON.stringify({ days: { '2026-09-24': {
+    session: null, free: 1.5, committed: 8, blocks: [
+      { title: 'Scribe shift', kind: 'work', from: '13:30', to: '19:30', allDay: false },
+      { title: 'Clinical shadowing', kind: 'work', from: '20:00', to: '22:00', allDay: false } ] } } });
+  const { S } = load(seed);
+  const s = S.read();
+  const now = at(2026, 9, 24, 12, 0);
+
+  ok(S.state('train', s, null, now) === 'na',
+     'training is the WEEK’s call — no session dealt, none asked');
+  ok(S.state('anatomy', s, null, now) === 'na',
+     'and an hour of anatomy is not asked on an evening that ends at 22:00');
+  ok(S.state('arrival', s, null, now) !== 'na',
+     'but the arrival rule is never evicted — it costs no slot and decides the night');
+  ok(S.state('prayer_am', s, null, now) === 'untold',
+     'the morning is untouched by any of it');
+  ok(S.eveningRoom(s, now) === 0, 'the evening room is measured, not assumed');
+
+  /* A tick beats the plan: the week was wrong about that afternoon. */
+  S.tick('train', true, now);
+  ok(S.state('train', S.read(), null, now) === 'done',
+     'and if you trained anyway, the tick is the fact and the plan was wrong');
+
+  /* A day the week DID deal a session to asks for it. */
+  const good = seeded({ sabbathDay: 0 });
+  good.ct_week_v1 = JSON.stringify({ days: { '2026-09-25': {
+    session: 'Strength A', free: 6, committed: 3, blocks: [
+      { title: 'Scribe shift', kind: 'work', from: '08:00', to: '11:00', allDay: false } ] } } });
+  const G = load(good).S;
+  ok(G.state('train', G.read(), null, at(2026, 9, 25, 12, 0)) === 'untold',
+     'a day with a session dealt asks for it');
+  ok(G.state('anatomy', G.read(), null, at(2026, 9, 25, 12, 0)) === 'untold',
+     'and an evening that is actually free still asks for anatomy');
+}
+
+/* ── 14. the sabbath holds, it does not un-ask ────────────────────────── */
+group('The sabbath is held, not skipped');
+{
+  const { S } = load(seeded({ sabbathDay: 0 }));   // Sunday
+  const sun = at(2026, 9, 27, 10, 0);
+  ok(S.isSabbath(S.read(), sun) === true, 'Sunday is the declared sabbath');
+  ok(S.state('train', S.read(), null, sun) === 'held', 'training is held');
+  ok(S.state('anatomy', S.read(), null, sun) === 'held', 'so is the study');
+  ok(S.state('prayer_am', S.read(), null, sun) === 'untold',
+     'prayer is NOT held — it is the one thing the day is for');
+
+  const mon = at(2026, 9, 28, 10, 0);
+  ok(S.isSabbath(S.read(), mon) === false, 'and Monday is not');
+
+  const none = load(seeded()).S;
+  ok(none.isSabbath(none.read(), at(2026, 9, 27, 10, 0)) === false,
+     'with no sabbath declared nothing is held — it is not assumed for you');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);

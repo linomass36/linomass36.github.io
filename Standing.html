@@ -1321,6 +1321,23 @@ footer {
                            '<span>wake<b>' + SZ.hhmm(szn.wake) + '</b></span>' +
                            '<span>leave<b>' + SZ.hhmm(szn.leave) + '</b></span>') +
                '</div>';
+          /* Why the card went quiet, from the same functions the Season page
+             reads — not a second opinion about the same afternoon. */
+          var dp = SZ.dayPlan(szs);
+          var why = '';
+          if (dp.sabbath) {
+            why = 'Sabbath \u00b7 training, study and the manuscript are held';
+          } else if (dp.source === 'week') {
+            var wb = [];
+            if (dp.committed != null) wb.push(dp.committed + 'h committed');
+            if (!dp.session) wb.push('no session dealt');
+            var rm = SZ.eveningRoom(szs);
+            if (rm != null) wb.push(rm > 0 ? SZ.hm(rm) + ' after the last block'
+                                           : 'nothing after the last block');
+            why = wb.join(' \u00b7 ');
+          }
+          if (why) H += '<div class="g" style="margin-top:9px">' + esc(why) + '</div>';
+
           H += '<div class="acts">' +
                '<button type="button" id="sz-derail">I\u2019m already derailing</button>' +
                (SZ.lapOpen() ? '<button type="button" class="bad" id="sz-back">Reset done</button>'

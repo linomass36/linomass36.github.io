@@ -486,6 +486,81 @@
     if (grp === 'after')   return n.phone;
     return n.lights;
   }
+  /* ── THE DAY'S SHAPE, READ FROM THE WEEK ────────────────────────────────
+     Asked: "If nothing connects to the calendar then how did the season know
+     when to train, do sabbath, etc. with my work and clinical shadowing?"
+
+     It did not. The nine rows were the same nine rows every day of the week,
+     which is a fair model of a life with one fixed shift and a fiction for
+     anyone whose Tuesday is eaten by clinic. calendar.js's own header says
+     this about the grind board's fixed `week|day` grid: a week where clinic
+     eats Tuesday cannot be expressed.
+
+     ct_week_v1 already holds the answer and nothing was reading it:
+
+       session   which training session the week dealt to this day, or null
+                 for a rest day. CTTraining owns that decision; asking for a
+                 session on a day the plan gave none is the board and the
+                 week disagreeing about the same afternoon.
+       free      waking hours not already committed
+       blocks    the commitments themselves, with their hours
+
+     So a block is NOT ASKED when the day cannot hold it — the same state day
+     one already used for hours the start time had spent. Not missed. Never
+     yours to do. */
+  function weekDay(key) {
+    var wk = readJSON(WEEK_KEY, null);
+    if (!wk || !wk.days) return null;
+    return wk.days[key] || null;
+  }
+
+  /* One declared day a week where nothing accrues. His own rules put it
+     highest — "mandatory, and never the catch-up day" — so it is HELD rather
+     than not-asked: held is a fact about what is owed, and the numbers still
+     render. Stored as a weekday index because that is the only input; which
+     dates it lands on is derived. */
+  function isSabbath(s, now) {
+    s = s || read();
+    if (s.sabbathDay == null) return false;
+    var d = now == null ? new Date() : new Date(now);
+    return d.getDay() === s.sabbathDay;
+  }
+  var SABBATH_HOLDS = { train: 1, anatomy: 1, spanish: 1, anki: 1, manuscript: 1 };
+
+  function dayPlan(s, now) {
+    s = s || read();
+    var key = dayKey(now);
+    var wd = weekDay(key);
+    var blocks = blocksOn(key).map(function (b) {
+      return { title: b.title, kind: b.kind,
+               from: hhmmToMins(b.from), to: hhmmToMins(b.to) };
+    }).filter(function (b) { return !isNaN(b.from); })
+      .sort(function (a, b) { return a.from - b.from; });
+    var lastEnd = null;
+    blocks.forEach(function (b) {
+      if (!isNaN(b.to) && (lastEnd == null || b.to > lastEnd)) lastEnd = b.to;
+    });
+    return {
+      key: key, source: wd ? 'week' : 'none',
+      session: wd ? (wd.session || null) : null,
+      free: wd ? wd.free : null, committed: wd ? wd.committed : null,
+      blocks: blocks, lastEnd: lastEnd,
+      sabbath: isSabbath(s, now)
+    };
+  }
+
+  /* What the evening can actually hold, once the last commitment ends and
+     before the phone goes down. Returns null when nothing is known, because
+     an unknown evening is not a full one. */
+  function eveningRoom(s, now) {
+    var p = dayPlan(s, now);
+    if (p.lastEnd == null) return null;
+    var n = night(s, now);
+    var ends = n.phone;
+    if (ends <= p.lastEnd) return 0;
+    return ends - p.lastEnd;
+  }
+
   function notAsked(id, s, now) {
     s = s || read();
     if (!s.started) return false;
@@ -500,12 +575,58 @@
     return end > 5 * 60 && mins > end;
   }
 
+  /* Which rows the day itself has eaten. Two sources, both already stored:
+     the week's own session plan for training, and the last commitment of the
+     day for everything meant to happen after it. */
+  function dayEats(id, s, now) {
+    s = s || read();
+    var p = dayPlan(s, now);
+    if (p.source === 'none') return false;          // nothing known, nothing claimed
+
+    /* TRAINING IS THE WEEK'S CALL, not this file's. CTTraining deals the
+       sessions round the committed hours; asking for one on a day it gave
+       none is two surfaces disagreeing about the same afternoon. */
+    if (id === 'train') return !p.session;
+
+    /* The arrival rule is never evicted. It costs no slot — it is about HOW
+       you come through the door, not a block competing for the evening — and
+       on the days the calendar has eaten everything else it is the only thing
+       left that decides how the night goes. */
+    if (id === 'arrival') return false;
+
+    var r = null;
+    for (var i = 0; i < ROWS.length; i++) if (ROWS[i].id === id) r = ROWS[i];
+    if (!r || r.grp !== 'after') return false;
+
+    /* The evening, measured rather than assumed. Shadowing that runs to 22:00
+       does not leave an hour of anatomy in the day, and a board that asks for
+       it anyway is asking for something the calendar already spent. The rows
+       are taken in order and the first that does not fit is where it stops. */
+    var room = eveningRoom(s, now);
+    if (room == null) return false;
+    var used = 0;
+    var after = ROWS.filter(function (x) { return x.grp === 'after'; });
+    for (var j = 0; j < after.length; j++) {
+      if (after[j].id === 'train' && !p.session) continue;
+      if (after[j].id === 'arrival') continue;
+      used += after[j].mins;
+      if (after[j].id === id) return used > room;
+    }
+    return false;
+  }
+
   function state(id, s, dKey, now) {
     s = s || read();
     dKey = dKey || dayKey(now);
     if (heldIds()[id] && dKey === dayKey(now)) return 'held';
     var t0 = ticks(s, dKey);
-    if (!t0[id] && dKey === dayKey(now) && notAsked(id, s, now)) return 'na';
+    /* A tick always wins. If you trained on a day the week called rest, the
+       week was wrong about your afternoon and the tick is the fact. */
+    if (!t0[id] && dKey === dayKey(now)) {
+      if (isSabbath(s, now) && SABBATH_HOLDS[id]) return 'held';
+      if (notAsked(id, s, now)) return 'na';
+      if (dayEats(id, s, now)) return 'na';
+    }
     var t = ticks(s, dKey);
     if (t[id] === 1) return 'done';
     if (t[id] === 2) return 'floor';
@@ -722,6 +843,8 @@
     reschedule: reschedule, canReschedule: canReschedule, notAsked: notAsked,
     night: night, hhmm: hhmm, hm: hm, morningMins: morningMins,
     anchor: anchor, anchorOn: anchorOn, blocksOn: blocksOn,
+    dayPlan: dayPlan, eveningRoom: eveningRoom, isSabbath: isSabbath,
+    weekDay: weekDay, dayEats: dayEats,
     ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
     week: week, next: next, dayKey: dayKey
   };
