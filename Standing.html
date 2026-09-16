@@ -1316,7 +1316,13 @@ footer {
                 : szn.late ? '<span>phone was due<b>' + SZ.hhmm(szn.phone) + '</b> \u00b7 ' +
                            SZ.hm(szn.slip) + ' ago</span><span>bed now<b>' +
                            SZ.hm(szn.bedNow) + '</b></span>'
-                : '<span>phone<b>' + SZ.hhmm(szn.phone) + '</b></span>' +
+                : szn.anchor && szn.anchor.source === 'default'
+                  ? '<span>no ' + esc(szn.anchor.when || 'tomorrow') + ' in the week<b>' +
+                    SZ.hhmm(szn.anchor.mins) + '</b> default</span><span>wake<b>' +
+                    SZ.hhmm(szn.wake) + '</b></span>'
+                : '<span>' + esc((szn.anchor && szn.anchor.title) || 'first') + '<b>' +
+                    SZ.hhmm(szn.anchor ? szn.anchor.mins : 0) + '</b></span>' +
+                  '<span>phone<b>' + SZ.hhmm(szn.phone) + '</b></span>' +
                            '<span>lights<b>' + SZ.hhmm(szn.lights) + '</b></span>' +
                            '<span>wake<b>' + SZ.hhmm(szn.wake) + '</b></span>' +
                            '<span>leave<b>' + SZ.hhmm(szn.leave) + '</b></span>') +

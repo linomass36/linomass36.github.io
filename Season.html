@@ -274,10 +274,11 @@
     /* The anchor is NAMED, so the alarm can be argued with rather than taken
        on faith. "Wake 05:05" is a demand; "wake 05:05, because Hike is at
        07:00" is an argument you can check against your own calendar. */
+    var when = (n.anchor && n.anchor.when) || 'tomorrow';
     var src = (n.anchor && n.anchor.source === 'calendar')
-      ? esc(n.anchor.title) + ' at ' + S.hhmm(n.anchor.mins)
-      : 'an ' + S.hhmm(n.anchor ? n.anchor.mins : n.shiftStart) +
-        ' start \u00b7 nothing in the calendar';
+      ? esc(n.anchor.title) + ', ' + when + ' at ' + S.hhmm(n.anchor.mins)
+      : 'nothing in the week for ' + when + ' \u00b7 using the ' +
+        S.hhmm(n.anchor ? n.anchor.mins : n.shiftStart) + ' default';
     var head = '<div class="kick">Tonight<span class="end">' + esc(src) + '</span></div>';
 
     var body, tone = n.late ? ' t-warn' : '';
@@ -299,6 +300,13 @@
         '<p class="hub-p">Drop the manuscript and it is <b>' + S.hhmm(n.wakeTrimmed) +
         '</b>. Move that block to after the first thing instead \u2014 the same ' +
         n.manuscript + ' minutes, later in the day. The rest of the chain still fits.</p>';
+    } else if (n.anchor && n.anchor.source === 'default') {
+      body = '<p class="hub-p">These come from the stored ' + S.hhmm(n.anchor.mins) +
+        ' start, not from your calendar \u2014 there is nothing in ' +
+        '<a href="Week.html">the Week</a> for <b>' + esc(when) + '</b>, and tonight\u2019s ' +
+        'bedtime is decided by when you have to be up ' + esc(when) + '.</p>' +
+        '<p class="hub-p">Put ' + esc(when) + '\u2019s first commitment in and every number ' +
+        'here moves with it.</p>';
     } else if (!n.late) {
       body = '<p class="hub-p">' + esc(chain) + ' = ' + fmtHM(n.morning) + ', then ' + n.commute +
         ' minutes of commute. Eight hours back from ' + S.hhmm(n.wake) +

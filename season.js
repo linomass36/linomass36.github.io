@@ -323,17 +323,28 @@
     var d = now == null ? new Date() : new Date(now);
     var mins = d.getHours() * 60 + d.getMinutes();
     var todayKey = dayKey(now);
+    var tomKey = nextDayKey(todayKey);
     var a = anchorOn(todayKey);
     if (a && mins < a.mins) {
-      return { mins: a.mins, title: a.title, kind: a.kind, source: 'calendar', forDay: todayKey };
+      return { mins: a.mins, title: a.title, kind: a.kind, source: 'calendar',
+               forDay: todayKey, when: 'today' };
     }
-    var b = anchorOn(nextDayKey(todayKey));
+    var b = anchorOn(tomKey);
     if (b) {
       return { mins: b.mins, title: b.title, kind: b.kind, source: 'calendar',
-               forDay: nextDayKey(todayKey) };
+               forDay: tomKey, when: 'tomorrow' };
     }
+    /* THE CASE THAT LOOKED LIKE A BUG. Today's first commitment has already
+       passed, so the next wake belongs to tomorrow — and tomorrow is not in
+       the week. Falling back to the stored shift is right; printing four bare
+       numbers as though they came from the calendar is not. Someone who has
+       carefully entered today then sees an alarm that ignores it and
+       reasonably concludes nothing is wired up. So the fallback says which
+       day it could not answer for. */
     return { mins: (s.shiftStart == null) ? DEFAULT_SHIFT : s.shiftStart,
-             title: null, kind: 'shift', source: 'default', forDay: null };
+             title: null, kind: 'shift', source: 'default',
+             forDay: (a && mins >= a.mins) ? tomKey : todayKey,
+             when: (a && mins >= a.mins) ? 'tomorrow' : 'today' };
   }
 
   function night(s, now) {

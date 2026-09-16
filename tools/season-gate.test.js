@@ -522,5 +522,44 @@ group('What the evening asks for fits in the evening');
      'the one that does not fit is not');
 }
 
+/* ── 18. the fallback says which day it could not answer for ──────────── */
+group('A default night says it is a default, and for which day');
+{
+  const seed = seeded();
+  /* Today is in the week. Tomorrow is not. */
+  seed.ct_week_v1 = JSON.stringify({ days: { '2026-09-17': { session: null, blocks: [
+    { title: 'Hike', kind: 'own', from: '07:00', to: '10:30', allDay: false },
+    { title: 'Scribe shift', kind: 'work', from: '13:30', to: '19:30', allDay: false } ] } } });
+  const { S } = load(seed);
+  const s = S.read();
+
+  /* Before the hike, it is today's and it is named. */
+  const early = S.night(s, at(2026, 9, 17, 6, 0)).anchor;
+  ok(early.source === 'calendar' && early.when === 'today' && early.title === 'Hike',
+     'before the first commitment the anchor is today’s, and named');
+
+  /* After it — the state in the reported screenshot — the next wake belongs
+     to tomorrow, and tomorrow is empty. Falling back is right; doing it
+     silently is what made a filled-in calendar look ignored. */
+  const later = S.night(s, at(2026, 9, 17, 8, 5)).anchor;
+  ok(later.source === 'default', 'once it has passed, an empty tomorrow falls back');
+  ok(later.when === 'tomorrow',
+     'and the fallback says WHICH day it could not answer for');
+  ok(later.forDay === '2026-09-18', 'naming the date, so it can be checked');
+
+  /* Put tomorrow in and the fallback goes away. */
+  const both = seeded();
+  both.ct_week_v1 = JSON.stringify({ days: {
+    '2026-09-17': { session: null, blocks: [
+      { title: 'Hike', kind: 'own', from: '07:00', to: '10:30', allDay: false } ] },
+    '2026-09-18': { session: null, blocks: [
+      { title: 'Scribe shift', kind: 'work', from: '09:00', to: '17:00', allDay: false } ] } } });
+  const B = load(both).S;
+  const bn = B.night(B.read(), at(2026, 9, 17, 8, 5));
+  ok(bn.anchor.source === 'calendar' && bn.anchor.when === 'tomorrow',
+     'with tomorrow entered it anchors on tomorrow, from the calendar');
+  ok(B.hhmm(bn.wake) === '07:05', 'and the alarm moves to match it');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);
