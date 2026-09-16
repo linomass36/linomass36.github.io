@@ -202,5 +202,78 @@ group('There is always a next block, including on a day that went badly');
   ok(n.id === 'prayer_am', 'and it is the first thing in the order, not the easiest');
 }
 
+/* ── 8. the lapse log never leaves the device ─────────────────────────── */
+group('The lap log is device-only, and the count says which device');
+{
+  const { S, ls } = load(seeded());
+  S.lapHit(at(2026, 9, 19, 23, 40));
+  S.lapBack(at(2026, 9, 19, 23, 51));
+  S.lapHit(at(2026, 9, 24, 21, 10));
+  S.lapBack(at(2026, 9, 24, 21, 25));
+
+  ok(ls._map[S.LAP_KEY] != null, 'the bouts are stored');
+  ok(S.LAP_KEY.indexOf('__local') === 0,
+     'under a __local key — sync.js pushes everything else to Firestore in plaintext');
+
+  /* THE ASSERTION THAT MATTERS. A future refactor that "tidies" this store
+     into a ct_ key would upload a record of every lapse to the cloud and put
+     it in every downloaded backup, silently, and nothing else would fail. */
+  const syncable = Object.keys(ls._map).filter(k => k.indexOf('__local') !== 0 &&
+                                                    k.indexOf('__sync') !== 0);
+  syncable.forEach((k) => {
+    const v = ls._map[k];
+    ok(v.indexOf('"bouts"') < 0, 'no bout list under the syncable key ' + k);
+    ok(!/"at"\s*:\s*\d{10,}/.test(v) || k !== S.KEY || JSON.parse(v).roll != null,
+       'nothing timestamped per-bout escapes into ' + k);
+  });
+
+  const roll = JSON.parse(ls._map[S.KEY]).roll;
+  ok(roll && roll.n === 2, 'the syncable rollup carries a count');
+  ok(roll && roll.days === 2, 'and how many days it spanned');
+  ok(!('bouts' in (roll || {})), 'and nothing else — a tally is not a record');
+
+  ok(S.lapLatency() === 13, 'the median gap is thirteen minutes, not the mean');
+  ok(S.lapCount() === 2, 'and both bouts are counted');
+}
+
+/* ── 9. a recalled bout is not a timed one ────────────────────────────── */
+group('A bout logged the next morning is marked, not guessed at');
+{
+  const { S } = load(seeded());
+  S.lapHit(at(2026, 9, 19, 23, 40));
+  S.lapBack(at(2026, 9, 19, 23, 50));
+  S.lapHit(at(2026, 9, 20, 22, 0), true);     // recalled the next day
+  S.lapBack(at(2026, 9, 21, 8, 0));
+
+  ok(S.lapCount() === 2, 'both are counted as bouts');
+  ok(S.lapLatency() === 10,
+     'but the recalled one is kept out of the median rather than reporting a ten-hour reset');
+  ok(S.lapOpen() === null, 'and nothing is left open');
+}
+
+/* ── 10. the Anki projection refuses to guess ─────────────────────────── */
+group('The backlog horizon comes from your own revlog, or not at all');
+{
+  const thin = seeded();
+  thin.ct_anki_v1 = JSON.stringify({ dueTotal: 210, history: { cards: [80, 90, 100] } });
+  const A = load(thin).S.anki();
+  ok(A.due === 210, 'the queue is read, not derived');
+  ok(A.rate === null && A.days === null,
+     'three days of history is not a rate — "not enough history" beats an invented date');
+
+  const full = seeded();
+  full.ct_anki_v1 = JSON.stringify({
+    dueTotal: 210,
+    history: { cards: [0, 120, 100, 0, 118, 130, 110, 118, 125, 0, 118, 118, 120, 118] }
+  });
+  const B = load(full).S.anki();
+  ok(B.basis === 11, 'zero days are excluded — they are days off, not a slower rate');
+  ok(B.rate === 118, 'the median reviewed day is 118 cards');
+  ok(B.days === 2, 'so 210 due is two days, rounded up');
+
+  const none = load(seeded()).S.anki();
+  ok(none === null, 'no reading at all returns null rather than a zero');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);

@@ -120,6 +120,22 @@
     <p class="hub-p">The rules shut at 21:00 and open on a check-in day. That is not a lock — it is
       your own store and you know where the editor is. What it buys is that a change made at 23:00
       is stamped, and the next check-in opens with it.</p>
+    <p class="hub-p"><b>Two buttons for two different moments.</b> <i>I'm already derailing</i> fires
+      before a round is lost and names the next smallest block; <i>lost that round</i> starts a bout,
+      and the reset card closes it. What gets counted is the gap between them — the skill that
+      survives a bad night — rather than days clean, which makes every failure catastrophic and is
+      therefore the number most worth faking. A bout logged the next morning is marked as recalled
+      and kept out of that median instead of reporting a nine-hour reset.</p>
+    <p class="hub-p"><b>The bouts never leave the device.</b> They live under a
+      <code>__local</code> key, which means two things worth knowing rather than discovering: no
+      backup will ever restore them, and a count read on the laptop cannot see what the phone
+      logged — so the figure always says which device it came from. Only a tally syncs, never a
+      record.</p>
+    <p class="hub-p"><b>The backlog gets a horizon.</b> Anki's queue is read against the median of
+      your own reviewed days, from the year of history <code>anki_sync.py</code> backfills, so the
+      pile has a date instead of a feeling. Under seven reviewed days it says so rather than
+      inventing one, and the daily cap is set in Anki — the hub reports the limit and cannot
+      enforce it.</p>
   </div>
   <div class="hub-card">
     <h3 class="hub-h3">Nothing was deleted</h3>

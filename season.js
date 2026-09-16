@@ -407,8 +407,147 @@
     return { ask: pick.ask, mins: pick.mins, id: pick.id };
   }
 
+  /* ── THE LAP ────────────────────────────────────────────────────────────
+     Two taps: the round was lost, and the reset started. What this reports is
+     the gap between them, because that is the skill the season is actually
+     training — "did the reset happen inside the hour" beats "days clean",
+     which makes every failure catastrophic and is therefore the number most
+     worth faking.
+
+     WHERE IT LIVES IS NOT NEGOTIABLE. sync.js pushes every localStorage key
+     that is not __sync* or __local* to Firestore IN PLAINTEXT — the vault
+     encrypts the published site, not your synced data — and backup.js
+     excludes __local* by rule because a downloaded file goes to Downloads,
+     into email, onto a stick. So the bouts live under __local and the ONLY
+     thing that syncs is a count with a device stamp.
+
+     Which costs something, and the cost is stated rather than discovered:
+     this is the one store in the hub a backup will never restore, and a
+     figure read on the laptop cannot see what the phone logged. So the count
+     is always rendered with the device it came from, the same honesty as
+     Money.convert() returning null rather than a total that is quietly short.
+
+     BACKFILL IS FIRST-CLASS. At 23:40 the vault passphrase stands between you
+     and logging the thing you are least willing to type, so a bout recorded
+     the next morning is marked `recalled` and kept out of the latency median
+     rather than being guessed at. The protocol's first three steps are
+     physical anyway — stop, shower, one true line. The logging is bookkeeping. */
+  var LAP_KEY = '__local_season_lap_v1';
+
+  function lapRead() {
+    var v = readJSON(LAP_KEY, null);
+    if (!v || typeof v !== 'object') v = {};
+    if (!Array.isArray(v.bouts)) v.bouts = [];
+    return v;
+  }
+  function lapSave(v) { return writeJSON(LAP_KEY, v); }
+
+  /* The syncable rollup: counts only, stamped with the device that saw them.
+     No timestamps, no text — a week's tally is not a record of what happened. */
+  function lapRoll() {
+    var l = lapRead(), s = read();
+    var by = {};
+    l.bouts.forEach(function (b) {
+      var k = dayKey(b.at);
+      by[k] = (by[k] || 0) + 1;
+    });
+    s.roll = { n: l.bouts.length, days: Object.keys(by).length, at: Date.now() };
+    save(s);
+    return s.roll;
+  }
+
+  function lapHit(now, recalled) {
+    var l = lapRead();
+    l.bouts.push({ at: (now == null ? Date.now() : now), back: null,
+                   recalled: !!recalled });
+    lapSave(l);
+    lapRoll();
+    return l.bouts[l.bouts.length - 1];
+  }
+  function lapBack(now) {
+    var l = lapRead();
+    for (var i = l.bouts.length - 1; i >= 0; i--) {
+      if (l.bouts[i].back == null) {
+        l.bouts[i].back = (now == null ? Date.now() : now);
+        lapSave(l);
+        return l.bouts[i];
+      }
+    }
+    return null;
+  }
+  function lapOpen() {
+    var l = lapRead();
+    for (var i = l.bouts.length - 1; i >= 0; i--) if (l.bouts[i].back == null) return l.bouts[i];
+    return null;
+  }
+
+  /* Median rather than mean: one night you fell asleep before resetting should
+     not move the number that says whether the skill is there. Recalled bouts
+     carry no honest gap and are excluded rather than estimated. */
+  function lapLatency() {
+    var l = lapRead();
+    var gaps = l.bouts.filter(function (b) { return b.back && !b.recalled; })
+                      .map(function (b) { return Math.round((b.back - b.at) / 60000); })
+                      .sort(function (a, b) { return a - b; });
+    if (!gaps.length) return null;
+    var m = Math.floor(gaps.length / 2);
+    return gaps.length % 2 ? gaps[m] : Math.round((gaps[m - 1] + gaps[m]) / 2);
+  }
+  function lapCount(sinceMs) {
+    var l = lapRead();
+    if (sinceMs == null) return l.bouts.length;
+    return l.bouts.filter(function (b) { return b.at >= sinceMs; }).length;
+  }
+
+  /* ── ANKI, PROJECTED FROM YOUR OWN REVLOG ───────────────────────────────
+     Backlog anxiety produces the hero session: three hundred reps, bed at
+     half past midnight, and a trigger the next day you have no resistance to.
+     A horizon fixes that better than willpower does, and the data is already
+     here — anki_sync.py backfills a year of daily rows into ct_anki_v1.history.
+
+     THE MEDIAN, over days you actually reviewed. A mean is dragged to nothing
+     by the fortnight you were away, and counting zero days would answer "how
+     long at your current rate" with "never".
+
+     AND IT RETURNS NULL RATHER THAN GUESSING. Under seven reviewed days there
+     is no honest rate, so the page says "not enough history" instead of a
+     date. The cap is NOT set here either: Anki serves the reviews, so the hub
+     reports the deck limit and cannot enforce one — a cap the hub displays and
+     Anki ignores is two numbers answering one question, which is the bug this
+     whole repo keeps being written against. */
+  var MIN_HISTORY = 7;
+
+  function anki() {
+    var a = readJSON('ct_anki_v1', null);
+    if (!a || typeof a !== 'object') return null;
+    var due = (a.dueTotal != null)
+      ? Math.max(0, parseInt(a.dueTotal, 10) || 0)
+      : Math.max(0, parseInt(a.due, 10) || 0) + Math.max(0, parseInt(a.backlog, 10) || 0);
+
+    var h = a.history;
+    var rate = null, basis = 0;
+    if (h && Array.isArray(h.cards)) {
+      var recent = h.cards.slice(-28).filter(function (n) { return n > 0; });
+      basis = recent.length;
+      if (basis >= MIN_HISTORY) {
+        var sorted = recent.slice().sort(function (x, y) { return x - y; });
+        var m = Math.floor(sorted.length / 2);
+        rate = sorted.length % 2 ? sorted[m] : Math.round((sorted[m - 1] + sorted[m]) / 2);
+      }
+    }
+    return {
+      due: due, rate: rate, basis: basis,
+      /* Null, not Infinity and not a guess. "Not counted" beats a wrong date. */
+      days: (rate && rate > 0) ? Math.ceil(due / rate) : null,
+      cap: (a.cap != null) ? parseInt(a.cap, 10) : null
+    };
+  }
+
   w.Season = {
-    KEY: KEY, ROWS: ROWS, GROUPS: GROUPS, CHAIN: CHAIN,
+    KEY: KEY, LAP_KEY: LAP_KEY, ROWS: ROWS, GROUPS: GROUPS, CHAIN: CHAIN,
+    lapRead: lapRead, lapHit: lapHit, lapBack: lapBack, lapOpen: lapOpen,
+    lapLatency: lapLatency, lapCount: lapCount, lapRoll: lapRoll,
+    anki: anki, MIN_HISTORY: MIN_HISTORY,
     read: read, save: save,
     day: day, endDay: endDay, checkins: checkins, isCheckin: isCheckin,
     nextCheckin: nextCheckin, phase: phase, live: live,

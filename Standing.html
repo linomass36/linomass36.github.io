@@ -17,6 +17,7 @@
 <script src="./sitemap.js"></script>
 <script src="./screen.js"></script>
 <script src="./systems.js"></script>
+<script src="./season.js"></script>
 <script src="./facts.js"></script>
 <script src="./contact.js"></script>
 <style>
@@ -1124,7 +1125,30 @@ footer {
     var easeDay = eased.length > 0 && !floorDay;
     var met = floorMet();
     var revealed = lsJson(RKEY, {})[C().today()] === 1;
-    var showOwed = !floorDay || revealed;
+
+    /* ── the season's fold ────────────────────────────────────────────────
+       While a season is live this page is a checklist first and a board of
+       thirteen systems second, so the board folds. PRECEDENCE MATTERS more
+       than the rule does: a floor day already collapses this page to one ask,
+       and two collapse mechanisms arguing on the same morning would be worse
+       than either alone. Floor day wins; the season folds only underneath it.
+
+       It opens by itself on a check-in day and on the day the weekly review
+       is owed, because both are days you come here to look at everything —
+       and it stops folding the moment the season is over, since Season.live()
+       is derived from the start date rather than a flag that would go on
+       being true forever. */
+    var SZ = window.Season;
+    var seasonFold = false, seasonDay = null;
+    try {
+      if (SZ) {
+        var sz = SZ.read();
+        seasonDay = SZ.day(sz);
+        seasonFold = SZ.live(sz) && !SZ.isCheckin(sz) && !floorDay;
+      }
+    } catch (e) {}
+
+    var showOwed = (!floorDay && !seasonFold) || revealed;
     var S = window.Systems;
     var H = '';
 
@@ -1238,6 +1262,17 @@ footer {
     }
 
     /* ── every system, at three densities ── */
+    if (seasonFold && !revealed) {
+      H += '<div class="kick">Every system<span class="r">' +
+           (owed.length ? owed.length + ' of ' + all.length + ' want you'
+                        : 'all ' + all.length + ' current') + '</span></div>';
+      H += '<button class="reveal" id="reveal" type="button">\u2193 the board is folded while ' +
+           'the season is live (' + owed.length + ' owed, day ' + seasonDay +
+           ') \u2014 show it anyway</button>';
+      H += '<p class="qsub" style="margin-top:9px">Today\u2019s order is on ' +
+           '<a href="Season.html">the Season</a>. Revealing is for today only.</p>';
+    }
+
     if (showOwed) {
       var pool = all, cards = [], lines = [];
       var RANK = { spine: 0, daily: 1, standing: 2 };

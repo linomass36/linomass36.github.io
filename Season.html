@@ -376,6 +376,53 @@
     H += '<div class="kick">Today, in order<span class="end">' + fmtHM(asked) +
       ' left of ask</span></div>' + body;
 
+    /* ── the two buttons, and they are for two different moments ──────────
+       "Already derailing" fires BEFORE the loss, while there is still a
+       choice; the reset fires after. A page with only the second one helps
+       you exactly when the shame has already taken the wheel. */
+    var open = S.lapOpen();
+    H += '<div class="kick">If it is going wrong<span class="end">two taps, no typing</span></div>';
+    if (open) {
+      H += '<div class="hub-card t-owed"><h3 class="hub-h3">Stop. Then five minutes.</h3>' +
+        '<p class="hub-p">1 · Stop the behaviour. No "one more".<br>' +
+        '2 · Physical interrupt — shower, cold water, a lap.<br>' +
+        '3 · One line of truth, not a speech.<br>' +
+        '4 · Prayer, short.<br>' +
+        '5 · The next scheduled block. Do not try to make up for it.</p>' +
+        '<div class="hub-row-btns"><button class="hub-btn pri" id="lapback" type="button">' +
+        'Reset done — back to the next block</button></div></div>';
+    } else {
+      H += '<div class="hub-row-btns">' +
+        '<button class="hub-btn" id="derail" type="button">I’m already derailing</button>' +
+        '<button class="hub-btn" id="laphit" type="button">Lost that round</button>' +
+        '<button class="hub-btn" id="lapback2" type="button">Log it for last night</button>' +
+        '</div>';
+      var lat = S.lapLatency(), cnt = S.lapCount();
+      H += '<p class="note">' + (cnt
+        ? cnt + ' bout' + (cnt === 1 ? '' : 's') + ' logged on this device' +
+          (lat != null ? ', median reset ' + lat + ' minutes' : ', none timed yet') +
+          '. The phone keeps its own log and does not sync it, so this figure cannot see it.'
+        : 'Nothing logged on this device. What gets counted is the gap from the loss to the ' +
+          'reset, not days clean — that is the skill, and it is the one that survives a bad night.') +
+        '</p>';
+    }
+
+    /* Anki: a horizon, from your own revlog, or nothing. */
+    var A = S.anki();
+    if (A) {
+      H += '<div class="kick">Anki' + (A.cap ? '<span class="end">cap ' + A.cap +
+        '/day, set in Anki</span>' : '') + '</div>';
+      H += '<div class="hub-card"><h3 class="hub-h3">' + A.due + ' due</h3>' +
+        '<p class="hub-p">' + (A.days != null
+          ? 'About <b>' + A.days + ' day' + (A.days === 1 ? '' : 's') +
+            '</b> to clear at your own rate — median ' + A.rate + ' cards a day over ' +
+            A.basis + ' reviewed days. It is not tonight’s problem.'
+          : 'Not enough history to say how long that is yet — ' + A.basis + ' reviewed day' +
+            (A.basis === 1 ? '' : 's') + ' logged, and a rate needs ' + S.MIN_HISTORY +
+            '. Run <code>anki_sync.py --backfill</code> once and this line starts answering.') +
+        '</p></div>';
+    }
+
     H += nightHTML(s, now);
 
     /* the day-close tap */
@@ -395,6 +442,24 @@
     H += declarationHTML();
 
     $('#screen').innerHTML = H;
+
+    function wire(id, fn) {
+      var el = document.getElementById(id);
+      if (el) el.onclick = function () { fn(); paint(); };
+    }
+    wire('laphit', function () { S.lapHit(); });
+    wire('lapback', function () { S.lapBack(); });
+    /* Backfill: the vault passphrase stands between you and logging this at
+       23:40, so a bout recorded in the morning is marked recalled and kept
+       out of the latency median rather than reporting a nine-hour reset. */
+    wire('lapback2', function () { S.lapHit(Date.now(), true); S.lapBack(); });
+    wire('derail', function () {
+      /* Before the loss, not after — so it does not open a bout. It names the
+         next smallest block and gets you moving. */
+      var n = S.next(S.read(), Date.now());
+      alert('Next block: ' + n.ask + (n.mins ? ' · ' + n.mins + ' minutes' : '') +
+            '\n\nChange room. Leave the phone where you are standing.');
+    });
 
     Array.prototype.forEach.call(document.querySelectorAll('[data-row]'), function (b) {
       b.onclick = function () {
