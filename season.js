@@ -897,7 +897,37 @@
     };
   }
 
+  /* ── WHERE YOU ARE IN THE DAY ───────────────────────────────────────────
+     The nine rows looked identical at 06:00, at lunchtime and at 21:00, so
+     "after the shift" sitting on screen while you get ready for work reads as
+     a demand rather than as later. Reported as "idk if it's working" — the
+     states were right and the page gave no way to tell, which is the same
+     failure as a correct number printed without saying where it came from.
+
+     The current group is the one holding the next thing actually owed, so it
+     is next() that decides rather than a second clock. Groups before it are
+     behind you; groups after it are ahead. */
+  var GROUP_ORDER = ['morning', 'day', 'after', 'night'];
+
+  function groupNow(s, now) {
+    s = s || read();
+    var n = next(s, now);
+    if (!n || !n.id) return null;
+    for (var i = 0; i < ROWS.length; i++) if (ROWS[i].id === n.id) return ROWS[i].grp;
+    return null;
+  }
+  /* 'past' · 'now' · 'ahead', for one group. */
+  function groupWhen(grp, s, now) {
+    var cur = groupNow(s, now);
+    if (!cur) return 'ahead';
+    var a = GROUP_ORDER.indexOf(grp), b = GROUP_ORDER.indexOf(cur);
+    if (a < b) return 'past';
+    if (a > b) return 'ahead';
+    return 'now';
+  }
+
   w.Season = {
+    GROUP_ORDER: GROUP_ORDER, groupNow: groupNow, groupWhen: groupWhen,
     KEY: KEY, LAP_KEY: LAP_KEY, ROWS: ROWS, GROUPS: GROUPS, CHAIN: CHAIN,
     lapRead: lapRead, lapHit: lapHit, lapBack: lapBack, lapOpen: lapOpen,
     lapLatency: lapLatency, lapCount: lapCount, lapRoll: lapRoll,

@@ -544,6 +544,8 @@ h2.vd.calm em{color:var(--ok)}
 .szc .g{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--faint);margin:10px 0 5px}
 .szc .g:first-of-type{margin-top:0}
+.szc .g.past{opacity:.5}
+.szc .g.now{color:var(--held)}
 .szc .rw{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);
   border-radius:7px;background:var(--raised);margin-bottom:5px;min-height:44px;width:100%;
   text-align:left}
@@ -1290,7 +1292,9 @@ footer {
           SZ.ROWS.forEach(function (r) {
             var st = SZ.state(r.id, szs, null);
             if (r.grp !== lastG) {
-              H += '<div class="g">' + esc(SZ.GROUPS[r.grp]) + '</div>';
+              var wn = SZ.groupWhen(r.grp, szs);
+              H += '<div class="g ' + wn + '">' + esc(SZ.GROUPS[r.grp]) +
+                   (wn === 'now' ? ' \u2190 now' : '') + '</div>';
               lastG = r.grp;
             }
             var mk = st === 'done' ? '\u2713' : st === 'floor' ? '\u2013' :

@@ -81,6 +81,11 @@
   .sn .grp { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
     text-transform: uppercase; color: var(--faint); margin: var(--s4) 0 6px; }
   .sn .grp:first-child { margin-top: 0; }
+  /* Where you are in the day. Behind you is quiet, now is the gold the rest
+     of this hub already uses for "this is the live one". */
+  .sn .grp.past { opacity: .5; }
+  .sn .grp.now { color: var(--held); }
+  .sn .grp.now span { letter-spacing: .1em; }
 
   .sn .times { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
   .sn .times .t { border: 1px solid var(--line-2); border-radius: var(--r4);
@@ -582,7 +587,12 @@
       var st = S.state(r.id, s, null, now);
       if (st === 'held') held++;
       if (st !== 'done' && st !== 'held') asked += r.mins;
-      if (r.grp !== lastGrp) { body += '<div class="grp">' + esc(S.GROUPS[r.grp]) + '</div>'; lastGrp = r.grp; }
+      if (r.grp !== lastGrp) {
+        var wn = S.groupWhen(r.grp, s, now);
+        body += '<div class="grp ' + wn + '">' + esc(S.GROUPS[r.grp]) +
+                (wn === 'now' ? '<span> \u2190 now</span>' : '') + '</div>';
+        lastGrp = r.grp;
+      }
       body += rowHTML(r, st);
     });
     /* WHY the board went quiet. A day that asks for almost nothing and does

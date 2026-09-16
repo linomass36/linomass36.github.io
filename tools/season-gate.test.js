@@ -561,5 +561,38 @@ group('A default night says it is a default, and for which day');
   ok(B.hhmm(bn.wake) === '07:05', 'and the alarm moves to match it');
 }
 
+/* ── 19. the board says where you are in the day ──────────────────────── */
+group('The day has a now, and it is the group holding the next thing owed');
+{
+  /* The reported day: the season began that morning at 07:50, after the
+     manuscript window, so the manuscript is not-asked and the morning is
+     already behind him by lunchtime. Seeding `started` on the day before
+     would leave the manuscript owed and the morning live — which is correct
+     for THAT day and not the one being described. */
+  const seed = { ct_season_v1: JSON.stringify({
+    started: at(2026, 9, 17, 7, 50), days: 90, checkinEvery: 21, shiftStart: 8 * 60,
+    ticks: { '2026-09-17': { prayer_am: 1 } }, amendments: [], archive: [] }) };
+  seed.ct_week_v1 = JSON.stringify({ days: { '2026-09-17': { session: null, blocks: [
+    { title: 'Hike', kind: 'own', from: '07:00', to: '10:30', allDay: false },
+    { title: 'Scribe shift', kind: 'work', from: '13:30', to: '19:30', allDay: false } ] } } });
+  const { S } = load(seed);
+  const s = S.read();
+  const noon = at(2026, 9, 17, 12, 33);
+
+  /* Reported at 12:33, getting ready for a 13:30 shift: every block still on
+     screen, with nothing saying which of them was for now. */
+  ok(S.groupNow(s, noon) === 'day',
+     'at 12:33 the live group is the one holding the next thing owed — Anki');
+  ok(S.groupWhen('morning', s, noon) === 'past', 'the morning is behind');
+  ok(S.groupWhen('day', s, noon) === 'now', 'work is now');
+  ok(S.groupWhen('after', s, noon) === 'ahead', 'and the evening is ahead, not owed');
+  ok(S.groupWhen('night', s, noon) === 'ahead', 'so is the night');
+
+  /* Tick the thing and the day moves on by itself. */
+  S.tick('anki', true, noon);
+  ok(S.groupNow(S.read(), noon) === 'after',
+     'ticking it moves the live group forward — no second clock decides this');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);
