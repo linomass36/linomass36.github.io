@@ -669,6 +669,55 @@
     return out;
   }
 
+  /* The last n day keys, ending today. */
+  function lastDays(n, now) {
+    var out = [], k = dayKey(now);
+    for (var i = n - 1; i >= 0; i--) {
+      out.push(w.CTDay ? w.CTDay.shift(k, -i) : k);
+    }
+    return out;
+  }
+
+  /* ── THE CLAIM, CHECKED ──────────────────────────────────────────────────
+     "A day without her can be a good day" is the season's actual claim, and
+     the day-close tap is the only thing that can test it. This is the read:
+     the median heaviness on days the practices were kept against the days
+     they were not.
+
+     IT RETURNS NULL RATHER THAN A HINT. Under eight logged days there is no
+     reading, and saying so beats a number computed from four evenings — the
+     same rule as the Anki projection and Money.convert(). And what comes back
+     is a correlation over days you logged, not a claim about cause: a lighter
+     day is as likely to have produced the prayer as the other way round, and
+     the page has to say so next to the figure rather than under it. */
+  var MIN_HEAVY = 8;
+
+  function median(xs) {
+    if (!xs.length) return null;
+    var a = xs.slice().sort(function (x, y) { return x - y; });
+    var m = Math.floor(a.length / 2);
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  function heavyRead(s, days) {
+    s = s || read();
+    var kept = [], missed = [], n = 0;
+    (days || []).forEach(function (k) {
+      var t = ticks(s, k);
+      if (t.heavy == null) return;
+      n++;
+      /* "Kept" is both prayers — the practice the claim is actually about,
+         and the only one asked every single day including the sabbath. */
+      (t.prayer_am && t.prayer_pm ? kept : missed).push(t.heavy);
+    });
+    if (n < MIN_HEAVY) return { n: n, enough: false, need: MIN_HEAVY };
+    return {
+      n: n, enough: true,
+      keptN: kept.length, missN: missed.length,
+      kept: median(kept), miss: median(missed)
+    };
+  }
+
   /* The next thing to do, always answerable — including on a day that has
      already gone badly, which is the only day it matters. */
   function next(s, now) {
@@ -846,6 +895,7 @@
     dayPlan: dayPlan, eveningRoom: eveningRoom, isSabbath: isSabbath,
     weekDay: weekDay, dayEats: dayEats,
     ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
-    week: week, next: next, dayKey: dayKey
+    week: week, next: next, dayKey: dayKey,
+    lastDays: lastDays, heavyRead: heavyRead, MIN_HEAVY: MIN_HEAVY, median: median
   };
 })(typeof window !== 'undefined' ? window : this);

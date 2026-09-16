@@ -441,5 +441,53 @@ group('The sabbath is held, not skipped');
      'with no sabbath declared nothing is held — it is not assumed for you');
 }
 
+/* ── 15. the week counts, and the claim it is for ─────────────────────── */
+group('Counts over seven days, and the reading refuses to guess');
+{
+  const seed = seeded({ sabbathDay: 0 });
+  seed.ct_lifelog_v1 = JSON.stringify({ days: {
+    '2026-09-21': {}, '2026-09-22': {}, '2026-09-23': {}, '2026-09-24': {} } });
+  const { S } = load(seed);
+  const now = at(2026, 9, 25, 12, 0);
+
+  const days = S.lastDays(7, now);
+  ok(days.length === 7 && days[6] === '2026-09-25',
+     'seven day keys ending today, derived rather than assembled by the page');
+
+  S.tick('manuscript', true, at(2026, 9, 22, 7, 0));
+  S.tick('manuscript', true, at(2026, 9, 23, 7, 0));
+  const wk = S.week(S.read(), days, now);
+  ok(wk.manuscript.logged === 2, 'two logged');
+  ok(wk.manuscript.missed === 2,
+     'two real misses — the days the Life Log says were closed and nothing was ticked');
+  ok(wk.manuscript.notClosed === 3,
+     'and three never closed, counted apart and never summed into the misses');
+}
+
+/* ── 16. the day-close reading ────────────────────────────────────────── */
+group('The claim is read from the record, or not at all');
+{
+  const { S } = load(seeded());
+  const thin = S.heavyRead(S.read(), S.lastDays(7, at(2026, 9, 25, 12, 0)));
+  ok(thin.enough === false && thin.n === 0,
+     'nothing logged is not a reading, and it says how many it needs');
+
+  /* Eight days: four with both prayers kept and light, four without. */
+  const st = S.read();
+  st.ticks = {};
+  const keys = S.lastDays(8, at(2026, 9, 25, 12, 0));
+  keys.forEach((k, i) => {
+    st.ticks[k] = (i % 2 === 0)
+      ? { prayer_am: 1, prayer_pm: 1, heavy: 1 }
+      : { heavy: 3 };
+  });
+  S.save(st);
+  const r = S.heavyRead(S.read(), keys);
+  ok(r.enough === true && r.n === 8, 'eight logged days is a reading');
+  ok(r.keptN === 4 && r.missN === 4, 'split by whether both prayers were kept');
+  ok(r.kept === 1 && r.miss === 3, 'and reported as medians, not means');
+  ok(S.median([]) === null, 'an empty set has no median rather than a zero');
+}
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));
 process.exit(failed ? 1 : 0);

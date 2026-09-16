@@ -115,6 +115,25 @@
   .sn .heavy button.on { border-color: var(--accent); background: var(--accent-w); color: var(--accent); }
   @media (max-width: 560px) { .sn .heavy { grid-template-columns: repeat(2, 1fr); } }
 
+  .sn .wk { display: flex; flex-direction: column; gap: 5px; }
+  .sn .wkrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; row-gap: 3px;
+    border-bottom: 1px dotted var(--line-2); padding-bottom: 5px; }
+  .sn .wkrow .nm { flex: 0 0 96px; font-size: 14px; color: var(--body); }
+  .sn .wkrow .pips { display: flex; gap: 3px; flex: 1; }
+  .sn .wkrow .pips i { width: 14px; height: 14px; border-radius: 3px; display: block;
+    border: 1px solid; }
+  .sn .wkrow .ct { font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+    flex: 0 0 auto; font-variant-numeric: lining-nums tabular-nums; }
+  @media (max-width: 560px) { .sn .wkrow .ct { flex: 1 1 100%; padding-left: 96px; } }
+  /* Same outline/fill vocabulary as the rows, so a pip and a row never
+     disagree about what gold means. */
+  .sn .p-done   { background: var(--ok);   border-color: var(--ok); }
+  .sn .p-floor  { background: transparent; border-color: var(--held); }
+  .sn .p-held   { background: var(--held); border-color: var(--held); }
+  .sn .p-na     { background: var(--sunken); border-color: var(--line-2); opacity: .6; }
+  .sn .p-missed { background: var(--owed-bg); border-color: var(--owed-ln); }
+  .sn .p-untold { background: var(--sunken); border-color: var(--line-2); }
+
   .sn .note { font-size: 13px; color: var(--faint); line-height: 1.5; margin: 7px 2px 0; }
   .sn .amend { border-left: 3px solid var(--held); background: var(--held-bg);
     border: 1px solid var(--held-ln); border-radius: var(--r4); padding: 12px 13px; }
@@ -295,6 +314,71 @@
     return head + '<div class="hub-card' + tone + '">' + times + body + '</div>';
   }
 
+  /* ── THE WEEK, COUNTED FROM THE DAYS ────────────────────────────────────
+     Counts, never chains. There is no streak number anywhere in this design
+     and a test asserts there never will be — "most days this week" survives a
+     bad Tuesday and "never break" does not, which is the whole argument.
+
+     The sentence is COUNTED FROM THE PIPS rather than stored beside them. An
+     earlier draft of this in the prototype kept both and they disagreed within
+     the hour, in the file written to argue against exactly that. */
+  var COUNTED = [
+    ['manuscript', 'Manuscript'], ['train', 'Training'], ['anatomy', 'Anatomy'],
+    ['anki', 'Anki'], ['spanish', 'Spanish'], ['prayer_am', 'Prayer (am)'],
+    ['prayer_pm', 'Prayer (pm)']
+  ];
+
+  function weekHTML(s, now, nDays, label) {
+    var days = S.lastDays(nDays, now);
+    var H = '<div class="kick">' + esc(label) + '<span class="end">counts, never chains</span></div>';
+    H += '<div class="wk">';
+    COUNTED.forEach(function (r) {
+      var pips = '', logged = 0, open = 0, held = 0, missed = 0;
+      days.forEach(function (k) {
+        var st = S.resolved(r[0], s, k, now);
+        if (st === 'done' || st === 'floor') logged++;
+        else if (st === 'held' || st === 'na') held++;
+        else if (st === 'missed') missed++;
+        else open++;
+        pips += '<i class="p-' + st + '"></i>';
+      });
+      var bits = [logged + ' logged'];
+      if (missed) bits.push(missed + ' missed');
+      if (open) bits.push(open + ' not closed');
+      if (held) bits.push(held + ' held');
+      H += '<div class="wkrow"><span class="nm">' + esc(r[1]) + '</span>' +
+        '<span class="pips">' + pips + '</span>' +
+        '<span class="ct">' + esc(bits.join(' \u00b7 ')) + '</span></div>';
+    });
+    return H + '</div>';
+  }
+
+  /* The claim, checked. A correlation over days you logged — not a claim
+     about cause, and the page says so at the same size as the number. */
+  function heavyReadHTML(s, now, nDays) {
+    var r = S.heavyRead(s, S.lastDays(nDays, now));
+    var H = '<div class="kick">The claim, checked<span class="end">' + r.n +
+      ' day-closes logged</span></div>';
+    if (!r.enough) {
+      return H + '<div class="hub-card"><p class="hub-p">Not enough yet. ' +
+        'The day-close needs <b>' + r.need + '</b> logged days before it can be read against ' +
+        'anything, and there are ' + r.n + '. Nothing is inferred from fewer.</p></div>';
+    }
+    if (!r.keptN || !r.missN) {
+      return H + '<div class="hub-card"><p class="hub-p">' + r.n + ' days logged, but they all ' +
+        'fall on one side — ' + (r.keptN ? 'prayer was kept every one of them' :
+        'it was not kept on any of them') + '. There is nothing to compare yet, which is its ' +
+        'own answer.</p></div>';
+    }
+    return H + '<div class="hub-card t-info"><h3 class="hub-h3">' +
+      'Kept days ran ' + r.kept + ' against ' + r.miss + '</h3>' +
+      '<p class="hub-p">Median heaviness on the ' + r.keptN + ' days both prayers were kept, ' +
+      'against the ' + r.missN + ' days they were not.</p>' +
+      '<p class="hub-p"><b>Which way it runs, this cannot say.</b> A lighter day is as likely to ' +
+      'have produced the prayer as the other way round, and neither figure is devotion \u2014 it ' +
+      'is where the hours went.</p></div>';
+  }
+
   function declarationHTML() {
     var H = '<div class="kick">The season · as declared</div><div class="rules">';
     H += '<div class="bk full"><h4>Why it exists</h4><p class="purpose">' + esc(PURPOSE) + '</p></div>';
@@ -394,6 +478,7 @@
 
     /* ── live ── */
     var nx = S.next(s, now);
+    var checkinExtra = false;
 
     /* ── THE DAY THE START TIME ATE ──────────────────────────────────────
        Reported: "I clicked start season but I thought it would start
@@ -448,6 +533,7 @@
       H += '<h2 class="vd held">Day ' + d + '. The season is <em>open</em>.</h2>' +
         '<p class="vsub">This is the one screen that can change the rules, and the only day ' +
         'it can happen without going on the record as an exception.</p>';
+      checkinExtra = true;
       var off = S.offWindow(s);
       if (off.length) {
         H += '<div class="kick">Read this first<span class="end">' + off.length +
@@ -661,6 +747,25 @@
         }).join('') + '</ul>';
     }
     H += '</div>';
+
+    /* The week, every day — seven days is the honest window for "most days",
+       and it is the thing the check-in then reads over a longer one. */
+    H += weekHTML(s, now, 7, 'The last seven days');
+
+    if (checkinExtra) {
+      /* The check-in reviews the period it covers, not an arbitrary week. */
+      H += weekHTML(s, now, s.checkinEvery, 'Since the last check-in');
+      H += heavyReadHTML(s, now, s.checkinEvery);
+      var lat = S.lapLatency(), cnt = S.lapCount();
+      H += '<div class="kick">The lap<span class="end">this device only</span></div>' +
+        '<div class="hub-card"><p class="hub-p">' +
+        (cnt ? cnt + ' bout' + (cnt === 1 ? '' : 's') + ' logged' +
+               (lat != null ? ', median reset <b>' + lat + ' minutes</b>' : ', none timed') +
+               '. What this measures is the gap from the loss to the reset \u2014 the skill that ' +
+               'survives a bad night \u2014 not days clean.'
+             : 'Nothing logged on this device. The phone keeps its own log and does not sync it, ' +
+               'so this figure cannot see it.') + '</p></div>';
+    }
 
     H += declarationHTML();
 
