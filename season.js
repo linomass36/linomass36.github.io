@@ -415,10 +415,27 @@
   }
 
   /* ── the day's order ────────────────────────────────────────────────────
-     `src` is the whole argument of the design. Five things you tap; four the
-     hub already measures and will therefore not ask you about twice. A
-     read-out cannot be ticked by hand — if the grind board says you did not
-     train, there is one answer to that question, not two. */
+     `src` names the board that can answer a row without being asked. Five
+     things you tap; three the hub already measures and will therefore not
+     ask you about twice — if the grind board recorded a session, there is
+     one answer to that question, not two.
+
+     WHAT SHIPPED BROKEN: those rows could not be completed at all. They were
+     rendered `disabled` on the strength of that rule, and then nothing ever
+     read the boards — `state()` consulted the ticks and nothing else. Anki,
+     training, anatomy and Spanish were untappable AND unread, which is to say
+     permanently untold. Reported on day two of a ninety-day season as "why
+     can't I check off Anki?", and a board that cannot record the day is worse
+     than no board, because the empty column reads as the truth about you.
+
+     A read-out now reads. It is locked only while the source has actually
+     ANSWERED; a source that has not run yet is silence, and silence is a row
+     you can still tap. That is the same rule dayEats already states — the
+     tick is the fact, the plan was wrong — extended from the calendar to the
+     feeds.
+
+     Spanish is a tap. It was given `src:'log'` against a Life Log field that
+     does not exist: wired to nothing, and indistinguishable from wired. */
   var ROWS = [
     { id: 'prayer_am',  grp: 'morning', ask: 'Prayer',              mins: 10, src: 'tap' },
     { id: 'manuscript', grp: 'morning', ask: 'Manuscript block',    mins: 45, src: 'tap' },
@@ -426,7 +443,7 @@
     { id: 'train',      grp: 'after',   ask: 'Training',            mins: 60, src: 'grind' },
     { id: 'arrival',    grp: 'after',   ask: 'Shower before couch · no trigger apps', mins: 20, src: 'tap' },
     { id: 'anatomy',    grp: 'after',   ask: 'Anatomy block',       mins: 60, src: 'anatomy' },
-    { id: 'spanish',    grp: 'after',   ask: 'Spanish',             mins: 15, src: 'log', secondary: true },
+    { id: 'spanish',    grp: 'after',   ask: 'Spanish',             mins: 15, src: 'tap', secondary: true },
     { id: 'phone',      grp: 'night',   ask: 'Phone off',           mins: 0,  src: 'tap' },
     { id: 'prayer_pm',  grp: 'night',   ask: 'Prayer',              mins: 10, src: 'tap' }
   ];
@@ -529,11 +546,18 @@
      highest — "mandatory, and never the catch-up day" — so it is HELD rather
      than not-asked: held is a fact about what is owed, and the numbers still
      render. Stored as a weekday index because that is the only input; which
-     dates it lands on is derived. */
-  function isSabbath(s, now) {
+     dates it lands on is derived.
+
+     It answers for a DAY, not for the clock. Reading the weekday off `now`
+     meant every past day was asked "is it the sabbath right now" and told no,
+     so a kept sabbath resolved to a miss the following Monday — the one day
+     of the week held by his own rule, counted against him for keeping it. */
+  function isSabbath(s, now, dKey) {
     s = s || read();
     if (s.sabbathDay == null) return false;
-    var d = now == null ? new Date() : new Date(now);
+    var d = dKey ? new Date(dKey + 'T12:00:00')
+                 : (now == null ? new Date() : new Date(now));
+    if (isNaN(d)) return false;
     return d.getDay() === s.sabbathDay;
   }
   var SABBATH_HOLDS = { train: 1, anatomy: 1, spanish: 1, anki: 1, manuscript: 1 };
@@ -556,7 +580,7 @@
       session: wd ? (wd.session || null) : null,
       free: wd ? wd.free : null, committed: wd ? wd.committed : null,
       blocks: blocks, lastEnd: lastEnd,
-      sabbath: isSabbath(s, now)
+      sabbath: isSabbath(s, now, key)
     };
   }
 
@@ -633,25 +657,115 @@
     return false;
   }
 
-  function state(id, s, dKey, now) {
+  function rowOf(id) {
+    for (var i = 0; i < ROWS.length; i++) if (ROWS[i].id === id) return ROWS[i];
+    return null;
+  }
+
+  /* ── WHAT THE OTHER BOARDS ALREADY KNOW ─────────────────────────────────
+     Returns true where the day's own record affirms the row, and null where
+     it says nothing. Never false: "the board has no session for Tuesday" and
+     "you did not train on Tuesday" are different statements, and only the
+     first one is in the data. Promoting silence to a no is how an unlogged
+     day becomes a miss, which is the thing this whole file is careful about.
+
+     Each row is read from its OWNER, not re-derived here. CTFacts already
+     joins the dated series — including the year of Anki rows the revlog
+     backfilled, which is the only place a past day's reps exist — and
+     CTTraining already settles the week-plan-versus-grind-board disagreement.
+     Where a module is not on the page the store is read directly, under the
+     same rule the module states.
+
+     One honest seam: the feeds date themselves by the CALENDAR day, and the
+     season's day boundary is CTDay's 05:00. Reviews done at half past midnight
+     are therefore the source's idea of which day it was, not the season's.
+     Taking the source's own dating is the lesser of the two lies — the
+     alternative is the hub re-dating a reading it did not take. */
+  function srcDone(id, dKey, ft) {
+    var r = rowOf(id);
+    if (!r || r.src === 'tap') return null;
+    try {
+      if (id === 'anki') {
+        if (ft === undefined) ft = factsTable();
+        var fr = ft && ft[dKey];
+        if (fr && fr.ankiReps != null) return fr.ankiReps > 0 ? true : null;
+        /* Without CTFacts only TODAY can be answered: ct_anki_v1 holds one
+           reading and is overwritten on every sync, so a reading stamped
+           yesterday says nothing at all about today. facts.js states the
+           same rule where it lands the same number. */
+        var a = readJSON('ct_anki_v1', null);
+        if (!a || String(a.at || '').slice(0, 10) !== dKey) return null;
+        var reps = a.repsToday != null ? a.repsToday : a.doneToday;
+        if (reps == null) return null;
+        return (parseInt(reps, 10) || 0) > 0 ? true : null;
+      }
+      if (id === 'train') {
+        var T = w.CTTraining;
+        if (T && typeof T.isDone === 'function') return T.isDone(dKey) ? true : null;
+        var wk = readJSON(WEEK_KEY, null);
+        var d = wk && wk.days && wk.days[dKey];
+        return (d && d.done) ? true : null;
+      }
+      if (id === 'anatomy') {
+        var an = readJSON('ct_anatomy_v1', null);
+        var day = an && an.days && an.days[dKey];
+        if (!day) return null;
+        /* Minutes, not a declared tier. Declaring the day's tier is planning
+           it; the block is the minutes that followed. anatomy-core counts
+           these separately for exactly that reason. */
+        var mins = (parseInt(day.minRead, 10) || 0) + (parseInt(day.minDraw, 10) || 0);
+        return mins > 0 ? true : null;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function factsTable() {
+    try {
+      if (w.CTFacts && typeof w.CTFacts.all === 'function') return w.CTFacts.all() || null;
+    } catch (e) {}
+    return null;
+  }
+
+  /* Who answered. A tick with no author is a number without a source, which
+     this repo has been bitten by three times — so the row says whether the
+     board read it or you said it. */
+  function from(id, s, dKey, now, ft) {
     s = s || read();
     dKey = dKey || dayKey(now);
+    var t = ticks(s, dKey);
+    if (t[id] === 1 || t[id] === 2) return 'you';
+    if (srcDone(id, dKey, ft) === true) { var r = rowOf(id); return r ? r.src : null; }
+    return null;
+  }
+
+  function state(id, s, dKey, now, ft) {
+    s = s || read();
+    dKey = dKey || dayKey(now);
+    var t = ticks(s, dKey);
+    /* YOUR TICK FIRST. If you trained on a day the week called rest, the week
+       was wrong about your afternoon and the tick is the fact. */
+    if (t[id] === 1) return 'done';
+    if (t[id] === 2) return 'floor';
+    /* Then a board that measured it. A source that affirms outranks anything
+       derived from a PLAN — held, sabbath, not-asked and evicted are all
+       statements about what the day was expected to hold, and a recorded
+       session is a statement about what it held. */
+    if (srcDone(id, dKey, ft) === true) return 'done';
     if (heldIds()[id] && dKey === dayKey(now)) return 'held';
-    var t0 = ticks(s, dKey);
-    /* A tick always wins. If you trained on a day the week called rest, the
-       week was wrong about your afternoon and the tick is the fact. */
-    if (!t0[id] && dKey === dayKey(now)) {
-      if (isSabbath(s, now) && SABBATH_HOLDS[id]) return 'held';
+    /* The sabbath is derived from the DAY, not from the clock: asking `now`
+       which weekday it is answered for today on every day, so last Sunday
+       resolved to a miss in the week grid — the one day of the week that is
+       held by his own rule, counted against him for being kept. */
+    if (isSabbath(s, now, dKey) && SABBATH_HOLDS[id]) return 'held';
+    if (dKey === dayKey(now)) {
       if (notAsked(id, s, now)) return 'na';
       if (dayEats(id, s, now)) return 'na';
     }
-    var t = ticks(s, dKey);
-    if (t[id] === 1) return 'done';
-    if (t[id] === 2) return 'floor';
     /* Today is still open, so an untouched row is untold rather than missed.
        A past day the board was never told about stays untold forever — it is
        not evidence of a miss, it is an absence of evidence. */
-    return dKey === dayKey(now) ? 'untold' : 'untold';
+    return 'untold';
   }
 
   /* A past day resolves to missed ONLY where the day was closed — i.e. the
@@ -662,21 +776,27 @@
     var l = readJSON('ct_lifelog_v1', null);
     return !!(l && l.days && l.days[dKey]);
   }
-  function resolved(id, s, dKey, now) {
-    var st = state(id, s, dKey, now);
+  function resolved(id, s, dKey, now, ft) {
+    var st = state(id, s, dKey, now, ft);
     if (st !== 'untold') return st;
     if (dKey === dayKey(now)) return 'untold';
     return closed(dKey) ? 'missed' : 'untold';
   }
 
-  /* The week, counted from the days rather than stored beside them. */
+  /* The week, counted from the days rather than stored beside them.
+
+     The joined table is read ONCE and handed down. A fortnight of nine rows
+     asks a hundred and twenty-six questions, and CTFacts.all() unpacks a year
+     of Anki rows every time it is called — which on a phone is the difference
+     between a grid and a stall. */
   function week(s, days, now) {
     s = s || read();
     var out = {};
+    var ft = factsTable();
     ROWS.forEach(function (r) {
       var logged = 0, open = 0, held = 0, missed = 0;
       days.forEach(function (k) {
-        var st = resolved(r.id, s, k, now);
+        var st = resolved(r.id, s, k, now, ft);
         if (st === 'done' || st === 'floor') logged++;
         else if (st === 'held' || st === 'na') held++;
         else if (st === 'missed') missed++;
@@ -740,14 +860,15 @@
      already gone badly, which is the only day it matters. */
   function next(s, now) {
     s = s || read();
-    var held = heldIds();
-    var t = ticks(s, dayKey(now));
     var n = night(s, now);
     var mins = n.now;
+    /* Owed is exactly `untold`, and state() is the only thing that decides
+       it. Re-testing held and not-asked here was a second opinion on the same
+       question, and one that had never heard of the feeds: it went on naming
+       Anki as the next block after the sync reported two hundred reps. */
+    var ft = factsTable();
     var order = ROWS.filter(function (r) {
-      if (held[r.id]) return false;
-      if (notAsked(r.id, s, now)) return false;
-      return !t[r.id];
+      return state(r.id, s, null, now, ft) === 'untold';
     });
     if (!order.length) return { ask: 'Nothing left. Sleep is the next block.', mins: 0 };
     /* After the shift, the morning's rows are gone rather than owed. */
@@ -943,6 +1064,7 @@
     dayPlan: dayPlan, eveningRoom: eveningRoom, isSabbath: isSabbath,
     weekDay: weekDay, dayEats: dayEats,
     ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
+    srcDone: srcDone, from: from, rowOf: rowOf,
     week: week, next: next, dayKey: dayKey,
     lastDays: lastDays, heavyRead: heavyRead, MIN_HEAVY: MIN_HEAVY, median: median
   };

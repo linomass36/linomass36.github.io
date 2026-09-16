@@ -460,8 +460,18 @@ group('Counts over seven days, and the reading refuses to guess');
   ok(wk.manuscript.logged === 2, 'two logged');
   ok(wk.manuscript.missed === 2,
      'two real misses — the days the Life Log says were closed and nothing was ticked');
-  ok(wk.manuscript.notClosed === 3,
-     'and three never closed, counted apart and never summed into the misses');
+  /* Seven days ending Friday the 25th spans Sunday the 20th, and the sabbath
+     is declared. It used to land here as a third not-closed day: isSabbath
+     read the weekday off `now`, so every past day was asked "is it the
+     sabbath at this moment" and told no. The day held by his own rule showed
+     up in the week grid as one more blank. It is held, and counted as held. */
+  ok(wk.manuscript.notClosed === 2,
+     'two never closed, counted apart and never summed into the misses');
+  ok(wk.manuscript.held === 1,
+     'and the sabbath inside the window is held — derived from the DAY, not the clock');
+  ok(wk.manuscript.logged + wk.manuscript.missed +
+     wk.manuscript.held + wk.manuscript.notClosed === 7,
+     'and the four buckets account for every day exactly once');
 }
 
 /* ── 16. the day-close reading ────────────────────────────────────────── */
@@ -592,6 +602,139 @@ group('The day has a now, and it is the group holding the next thing owed');
   S.tick('anki', true, noon);
   ok(S.groupNow(S.read(), noon) === 'after',
      'ticking it moves the live group forward — no second clock decides this');
+}
+
+/* ── 20. the rows the hub answers for itself ──────────────────────────────
+   WHAT SHIPPED BROKEN: Anki, training, anatomy and Spanish were rendered
+   `disabled` because a board was supposed to answer them, and no board was
+   ever read — state() consulted the ticks and nothing else. Four of the nine
+   rows could not be completed by any means at all. Reported on day two of a
+   ninety-day season as "why can't I check off Anki?", with a suite this size
+   fully green: every assertion here was written because the arithmetic was
+   right about rows nobody could reach. */
+group('A read-out reads, and silence leaves the row tappable');
+{
+  const day = '2026-09-18';
+  const now = at(2026, 9, 18, 21, 0);
+  const base = () => ({ ct_season_v1: JSON.stringify({
+    started: at(2026, 9, 16, 21, 40), days: 90, checkinEvery: 21, shiftStart: 8 * 60 }) });
+
+  /* Nothing on any feed. The row is not done — and, crucially, not claimed
+     by anything either, so the page has something to let him tap. */
+  {
+    const { S } = load(base());
+    ok(S.srcDone('anki', day) === null, 'a feed that has not run says nothing');
+    ok(S.state('anki', S.read(), day, now) === 'untold', 'so the row is untold');
+    ok(S.from('anki', S.read(), day, now) === null, 'and nobody has answered it');
+  }
+
+  /* The sync landed today's reading. The row completes itself. */
+  {
+    const seed = base();
+    seed.ct_anki_v1 = JSON.stringify({ at: day + 'T18:04:00', repsToday: 212, dueTotal: 40 });
+    const { S } = load(seed);
+    ok(S.srcDone('anki', day) === true, 'reps on the day is the day answered');
+    ok(S.state('anki', S.read(), day, now) === 'done', 'and the row reads done');
+    ok(S.from('anki', S.read(), day, now) === 'anki', 'naming the board that said so');
+  }
+
+  /* A reading stamped YESTERDAY is yesterday's work. ct_anki_v1 holds one
+     reading and is overwritten on every sync; facts.js states the same rule
+     where it lands the same number, and the hub must not invent reps. */
+  {
+    const seed = base();
+    seed.ct_anki_v1 = JSON.stringify({ at: '2026-09-17T18:04:00', repsToday: 212 });
+    const { S } = load(seed);
+    ok(S.srcDone('anki', day) === null, 'a stale reading answers for its own day, not this one');
+    ok(S.srcDone('anki', '2026-09-17') === true, 'and it does answer for that one');
+  }
+
+  /* Zero reps is not a no. "The sync ran and you reviewed nothing" and "you
+     did not do Anki" are different statements and only one is in the data —
+     promoting silence to a no is how an unlogged day becomes a miss. */
+  {
+    const seed = base();
+    seed.ct_anki_v1 = JSON.stringify({ at: day + 'T18:04:00', repsToday: 0 });
+    const { S } = load(seed);
+    ok(S.srcDone('anki', day) === null, 'zero reps is silence, never a recorded miss');
+    ok(S.resolved('anki', S.read(), day, at(2026, 9, 20, 9, 0)) === 'untold',
+       'and an unclosed day with a zero reading is still untold two days later');
+  }
+
+  /* The dated training week, which is what CTTraining settles. */
+  {
+    const seed = base();
+    seed.ct_week_v1 = JSON.stringify({ days: { [day]: { session: 'Lower', done: true } } });
+    const { S } = load(seed);
+    ok(S.state('train', S.read(), day, now) === 'done', 'a session the week recorded is done');
+    ok(S.from('train', S.read(), day, now) === 'grind', 'from the grind board');
+  }
+  {
+    const seed = base();
+    seed.ct_week_v1 = JSON.stringify({ days: { [day]: { session: 'Lower' } } });
+    const { S } = load(seed);
+    ok(S.srcDone('train', day) === null, 'a session dealt but not ticked is not a session done');
+  }
+
+  /* Anatomy is MINUTES, not a declared tier. Declaring the tier is planning
+     the day; the block is what followed. */
+  {
+    const seed = base();
+    seed.ct_anatomy_v1 = JSON.stringify({ days: { [day]: { tier: 'full', minRead: 0, minDraw: 0 } } });
+    const { S } = load(seed);
+    ok(S.srcDone('anatomy', day) === null, 'a tier declared with no minutes is not a block');
+    seed.ct_anatomy_v1 = JSON.stringify({ days: { [day]: { tier: 'full', minRead: 35, minDraw: 25 } } });
+    const T = load(seed).S;
+    ok(T.srcDone('anatomy', day) === true, 'minutes read or drawn are the block');
+  }
+
+  /* Spanish has no source in this hub. It was wired to a Life Log field that
+     does not exist, which is indistinguishable from being wired. */
+  {
+    const { S } = load(base());
+    ok(S.rowOf('spanish').src === 'tap', 'Spanish is a tap — nothing in the hub measures it');
+    ok(S.srcDone('spanish', day) === null, 'and it claims no source');
+    S.tick('spanish', true, now);
+    ok(S.state('spanish', S.read(), day, now) === 'done', 'so the tap is the only answer, and it works');
+  }
+
+  /* Your tick outranks the board, both ways round. */
+  {
+    const seed = base();
+    seed.ct_anki_v1 = JSON.stringify({ at: day + 'T18:04:00', repsToday: 0 });
+    const { S } = load(seed);
+    S.tick('anki', true, now);
+    ok(S.state('anki', S.read(), day, now) === 'done', 'a tick answers a row the feed left silent');
+    ok(S.from('anki', S.read(), day, now) === 'you', 'and the row says who answered');
+  }
+
+  /* A source that AFFIRMS outranks anything derived from the plan. Held,
+     sabbath and evicted are statements about what the day was expected to
+     hold; a recorded session is a statement about what it held. */
+  {
+    const seed = base();
+    seed.ct_season_v1 = JSON.stringify({ started: at(2026, 9, 16, 21, 40), days: 90,
+                                         checkinEvery: 21, shiftStart: 8 * 60, sabbathDay: 0 });
+    seed.ct_week_v1 = JSON.stringify({ days: { '2026-09-20': { session: 'Lower', done: true } } });
+    const { S } = load(seed);
+    const sun = at(2026, 9, 20, 19, 0);
+    ok(S.state('train', S.read(), '2026-09-20', sun) === 'done',
+       'if you trained on the sabbath, you trained — the hold was about what was owed');
+    ok(S.state('anatomy', S.read(), '2026-09-20', sun) === 'held',
+       'and the rest of the day is still held');
+  }
+
+  /* The next block cannot name something a board has already recorded. */
+  {
+    const seed = base();
+    seed.ct_anki_v1 = JSON.stringify({ at: day + 'T12:10:00', repsToday: 212 });
+    const { S } = load(seed);
+    const s = S.read();
+    S.tick('prayer_am', true, at(2026, 9, 18, 6, 0));
+    S.tick('manuscript', true, at(2026, 9, 18, 6, 30));
+    const n = S.next(S.read(), at(2026, 9, 18, 13, 0));
+    ok(n.id !== 'anki', 'the next block is not the one the sync already answered');
+  }
 }
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed'));

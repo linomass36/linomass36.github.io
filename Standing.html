@@ -557,6 +557,11 @@ h2.vd.calm em{color:var(--ok)}
   font-variant-numeric:lining-nums tabular-nums}
 .szc .rw.read{cursor:default}
 .szc .rw.read .bx{border-style:dashed}
+/* Which board answered it. Small, lowercase, beside the row rather than under
+   it — a tick with no author is a number with no source. */
+.szc .rw .sr{font-family:var(--mono);font-style:normal;font-size:9.5px;
+  letter-spacing:.06em;text-transform:uppercase;font-variant-numeric:lining-nums;
+  color:var(--faint);vertical-align:1px}
 .szc .rw.s-done{background:var(--ok-w);border-color:var(--ok-l)}
 .szc .rw.s-done .bx{background:var(--ok);border-color:var(--ok);color:var(--raised)}
 .szc .rw.s-done .t{color:var(--ok)}
@@ -1299,12 +1304,18 @@ footer {
             }
             var mk = st === 'done' ? '\u2713' : st === 'floor' ? '\u2013' :
                      st === 'held' ? '\u00b7' : '';
-            var isRead = r.src !== 'tap';
+            /* Locked by a board that ANSWERED, not by the mere existence of
+               a `src`. The four rows with a source behind them were the four
+               that could never be completed: disabled here, and never read
+               anywhere. A feed that has not reported is silence. */
+            var frm = SZ.from(r.id, szs, null);
+            var isRead = r.src !== 'tap' && frm === r.src;
             H += '<button class="rw s-' + st + (isRead ? ' read' : '') +
                  '" type="button" data-szrow="' + esc(r.id) + '"' +
                  (isRead ? ' disabled' : '') + '>' +
                  '<span class="bx">' + mk + '</span>' +
-                 '<span class="t">' + esc(r.ask) + '</span>' +
+                 '<span class="t">' + esc(r.ask) +
+                 (isRead ? ' <i class="sr">' + esc(r.src) + '</i>' : '') + '</span>' +
                  (r.mins ? '<span class="m">' + r.mins + 'm</span>' : '') + '</button>';
           });
           /* One line, four numbers. If the phone hour has gone it says so

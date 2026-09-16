@@ -9,6 +9,12 @@
 <script src="./sitemap.js"></script>
 <script src="./day.js"></script>
 <script src="./wait.js"></script>
+<!-- CTFacts owns the dated series the week grid reads the Anki row from: a
+     past day's reps exist only in the revlog backfill it unpacks. Without it
+     season.js can answer for today and says nothing about the rest, which is
+     a grid that quietly under-counts rather than one that is honest. -->
+<script src="./screen.js"></script>
+<script src="./facts.js"></script>
 <script src="./season.js"></script>
 <script src="./plates.js"></script>
 <style>
@@ -253,14 +259,25 @@
   function fmtHM(mins) { return S.hm(mins); }
   function wrap2(x) { return ((x % 1440) + 1440) % 1440; }
 
-  function rowHTML(r, st) {
+  /* The row says WHO answered it, and is locked only by a board that actually
+     did. It used to be locked by the mere existence of a `src`: Anki, training
+     and anatomy were untappable on the promise of a reading nothing ever took,
+     so the only four rows with a source behind them were the four that could
+     never be completed. A feed that has not run is silence, and a silent row
+     is one you can still answer yourself. */
+  function rowHTML(r, st, frm) {
     var mark = st === 'done' ? '✓' : st === 'floor' ? '–' : st === 'held' ? '·' : '';
     var read = r.src !== 'tap';
-    var tag = read ? esc(r.src) : 'tap';
-    var sub = tag + (st === 'untold' ? ' · not told' : st === 'floor' ? ' · floor' :
-                     st === 'held' ? ' · held' : '');
-    return '<button class="row s-' + st + (read ? ' read' : '') + (r.secondary ? ' sec' : '') +
-      '" type="button" data-row="' + esc(r.id) + '"' + (read ? ' disabled' : '') + '>' +
+    var locked = read && frm === r.src;
+    var sub = !read
+      ? 'tap' + (st === 'untold' ? ' · not told' : st === 'floor' ? ' · floor' :
+                 st === 'held' ? ' · held' : '')
+      : locked ? 'read from ' + esc(r.src)
+      : frm === 'you' ? 'you said so · ' + esc(r.src) + ' has not reported'
+      : st === 'held' ? esc(r.src) + ' · held'
+      : esc(r.src) + ' has not reported · tap to log it';
+    return '<button class="row s-' + st + (locked ? ' read' : '') + (r.secondary ? ' sec' : '') +
+      '" type="button" data-row="' + esc(r.id) + '"' + (locked ? ' disabled' : '') + '>' +
       '<span class="box">' + mark + '</span>' +
       '<span class="tx"><b>' + esc(r.ask) + '</b><i>' + esc(sub) + '</i></span>' +
       (r.mins ? '<span class="mins">' + r.mins + 'm</span>' : '') +
@@ -593,7 +610,7 @@
                 (wn === 'now' ? '<span> \u2190 now</span>' : '') + '</div>';
         lastGrp = r.grp;
       }
-      body += rowHTML(r, st);
+      body += rowHTML(r, st, S.from(r.id, s, null, now));
     });
     /* WHY the board went quiet. A day that asks for almost nothing and does
        not say what ate it reads as a broken page, not an honest one. */
