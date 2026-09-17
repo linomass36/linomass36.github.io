@@ -126,6 +126,22 @@
   .sn .heavy button.on { border-color: var(--accent); background: var(--accent-w); color: var(--accent); }
   @media (max-width: 560px) { .sn .heavy { grid-template-columns: repeat(2, 1fr); } }
 
+  /* The day-close scale, one point per row. Four columns fitted the labels
+     and nothing else; an anchored point needs a line of its own to say what
+     it means, and the anchors are the reason the answers stay comparable
+     across ninety days. */
+  .sn .hscale { display: grid; gap: 6px; margin: 4px 0 12px; }
+  .sn .hscale button { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    row-gap: 2px; text-align: left; border: 1px solid var(--line-2);
+    border-radius: var(--r4); background: var(--raised); color: var(--ink);
+    padding: 10px 12px; min-height: var(--tap); font-family: var(--serif); }
+  .sn .hscale button b { flex: 0 0 auto; font-size: 15.5px; font-weight: 500; }
+  .sn .hscale button i { flex: 1 1 14ch; min-width: 0; font-style: normal; font-size: 13px;
+    line-height: 1.35; color: var(--faint); }
+  .sn .hscale button.on { border-color: var(--accent); background: var(--accent-w); }
+  .sn .hscale button.on b { color: var(--accent); }
+  .sn .hscale button.on i { color: var(--accent); opacity: .85; }
+
   .sn .wk { display: flex; flex-direction: column; gap: 5px; }
   .sn .wkrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; row-gap: 3px;
     border-bottom: 1px dotted var(--line-2); padding-bottom: 5px; }
@@ -250,11 +266,10 @@
     'The manuscript, the body and school held — so the season was a clearing, not a suspension'
   ];
 
-  /* One tap, once, at the day-close. Asked about THE DAY, not about her:
-     "how heavy was today" rather than "how much do you miss her", because
-     the second is rumination with a number attached. No target, no streak,
-     no colour — a heavy day is not a failed day, it is Tuesday. */
-  var HEAVY = ['Light', 'Ordinary', 'Heavy', 'Very heavy'];
+  /* The day-close scale lives in season.js, with its anchors. It was four
+     bare adjectives here, and the read-out prints the same numbers back — a
+     second copy of a scale in the page that draws it is how a 3 comes to
+     mean two different things on two screens. */
 
   function fmtHM(mins) { return S.hm(mins); }
   function wrap2(x) { return ((x % 1440) + 1440) % 1440; }
@@ -401,10 +416,17 @@
         'it was not kept on any of them') + '. There is nothing to compare yet, which is its ' +
         'own answer.</p></div>';
     }
+    /* NAME THE SCALE. It printed "Kept days ran 2 against 3" — two integers
+       with no unit, no range and no direction, in a card whose whole point is
+       that a figure must say where it came from. A 3 is only a number if you
+       already know the scale runs 1 to 4 and which end is the heavy one. */
     return H + '<div class="hub-card t-info"><h3 class="hub-h3">' +
-      'Kept days ran ' + r.kept + ' against ' + r.miss + '</h3>' +
-      '<p class="hub-p">Median heaviness on the ' + r.keptN + ' days both prayers were kept, ' +
-      'against the ' + r.missN + ' days they were not.</p>' +
+      'Kept days ran ' + esc(S.heavyLabel(r.kept)) + ', the rest ' +
+      esc(S.heavyLabel(r.miss)) + '</h3>' +
+      '<p class="hub-p">Median heaviness on the ' + r.keptN + ' days both prayers were kept ' +
+      '(<b>' + r.kept + '</b>), against the ' + r.missN + ' days they were not (<b>' + r.miss +
+      '</b>), on the four-point day-close scale — 1 light, 4 very heavy. Lower is a day ' +
+      'that cost you less to get through.</p>' +
       '<p class="hub-p"><b>Which way it runs, this cannot say.</b> A lighter day is as likely to ' +
       'have produced the prayer as the other way round, and neither figure is devotion \u2014 it ' +
       'is where the hours went.</p></div>';
@@ -699,16 +721,35 @@
 
     H += nightHTML(s, now);
 
-    /* the day-close tap */
+    /* THE DAY-CLOSE TAP, WHICH NOW SAYS WHAT IT IS ASKING.
+       Four adjectives over four buttons and no definition anywhere: heavy in
+       what sense? Effort, mood, hours, loneliness? Each point carries its
+       anchor now, and the anchors are the load-bearing part — the read-out
+       compares a median from week one against one from week twelve, so a
+       scale that drifts measures the vocabulary rather than the days. */
     var t = S.ticks(s, null);
     H += '<div class="kick">The day-close<span class="end">asked once, in the evening</span></div>' +
-      '<div class="hub-card"><h3 class="hub-h3">How heavy was today?</h3><div class="heavy">' +
-      HEAVY.map(function (l, i) {
-        return '<button type="button" data-heavy="' + i + '"' +
-          (t.heavy === i + 1 ? ' class="on"' : '') + '>' + esc(l) + '</button>';
+      '<div class="hub-card"><h3 class="hub-h3">How heavy was today?</h3>' +
+      '<p class="hub-p"><b>How much the day cost you to get through</b> — the weight you were ' +
+      'carrying, not how much was in it. A twelve-hour shift can be a light day and an empty ' +
+      'Saturday can be a very heavy one. That gap is the whole reason this is asked: how busy ' +
+      'you were is already counted by the nine rows above, and asking for it twice would tell ' +
+      'you nothing new.</p>' +
+      '<div class="hscale">' +
+      S.HEAVY.map(function (h) {
+        return '<button type="button" data-heavy="' + (h.n - 1) + '"' +
+          (t.heavy === h.n ? ' class="on"' : '') + '>' +
+          '<b>' + esc(h.label) + '</b><i>' + esc(h.means) + '</i></button>';
       }).join('') + '</div>' +
-      '<p class="hub-p">Not about her — about the day. No target and no streak, and a heavy ' +
-      'day is not a failed one.</p></div>';
+      '<p class="hub-p">It is the only instrument that can test what the season actually claims — ' +
+      '<i>a day without her can be a good day</i> — by reading the days the practices were kept ' +
+      'against the days they were not. Which is why it asks about <b>the day</b> and never about ' +
+      'her: "how much do you miss her" is rumination with a number attached, and answering it ' +
+      'every night would be practising the thing this is meant to loosen.</p>' +
+      '<p class="hub-p">No target, no streak, no colour. <b>A heavy day is not a failed day</b>, ' +
+      'it is Tuesday — and a season with no heavy days in it would mean the tap was being ' +
+      'answered for the board rather than honestly. Tap the same one again to take it back.</p>' +
+      '</div>';
 
     /* The purpose is NOT printed here as well. The declaration below already
        carries it, and the first version rendered the same paragraph twice on

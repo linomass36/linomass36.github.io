@@ -863,6 +863,58 @@
      the page has to say so next to the figure rather than under it. */
   var MIN_HEAVY = 8;
 
+  /* ── HOW HEAVY WAS TODAY, AND HEAVY IN WHAT SENSE ───────────────────────
+     WHAT SHIPPED BROKEN: the card asked "how heavy was today?" over four
+     buttons reading Light / Ordinary / Heavy / Very heavy, and nothing on the
+     page said heavy in what sense. Reported as "I'm confused on what how
+     heavy was today is supposed to mean", which is the only honest reading of
+     a four-point scale whose points are four adjectives.
+
+     TWO THINGS WERE WRONG, AND THE SECOND IS THE WORSE ONE.
+
+     It never said what it was measuring. Heaviness here is what the day COST
+     you to get through — the weight you were carrying — and emphatically not
+     how much was in it. A twelve-hour shift can be a light day and an empty
+     Saturday can be a very heavy one, and that gap is the entire reason the
+     question is asked at all. Were it tracking how busy the day was it would
+     be a second copy of a number the nine rows already hold, which is the
+     failure this repo has spent three refactors on.
+
+     And the points were not anchored, which quietly breaks the one thing the
+     answer is used for. heavyRead() compares the median of the days both
+     prayers were kept against the median of the days they were not, ACROSS
+     THE WHOLE SEASON. If "Heavy" means something slightly different in week
+     eleven than it meant in week one, that comparison measures his vocabulary
+     rather than his days — and nothing about the output would look wrong. An
+     anchor per point is what makes a September answer and a December answer
+     the same unit.
+
+     Kept here rather than in the page because the read-out prints these
+     numbers back and needs the same words for them. A second copy of the
+     scale in the page that draws it is how a 3 comes to mean two things. */
+  var HEAVY = [
+    { n: 1, label: 'Light',
+      means: 'You were not carrying anything. The day went past.' },
+    { n: 2, label: 'Ordinary',
+      means: 'A normal day’s weight. Nothing you had to work at.' },
+    { n: 3, label: 'Heavy',
+      means: 'Getting through it took effort you noticed.' },
+    { n: 4, label: 'Very heavy',
+      means: 'Most of what you did today was getting through it.' }
+  ];
+
+  /* The word for a number on that scale — including the halves, because a
+     median over an even number of days lands between two points and "2.5"
+     printed on its own is the bare figure this whole file exists against. */
+  function heavyLabel(n) {
+    if (n == null || isNaN(n)) return null;
+    var lo = Math.floor(n), hi = Math.ceil(n);
+    function at(x) { return (x >= 1 && x <= HEAVY.length) ? HEAVY[x - 1].label : null; }
+    if (lo === hi) return at(lo);
+    var a = at(lo), b = at(hi);
+    return (a && b) ? a + '–' + b.toLowerCase() : (a || b);
+  }
+
   function median(xs) {
     if (!xs.length) return null;
     var a = xs.slice().sort(function (x, y) { return x - y; });
@@ -1231,6 +1283,7 @@
     ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
     srcDone: srcDone, from: from, rowOf: rowOf, tag: tag,
     week: week, next: next, dayKey: dayKey,
-    lastDays: lastDays, heavyRead: heavyRead, MIN_HEAVY: MIN_HEAVY, median: median
+    lastDays: lastDays, heavyRead: heavyRead, MIN_HEAVY: MIN_HEAVY, median: median,
+    HEAVY: HEAVY, heavyLabel: heavyLabel
   };
 })(typeof window !== 'undefined' ? window : this);

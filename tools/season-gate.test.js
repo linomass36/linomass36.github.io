@@ -729,6 +729,54 @@ group('The day has a now, and it is the group holding the next thing owed');
      'ticking it moves the live group forward — no second clock decides this');
 }
 
+/* ── 16b. the day-close scale says what it is asking ──────────────────────
+   WHAT SHIPPED BROKEN: the card asked "how heavy was today?" over four
+   buttons reading Light / Ordinary / Heavy / Very heavy and nothing anywhere
+   said heavy in what sense. Reported as "I'm confused on what how heavy was
+   today is supposed to mean".
+
+   The anchors are not decoration. heavyRead() compares a median from week one
+   against one from week twelve, so an unanchored point that drifts measures
+   his vocabulary rather than his days — and nothing in the output would look
+   wrong. This group pins the scale down so a refactor cannot quietly lose it. */
+group('The day-close scale is anchored, and the read-out names it');
+{
+  const { S } = load(seeded());
+
+  ok(S.HEAVY.length === 4, 'four points, and the scale lives in one place');
+  ok(S.HEAVY.every((h, i) => h.n === i + 1),
+     'numbered 1 to 4 in order — the stored value is a position on this scale');
+  ok(S.HEAVY.every((h) => typeof h.means === 'string' && h.means.length > 12),
+     'and every point carries an anchor, which is what keeps week one and week twelve comparable');
+
+  ok(S.heavyLabel(1) === 'Light' && S.heavyLabel(4) === 'Very heavy',
+     'a stored value reads back as its own word');
+  /* A median over an even number of days lands between two points, and "2.5"
+     printed on its own is the bare figure this whole repo is written against. */
+  ok(S.heavyLabel(2.5) === 'Ordinary–heavy',
+     'and a median between two points is named rather than printed as 2.5 (' +
+     S.heavyLabel(2.5) + ')');
+  ok(S.heavyLabel(null) === null && S.heavyLabel(NaN) === null,
+     'no reading is null, never a label invented for one');
+
+  /* The read-out prints these numbers back, so it has to be reading the same
+     scale the card wrote. A second copy in the page is how a 3 comes to mean
+     two different things on two screens. */
+  const days = ['2026-09-17', '2026-09-18', '2026-09-19', '2026-09-20',
+                '2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24'];
+  const st = S.read();
+  st.ticks = {};
+  days.forEach((k, i) => {
+    /* Four days both prayers kept and light; four without and heavy. */
+    st.ticks[k] = i < 4 ? { prayer_am: 1, prayer_pm: 1, heavy: 2 } : { heavy: 4 };
+  });
+  S.save(st);
+  const r = S.heavyRead(S.read(), days);
+  ok(r.enough && r.kept === 2 && r.miss === 4, 'the medians come out of the stored positions');
+  ok(S.heavyLabel(r.kept) === 'Ordinary' && S.heavyLabel(r.miss) === 'Very heavy',
+     'and both ends of the comparison have a word the card would recognise');
+}
+
 /* ── 19b. the board says what its own colours mean ────────────────────────
    WHAT SHIPPED BROKEN: the Standing card drew six states with three glyphs —
    a tick, a dash, a middle dot — and named none of them. On a declared
