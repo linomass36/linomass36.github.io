@@ -265,17 +265,18 @@
      so the only four rows with a source behind them were the four that could
      never be completed. A feed that has not run is silence, and a silent row
      is one you can still answer yourself. */
-  function rowHTML(r, st, frm) {
+  function rowHTML(r, st, frm, tg) {
     var mark = st === 'done' ? '✓' : st === 'floor' ? '–' : st === 'held' ? '·' : '';
     var read = r.src !== 'tap';
     var locked = read && frm === r.src;
-    var sub = !read
-      ? 'tap' + (st === 'untold' ? ' · not told' : st === 'floor' ? ' · floor' :
-                 st === 'held' ? ' · held' : '')
-      : locked ? 'read from ' + esc(r.src)
-      : frm === 'you' ? 'you said so · ' + esc(r.src) + ' has not reported'
-      : st === 'held' ? esc(r.src) + ' · held'
-      : esc(r.src) + ' has not reported · tap to log it';
+    /* The STATE comes from Season.tag — one word, one owner, so this page and
+       the Standing card cannot describe the same gold box differently. What
+       this page adds is the affordance: whether there is anything to tap.
+       That part is a fact about the page, not about the day. */
+    var sub = locked ? 'read from ' + esc(r.src)
+      : frm === 'you' && read ? 'you said so · ' + esc(r.src) + ' has not reported'
+      : st === 'untold' ? (read ? esc(tg) + ' · tap to log it' : 'not told · tap')
+      : esc(tg || 'tap');
     return '<button class="row s-' + st + (locked ? ' read' : '') + (r.secondary ? ' sec' : '') +
       '" type="button" data-row="' + esc(r.id) + '"' + (locked ? ' disabled' : '') + '>' +
       '<span class="box">' + mark + '</span>' +
@@ -610,7 +611,7 @@
                 (wn === 'now' ? '<span> \u2190 now</span>' : '') + '</div>';
         lastGrp = r.grp;
       }
-      body += rowHTML(r, st, S.from(r.id, s, null, now));
+      body += rowHTML(r, st, S.from(r.id, s, null, now), S.tag(r.id, s, null, now));
     });
     /* WHY the board went quiet. A day that asks for almost nothing and does
        not say what ate it reads as a broken page, not an honest one. */

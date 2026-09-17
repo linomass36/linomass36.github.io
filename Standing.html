@@ -546,6 +546,13 @@ h2.vd.calm em{color:var(--ok)}
 .szc .g:first-of-type{margin-top:0}
 .szc .g.past{opacity:.5}
 .szc .g.now{color:var(--held)}
+/* Why the card looks the way it does, above the rows rather than under them.
+   A sabbath turning four rows gold with the sentence explaining it printed
+   below the ninth row is an explanation you have to go looking for. */
+.szc .szwhy{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);padding:7px 10px;border:1px solid var(--line);border-radius:7px;
+  background:var(--sunken);margin-bottom:9px;font-variant-numeric:lining-nums tabular-nums}
+.szc .szwhy.held{border-color:var(--held-ln);background:var(--held-bg);color:var(--held)}
 .szc .rw{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);
   border-radius:7px;background:var(--raised);margin-bottom:5px;min-height:44px;width:100%;
   text-align:left}
@@ -1293,6 +1300,28 @@ footer {
           H += '<div class="szc"><div class="hd">Season \u00b7 day ' + seasonDay +
                ' of ' + szs.days + '<span class="r">next: ' + esc(nx.ask.toLowerCase()) +
                '</span></div>';
+
+          /* WHY THE CARD LOOKS LIKE THIS, ABOVE THE ROWS IT EXPLAINS.
+             It used to print below the ninth row, which on a phone is off
+             the bottom of the screen \u2014 so a sabbath turned four rows gold
+             and the sentence saying so was a scroll away. An explanation
+             you have to go looking for is not one. */
+          var dp = SZ.dayPlan(szs);
+          var why = '';
+          if (dp.sabbath) {
+            why = 'Sabbath \u00b7 training, study and the manuscript are held';
+          } else if (dp.source === 'week') {
+            var wb = [];
+            if (dp.committed != null) wb.push(dp.committed + 'h committed');
+            if (!dp.session) wb.push('no session dealt');
+            var rm = SZ.eveningRoom(szs);
+            if (rm != null) wb.push(rm > 0 ? SZ.hm(rm) + ' after the last block'
+                                           : 'nothing after the last block');
+            why = wb.join(' \u00b7 ');
+          }
+          if (why) H += '<div class="szwhy' + (dp.sabbath ? ' held' : '') + '">' +
+                        esc(why) + '</div>';
+
           var lastG = null;
           SZ.ROWS.forEach(function (r) {
             var st = SZ.state(r.id, szs, null);
@@ -1310,12 +1339,17 @@ footer {
                anywhere. A feed that has not reported is silence. */
             var frm = SZ.from(r.id, szs, null);
             var isRead = r.src !== 'tap' && frm === r.src;
+            /* The state IN WORDS. A gold box with a dot in it said nothing to
+               the person reading it, and the glyphs were the card's only
+               vocabulary for six different states. Season.tag owns the word
+               so this page and the Season page cannot name it differently. */
+            var tg = SZ.tag(r.id, szs, null);
             H += '<button class="rw s-' + st + (isRead ? ' read' : '') +
                  '" type="button" data-szrow="' + esc(r.id) + '"' +
                  (isRead ? ' disabled' : '') + '>' +
                  '<span class="bx">' + mk + '</span>' +
                  '<span class="t">' + esc(r.ask) +
-                 (isRead ? ' <i class="sr">' + esc(r.src) + '</i>' : '') + '</span>' +
+                 (tg ? ' <i class="sr">' + esc(tg) + '</i>' : '') + '</span>' +
                  (r.mins ? '<span class="m">' + r.mins + 'm</span>' : '') + '</button>';
           });
           /* One line, four numbers. If the phone hour has gone it says so
@@ -1342,23 +1376,6 @@ footer {
                            '<span>wake<b>' + SZ.hhmm(szn.wake) + '</b></span>' +
                            '<span>leave<b>' + SZ.hhmm(szn.leave) + '</b></span>') +
                '</div>';
-          /* Why the card went quiet, from the same functions the Season page
-             reads — not a second opinion about the same afternoon. */
-          var dp = SZ.dayPlan(szs);
-          var why = '';
-          if (dp.sabbath) {
-            why = 'Sabbath \u00b7 training, study and the manuscript are held';
-          } else if (dp.source === 'week') {
-            var wb = [];
-            if (dp.committed != null) wb.push(dp.committed + 'h committed');
-            if (!dp.session) wb.push('no session dealt');
-            var rm = SZ.eveningRoom(szs);
-            if (rm != null) wb.push(rm > 0 ? SZ.hm(rm) + ' after the last block'
-                                           : 'nothing after the last block');
-            why = wb.join(' \u00b7 ');
-          }
-          if (why) H += '<div class="g" style="margin-top:9px">' + esc(why) + '</div>';
-
           H += '<div class="acts">' +
                '<button type="button" id="sz-derail">I\u2019m already derailing</button>' +
                (SZ.lapOpen() ? '<button type="button" class="bad" id="sz-back">Reset done</button>'

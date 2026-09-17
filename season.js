@@ -739,6 +739,39 @@
     return null;
   }
 
+  /* ── THE STATE, IN ONE WORD ─────────────────────────────────────────────
+     WHAT SHIPPED BROKEN: the Standing card drew six states with three
+     glyphs — a tick, a dash, a middle dot — and named none of them. On a
+     declared sabbath four rows went gold with a dot in the box, and the only
+     thing on the page explaining it was a line printed BELOW the ninth row,
+     off the bottom of a phone screen. Reported as "this weird brown thing
+     that I don't understand", which is the correct reading of a colour with
+     no key. A board that cannot say what it is telling you is decoration.
+
+     The word is built here because both surfaces show it, and two pages
+     naming the same state is how they come to name it differently — the
+     failure this repo has now had five times. The page may add its own
+     affordance hint after it ("tap to log it"); the STATE is one word from
+     one place.
+
+     Held is split, because they are different facts about the day: a
+     condition you declared holds until you clear it, and the sabbath comes
+     round every week. "Held" with no reason is the thing that was confusing. */
+  function tag(id, s, dKey, now, ft) {
+    s = s || read();
+    dKey = dKey || dayKey(now);
+    var st = state(id, s, dKey, now, ft);
+    if (st === 'done') {
+      var f = from(id, s, dKey, now, ft);
+      return (f && f !== 'you') ? f : 'done';
+    }
+    if (st === 'floor') return 'floor';
+    if (st === 'held') return heldIds()[id] ? 'held' : 'sabbath';
+    if (st === 'na') return 'not asked';
+    var r = rowOf(id);
+    return (r && r.src !== 'tap') ? r.src + ' — not reported' : '';
+  }
+
   function state(id, s, dKey, now, ft) {
     s = s || read();
     dKey = dKey || dayKey(now);
@@ -1196,7 +1229,7 @@
     dayPlan: dayPlan, eveningRoom: eveningRoom, isSabbath: isSabbath,
     weekDay: weekDay, dayEats: dayEats,
     ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
-    srcDone: srcDone, from: from, rowOf: rowOf,
+    srcDone: srcDone, from: from, rowOf: rowOf, tag: tag,
     week: week, next: next, dayKey: dayKey,
     lastDays: lastDays, heavyRead: heavyRead, MIN_HEAVY: MIN_HEAVY, median: median
   };

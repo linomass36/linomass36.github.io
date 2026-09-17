@@ -729,6 +729,47 @@ group('The day has a now, and it is the group holding the next thing owed');
      'ticking it moves the live group forward — no second clock decides this');
 }
 
+/* ── 19b. the board says what its own colours mean ────────────────────────
+   WHAT SHIPPED BROKEN: the Standing card drew six states with three glyphs —
+   a tick, a dash, a middle dot — and named none of them. On a declared
+   sabbath four rows went gold with a dot in the box and the only sentence
+   explaining it printed below the ninth row, off the bottom of a phone.
+   Reported as "this weird brown thing that I don't understand", which is the
+   right reading of a colour with no key. */
+group('Every state has a word, and held says WHICH hold');
+{
+  const seed = seeded({ sabbathDay: 0 });          // sabbath on Sunday
+  seed.ct_week_v1 = JSON.stringify({ days: {
+    '2026-09-20': { session: 'Lower' },
+    '2026-09-21': { session: null, committed: 8, blocks: [
+      { title: 'Scribe shift', kind: 'work', from: '09:00', to: '17:00', allDay: false } ] } } });
+  const { S } = load(seed);
+  const sun = at(2026, 9, 20, 9, 0);
+  const mon = at(2026, 9, 21, 9, 0);
+
+  /* The reported screen: gold box, dot in it, nothing saying why. */
+  ok(S.state('manuscript', S.read(), null, sun) === 'held', 'the sabbath holds the manuscript');
+  ok(S.tag('manuscript', S.read(), null, sun) === 'sabbath',
+     'and the row says SABBATH, not a middle dot and a colour');
+  ok(S.tag('prayer_am', S.read(), null, sun) === '',
+     'a row that is simply not done yet claims nothing — silence has no badge');
+
+  /* The other hold is a different fact about the day and gets a different
+     word: a condition you declared stands until you clear it, the sabbath
+     comes round every week. "Held" with no reason is what confused him. */
+  ok(S.tag('train', S.read(), null, mon) === 'not asked',
+     'a day the week dealt no session says NOT ASKED rather than going quiet');
+
+  S.tick('prayer_am', true, mon);
+  ok(S.tag('prayer_am', S.read(), null, mon) === 'done', 'a tick reads as done');
+  const g = load(Object.assign(seeded(), {
+    ct_anki_v1: JSON.stringify({ at: '2026-09-21T12:00:00', repsToday: 212 }) })).S;
+  ok(g.tag('anki', g.read(), '2026-09-21', mon) === 'anki',
+     'and a row a board answered names the board instead');
+  ok(/not reported/.test(g.tag('train', g.read(), '2026-09-21', mon)),
+     'a source that has said nothing says so, rather than looking the same as untouched');
+}
+
 /* ── 20. the rows the hub answers for itself ──────────────────────────────
    WHAT SHIPPED BROKEN: Anki, training, anatomy and Spanish were rendered
    `disabled` because a board was supposed to answer them, and no board was
