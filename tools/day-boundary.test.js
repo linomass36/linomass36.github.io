@@ -103,5 +103,67 @@ group('Every module still parses with and without day.js');
   }
 }
 
+/* ── the page has to notice the day turned ──────────────────────────────────
+   WHAT SHIPPED BROKEN: the Season checklist showed day one's ticks on day
+   two. The ticks were filed correctly the whole time — the PAGE was a
+   picture, painted once at load and restored from iOS's back-forward cache
+   without a line of script running. Standing.html had listeners for exactly
+   this and a comment explaining why; nothing else did, so the one surface
+   that IS a checklist was the one that went stale.
+
+   This DRIVES THE BOUNDARY rather than waiting for one, per CLAUDE.md: a
+   test that sleeps until midnight passes tonight and blocks the deploy for
+   the rest of the week. */
+group('A day that turns under an open page tells the page');
+{
+  /* A clock this test moves, rather than one it reads. Per CLAUDE.md: a test
+     that waits for real midnight passes tonight and blocks every deploy after
+     it. day.js only ever asks for `new Date()` and `Date.now()`, so shifting
+     both is the whole of the simulation. */
+  let SKEW = 0;
+  class Clock extends Date {
+    constructor(...a) { if (!a.length) super(Date.now() + SKEW); else super(...a); }
+    static now() { return Date.now() + SKEW; }
+  }
+  const c = load(['day.js']);
+  c.Date = Clock;
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'day.js'), 'utf8'), c, { filename: 'day.js' });
+  const D = c.window.CTDay;
+  ok(typeof D.watch === 'function', 'CTDay owns the watch, next to the boundary it depends on');
+
+  let fired = 0, sawPrev = null;
+  const stop = D.watch((k, prev) => { fired++; sawPrev = prev; });
+  const before = D._stamp();
+
+  /* Nothing has changed, so nothing repaints: a page brought back to the
+     front on the same day must not flicker through a full re-render. */
+  D._fire();
+  ok(fired === 0, 'coming back on the same day is not a day change');
+
+  /* Now a day passes with the page still open — the phone asleep in a pocket,
+     which is the case that produced day one's ticks on day two. */
+  SKEW = 26 * 3600 * 1000;
+  D._fire();
+  ok(fired === 1, 'a day passing under an open page IS a day change');
+  ok(sawPrev === before, 'and the watcher is told which day it had been showing');
+  D._fire();
+  ok(fired === 1, 'and it is reported once, not on every glance after it');
+
+  /* Unwatching stops it — a repaint still bound to a page that has gone is a
+     thrown error at every boundary from then on. */
+  stop();
+  SKEW += 26 * 3600 * 1000;
+  D._fire();
+  ok(fired === 1, 'and unwatching stops it');
+
+  /* One element throwing must not stop the rest of the page repainting. */
+  let second = 0;
+  D.watch(() => { throw new Error('boom'); });
+  D.watch(() => { second++; });
+  SKEW += 26 * 3600 * 1000;
+  D._fire();
+  ok(second === 1, 'a watcher that throws does not take the others down with it');
+}
+
 console.log(failed ? '\n' + failed + ' failed\n' : '\nall green\n');
 process.exit(failed ? 1 : 0);

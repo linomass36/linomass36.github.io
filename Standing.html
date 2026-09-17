@@ -1614,44 +1614,34 @@ footer {
 
      So the day the page was painted for is remembered, and anything that
      means "you are looking at this again" re-checks it: returning to the
-     tab, restoring from bfcache, refocusing the window. A timer to the next
-     local midnight covers being on screen when it turns.
+     tab, restoring from bfcache, refocusing the window. A timer covers being
+     on screen when it turns.
 
-     Local midnight, not UTC — the dateline is the day you are living in.
-     systems.js keeps the Life Log's UTC convention for reading that store,
-     because that is how those keys were written. Different questions;
-     conflating them is what would corrupt the log. */
-  var paintedFor = null;
+     THAT MECHANISM NOW LIVES IN day.js, which is where it should always have
+     been: it belongs beside the boundary it depends on, and this page having
+     its own copy was why the Season checklist — the one surface that is a
+     list of ticks — showed day one's ticks on day two. It had none.
 
-  function dayKey() {
-    var d = new Date();
-    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+     It also fixes what this version got wrong. The key here was the local
+     CALENDAR date, so the page repainted at midnight and the hub's own day
+     turned five hours later with nothing watching. CTDay.watch fires on
+     either edge, which is what a page showing both a dateline and a season
+     day actually needs.
+
+     Local midnight is still the dateline's day — systems.js keeps the Life
+     Log's UTC convention for reading that store, because that is how those
+     keys were written. Different questions; conflating them is what would
+     corrupt the log. */
+  if (window.CTDay && window.CTDay.watch) {
+    window.CTDay.watch(function () { paint(); });
+  } else {
+    /* day.js missing is a page that is wrong by hours rather than broken,
+       which is the rule every other CTDay consumer follows. */
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) paint();
+    });
+    window.addEventListener('pageshow', function () { paint(); });
   }
-
-
-  function refreshForDay(force) {
-    var k = dayKey();
-    if (!force && k === paintedFor) return;
-    paintedFor = k;
-    paint();
-  }
-
-  document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) refreshForDay();
-  });
-  window.addEventListener('pageshow', function () { refreshForDay(); });
-  window.addEventListener('focus', function () { refreshForDay(); });
-
-  /* Timers do not survive a suspended phone, which is why the listeners
-     above exist too — this only covers being on screen at the turn. Five
-     seconds past, so a clock a shade fast cannot fire while it is still
-     yesterday. */
-  function armMidnight() {
-    var now = new Date(), next = new Date(now);
-    next.setHours(24, 0, 0, 5);
-    setTimeout(function () { refreshForDay(); armMidnight(); }, next - now);
-  }
-  armMidnight();
 
   /* anatomy-core and the data files are plain scripts, but sync.js may
      still be pulling the cloud copy into localStorage when this runs.
@@ -1665,7 +1655,6 @@ footer {
     anki: 'ANKI', reading: 'READ', research: 'RSRCH', record: 'LOG', journal: 'JRNL',
     weekly: 'REVIEW', vault: 'VAULT'
   };
-  paintedFor = dayKey();
 
   /* A reading published by the Mac lands here. Repaint rather than reload:
      you may be mid-sentence in the capture box. */

@@ -663,6 +663,12 @@
         '<button class="hub-btn" id="derail" type="button">I’m already derailing</button>' +
         '<button class="hub-btn" id="laphit" type="button">Lost that round</button>' +
         '<button class="hub-btn" id="lapback2" type="button">Log it for last night</button>' +
+        /* A mis-tap on a button this size is a bout that never happened, and
+           until this existed there was no way to remove one — the count, the
+           median and the rollup all carried it permanently. Only shown when
+           there is something to take back. */
+        (S.lapCount() ? '<button class="hub-btn" id="lapundo" type="button">' +
+          'Remove the last one — mis-tap</button>' : '') +
         '</div>';
       var lat = S.lapLatency(), cnt = S.lapCount();
       H += '<p class="note">' + (cnt
@@ -791,15 +797,25 @@
       /* The check-in reviews the period it covers, not an arbitrary week. */
       H += weekHTML(s, now, s.checkinEvery, 'Since the last check-in');
       H += heavyReadHTML(s, now, s.checkinEvery);
-      var lat = S.lapLatency(), cnt = S.lapCount();
+    }
+
+    /* The lap count used to appear only on a check-in day, which meant a
+       bout recorded by accident was invisible for up to three weeks and then
+       turned up inside the one review it would most distort. You cannot
+       correct what you are not shown, so once there is anything logged it is
+       on the page \u2014 with the undo beside it. */
+    var lapN = S.lapCount();
+    if (lapN || S.lapOpen()) {
+      var lat = S.lapLatency();
       H += '<div class="kick">The lap<span class="end">this device only</span></div>' +
         '<div class="hub-card"><p class="hub-p">' +
-        (cnt ? cnt + ' bout' + (cnt === 1 ? '' : 's') + ' logged' +
-               (lat != null ? ', median reset <b>' + lat + ' minutes</b>' : ', none timed') +
-               '. What this measures is the gap from the loss to the reset \u2014 the skill that ' +
-               'survives a bad night \u2014 not days clean.'
-             : 'Nothing logged on this device. The phone keeps its own log and does not sync it, ' +
-               'so this figure cannot see it.') + '</p></div>';
+        lapN + ' bout' + (lapN === 1 ? '' : 's') + ' logged' +
+        (lat != null ? ', median reset <b>' + lat + ' minutes</b>' : ', none timed') +
+        '. What this measures is the gap from the loss to the reset \u2014 the skill that ' +
+        'survives a bad night \u2014 not days clean. The phone keeps its own log and does not ' +
+        'sync it, so this figure sees this device only.</p>' +
+        '<div class="hub-row-btns"><button class="hub-btn" id="lapundo2" type="button">' +
+        'Remove the last one \u2014 mis-tap</button></div></div>';
     }
 
     H += declarationHTML();
@@ -837,6 +853,17 @@
        23:40, so a bout recorded in the morning is marked recalled and kept
        out of the latency median rather than reporting a nine-hour reset. */
     wire('lapback2', function () { S.lapHit(Date.now(), true); S.lapBack(); });
+    /* Confirmed, because the undo sits beside the button it undoes and a
+       second mis-tap would be a worse record than the first. */
+    function undoLap() {
+      var n = S.lapCount();
+      if (!n) return;
+      if (!confirm('Remove the most recent bout from the lap log?\n\n' + n +
+                   ' logged on this device. This takes back the last one only.')) return;
+      S.lapUndo();
+    }
+    wire('lapundo', undoLap);
+    wire('lapundo2', undoLap);
     wire('derail', function () {
       /* Before the loss, not after — so it does not open a bout. It names the
          next smallest block and gets you moving. */
@@ -867,12 +894,24 @@
     });
   }
 
-  var dl = document.getElementById('dateline');
-  if (dl) {
-    dl.textContent = new Date().toLocaleDateString(undefined,
-      { weekday: 'short', day: 'numeric', month: 'short' });
+  function dateline() {
+    var dl = document.getElementById('dateline');
+    if (dl) {
+      dl.textContent = new Date().toLocaleDateString(undefined,
+        { weekday: 'short', day: 'numeric', month: 'short' });
+    }
   }
+  dateline();
   paint();
+
+  /* This page is a CHECKLIST, and a checklist painted once at load is a
+     picture of the day it was painted for. On a phone the tab is never
+     closed and iOS restores it from the back-forward cache without running a
+     line of script — so day two opened on day one's render, ticks and all.
+     CTDay owns the boundary, so it owns noticing that it moved. */
+  if (window.CTDay && window.CTDay.watch) {
+    window.CTDay.watch(function () { dateline(); paint(); });
+  }
 })();
 </script>
 </body>

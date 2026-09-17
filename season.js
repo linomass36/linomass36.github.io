@@ -950,6 +950,29 @@
     }
     return null;
   }
+  /* ── TAKING BACK THE LAST ONE ───────────────────────────────────────────
+     WHAT SHIPPED BROKEN: two bouts were recorded that never happened, and
+     there was no way to remove them. lapHit only ever pushed. So the median
+     reset time, the count the check-in reads and the syncable rollup were all
+     carrying a mis-tap with no way out but editing localStorage by hand.
+
+     A log you cannot correct is not more honest than one you can — it is just
+     wrong, permanently, and a number you know to be wrong is one you stop
+     reading. That is the failure this removes.
+
+     It takes back the LAST bout only, and it is not a delete tool. A mis-tap
+     is something you notice immediately; rewriting the middle of the log is
+     not what this is for, and not offered. The rollup is recomputed, so the
+     count that syncs cannot disagree with the log that stayed on the phone. */
+  function lapUndo() {
+    var l = lapRead();
+    if (!l.bouts.length) return null;
+    var gone = l.bouts.pop();
+    lapSave(l);
+    lapRoll();
+    return gone;
+  }
+
   function lapOpen() {
     var l = lapRead();
     for (var i = l.bouts.length - 1; i >= 0; i--) if (l.bouts[i].back == null) return l.bouts[i];
@@ -1051,6 +1074,7 @@
     GROUP_ORDER: GROUP_ORDER, groupNow: groupNow, groupWhen: groupWhen,
     KEY: KEY, LAP_KEY: LAP_KEY, ROWS: ROWS, GROUPS: GROUPS, CHAIN: CHAIN,
     lapRead: lapRead, lapHit: lapHit, lapBack: lapBack, lapOpen: lapOpen,
+    lapUndo: lapUndo,
     lapLatency: lapLatency, lapCount: lapCount, lapRoll: lapRoll,
     anki: anki, MIN_HISTORY: MIN_HISTORY,
     read: read, save: save,

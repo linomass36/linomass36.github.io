@@ -24,6 +24,7 @@
      CTDay.shift(key, n)  n days from a given day key
      CTDay.startMs(key)   the instant that day begins, for ranges
      CTDay.rollover()     the hour it turns over, for a page that says so
+     CTDay.watch(fn)      call fn when the day changes under an open page
 
    Every consumer falls back to its old behaviour when this file has not
    loaded, so a page that forgets the script tag is wrong by a few hours
@@ -107,11 +108,95 @@
     return Math.round((y - x) / 86400000);
   }
 
+  /* ── "you are looking at this again" ─────────────────────────────────────
+     WHAT SHIPPED BROKEN: the Season checklist showed day one's ticks on day
+     two. Not a storage bug — the ticks were filed under the right day the
+     whole time. The PAGE was a picture. It painted once at load, and on a
+     phone that load was two days ago: the tab is never closed, iOS restores
+     it from the back-forward cache without running a line of script, and what
+     came back on screen was the render from the night before, ticks and all.
+     Acting on it would have meant re-ticking rows already ticked and trusting
+     a board that had stopped reading its own store.
+
+     Standing.html had solved this for itself, with the listeners and the
+     comment explaining why. Nothing else had, so the one surface that IS a
+     checklist was the one that went stale. It belongs here, beside the
+     boundary it depends on, so the next page to need it inherits it.
+
+     It fires when EITHER day changes: the hub's own day, which turns at the
+     rollover, and the local calendar date, which the datelines print. Keying
+     it to one of them would leave the other stale for five hours — which is
+     what the timer it replaces did.
+
+     The listeners are the load-bearing part and the timer is the backstop,
+     not the other way round. A suspended phone does not run timers; what it
+     does reliably is fire pageshow and visibilitychange on the way back. */
+  var watchers = [], bound = false, timer = null, lastStamp = null;
+
+  function stamp() { return key() + '|' + isoLocal(new Date()); }
+
+  function fire() {
+    var s = stamp();
+    if (s !== lastStamp) {
+      var prev = lastStamp;
+      lastStamp = s;
+      /* A copy, so a watcher that unwatches itself cannot skip the next. */
+      watchers.slice().forEach(function (fn) {
+        /* One page's throw must not stop the rest of the page repainting. */
+        try { fn(key(), prev); } catch (e) {}
+      });
+    }
+    arm();
+  }
+
+  function arm() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    var now = new Date();
+    var mid = new Date(now); mid.setHours(24, 0, 0, 0);
+    var roll = new Date(now); roll.setHours(rollover(), 0, 0, 0);
+    if (roll.getTime() <= now.getTime()) roll.setDate(roll.getDate() + 1);
+    /* Five seconds past the edge, so a clock a shade fast cannot fire while
+       it is still yesterday and then sit quiet until tomorrow. */
+    var ms = Math.min(mid.getTime(), roll.getTime()) + 5000 - Date.now();
+    if (!(ms > 0)) ms = 1000;
+    timer = setTimeout(fire, ms);
+  }
+
+  function watch(fn) {
+    if (typeof fn !== 'function') return function () {};
+    if (lastStamp === null) lastStamp = stamp();
+    watchers.push(fn);
+    if (!bound) {
+      bound = true;
+      try {
+        if (w.document) {
+          w.document.addEventListener('visibilitychange', function () {
+            if (!w.document.hidden) fire();
+          });
+        }
+        if (w.addEventListener) {
+          w.addEventListener('pageshow', function () { fire(); });
+          w.addEventListener('focus', function () { fire(); });
+        }
+        arm();
+      } catch (e) {}
+    }
+    return function () {
+      var i = watchers.indexOf(fn);
+      if (i >= 0) watchers.splice(i, 1);
+    };
+  }
+
   w.CTDay = {
     DEFAULT_ROLLOVER: DEFAULT_ROLLOVER,
     rollover: rollover,
     key: key, today: today, offset: offset, shift: shift,
     startMs: startMs, between: between,
     isoLocal: isoLocal,
+    watch: watch,
+    /* Exposed for the test, which drives the boundary rather than waiting
+       for it — per CLAUDE.md, nothing here may read the wall clock to decide
+       whether a day has passed. */
+    _stamp: stamp, _fire: fire
   };
 })(window);

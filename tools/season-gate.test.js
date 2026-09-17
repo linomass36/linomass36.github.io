@@ -262,6 +262,39 @@ group('A bout logged the next morning is marked, not guessed at');
   ok(S.lapOpen() === null, 'and nothing is left open');
 }
 
+/* ── 9b. a mis-tap can be taken back ──────────────────────────────────────
+   WHAT SHIPPED BROKEN: two bouts were recorded that never happened, and
+   lapHit only ever pushed — there was no undo at any level of the UI. The
+   count the check-in reads, the median reset and the syncable rollup all
+   carried the mis-tap permanently, and the only way out was editing
+   localStorage by hand. A log you cannot correct is not a more honest log; it
+   is a wrong one, and a number you know to be wrong is one you stop reading. */
+group('A bout recorded by accident can be taken back');
+{
+  const { S, ls } = load(seeded());
+  S.lapHit(at(2026, 9, 19, 23, 40));
+  S.lapBack(at(2026, 9, 19, 23, 50));
+  S.lapHit(at(2026, 9, 24, 21, 10));          // the mis-tap
+  S.lapHit(at(2026, 9, 24, 21, 11));          // and the second one
+
+  ok(S.lapCount() === 3, 'three logged, two of them by accident');
+  const gone = S.lapUndo();
+  ok(gone && gone.at === at(2026, 9, 24, 21, 11), 'the undo returns the one it removed');
+  S.lapUndo();
+  ok(S.lapCount() === 1, 'and both mis-taps are gone');
+
+  /* The rollup is what syncs, so it cannot be left claiming three. */
+  ok(JSON.parse(ls._map[S.KEY]).roll.n === 1,
+     'the syncable rollup is recomputed, not left disagreeing with the log');
+  ok(S.lapOpen() === null, 'and removing an unclosed bout closes nothing behind it');
+  ok(S.lapLatency() === 10, 'the median is read from what is left');
+
+  /* It takes back the LAST one. It is not a delete tool, and an undo on an
+     empty log is a no-op rather than a throw. */
+  S.lapUndo();
+  ok(S.lapCount() === 0 && S.lapUndo() === null, 'undoing an empty log does nothing');
+}
+
 /* ── 10. the Anki projection refuses to guess ─────────────────────────── */
 group('The backlog horizon comes from your own revlog, or not at all');
 {
