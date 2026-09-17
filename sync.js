@@ -73,8 +73,49 @@
     };
   })();
 
+  /* ── TELLING THE PAGE, RATHER THAN THROWING IT AWAY ──────────────────────
+     A change from another device used to mean location.reload(), full stop.
+     That is correct and it is brutal: it loses the scroll position, it
+     discards whatever is half-typed in the amendment box, and on a page that
+     has just been opened to tick one row it is a visible lurch for a
+     one-character change in a store the page may not even read.
+
+     So a page can say it will redraw itself. If anything has subscribed, the
+     subscribers are called and the page stays where it is; if nothing has,
+     the reload still happens, because a page that has not claimed
+     responsibility for repainting is a page that will otherwise sit there
+     showing a store it no longer has.
+
+     RELOAD REMAINS THE DEFAULT for that reason. The temptation is to make
+     notify-only the behaviour everywhere and let each page catch up in its
+     own time — which is how one panel ends up repainted from the new data
+     while the one above it still shows the old, on the same screen. A page
+     subscribes only if its repaint covers everything it draws. */
+  var applied = [];
+
+  function onApplied(fn) {
+    if (typeof fn !== 'function') return function () {};
+    applied.push(fn);
+    return function () {
+      var i = applied.indexOf(fn);
+      if (i >= 0) applied.splice(i, 1);
+    };
+  }
+
+  function announceApplied() {
+    if (!applied.length) return false;
+    /* A copy, and each in its own try: one page element throwing must not
+       leave the rest of the page showing the store that has already gone. */
+    var ok = false;
+    applied.slice().forEach(function (fn) {
+      try { fn(); ok = true; } catch (e) { try { console.warn('[sync] repaint failed', e); } catch (e2) {} }
+    });
+    return ok;
+  }
+
   window.hubSync = {
     get state() { return window.__syncState; },
+    onApplied: onApplied,
     syncNow: function () { console.log('[sync] manual sync requested'); },
     // Tap the pill → a small panel with everything needed to debug sync from a
     // phone (no console needed): account, device/cloud revision, whether the
@@ -801,7 +842,12 @@
     unsub = docRef().onSnapshot(function (snap) {
       if (!snap.exists) return;
       if (snap.metadata && snap.metadata.hasPendingWrites) return; // our own write echoing back
-      if (applyIfNewer(snap)) { location.reload(); return; }
+      if (applyIfNewer(snap)) {
+        /* The page redraws itself if it said it would; otherwise it is
+           replaced, because the alternative is a screen full of a store
+           that is no longer there. */
+        if (!announceApplied()) { location.reload(); return; }
+      }
       syncedLabel();
     }, function (e) { fail('listener', e); });
   }

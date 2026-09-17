@@ -979,6 +979,114 @@
     return null;
   }
 
+  /* ── WHAT A BOUT IS ─────────────────────────────────────────────────────
+     WHAT SHIPPED BROKEN: nothing anywhere said. The word was used on both
+     surfaces, in the Guide, and inside the one figure the check-in reads —
+     "2 bouts logged, median reset 13 minutes" — and a number whose unit is
+     undefined is not a measurement, it is a shape. Reported as "what counts
+     as a bout, that isn't explained anywhere and I'm confused", which is the
+     correct reaction to a counter that will not say what it counts.
+
+     THE HUB CANNOT SUPPLY THE ANSWER and must not invent one. What counts as
+     losing a round is a fact about him, not about this file, and a definition
+     guessed here would be the hub telling him what his own problem is. What
+     the hub CAN state is the mechanism, and it does, in prose on the page:
+     the bout opens on `lost that round`, closes on `reset done`, and what is
+     counted is the gap between them.
+
+     So the definition is his, written once and shown everywhere the count is.
+     It lives in the LOCAL store beside the bouts, not in ct_season_v1 — a
+     sentence naming the behaviour is more revealing than a list of times it
+     happened, and ct_ keys ride the sync to Firestore in plaintext. The cost
+     is that it has to be written on each device, which is the same cost the
+     bouts already pay and for the same reason. */
+  function lapDefine(text) {
+    var l = lapRead();
+    var v = String(text == null ? '' : text).trim();
+    if (v) l.is = v.slice(0, 280); else delete l.is;
+    lapSave(l);
+    return l.is || null;
+  }
+  function lapIs() {
+    var l = lapRead();
+    return (typeof l.is === 'string' && l.is) ? l.is : null;
+  }
+
+  /* ── THE DERAIL BUTTON ANSWERS WITH A BODY, NOT A LIST ───────────────────
+     WHAT SHIPPED BROKEN: pressed at night in a bad moment, it said "Next
+     block: Anatomy block · 60 minutes. Change room." — and said it after the
+     phone was away and the evening prayer was ticked, so the day was already
+     shut. Two failures in one alert.
+
+     It answered a struggle with a STUDY BLOCK, which is the opposite of the
+     protocol printed six inches above it on the same page: stop, PHYSICAL
+     interrupt, one line of truth, prayer, then the next block. The interrupt
+     is the whole mechanism — the list is what you go back to afterwards, not
+     what gets you out of the minute you are in.
+
+     And it read next(), which answers "what is owed today" and has no idea
+     the day is over. At 23:00 with the night rows ticked there is no honest
+     next block; there is bed.
+
+     So: the interrupt first, and it is physical. Anything owed comes after
+     it, is the SMALLEST owed thing rather than the next in order — the reply
+     to a bad moment is a smaller ask, never a longer list, which is the rule
+     the floor day already runs on — and it is not offered at all once the
+     night has been answered.
+
+     One instruction, not a menu. A menu at the weak minute is a decision to
+     make, and making decisions is the thing that has just failed. */
+  function derail(s, now) {
+    s = s || read();
+    var n = night(s, now);
+    var ft = factsTable();
+
+    /* Closed means the night was ANSWERED, not merely that it is late. The
+       phone hour passing is a slip, and a slip is a night still worth
+       rescuing; both night rows ticked is a day actually shut. */
+    var closed = state('phone', s, null, now, ft) === 'done' &&
+                 state('prayer_pm', s, null, now, ft) === 'done';
+
+    var move;
+    if (closed || n.late || n.gone) {
+      move = 'Cold water on your face. Then bed.';
+    } else if (n.now >= 6 * 60) {
+      move = 'Outside. To the end of the street and back, phone left here.';
+    } else {
+      /* Between the rollover and six: dark, and going out is not the move. */
+      move = 'Stand up and get in the shower. Now, not in a minute.';
+    }
+
+    /* The smallest thing still open, by its own minutes. Ten minutes of
+       prayer is a door you can get through; an hour of anatomy is not, and
+       offering it is how the board stops being believed. */
+    var owed = null;
+    if (!closed) {
+      var open = ROWS.filter(function (r) {
+        return r.mins > 0 && state(r.id, s, null, now, ft) === 'untold';
+      }).sort(function (a, b) { return a.mins - b.mins; });
+      if (open.length) owed = { id: open[0].id, ask: open[0].ask, mins: open[0].mins };
+    }
+
+    /* The text is built HERE, once. Both surfaces raise this alert, and two
+       pages formatting the same object is how they come to disagree — which
+       is the failure this repo has now had four times. */
+    var t = move + '\n\n';
+    if (closed) {
+      t += 'The day is shut — phone away and the evening prayer are both ticked. ' +
+           'Nothing is owed.' +
+           (n.gone ? '' : '\n\nLights at ' + hhmm(n.lights) + '.');
+    } else if (owed) {
+      t += 'When you are back: ' + owed.ask + ' · ' + owed.mins + ' minutes. ' +
+           'The smallest thing open, not the list.';
+    } else {
+      t += 'Nothing is owed.' + (n.late ? '' : '\n\nPhone away at ' + hhmm(n.phone) + '.');
+    }
+
+    return { move: move, closed: closed, owed: owed, text: t,
+             late: n.late, gone: n.gone, lights: n.lights, phone: n.phone };
+  }
+
   /* Median rather than mean: one night you fell asleep before resetting should
      not move the number that says whether the skill is there. Recalled bouts
      carry no honest gap and are excluded rather than estimated. */
@@ -1074,7 +1182,7 @@
     GROUP_ORDER: GROUP_ORDER, groupNow: groupNow, groupWhen: groupWhen,
     KEY: KEY, LAP_KEY: LAP_KEY, ROWS: ROWS, GROUPS: GROUPS, CHAIN: CHAIN,
     lapRead: lapRead, lapHit: lapHit, lapBack: lapBack, lapOpen: lapOpen,
-    lapUndo: lapUndo,
+    lapUndo: lapUndo, lapDefine: lapDefine, lapIs: lapIs, derail: derail,
     lapLatency: lapLatency, lapCount: lapCount, lapRoll: lapRoll,
     anki: anki, MIN_HISTORY: MIN_HISTORY,
     read: read, save: save,

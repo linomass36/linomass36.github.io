@@ -295,6 +295,98 @@ group('A bout recorded by accident can be taken back');
   ok(S.lapCount() === 0 && S.lapUndo() === null, 'undoing an empty log does nothing');
 }
 
+/* ── 9c. the counter has to name its unit ─────────────────────────────────
+   WHAT SHIPPED BROKEN: nothing anywhere said what a bout was. The word was
+   on both surfaces, in the Guide, and inside the figure the check-in reads.
+   A count whose unit is undefined is a shape, not a measurement. */
+group('What counts as a bout is his to write, and it never leaves the device');
+{
+  const { S, ls } = load(seeded());
+  ok(S.lapIs() === null, 'undefined until he says — the hub does not guess it for him');
+
+  const SECRET = 'opening the app and ranking women I will never meet';
+  S.lapDefine(SECRET);
+  ok(S.lapIs() === SECRET, 'and then it is his words, kept verbatim');
+
+  /* THE ASSERTION THAT MATTERS, and it matters more than the bout timestamps
+     do: a sentence naming the behaviour is more revealing than a list of the
+     times it happened. sync.js pushes every key that is not __local/__sync to
+     Firestore in plaintext, so a refactor that "tidied" this into ct_season_v1
+     would upload it, put it in every downloaded backup, and fail nothing. */
+  Object.keys(ls._map).forEach((k) => {
+    if (k.indexOf('__local') === 0 || k.indexOf('__sync') === 0) return;
+    ok(ls._map[k].indexOf(SECRET) < 0, 'the definition is not in the syncable key ' + k);
+  });
+  ok(ls._map[S.LAP_KEY].indexOf(SECRET) >= 0, 'it is in the local one, beside the bouts');
+
+  S.lapDefine('   ');
+  ok(S.lapIs() === null, 'clearing it with blank space clears it rather than storing blanks');
+  S.lapDefine(SECRET);
+  S.lapHit(at(2026, 9, 19, 23, 40));
+  S.lapUndo();
+  ok(S.lapIs() === SECRET, 'and an undo takes back a bout, not the definition');
+}
+
+/* ── 9d. the derail button answers with a body ────────────────────────────
+   WHAT SHIPPED BROKEN: pressed at night in a bad moment, it said "Next
+   block: Anatomy block · 60 minutes" — after the phone was away and the
+   evening prayer was ticked, so the day was already shut. It answered a
+   struggle with a study block, which is the opposite of the protocol printed
+   on the same page, and it read next(), which does not know the day is over. */
+group('Derailing is answered with the body first, and never with the list');
+{
+  const seed = () => seeded({ sabbathDay: null });
+
+  /* The reported case: 23:00, both night rows ticked. */
+  {
+    const { S } = load(seed());
+    const night = at(2026, 9, 20, 23, 0);
+    S.tick('phone', true, night);
+    S.tick('prayer_pm', true, night);
+    const d = S.derail(S.read(), night);
+    ok(d.closed === true, 'phone away and the evening prayer ticked is a day that is shut');
+    ok(d.owed === null, 'so nothing is owed — there is no honest next block at 23:00');
+    ok(!/anatomy|Anatomy/.test(d.text), 'and it does not name a study block');
+    ok(/bed/i.test(d.text), 'it names the body and then bed');
+  }
+
+  /* Mid-afternoon, plenty open. The interrupt still comes first, and what
+     follows it is the SMALLEST thing open — an hour of anatomy is not a door
+     you can get through in a bad minute. */
+  {
+    const { S } = load(seed());
+    const noon = at(2026, 9, 21, 15, 0);
+    const d = S.derail(S.read(), noon);
+    ok(d.closed === false, 'the afternoon is not a shut day');
+    ok(d.text.indexOf(d.move) === 0, 'the physical interrupt is the first thing said');
+    ok(/outside/i.test(d.move), 'and in daylight it is out of the room, not a list');
+    ok(d.owed && d.owed.mins === 10,
+       'what follows is the smallest thing open (' + (d.owed && d.owed.mins) + 'm), not the next in order');
+    ok(d.text.indexOf(d.move) < d.text.indexOf(String(d.owed.mins)),
+       'and it is offered AFTER the interrupt, never instead of it');
+  }
+
+  /* Everything ticked but the night not yet answered: still open, nothing
+     owed, and it says so rather than inventing something to do. */
+  {
+    const { S } = load(seed());
+    const ev = at(2026, 9, 21, 20, 0);
+    S.ROWS.forEach((r) => { if (r.mins > 0) S.tick(r.id, true, ev); });
+    const d = S.derail(S.read(), ev);
+    ok(d.owed === null && d.closed === false, 'a full day with the night still open owes nothing');
+    ok(/Nothing is owed/.test(d.text), 'and it says so rather than inventing a block');
+  }
+
+  /* Both surfaces raise this alert. Two pages formatting the same object is
+     how they come to disagree, so the words are built in one place. */
+  {
+    const { S } = load(seed());
+    const d = S.derail(S.read(), at(2026, 9, 21, 15, 0));
+    ok(typeof d.text === 'string' && d.text.length > 0,
+       'the text is built in season.js, not twice in two pages');
+  }
+}
+
 /* ── 10. the Anki projection refuses to guess ─────────────────────────── */
 group('The backlog horizon comes from your own revlog, or not at all');
 {

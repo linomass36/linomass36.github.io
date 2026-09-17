@@ -804,18 +804,57 @@
        turned up inside the one review it would most distort. You cannot
        correct what you are not shown, so once there is anything logged it is
        on the page \u2014 with the undo beside it. */
+    /* Always, while a season is live. Gating it on "something has been
+       logged" put the definition field behind having already used the thing
+       it defines, and hid it again the moment a mis-tap was undone. */
     var lapN = S.lapCount();
-    if (lapN || S.lapOpen()) {
+    var lapIs = S.lapIs();
+    {
       var lat = S.lapLatency();
       H += '<div class="kick">The lap<span class="end">this device only</span></div>' +
-        '<div class="hub-card"><p class="hub-p">' +
-        lapN + ' bout' + (lapN === 1 ? '' : 's') + ' logged' +
-        (lat != null ? ', median reset <b>' + lat + ' minutes</b>' : ', none timed') +
-        '. What this measures is the gap from the loss to the reset \u2014 the skill that ' +
-        'survives a bad night \u2014 not days clean. The phone keeps its own log and does not ' +
-        'sync it, so this figure sees this device only.</p>' +
-        '<div class="hub-row-btns"><button class="hub-btn" id="lapundo2" type="button">' +
-        'Remove the last one \u2014 mis-tap</button></div></div>';
+        '<div class="hub-card">' +
+
+        /* THE MECHANISM, which is the hub's to state. The count was on the
+           page with nothing anywhere defining its unit \u2014 "2 bouts, median
+           reset 13 minutes" is a shape, not a measurement, until this
+           paragraph exists. */
+        '<p class="hub-p"><b>A bout is one round, from the loss to the reset.</b> ' +
+        'It opens the moment you press <i>lost that round</i> and closes when you press ' +
+        '<i>reset done</i>. What gets counted is the gap between those two presses \u2014 how ' +
+        'fast you came back \u2014 not how long the round lasted and not days clean. Days clean ' +
+        'makes every failure total, which is why it is the number most worth faking.</p>' +
+
+        /* WHAT counts as losing a round is his, not this page's. A definition
+           written here would be the hub telling him what his own problem is. */
+        (lapIs
+          ? '<p class="hub-p"><b>What you said counts:</b> \u201c' + esc(lapIs) + '\u201d</p>'
+          : '<p class="hub-p t-warn"><b>You have not said what counts as losing a round.</b> ' +
+            'The hub will not guess \u2014 that is a fact about you, not about this page, and a ' +
+            'counter that will not name its unit is a shape rather than a number. Write it ' +
+            'below, in your own words. One line is enough.</p>') +
+
+        '<input id="lap-is" type="text" maxlength="280" ' +
+        'placeholder="' + (lapIs ? 'change what counts' : 'losing a round is\u2026') + '" ' +
+        'value="' + esc(lapIs || '') + '" ' +
+        'style="width:100%;min-height:44px;font-size:16px;padding:9px 11px;border:1px solid ' +
+        'var(--line-2);border-radius:var(--r4);background:var(--raised);color:var(--ink);' +
+        'font-family:var(--serif)">' +
+        '<div class="hub-row-btns" style="margin-top:9px">' +
+        '<button class="hub-btn" id="lap-is-save" type="button">Save</button></div>' +
+        '<p class="note" style="font-size:13px;color:var(--faint);line-height:1.5;margin:9px 2px 0">' +
+        'Kept on this device only, beside the bouts themselves. A sentence naming the behaviour ' +
+        'is more revealing than a list of times it happened, and every <code>ct_</code> key rides ' +
+        'the sync to the cloud in plaintext. The cost is that it has to be written on each ' +
+        'device.</p>' +
+
+        (lapN || S.lapOpen()
+          ? '<p class="hub-p">' + lapN + ' bout' + (lapN === 1 ? '' : 's') + ' logged' +
+            (lat != null ? ', median reset <b>' + lat + ' minutes</b>' : ', none timed') +
+            '. This figure sees this device only.</p>' +
+            '<div class="hub-row-btns"><button class="hub-btn" id="lapundo2" type="button">' +
+            'Remove the last one \u2014 mis-tap</button></div>'
+          : '<p class="hub-p">Nothing logged on this device.</p>') +
+        '</div>';
     }
 
     H += declarationHTML();
@@ -864,12 +903,16 @@
     }
     wire('lapundo', undoLap);
     wire('lapundo2', undoLap);
+    wire('lap-is-save', function () {
+      var f = document.getElementById('lap-is');
+      if (f) S.lapDefine(f.value);
+    });
     wire('derail', function () {
-      /* Before the loss, not after — so it does not open a bout. It names the
-         next smallest block and gets you moving. */
-      var n = S.next(S.read(), Date.now());
-      alert('Next block: ' + n.ask + (n.mins ? ' · ' + n.mins + ' minutes' : '') +
-            '\n\nChange room. Leave the phone where you are standing.');
+      /* Before the loss, not after — so it does not open a bout. Season.derail
+         owns what it says: the physical interrupt first, anything owed after
+         it and only if the day is still open. It used to answer a bad night
+         with a sixty-minute anatomy block. */
+      alert(S.derail(S.read(), Date.now()).text);
     });
 
     Array.prototype.forEach.call(document.querySelectorAll('[data-row]'), function (b) {
@@ -911,6 +954,20 @@
      CTDay owns the boundary, so it owns noticing that it moved. */
   if (window.CTDay && window.CTDay.watch) {
     window.CTDay.watch(function () { dateline(); paint(); });
+  }
+
+  /* A tick made on the Mac used to sit in the cloud until this tab was
+     reloaded by hand. paint() rebuilds everything this page draws, so it can
+     take the repaint and sync.js can skip the reload — which on a phone was
+     a lurch that lost the scroll position and whatever was half-typed in the
+     amendment box. */
+  if (window.hubSync && window.hubSync.onApplied) {
+    window.hubSync.onApplied(function () { paint(); });
+  }
+  /* The Mac's Anki reading arrives on its own channel, not through the
+     store sync, and the Anki row reads it. */
+  if (window.Feeds && window.Feeds.start) {
+    try { window.Feeds.start(function () { paint(); }); } catch (e) {}
   }
 })();
 </script>

@@ -1518,11 +1518,10 @@ footer {
     });
     var szd = $('#sz-derail');
     if (szd) szd.addEventListener('click', function () {
-      try {
-        var n = window.Season.next(window.Season.read());
-        alert('Next block: ' + n.ask + (n.mins ? ' \u00b7 ' + n.mins + ' minutes' : '') +
-              '\n\nChange room. Leave the phone where you are standing.');
-      } catch (e) {}
+      /* Season.derail owns the words. This page formatting its own version of
+         the same advice is how the two surfaces come to disagree about the
+         same bad minute. */
+      try { alert(window.Season.derail(window.Season.read()).text); } catch (e) {}
     });
     var rv = $('#reveal');
     if (rv) rv.addEventListener('click', function () { setRevealed(true); paint(); });
@@ -1659,6 +1658,14 @@ footer {
   /* A reading published by the Mac lands here. Repaint rather than reload:
      you may be mid-sentence in the capture box. */
   if (window.Feeds) window.Feeds.start(function () { paint(); });
+
+  /* And the same for a change from another DEVICE, which arrives through the
+     store sync rather than the feed. It used to force location.reload() —
+     correct, and brutal on a phone mid-capture. paint() rebuilds everything
+     this page draws, so it can take the repaint instead. */
+  if (window.hubSync && window.hubSync.onApplied) {
+    window.hubSync.onApplied(function () { paint(); });
+  }
 
   /* A reading handed over in the URL fragment, by `anki_sync.py --open`.
      A fragment never reaches the server — browsers strip everything after
