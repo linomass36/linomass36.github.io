@@ -171,10 +171,11 @@
      THE SEASON — a bounded posture with a start date, an edge and a review.
 
      WHY IT IS A PAGE AND NOT A PANEL OF THE JOURNAL. The same reason the
-     Wait is not: a thing you write in cannot tell you to stop writing. This
-     page answers what today permits, and that answer has to be computed
-     rather than remembered, because the person reading it at 23:00 on day
-     forty has a better case than the one who agreed it in September.
+     Wait was not, before it was archived: a thing you write in cannot tell
+     you to stop writing. This page answers what today permits, and that
+     answer has to be computed rather than remembered, because the person
+     reading it at 23:00 on day forty has a better case than the one who
+     agreed it in September.
 
      NOTHING HERE IS STORED THAT CAN BE DERIVED. season.js owns the
      arithmetic; this file only renders it. The day number, the check-in
@@ -754,34 +755,50 @@
     /* The purpose is NOT printed here as well. The declaration below already
        carries it, and the first version rendered the same paragraph twice on
        one screen — which is how prose earns the right to be skipped. */
-    /* ── the ex rule, READ from the Wait rather than restated ─────────────
+    /* ── the ex rule, DERIVED from the Wait rather than restated ──────────
        The No list above says "closed unless she initiates". The DATE that
        makes that concrete belongs to wait.js, which computes it from the day
-       the message actually went out — so this reads that file and links to
-       it. Two ninety-day counters with different start dates would be
-       believed selectively at 02:00, which is the whole failure this hub
-       keeps being rewritten to avoid. */
+       the message actually went out — so this reads that file. Two
+       ninety-day counters with different start dates would be believed
+       selectively at 02:00, which is the whole failure this hub keeps being
+       rewritten to avoid, and it is not fixed by the page that owned the
+       first counter being archived.
+
+       WHAT CHANGED. Wait.html is archived and the mornings pill is gone, so
+       this card no longer links to either: the sitemap's rule is that
+       nothing live links to an archived page, and tools/sitemap.test.js
+       fails the deploy when something does. Reading wait.js is untouched by
+       that rule — a link is a place you are sent, a derivation is a number
+       you are shown. The floor date still comes from the one stored fact and
+       is still not decided here.
+
+       With no send date there is nothing to compute and nowhere left to type
+       one, so the card says the rule stands and says the date is not
+       counted. Money.convert() returns null on a missing rate for the same
+       reason: a number that is quietly wrong is worse than "not counted". */
     var W = window.Wait;
     if (W) {
       var wst = null, wg = null, wph = null;
       try { wst = W.read(); wg = W.gates(wst); wph = W.phase(wst); } catch (e) {}
-      H += '<div class="kick">The ex · owned by the Wait</div><div class="hub-card">';
+      H += '<div class="kick">The ex<span class="end">the season owns this now</span></div>' +
+        '<div class="hub-card">';
       if (!wst || !wst.sent) {
-        H += '<p class="hub-p">No send date recorded, so nothing can be computed — not the ' +
-          'week, not the floor, not the date this stops being a live question. ' +
-          '<a href="Wait.html">Put it in on the Wait</a> (or on the mornings pill, which takes ' +
-          'the same field and writes the same store).</p>';
+        H += '<p class="hub-p">Closed unless she initiates — that part of the rule needs no ' +
+          'date. What cannot be shown is the floor: no send date was ever recorded, so the ' +
+          'ninety days have nothing to count from and the page that took that date is ' +
+          'archived. Not counted, rather than a date invented to fill the line.</p>';
       } else {
         H += '<p class="hub-p">The ask went out ' +
           esc(new Date(wst.sent).toLocaleDateString(undefined,
             { weekday: 'long', day: 'numeric', month: 'long' })) +
-          '. <a href="Wait.html">The Wait</a> holds what today permits' +
-          (wph ? ' — currently <b>' + esc(String(wph)) + '</b>' : '') + '.</p>';
+          (wph ? ', and by that clock it is <b>' + esc(String(wph)) + '</b>' : '') +
+          '. That is the whole of what is left to know about it.</p>';
         if (wg && wg.floor) {
           H += '<p class="hub-p">No new reach until ' +
             esc(new Date(wg.floor).toLocaleDateString(undefined,
               { day: 'numeric', month: 'long', year: 'numeric' })) +
-            ' unless she initiates. That date is computed there, not decided here.</p>';
+            ' unless she initiates. Computed from the send date by <b>wait.js</b>, not decided ' +
+            'here and not typed anywhere — which is why there is still only one of it.</p>';
         }
       }
       H += '</div>';

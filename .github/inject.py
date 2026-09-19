@@ -73,10 +73,19 @@ SHIM = (
     '<script src="./screen.js"></script>\n'
     '<script src="./facts.js"></script>\n'
     '<script src="./contact.js"></script>\n'
-    # wait.js before mornings.js: the overlay reads window.Wait for the send
-    # date and the week rather than keeping a second copy of either.
-    '<script src="./wait.js"></script>\n'
-    '<script src="./mornings.js"></script>\n'
+    # season.js goes everywhere systems.js can be loaded, because
+    # Systems.drift() asks it whether the board was told about a day. A page
+    # that had systems.js and not this one would compute a DIFFERENT number of
+    # days down from the page next to it — the oldest failure in this repo.
+    # tools/rut.test.js fails the deploy if the two ever come apart.
+    #
+    # wait.js and mornings.js used to sit here, in that order, so the mornings
+    # pill could read the send date off window.Wait. The pill is gone and
+    # Wait.html is archived; wait.js is still on disk and is still linked by
+    # the two pages that read it (the archived page itself, and the Season,
+    # which derives the ex rule's floor date rather than restating it). It is
+    # simply no longer inlined into thirty pages that never look at it.
+    '<script src="./season.js"></script>\n'
     '<script src="./calendar.js"></script>\n'
     '<script src="./training.js"></script>\n'
     '<script src="./tabs.js"></script>\n'
@@ -229,8 +238,7 @@ BUNDLER_HEAD = (
     '<script src="./sitemap.js?v=__APP_VERSION__"></script>\n'
     '<script src="./facts.js?v=__APP_VERSION__"></script>\n'
     '<script src="./contact.js?v=__APP_VERSION__"></script>\n'
-    '<script src="./wait.js?v=__APP_VERSION__"></script>\n'
-    '<script src="./mornings.js?v=__APP_VERSION__"></script>\n'
+    '<script src="./season.js?v=__APP_VERSION__"></script>\n'
     '<script src="./calendar.js?v=__APP_VERSION__"></script>\n'
     '<script src="./training.js?v=__APP_VERSION__"></script>\n'
     '<script src="./tabs.js?v=__APP_VERSION__"></script>\n'

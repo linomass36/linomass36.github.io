@@ -848,22 +848,59 @@
   // The ones a slower-day condition has resized rather than held.
   function eased() { return all().filter(function (s) { return !!s.eased; }); }
 
-  /* Drift: days since anything was logged. A rut is data the hub already
-     holds, and naming it is most of the intervention — so it is computed
-     rather than felt. Reads the Life Log, which is the one store that gets
-     written on any kind of day. */
-  function drift() {
+  /* Drift: days since the hub was told anything about a day. A rut is data
+     the hub already holds, and naming it is most of the intervention — so it
+     is computed rather than felt.
+
+     WHAT SHIPPED BROKEN. This read the Life Log and nothing else, on the
+     stated grounds that the Life Log is "the one store that gets written on
+     any kind of day". The season board ended that: nine rows, ticked in the
+     evening, writing ct_season_v1 and never ct_lifelog_v1. A fortnight of
+     keeping the season and closing no log day came back as a fortnight of
+     drift, so floorDay() went true, the Standing declared a rut — and the
+     floor day's own rule hid the season checklist, which is the surface
+     holding the evidence against it. The one number on the front door that
+     is supposed to be unarguable was reading half the evidence.
+
+     So it is the MOST RECENT of the two, per source, never a sum and never a
+     preference: Season owns which days it was told about (lastTold), the
+     Life Log owns which days were closed, and this file owns neither. A
+     store this cannot see is silence rather than a zero — with no season
+     declared, Season.lastTold() is null and the arithmetic is exactly what
+     it was before.
+
+     `now` is accepted so a test can drive the clock rather than read it. */
+  function lastLogged() {
     var d = readJSON('ct_lifelog_v1', null);
     var days = (d && d.days && typeof d.days === 'object') ? d.days : null;
-    if (!days) return 0;
+    if (!days) return null;
     var keys = Object.keys(days).filter(function (k) { return days[k]; }).sort();
-    if (!keys.length) return 0;
+    return keys.length ? keys[keys.length - 1] : null;
+  }
+
+  function drift(now) {
     /* The Life Log keys its days by the UTC date, so the comparison has to
        use its convention rather than the local one, or a late evening lands
-       on tomorrow and reports a day of drift that has not happened. */
-    var last = keys[keys.length - 1];
-    var gap = Math.round((new Date(logDay() + 'T12:00:00') - new Date(last + 'T12:00:00')) / 86400000);
-    return Math.max(0, gap);
+       on tomorrow and reports a day of drift that has not happened. The
+       season keys by the hub's 05:00 boundary instead; the two can disagree
+       by a day at the margin, and taking the smaller gap is the direction
+       that disagreement is allowed to fall. Inventing a rut is the failure
+       here. Missing one by a day is not. */
+    var today = w.CTDay ? w.CTDay.key(now)
+                        : new Date(now == null ? Date.now() : now).toISOString().slice(0, 10);
+    var marks = [lastLogged()];
+    try {
+      if (w.Season && typeof w.Season.lastTold === 'function') marks.push(w.Season.lastTold(null, now));
+    } catch (e) {}
+
+    var best = null;
+    marks.forEach(function (k) {
+      if (!k) return;
+      var gap = Math.round((new Date(today + 'T12:00:00') - new Date(k + 'T12:00:00')) / 86400000);
+      gap = Math.max(0, gap);
+      if (best === null || gap < best) best = gap;
+    });
+    return best === null ? 0 : best;
   }
 
   /* A floor day is any day the hub has reason to lower the bar to one thing:
@@ -876,13 +913,13 @@
      collapsed the entire page — and the grade is the user's answer to it, so
      honouring it here is the point. Falls back to the old any-condition test
      for a conditions.js older than the grades. */
-  function floorDay() {
+  function floorDay(now) {
     var C = w.Conditions;
     var any = false;
     try {
       any = C ? (typeof C.stopping === 'function' ? !!C.stopping().length : !!C.active().length) : false;
     } catch (e) {}
-    return any || drift() >= 3;
+    return any || drift(now) >= 3;
   }
 
   w.Systems = { all: all, owed: owed, held: held, eased: eased, drift: drift, floorDay: floorDay,

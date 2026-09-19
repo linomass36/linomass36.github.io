@@ -1289,7 +1289,16 @@ footer {
 
     /* ── the season's day, on the front door ──────────────────────────────
        Skipped entirely on a floor day: that page is one ask and adding nine
-       rows under it would undo the only thing the floor day does. */
+       rows under it would undo the only thing the floor day does.
+
+       THAT RULE WAS FINE AND THE NUMBER UNDER IT WAS NOT, which is the worst
+       way for this page to fail. Systems.drift() counted only closed Life Log
+       days, so ticking these nine rows every evening and closing no log day
+       read as a rut — and the rule above then hid the checklist holding the
+       ticks that disproved it. Reported as "the season checklist is missing
+       from the main page and it says I'm in a rut". drift() reads the season
+       board too now; see systems.js and tools/rut.test.js. Nothing here
+       changed, because nothing here was wrong. */
     if (SZ && seasonDay != null && !floorDay) {
       try {
         var szs = SZ.read();

@@ -29,7 +29,7 @@ itself. Prose is for the parts that cannot.
 ## Where a number comes from
 
 The recurring failure in this repo is **two pages answering the same question
-differently**, and it has happened three times now:
+differently**, and it has happened four times now:
 
 - Five files each kept their own copy of the site map. They drifted.
   → `sitemap.js`, enforced by `tools/sitemap.test.js`.
@@ -40,12 +40,24 @@ differently**, and it has happened three times now:
   the Net worth panel of the same page held real snapshots, and the Vault wrote
   amounts with no currency while every other reader assumed the base.
   → `Money.position()`, enforced by `tools/money-sync.test.js`.
+- `Systems.drift()` — "days since anything was logged", which at three turns
+  the front door into a floor day — read the Life Log and nothing else, on
+  the grounds that it was the one store written on any kind of day. The season
+  board ended that and the comment went on saying it. A fortnight of ticking
+  the season came back as a fortnight of silence, and the floor day it caused
+  then hid the season checklist: the page suppressed the evidence against its
+  own verdict.
+  → `Season.lastTold()`, enforced by `tools/rut.test.js`.
 
 So, before adding a figure to a page:
 
 1. **Does something already own this?** `Money` owns currency and net worth.
    `PlanV2` owns the plan and anything derived from it. `SITEMAP` owns the
-   structure. `Backup` owns what a backup contains. Read it, do not re-derive it.
+   structure. `Backup` owns what a backup contains. `Season` owns which days
+   its board was told about. Read it, do not re-derive it.
+   A derivation whose comment names the stores it reads is a derivation that
+   goes stale when a store is added. If it means "anything", make it ask every
+   owner — and ask them, do not read their keys.
 2. **Store inputs, derive outputs.** A stored conclusion cannot notice that it
    disagrees with its own inputs. `PlanV2.sy*` recomputes the school-year model
    from the figures the source document states, which is how that document's

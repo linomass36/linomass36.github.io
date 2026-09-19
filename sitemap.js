@@ -262,21 +262,18 @@
       dest: 'people', panel: 'Files', ord: 2,
       plain: 'Files',
       blurb: 'What was said, and when.' },
-    /* The Wait is a panel of People because that is where you would look for
-       it, not because it is a contact. It holds one relationship and one
-       rule set, and it is here rather than in the Journal for the reason
-       the Journal is not a gate: a thing you write in cannot tell you to
-       stop writing. */
-    'Wait.html':                 { name: 'The Wait',      group: 'People & money', parent: 'Network Map.dc.html', back: 'none',
-      dest: 'people', panel: 'Wait', ord: 5,
-      plain: 'Wait',
-      blurb: 'One ask, one bump, one week — and what the hour permits.' },
-    /* Filed beside the Wait for the reason the Wait is filed here: it holds
-       one rule set and answers what today permits, and a thing you write in
-       cannot tell you to stop writing. The Wait is one relationship's case of
-       it; the Season is the posture. It reads Wait rather than keeping a
-       second copy of the ex rule — two ninety-day counters with different
-       start dates would be believed selectively at 02:00. */
+    /* The Wait was a panel of People and is archived now — see the block
+       below, which says why. The Season is what is left of that corner of
+       the hub: it holds one rule set and answers what today permits, and it
+       is here rather than in the Journal for the reason the Journal is not a
+       gate — a thing you write in cannot tell you to stop writing. The Wait
+       was one relationship's case of that; the Season is the posture.
+
+       It still DERIVES the ex rule's floor date from wait.js rather than
+       restating it, because two ninety-day counters with different start
+       dates would be believed selectively at 02:00. Deriving is not linking:
+       the card prints the date and no longer sends you to an archived page,
+       which is what the archive rule actually asks. */
     'Season.html':               { name: 'The Season',    group: 'People & money', parent: 'Network Map.dc.html', back: 'none',
       dest: 'people', panel: 'Season', ord: 4,
       plain: 'Season',
@@ -385,7 +382,25 @@
            'when it was worth opening, so they did not sit at the same weight as a page you open ' +
            'every morning.',
       why: 'The Archive does that job now, and says why each document was retired rather than ' +
-           'only what it held.' }
+           'only what it held.' },
+
+    /* Not a v1 document. The first page archived because the thing it gated
+       is over rather than because a plan under it was replaced — which is
+       why its `why` says what happened rather than what superseded it.
+
+       It is still a gate that works: open the URL and it computes today's
+       answer from the send date, in her waking hours, exactly as it did.
+       Nothing live links here and nothing live should. */
+    'Wait.html': {
+      name: 'The Wait', archived: true, replacedBy: 'Season.html',
+      meta: 'one ask · one bump · one week', color: '#8A5B6B',
+      was: 'One reach-out and the limits agreed with it, with every date — the bump window, ' +
+           'the deadline, the floor — computed from the day the message actually went out, and ' +
+           'the elapsed figure counted in her waking hours rather than in ours.',
+      why: 'The wait it was built for has run out, which is the outcome it was written to make ' +
+           'survivable rather than a failure of the page. The mornings pill that opened onto it ' +
+           'went with it. The Season carries the posture now, and still reads this page’s ' +
+           'floor date rather than keeping a second copy of it.' }
   };
 
   /* The phone tab bar. Deliberately NOT the spine: the spine is an ownership

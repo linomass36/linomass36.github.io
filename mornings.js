@@ -1,4 +1,24 @@
 /* ─────────────────────────────────────────────────────────────────────────
+   RETIRED. Nothing loads this file any more.
+
+   The pill it mounted — third seat in the right-hand stack, day number on
+   its face — is gone, and Wait.html is archived: see the archived block of
+   sitemap.js, which says why. inject.py no longer carries this file or
+   wait.js in the shim, so no built page references either one, and the only
+   way into the wall was the pill.
+
+   It stays on disk for the reason every archived thing here stays on disk: a
+   record you can no longer read is a record you cannot learn from. The store
+   it wrote, ct_mornings_v1, is untouched and still rides the backup and the
+   sync, because backup.js enumerates localStorage rather than keeping a list
+   — so nothing that was marked has been thrown away, and re-linking this
+   file is all it would take to draw the wall again.
+
+   tools/mornings.test.js still runs on the deploy. It asserts that this file
+   never grew a second copy of a date Wait owns, and that assertion is worth
+   keeping true for as long as the code is here to be revived.
+
+   ─────────────────────────────────────────────────────────────────────────
    mornings.js — the mornings of a wait, counted on a wall.
 
    WHY THIS EXISTS. Wait.html answers "what does today permit". It is a good

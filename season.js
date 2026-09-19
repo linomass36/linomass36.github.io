@@ -465,6 +465,48 @@
     return s.ticks[k];
   }
 
+  /* ── THE DAYS THE BOARD WAS TOLD ABOUT ────────────────────────────
+     WHAT SHIPPED BROKEN. Systems.drift() — "days since anything was logged",
+     the number the Standing turns into a floor day at three — read the Life
+     Log and nothing else, on the stated grounds that the Life Log "is the one
+     store that gets written on any kind of day". That stopped being true the
+     day this board shipped. A fortnight of ticking these nine rows every
+     evening and closing no Life Log day read as a fortnight of silence, so
+     the front door declared a rut, collapsed to one ask, and hid THIS
+     CHECKLIST to do it — the one surface holding the evidence that the rut
+     was not there. Reported as "the season checklist is missing from the main
+     page and it says I'm in a rut".
+
+     So the board publishes what it was told, and drift asks. It is a day key
+     list, not a verdict: whether a told day counts for anything is the
+     caller's question, and state()/resolved() above still answer a much
+     narrower one about individual rows.
+
+     A tick is evidence the day was REPORTED, never that it went well. The
+     heaviness tap counts for the same reason a missed row does: both mean
+     somebody sat down with the day. */
+  function toldDays(s) {
+    s = s || read();
+    var t = (s.ticks && typeof s.ticks === 'object') ? s.ticks : {};
+    return Object.keys(t).filter(function (k) {
+      var row = t[k];
+      return !!row && typeof row === 'object' && Object.keys(row).length > 0;
+    }).sort();
+  }
+
+  /* The most recent day the board heard about, on or before `now`. A tick
+     carrying tomorrow's key — a clock skewed across the 05:00 boundary, a
+     restored backup from a device a day ahead — must not be able to report
+     that today was logged, so anything after today is stepped over rather
+     than trusted. Returns null when it was never told anything, which is
+     silence and not day zero. */
+  function lastTold(s, now) {
+    var days = toldDays(s);
+    var today = dayKey(now);
+    for (var i = days.length - 1; i >= 0; i--) if (days[i] <= today) return days[i];
+    return null;
+  }
+
   /* ── the four states, and the fourth is the point ───────────────────────
      done · floor · missed · untold, plus held.
 
@@ -1280,7 +1322,8 @@
     anchor: anchor, anchorOn: anchorOn, blocksOn: blocksOn,
     dayPlan: dayPlan, eveningRoom: eveningRoom, isSabbath: isSabbath,
     weekDay: weekDay, dayEats: dayEats,
-    ticks: ticks, tick: tick, state: state, resolved: resolved, closed: closed,
+    ticks: ticks, tick: tick, toldDays: toldDays, lastTold: lastTold,
+    state: state, resolved: resolved, closed: closed,
     srcDone: srcDone, from: from, rowOf: rowOf, tag: tag,
     week: week, next: next, dayKey: dayKey,
     lastDays: lastDays, heavyRead: heavyRead, MIN_HEAVY: MIN_HEAVY, median: median,

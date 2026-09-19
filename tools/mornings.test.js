@@ -1,6 +1,12 @@
 /* ─────────────────────────────────────────────────────────────
    mornings.test.js — the wall counts the same wait the Wait page does.
 
+   RETIRED, AND STILL RUN. The pill is off every page and Wait.html is
+   archived; mornings.js stays on disk, so these assertions stay green
+   against real code and re-linking the file is all a revival would take.
+   The last two groups changed sides with the feature: they now check that
+   the Guide says the pill is gone, and that the deploy does not ship it.
+
    Run with `node tools/mornings.test.js` from the repo root. Also run by the
    deploy.
 
@@ -260,26 +266,57 @@ ok(M.dayNumber({}, Date.now()) === null,
    'the day number is still null with nothing stored — the screen asks, it does not guess');
 
 /* ── 9. the Guide heard about it ──────────────────────────────────────── */
-group('The Guide knows this exists');
+group('The Guide knows what happened to this');
 
+/* It used to check that the Guide DESCRIBED the pill. A retired feature the
+   Guide still advertises is worse than one it never mentioned, so the check
+   followed the feature: the page has to say the pill is gone and what became
+   of the wall, not explain how to use it. */
 const guide = read('Guide.html').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-ok(/mornings/i.test(guide), 'the Guide mentions the mornings');
-ok(/tally|wall/i.test(guide), 'and says what the wall is');
-ok(/eight/i.test(guide), 'and that there are eight steps at the end of it');
+ok(/mornings/i.test(guide), 'the Guide still accounts for the mornings');
+ok(/tally|wall/i.test(guide), 'and says what the wall was');
+ok(/pill is gone|no longer built into any page/i.test(guide),
+   'and says plainly that the pill is no longer on any page');
+ok(/still rides the backup/i.test(guide),
+   'and that what was marked was filed rather than thrown away');
 
-/* ── 10. it actually ships ────────────────────────────────────────────── */
-group('The deploy injects it, on both kinds of page');
+/* ── RETIRED, AND THE DEPLOY HAS TO SAY SO ───────────────────────────
+   This group asserted the opposite until the wait ended: that the shim and
+   the bundler head both carried wait.js and then mornings.js, in that order,
+   so the pill could read the send date off window.Wait on any page.
+
+   The pill is gone and Wait.html is archived. Both files are still on disk
+   — archived here means filed, not deleted — so the assertions above still
+   run against real code, and this group now guards the retirement instead:
+   nothing may quietly put the pill back into thirty pages, and wait.js is
+   allowed everywhere it is LINKED (the archived page, and the Season, which
+   derives the ex rule's floor date from it) but is no longer inlined into
+   pages that never look at it.
+
+   Matching on the script tag rather than the bare filename, because the
+   comment left in inject.py explaining the removal names both files — and a
+   check that a prose mention satisfies is not a check. */
+group('The deploy no longer ships the pill');
 
 const inject = read('.github/inject.py');
 const shim = inject.slice(inject.indexOf('SHIM = ('), inject.indexOf('VERSION_FILE'));
 const bundler = inject.slice(inject.indexOf('BUNDLER_HEAD = ('), inject.indexOf('def esc_json'));
+const tag = (blob, f) => new RegExp('<script src="\\./' + f.replace('.', '\\.') +
+                                    '(\\?v=__APP_VERSION__)?"></script>').test(blob);
+
 [['wait.js', 'the dates'], ['mornings.js', 'the wall']].forEach(([f, what]) => {
-  ok(shim.indexOf(f) >= 0, 'the shim injects ' + f + ' — ' + what + ' on a vanilla page');
-  ok(bundler.indexOf(f) >= 0, 'and the bundler head injects it into the .dc.html exports');
+  ok(!tag(shim, f), 'the shim does not inject ' + f + ' — ' + what + ' is not on a vanilla page');
+  ok(!tag(bundler, f), 'nor does the bundler head, so the .dc.html exports are clear of it too');
 });
-ok(shim.indexOf('wait.js') < shim.indexOf('mornings.js'),
-   'wait.js loads first, because mornings.js reads window.Wait');
-ok(bundler.indexOf('wait.js') < bundler.indexOf('mornings.js'), 'same order inside the exports');
+
+/* The pages that DO still read the dates say so themselves. Wait.html is the
+   archived gate; Season.html derives the floor date. If either loses its tag
+   the code it reads is simply absent, and window.Wait being undefined is a
+   card that silently does not render rather than an error anybody sees. */
+['Wait.html', 'Season.html'].forEach((page) => {
+  ok(/<script src="\.\/wait\.js"><\/script>/.test(read(page)),
+     page + ' links wait.js itself, now that nothing injects it');
+});
 
 console.log(failed ? '\n' + failed + ' failed' : '\nall green');
 process.exit(failed ? 1 : 0);
