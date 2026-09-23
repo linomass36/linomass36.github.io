@@ -1288,18 +1288,24 @@ footer {
     }
 
     /* ── the season's day, on the front door ──────────────────────────────
-       Skipped entirely on a floor day: that page is one ask and adding nine
-       rows under it would undo the only thing the floor day does.
+       SHOWN ON A FLOOR DAY TOO, and that is the change.
 
-       THAT RULE WAS FINE AND THE NUMBER UNDER IT WAS NOT, which is the worst
-       way for this page to fail. Systems.drift() counted only closed Life Log
-       days, so ticking these nine rows every evening and closing no log day
-       read as a rut — and the rule above then hid the checklist holding the
-       ticks that disproved it. Reported as "the season checklist is missing
-       from the main page and it says I'm in a rut". drift() reads the season
-       board too now; see systems.js and tools/rut.test.js. Nothing here
-       changed, because nothing here was wrong. */
-    if (SZ && seasonDay != null && !floorDay) {
+       It used to be skipped on a floor day, on the grounds that the page is
+       one ask and nine rows under it would undo the only thing a floor day
+       does. The first fix kept that rule and repaired the number feeding it
+       (drift now asks the season board — see systems.js, tools/rut.test.js).
+       That still left the rule itself, and the rule was the bug: three quiet
+       days in, the one surface you come back through was the one thing the
+       page took away. Reported as "the season to-do list isn't showing up
+       when I haven't done anything for a couple of days — it's acting as a
+       barrier that makes it harder to get back in".
+
+       A tick is the way back in, not a demand on top of the floor: any one
+       row tells the hub about today, drift goes to zero and the floor day
+       lifts on the repaint. So the card stays, under the one ask, and on a
+       floor day it says that out loud. tools/floor-season.test.js fails the
+       deploy if the checklist is gated on the floor day again. */
+    if (SZ && seasonDay != null) {
       try {
         var szs = SZ.read();
         if (SZ.live(szs)) {
@@ -1330,6 +1336,11 @@ footer {
           }
           if (why) H += '<div class="szwhy' + (dp.sabbath ? ' held' : '') + '">' +
                         esc(why) + '</div>';
+          /* Only when the floor is the drift's. A condition that stops you is
+             not lifted by a tick, and promising it would be a lie. */
+          if (floorDay && drift >= 3 && !holding.length) {
+            H += '<div class="szwhy">Tick any one row and today stops being a floor day.</div>';
+          }
 
           var lastG = null;
           SZ.ROWS.forEach(function (r) {

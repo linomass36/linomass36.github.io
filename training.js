@@ -235,6 +235,37 @@
     return { iso: iso, slot: slot, week: wk, label: name, title: full, done: on };
   }
 
+  /* Which session a workout done on a date should be FILED under, when the
+     person saying so did not name one — the season board's Training row is
+     one tap, not a session picker.
+
+     REPORTED: "when I check that I worked out, the workout isn't registered
+     as done because I didn't fill it in on its own page." The season tick
+     lived in ct_season_v1 and nowhere else, so the grind board, the Week and
+     the Life Log's gym tick all went on saying the session was owed.
+
+     The week's own answer first (the planner dealt a slot to this date);
+     then the programme's timetable for that weekday, if that session is not
+     already done this block week; then the first session of the week still
+     open, because the board advances "when the work is done, not when a week
+     passes" and a session done is a session done. Null only when the whole
+     week is already ticked — there is nothing honest left to file it under,
+     and setDone() still records the date on the Week. */
+  function pickSlot(iso) {
+    var planned = slotFor(iso);
+    if (planned) return planned;
+    var g = grindStore();
+    var wk = blockWeek(iso) || g.week;
+    var open = function (slot) { return !g.sessions[wk + '|' + slot]; };
+    var dt = new Date(String(iso) + 'T12:00:00');
+    if (!isNaN(dt)) {
+      var grid = SLOTS[(dt.getDay() + 6) % 7];        // Mon = 0; Sunday falls off the end
+      if (grid && open(grid.slot)) return grid.slot;
+    }
+    for (var i = 0; i < SLOTS.length; i++) if (open(SLOTS[i].slot)) return SLOTS[i].slot;
+    return null;
+  }
+
   /* ── your own blocks ───────────────────────────────────────────────────
      A calendar the hub can only READ cannot hold a date on Friday, and the
      planner was filling every hour it could not see a reason not to. So a
@@ -419,7 +450,7 @@
     SLOTS: SLOTS, REST: REST,
     slots: slots, sessions: sessions, slotOf: slotOf, label: label, title: title,
     blockWeek: blockWeek, today: today, iso: isoOf,
-    day: day, slotFor: slotFor, isDone: isDone, setDone: setDone,
+    day: day, slotFor: slotFor, pickSlot: pickSlot, isDone: isDone, setDone: setDone,
     week: week, reconcile: reconcile,
     own: own, addOwn: addOwn, dropOwn: dropOwn, blocksFor: blocksFor,
     eventsFromStore: eventsFromStore,

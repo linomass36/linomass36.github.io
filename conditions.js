@@ -640,7 +640,11 @@
     /* 4 · the queue, as a number rather than as "the queue". */
     try {
       var a = JSON.parse(localStorage.getItem('ct_anki_v1') || 'null');
-      if (a) {
+      /* Not when the season board was already told Anki is done today — the
+         reading lags the sync, and asking for twenty more cards on the day
+         you did them is the hub not listening. */
+      var saidAnki = !!(w.Season && typeof w.Season.said === 'function' && w.Season.said('anki'));
+      if (a && !saidAnki) {
         var waiting = a.dueTotal != null ? parseInt(a.dueTotal, 10)
                     : (parseInt(a.due, 10) || 0) + (parseInt(a.backlog, 10) || 0);
         if (waiting > 0) {

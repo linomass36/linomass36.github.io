@@ -638,7 +638,20 @@
     var a = readJSON('ct_anki_v1', null);
     var parts = [], due = 0, known = false;
 
-    if (a && typeof a === 'object') {
+    /* SAID ON THE SEASON BOARD. Reported: "when I check that I did Anki, it
+       isn't registered as done because I didn't fill it in on its own page."
+       The reading only moves when the Mac sync runs or a number is typed in,
+       so a day you ticked Anki on the season still read as Anki owed. The
+       tick carries no count, so none is invented and the queue is not
+       zeroed — today's Anki simply stops being owed, and the line says who
+       said so. Asked of Season, not read from its store. */
+    var saidAnki = false;
+    try { saidAnki = !!(w.Season && typeof w.Season.said === 'function' && w.Season.said('anki', isoDay())); } catch (e) {}
+
+    if (saidAnki) {
+      known = true;
+      parts.push('anki done today (Season)');
+    } else if (a && typeof a === 'object') {
       var aDue = (a.dueTotal != null)
         ? Math.max(0, parseInt(a.dueTotal, 10) || 0)
         : Math.max(0, parseInt(a.due, 10) || 0) + Math.max(0, parseInt(a.backlog, 10) || 0);
@@ -664,7 +677,7 @@
     if (!known) return Object.assign(base, { big: '\u2014', unit: 'not linked', tone: '',
       line: 'run the Mac sync, or type a reading in' });
     if (!due) return Object.assign(base, { big: '\u2713', unit: 'clear', tone: 'ok',
-      line: 'all three queues are clear' });
+      line: saidAnki ? parts.join(' \u00b7 ') + ' \u00b7 nothing else due' : 'all three queues are clear' });
     return Object.assign(base, {
       big: String(due), unit: 'due now', tone: 'go', line: parts.join(' \u00b7 ')
     });

@@ -107,6 +107,7 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
 <script src="./day.js"></script>
 <script src="./screen.js"></script>
 <script src="./facts.js"></script>
+<script src="./season.js"></script>
 <script src="./plates.js"></script>
 </head>
 <body>
@@ -172,6 +173,12 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     var q = { id: 'anki', name: 'Anki', color: 'var(--s1)', href: null,
               due: 0, sub: '', stale: false, has: false };
     if (!d || typeof d !== 'object') {
+      if (window.Season && typeof window.Season.said === 'function' && window.Season.said('anki', isoDay())) {
+        q.sub = 'done today — ticked on the Season · not linked, so no count';
+        q.href = 'Standing.html#anki';
+        q.done = true;
+        return q;
+      }
       q.sub = 'not linked — run the Mac sync, or type one in on the Standing';
       q.href = 'Standing.html#anki';
       return q;
@@ -190,12 +197,24 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     var streak = Math.max(0, parseInt(d.streak, 10) || 0);
     q.due = waiting;
     q.href = 'Standing.html#anki';
+    /* Ticked on the season board. The reading only moves when the sync runs,
+       so a day you told the Season you did Anki read here as "nothing done".
+       Season.said() is asked rather than its store read, and no rep count is
+       invented: the queue keeps the reading's number and the reading's age. */
+    var said = false;
+    try { said = !!(window.Season && typeof window.Season.said === 'function' && window.Season.said('anki', isoDay())); } catch (e) {}
+    if (said) q.done = true;
     if (age !== null && age > 1) {
       q.stale = true;
-      q.sub = 'last reading ' + age + ' days ago — the sync is not running';
+      q.sub = (said ? 'done today — ticked on the Season · ' : '') +
+              'last reading ' + age + ' days ago' + (said ? '' : ' — the sync is not running');
       return q;
     }
     var when = age === 1 ? ' yesterday' : ' today';
+    if (said && (age === 1 || !reps)) {
+      q.sub = 'done today — ticked on the Season' + (streak ? ' · ' + streak + 'd streak' : '');
+      return q;
+    }
     q.sub = (reps ? reps + ' rep' + (reps === 1 ? '' : 's') + when : 'nothing done' + when) +
             (streak ? ' · ' + streak + 'd streak' : '');
     return q;
@@ -231,7 +250,9 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
     var qs = [anki(), cards(), resurfaced()];
     var box = $('#queues'); box.innerHTML = '';
     qs.forEach(function (q) {
-      var a = el('a', 'q' + (q.stale ? ' is-stale' : q.due > 0 ? ' is-due' : ' is-clear'));
+      /* `done` is today's reviews said done on the season board: the queue
+         keeps its number, but it is not owed today, same as the Recall tile. */
+      var a = el('a', 'q' + (q.done ? ' is-clear' : q.stale ? ' is-stale' : q.due > 0 ? ' is-due' : ' is-clear'));
       if (q.href) a.href = q.href;
       var dot = el('span', 'dot'); dot.style.background = q.color; a.appendChild(dot);
       var body = el('span', 'body');
@@ -243,17 +264,19 @@ footer { display:flex; justify-content:space-between; gap:12px; margin-top:40px;
       a.appendChild(big);
       box.appendChild(a);
     });
-    var total = qs.reduce(function (t, q) { return t + (q.stale ? 0 : q.due); }, 0);
+    var total = qs.reduce(function (t, q) { return t + (q.stale || q.done ? 0 : q.due); }, 0);
     var n = $('#tot-n');
     n.textContent = String(total);
     n.className = 'n' + (total > 0 ? ' is-due' : '');
     $('#tot-l').textContent = total === 0 ? 'nothing owed' : 'due right now';
-    var names = qs.filter(function (q) { return !q.stale && q.due > 0; })
+    var names = qs.filter(function (q) { return !q.stale && !q.done && q.due > 0; })
                   .map(function (q) { return q.name.toLowerCase() + ' ' + q.due; });
     $('#tot-s').textContent = total === 0
-      ? 'All three queues are clear. That is the whole page.'
+      ? (qs.some(function (q) { return q.done; })
+          ? 'Nothing owed — Anki was ticked done on the Season today.'
+          : 'All three queues are clear. That is the whole page.')
       : names.join(' · ');
-    var stale = qs.filter(function (q) { return q.stale; });
+    var stale = qs.filter(function (q) { return q.stale && !q.done; });
     $('#tot-note').textContent = stale.length ? stale[0].name.toLowerCase() + ' reading is stale' : '';
   }
 

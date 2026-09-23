@@ -115,6 +115,7 @@ jobs:
           node tools/season-gate.test.js
           node tools/mornings.test.js
           node tools/rut.test.js
+          node tools/floor-season.test.js
           node tools/weekly-review.test.js
           node tools/health-import.test.js
           node tools/facts.test.js

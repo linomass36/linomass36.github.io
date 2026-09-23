@@ -461,8 +461,61 @@
     if (!s.ticks[k]) s.ticks[k] = {};
     if (onOff === false) delete s.ticks[k][id];
     else s.ticks[k][id] = 1;
+    fileTraining(s, id, k, onOff !== false);
     save(s);
     return s.ticks[k];
+  }
+
+  /* ── A TICK HERE IS A FACT EVERYWHERE ───────────────────────────────────
+     REPORTED: "when I check that I prayed, wrote the manuscript and did Anki
+     and worked out, the Anki and workout aren't registered as being done
+     because I didn't fill them in their own pages."
+
+     True, and the same failure as drift reading one store: srcDone() above
+     taught this board to READ the grind board, and nothing taught the grind
+     board to hear this one. A tick stayed in ct_season_v1, so the Grind tile,
+     the Week and the Life Log's gym tick all went on calling the session owed
+     on a day you had told the hub you trained.
+
+     Training goes through CTTraining.setDone, which is already "the one
+     writer" for a session — it files the week, the board and the gym tick
+     together, so nothing here learns their shapes. Which session it is filed
+     under is training.js's call (pickSlot), and the slot is remembered under
+     `filed` so un-ticking takes back exactly what this tick wrote and never a
+     session you recorded on the board yourself.
+
+     Anki is NOT written anywhere. ct_anki_v1 is one reading, overwritten by
+     every sync, and a tick carries no rep count to put in it; the readers ask
+     said() instead — see systems.js and Recall.html. */
+  function fileTraining(s, id, k, on) {
+    if (id !== 'train') return;
+    var T = w.CTTraining;
+    if (!T || typeof T.setDone !== 'function') return;
+    try {
+      if (!s.filed || typeof s.filed !== 'object') s.filed = {};
+      var mine = s.filed[k] && Object.prototype.hasOwnProperty.call(s.filed[k], 'train');
+      if (on) {
+        if (mine || T.isDone(k)) return;          // already on the board: nothing to add
+        var slot = typeof T.pickSlot === 'function' ? T.pickSlot(k) : null;
+        T.setDone(k, true, slot ? { slot: slot } : {});
+        if (!s.filed[k]) s.filed[k] = {};
+        s.filed[k].train = slot || '';
+      } else if (mine) {
+        var was = s.filed[k].train;
+        T.setDone(k, false, was ? { slot: was } : {});
+        delete s.filed[k].train;
+        if (!Object.keys(s.filed[k]).length) delete s.filed[k];
+      }
+    } catch (e) {}
+  }
+
+  /* Did you SAY this row was done on this day — your tick, not a board's
+     reading. The question other pages ask so they do not read this store's
+     keys: the Anki tile and Recall use it to stop calling a day's reviews
+     undone because the Mac sync has not run. */
+  function said(id, dKey) {
+    var t = ticks(null, dKey || dayKey());
+    return t[id] === 1;
   }
 
   /* ── THE DAYS THE BOARD WAS TOLD ABOUT ────────────────────────────
@@ -1322,7 +1375,7 @@
     anchor: anchor, anchorOn: anchorOn, blocksOn: blocksOn,
     dayPlan: dayPlan, eveningRoom: eveningRoom, isSabbath: isSabbath,
     weekDay: weekDay, dayEats: dayEats,
-    ticks: ticks, tick: tick, toldDays: toldDays, lastTold: lastTold,
+    ticks: ticks, tick: tick, said: said, toldDays: toldDays, lastTold: lastTold,
     state: state, resolved: resolved, closed: closed,
     srcDone: srcDone, from: from, rowOf: rowOf, tag: tag,
     week: week, next: next, dayKey: dayKey,
