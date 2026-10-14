@@ -76,9 +76,9 @@
       lands: 'Grind.dc.html',
       blurb: 'Training, rest, the daily log, and what the numbers say about them.' },
 
-    { id: 'study',    name: 'Recall',        plain: 'Study',     icon: '\u25c9',
-      lands: 'Recall.html',
-      blurb: 'What you owe your memory today, and the anatomy you are closing out.' },
+    { id: 'study',    name: 'The Term',      plain: 'Study',     icon: '\u25c9',
+      lands: 'Study Control.html',
+      blurb: 'The term: what is graded next, what the rules say has to change, and what you owe your memory.' },
 
     /* Its own destination, not a tab under Study. Reading here is recreation
        rather than work, and filing it beside the error-card queue made it look
@@ -134,6 +134,13 @@
       blurb: 'Declare what is true today, and what it holds.',
       foldedInto: 'Settings.html#conditions' },
 
+    /* Lands first because it is what term actually runs on: real classes,
+       real results, and rules that say what to change. Recall and the Study
+       Engine stay as panels — they still own their stores. */
+    'Study Control.html':        { name: 'Study Control', group: 'Study', parent: 'Standing.html', back: 'none',
+      dest: 'study', panel: 'This term', ord: 0,
+      plain: 'This term',
+      blurb: 'Classes, results, Anki weeks, and the ten rules that flag a change.' },
     'Recall.html':               { name: 'Recall',        group: 'Study', parent: 'Today.dc.html', back: 'none',
       dest: 'study', panel: 'Due today', ord: 1,
       plain: 'Due today',

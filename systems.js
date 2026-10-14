@@ -864,7 +864,8 @@
 
      So it is the MOST RECENT of the two, per source, never a sum and never a
      preference: Season owns which days it was told about (lastTold), the
-     Life Log owns which days were closed, and this file owns neither. A
+     Life Log owns which days were closed, StudyControl owns which days the
+     term was reported (lastTold), and this file owns none of them. A
      store this cannot see is silence rather than a zero — with no season
      declared, Season.lastTold() is null and the arithmetic is exactly what
      it was before.
@@ -891,6 +892,14 @@
     var marks = [lastLogged()];
     try {
       if (w.Season && typeof w.Season.lastTold === 'function') marks.push(w.Season.lastTold(null, now));
+    } catch (e) {}
+    /* And the term. Study Control was the one thing in use through the first
+       month of Year 2, in a store this never read, so a month of logged
+       quizzes and ticked prep would have come back as a month down — the
+       season board's bug again, one owner later. Same rule: ask the owner,
+       do not read its key. See tools/study-control.test.js. */
+    try {
+      if (w.StudyControl && typeof w.StudyControl.lastTold === 'function') marks.push(w.StudyControl.lastTold(null, now));
     } catch (e) {}
 
     var best = null;

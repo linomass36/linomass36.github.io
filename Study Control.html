@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study Control · CT Hub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a control sheet. Subject status strip on top, flags next, then this week's classes beside the logging forms, then history. Subject colors borrow from stains and tissue. */
+:root{
+  --bg:#f6f5f8; --panel:#ffffff; --ink:#1d1b24; --muted:#6a6577; --line:#e3e0ea; --soft:#efedf3;
+  --accent:#4a3f8f;
+  --ana:#8c2f3c; --his:#c2477a; --phy:#1f7a78; --emb:#b7791f;
+  --ok:#2f7d4f; --okbg:#e6f3ea; --warn:#a86512; --warnbg:#fbf0de; --bad:#b3261e; --badbg:#fbe5e3;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141219; --panel:#1d1a24; --ink:#ece9f2; --muted:#a29cb0; --line:#2f2b3a; --soft:#25212e;
+  --accent:#a99cf0; --ana:#e07b88; --his:#ec86b1; --phy:#5fc4c1; --emb:#e5b45c;
+  --ok:#73c995; --okbg:#1c3226; --warn:#e6ad5c; --warnbg:#382a14; --bad:#f08a82; --badbg:#3e1d1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141219; --panel:#1d1a24; --ink:#ece9f2; --muted:#a29cb0; --line:#2f2b3a; --soft:#25212e;
+  --accent:#a99cf0; --ana:#e07b88; --his:#ec86b1; --phy:#5fc4c1; --emb:#e5b45c;
+  --ok:#73c995; --okbg:#1c3226; --warn:#e6ad5c; --warnbg:#382a14; --bad:#f08a82; --badbg:#3e1d1b; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:.005em}
+h1{font-size:28px;font-weight:700}
+h2{font-size:19px;font-weight:600}
+h3{font-size:15px;font-weight:600}
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.io{display:flex;flex-direction:column;gap:6px;align-items:flex-end}.io-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}@media (max-width:560px){.io{align-items:flex-start}.io-btns{justify-content:flex-start}}
+.status-line{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sec-head .eyebrow{white-space:nowrap}
+
+/* subject strip */
+.subjects{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.subjects{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.subjects{grid-template-columns:1fr}}
+.subj{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.subj-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.subj h3{font-size:18px;color:var(--c)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11.5px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.bad{background:var(--badbg);color:var(--bad)} .chip.na{background:var(--soft);color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.next{font-size:13px;border-top:1px dashed var(--line);padding-top:8px}
+.next b{font-weight:600}
+
+/* flags */
+.flags{display:flex;flex-direction:column;gap:8px}
+.flag{display:grid;grid-template-columns:6px 1fr auto;gap:12px;align-items:start;background:var(--soft);border-radius:8px;padding:10px 12px 10px 0;overflow:hidden}
+.flag .bar{align-self:stretch;border-radius:0 3px 3px 0}
+.flag.change .bar{background:var(--bad)} .flag.warn .bar{background:var(--warn)}
+.flag-body{min-width:0}
+.flag-title{font-weight:600}
+.flag-meta{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);margin-bottom:2px}
+.flag-do{margin-top:3px}
+.flag-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.flag-note{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.flag-note input{flex:1;min-width:180px}
+.empty{color:var(--muted);font-size:13.5px;padding:6px 0}
+@media (max-width:560px){.flag{grid-template-columns:6px 1fr}.flag-actions{grid-column:2;flex-direction:row;align-items:center}}
+
+/* two columns */
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.ev{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.ev:first-child{border-top:0}
+.ev-date{font-family:var(--f-mono);font-size:12px;color:var(--muted);line-height:1.35}
+.ev-date b{display:block;font-size:15px;color:var(--ink);font-weight:500}
+.ev-title{font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--c);display:inline-block;flex:none;transform:translateY(-1px)}
+.ev-note{color:var(--muted);font-size:13px}
+.ticks{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:3px 9px;font-size:12.5px;cursor:pointer;color:var(--ink);font-family:var(--f-body)}
+.tick[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--panel))}
+.tick .box{width:12px;height:12px;border:1.5px solid var(--muted);border-radius:3px;display:inline-block}
+.tick[aria-pressed="true"] .box{background:var(--c);border-color:var(--c)}
+.tick.after{border-style:dashed}
+
+/* forms */
+form{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row > label{flex:1 1 120px;min-width:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+input,select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+textarea{min-height:56px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.tick:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.causes{display:flex;flex-wrap:wrap;gap:6px}
+.cause{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer;font-family:var(--f-body)}
+.cause[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+button.primary{align-self:flex-start;background:var(--accent);color:var(--panel);border:0;border-radius:6px;padding:8px 16px;font:600 14px var(--f-body);cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:4px 10px;font:500 12.5px var(--f-body);cursor:pointer;white-space:nowrap}
+button.link{background:none;border:0;color:var(--accent);font:500 13px var(--f-body);cursor:pointer;padding:0}
+.formmsg{font-size:13px;color:var(--ok);min-height:1em}
+.formmsg.err{color:var(--bad)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:6px 10px;font:600 13.5px var(--f-display);color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.anki-grid{display:grid;grid-template-columns:96px repeat(4,minmax(0,1fr));gap:6px;align-items:center;font-size:12.5px}
+.anki-grid .h{color:var(--muted);font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.anki-grid input{padding:5px 6px;font-family:var(--f-mono);font-size:13px}
+.scroll{overflow-x:auto}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;font-weight:500;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pct.bad{color:var(--bad)} .pct.warn{color:var(--warn)} .pct.ok{color:var(--ok)}
+.tag{display:inline-block;font-size:11.5px;background:var(--soft);border-radius:4px;padding:0 6px;margin:1px 3px 1px 0;color:var(--muted)}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px;font-size:13.5px}
+@media (max-width:700px){.rules{grid-template-columns:1fr}}
+.rules div{padding:6px 0;border-top:1px solid var(--line)}
+.rules b{font-family:var(--f-mono);font-weight:500;font-size:12px;color:var(--accent);margin-right:6px}
+details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--accent);margin-top:8px}
+.notice{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:10px 12px;font-size:13.5px}
+@media (prefers-reduced-motion:no-preference){.flag,.ev{transition:background .15s}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">UMLub · Year 2 · fall 2026</div>
+      <h1>Study control</h1>
+      <p>Log every quiz and test, tick prep before each class, add the Anki numbers each Sunday. The page checks the rules and tells you when something has to change.</p>
+    </div>
+    <div class="io"><div class="status-line" id="statusLine">Loading…</div><div class="status-line" id="savedLine"></div>
+      <div class="io-btns"><button class="ghost" id="btnExport" type="button">Back up (download)</button><button class="ghost" id="btnImport" type="button">Restore from backup</button><input type="file" id="fileImport" accept=".json,application/json" hidden></div>
+      <div class="formmsg" id="ioMsg" role="status"></div></div>
+  </header>
+
+  <div class="notice" id="offline" hidden>This browser is blocking storage (private window or blocked site data), so nothing you enter will be kept. Open the file in a normal window.</div>
+
+  <section class="subjects" id="subjects" aria-label="Subjects"></section>
+
+  <section class="panel">
+    <div class="sec-head"><h2>Needs a change</h2><span class="eyebrow" id="flagCount"></span></div>
+    <div class="flags" id="flags"><div class="empty">Checking the rules…</div></div>
+    <details id="handledBox" hidden><summary id="handledSum"></summary><div class="flags" id="handled" style="margin-top:8px"></div></details>
+  </section>
+
+  <div class="cols">
+    <section class="panel">
+      <div class="sec-head"><h2>Next 10 days</h2><span class="eyebrow">Tick prep as you go</span></div>
+      <div id="upcoming"><div class="empty">Loading classes…</div></div>
+      <details><summary>Last 7 days: cards made after class?</summary><div id="recent" style="margin-top:6px"></div></details>
+    </section>
+
+    <section class="panel">
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="res" id="tab-res">Log a result</button>
+        <button role="tab" aria-selected="false" data-tab="anki" id="tab-anki">Anki week</button>
+        <button role="tab" aria-selected="false" data-tab="ev" id="tab-ev">Add a class</button>
+      </div>
+
+      <form id="fRes" data-pane="res">
+        <div class="row">
+          <label>Subject<select id="rSubj"></select></label>
+          <label>Type<select id="rKind">
+            <option value="quiz">Class quiz</option><option value="entrance">Entrance test</option>
+            <option value="partial">Partial</option><option value="practice">Practice questions</option></select></label>
+          <label>Date<input type="date" id="rDate"></label>
+        </div>
+        <label>What it covered<input id="rTitle" placeholder="e.g. W2 connective tissue, cartilage, bone"></label>
+        <div class="row">
+          <label>Score<input type="number" id="rScore" min="0" step="0.5" inputmode="decimal"></label>
+          <label>Out of<input type="number" id="rMax" min="1" step="0.5" inputmode="decimal"></label>
+          <label>Score is<select id="rEst"><option value="1">My estimate</option><option value="0">Official</option></select></label>
+        </div>
+        <div><div class="eyebrow" style="margin-bottom:6px">Why points were lost</div><div class="causes" id="rCauses"></div></div>
+        <label>The questions you missed<textarea id="rMiss" placeholder="One per line. Each becomes an error card."></textarea></label>
+        <button class="primary" type="submit">Save result</button>
+        <div class="formmsg" id="rMsg" role="status"></div>
+      </form>
+
+      <form id="fAnki" data-pane="anki" hidden>
+        <label>Week starting (Monday)<input type="date" id="aWeek"></label>
+        <div class="scroll"><div class="anki-grid" id="aGrid"></div></div>
+        <label>Note<input id="aNote" placeholder="e.g. from Sunday export, real time rebuilt"></label>
+        <button class="primary" type="submit">Save week</button>
+        <div class="formmsg" id="aMsg" role="status"></div>
+        <p class="ev-note" style="margin:0">Real minutes per day, not Anki's logged time. Send me the export on Sunday and I fill this in.</p>
+      </form>
+
+      <form id="fEv" data-pane="ev" hidden>
+        <div class="row">
+          <label>Subject<select id="eSubj"></select></label>
+          <label>Kind<select id="eKind"><option value="lab">Lab</option><option value="seminar">Seminar</option><option value="test">Test</option><option value="partial">Partial</option></select></label>
+        </div>
+        <div class="row">
+          <label>Date<input type="date" id="eDate"></label>
+          <label>Time<input type="time" id="eTime"></label>
+        </div>
+        <label>Title<input id="eTitle" placeholder="e.g. Lab 6 · brainstem"></label>
+        <label>Note<input id="eNote" placeholder="Set pages, chapter, what's tested"></label>
+        <label style="flex-direction:row;align-items:center;gap:8px;color:var(--ink)"><input type="checkbox" id="eQuiz" style="width:auto"> Graded (quiz or test at this class)</label>
+        <button class="primary" type="submit">Add class</button>
+        <div class="formmsg" id="eMsg" role="status"></div>
+      </form>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="sec-head"><h2>Results</h2><span class="eyebrow">Newest first</span></div>
+    <div class="scroll"><table><thead><tr><th>Date</th><th>Subject</th><th>What</th><th>Score</th><th>Lost to</th><th>Error cards</th></tr></thead><tbody id="resRows"></tbody></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="sec-head"><h2>Anki by week</h2><span class="eyebrow">Real min/day · recall · new/day</span></div>
+    <div class="scroll"><table><thead><tr><th>Week</th><th>Anatomy</th><th>Histology</th><th>Physiology</th><th>Embryology</th><th>Total</th><th>Note</th></tr></thead><tbody id="ankiRows"></tbody></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="sec-head"><h2>The rules</h2><span class="eyebrow">What trips a flag</span></div>
+    <div class="rules">
+      <div><b>R1</b>Any quiz or test under 70%: error card for every miss and name the cause before the next class.</div>
+      <div><b>R2</b>Two results in a row under 80% in one subject: the method isn't working. Change one thing.</div>
+      <div><b>R3</b>The same cause in two of your last five results: fix the cause everywhere, not one subject.</div>
+      <div><b>R4</b>Error cards not made two days after a result.</div>
+      <div><b>R5</b>A class within two days with fewer than two prep items ticked.</div>
+      <div><b>R6</b>Lab or seminar passed without cards made within 24 hours.</div>
+      <div><b>R7</b>Two classes in 14 days in one subject with under two prep items: the week isn't giving that subject time.</div>
+      <div><b>R8</b>Recall under 80% in a subject: one week is a warning, two weeks means nothing new goes live until it's read and blank-paged.</div>
+      <div><b>R9</b>Anki over 150 real min/day for a week: cut new cards in the subject whose next test is furthest away.</div>
+      <div><b>R10</b>Last week's Anki row missing by Tuesday: send the export.</div>
+    </div>
+  </section>
+</div>
+
+<script src="./day.js"></script>
+<script src="./study-control.js"></script>
+<script>
+/* The rules, the store and the subject tables live in study-control.js, so
+   the Standing and Systems.drift() can ask the same questions this page
+   answers. This script only renders and writes. */
+const SC=window.StudyControl;
+const {SUBJ,SK,CAUSES,KIND}=SC;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const {iso,parse,addDays,diff,monday}=SC;
+const TODAY=SC.today();
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const short=SC.short, pctOf=SC.pctOf;
+const pctCls=p=>p==null?"":p<.7?"bad":p<.8?"warn":"ok";
+
+const S={events:[],results:[],anki:[],actions:{}};
+let db=null, ready={events:false,results:false,anki:false,actions:false};
+
+/* ---------- forms setup ---------- */
+for(const sel of ["#rSubj","#eSubj"]) $(sel).innerHTML=SK.map(k=>`<option value="${k}">${SUBJ[k].name}</option>`).join("");
+$("#rDate").value=TODAY; $("#eDate").value=TODAY; $("#aWeek").value=monday(addDays(TODAY,-7));
+const picked=new Set();
+$("#rCauses").innerHTML=Object.entries(CAUSES).map(([k,v])=>`<button type="button" class="cause" aria-pressed="false" data-c="${k}">${v[0]}</button>`).join("");
+$("#rCauses").addEventListener("click",e=>{const b=e.target.closest(".cause");if(!b)return;const k=b.dataset.c;picked.has(k)?picked.delete(k):picked.add(k);b.setAttribute("aria-pressed",picked.has(k))});
+$("#aGrid").innerHTML=`<div class="h"></div>`+SK.map(k=>`<div class="h" style="color:var(${SUBJ[k].c})">${SUBJ[k].name}</div>`).join("")+
+  [["min","Min/day"],["recall","Recall %"],["newc","New/day"],["backlog","New waiting"]].map(([f,l])=>`<div class="h">${l}</div>`+SK.map(k=>`<input type="number" min="0" step="1" id="a_${k}_${f}" aria-label="${SUBJ[k].name} ${l}">`).join("")).join("");
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  document.querySelectorAll("[data-pane]").forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab);
+}));
+$("#aWeek").addEventListener("change",fillAnkiForm);
+function fillAnkiForm(){
+  const w=monday($("#aWeek").value||TODAY); const doc=S.anki.find(a=>a.week===w)||{};
+  for(const k of SK)for(const f of ["min","recall","newc","backlog"]){const v=doc[k]?.[f];$(`#a_${k}_${f}`).value=v??""}
+  $("#aNote").value=doc.note||"";
+}
+function msg(el,t,err){el.textContent=t;el.classList.toggle("err",!!err);if(!err)setTimeout(()=>{if(el.textContent===t)el.textContent=""},4000)}
+
+$("#fRes").addEventListener("submit",async e=>{
+  e.preventDefault(); const m=$("#rMsg");
+  const score=parseFloat($("#rScore").value), max=parseFloat($("#rMax").value);
+  if(!(max>0)||isNaN(score)||score<0||score>max) return msg(m,"Enter a score between 0 and the maximum.",true);
+  if(!db) return msg(m,"Saving isn't available in this view.",true);
+  const doc={date:$("#rDate").value||TODAY,subject:$("#rSubj").value,kind:$("#rKind").value,title:$("#rTitle").value.trim(),
+    score,max,estimate:$("#rEst").value==="1",causes:[...picked],misses:$("#rMiss").value.trim(),errorCards:false,createdAt:new Date().toISOString()};
+  try{await db.collection("results").add(doc); msg(m,"Saved. Rules re-checked.");
+    $("#rTitle").value="";$("#rScore").value="";$("#rMax").value="";$("#rMiss").value="";picked.clear();
+    document.querySelectorAll(".cause").forEach(b=>b.setAttribute("aria-pressed","false"));
+  }catch(err){msg(m,"Couldn't save: "+(err.message||err.code),true)}
+});
+$("#fAnki").addEventListener("submit",async e=>{
+  e.preventDefault(); const m=$("#aMsg"); if(!db) return msg(m,"Saving isn't available in this view.",true);
+  const w=monday($("#aWeek").value||TODAY); const doc={week:w,note:$("#aNote").value.trim()};
+  for(const k of SK){const o={};for(const f of ["min","recall","newc","backlog"]){const v=$(`#a_${k}_${f}`).value;if(v!=="")o[f]=Number(v)}if(Object.keys(o).length)doc[k]=o}
+  try{await db.doc("anki/w"+w).set(doc);msg(m,"Week of "+short(w)+" saved.")}catch(err){msg(m,"Couldn't save: "+(err.message||err.code),true)}
+});
+$("#fEv").addEventListener("submit",async e=>{
+  e.preventDefault(); const m=$("#eMsg"); const title=$("#eTitle").value.trim();
+  if(!title) return msg(m,"Give the class a title.",true); if(!db) return msg(m,"Saving isn't available in this view.",true);
+  const doc={date:$("#eDate").value||TODAY,time:$("#eTime").value,subject:$("#eSubj").value,kind:$("#eKind").value,title,note:$("#eNote").value.trim(),graded:$("#eQuiz").checked,prep:{}};
+  try{await db.collection("events").add(doc);msg(m,"Added "+title+".");$("#eTitle").value="";$("#eNote").value=""}catch(err){msg(m,"Couldn't save: "+(err.message||err.code),true)}
+});
+
+/* ---------- rules ---------- */
+const isAssess=SC.isAssess;
+function nextAssess(k){return S.events.filter(e=>e.subject===k&&isAssess(e)&&e.date>=TODAY).sort((a,b)=>a.date.localeCompare(b.date))[0]}
+function nextClass(k){return S.events.filter(e=>e.subject===k&&e.date>=TODAY).sort((a,b)=>a.date.localeCompare(b.date))[0]}
+function computeFlags(){return SC.flags(store)}
+
+/* ---------- render ---------- */
+function render(){
+  const all=computeFlags(); const open=all.filter(f=>!S.actions[f.id]); const done=all.filter(f=>S.actions[f.id]);
+  const loaded=Object.values(ready).every(Boolean);
+  $("#statusLine").innerHTML=`${DOW[parse(TODAY).getDay()]} ${short(TODAY)} · ${open.filter(f=>f.lvl==="change").length} change · ${open.filter(f=>f.lvl==="warn").length} warning${loaded?"":" · syncing"}`;
+  // subjects
+  $("#subjects").innerHTML=SK.map(k=>{
+    const s=SUBJ[k], mine=open.filter(f=>f.subj===k);
+    const st=mine.some(f=>f.lvl==="change")?["bad","Change needed"]:mine.length?["warn","Watch"]:["ok","On track"];
+    const last=S.results.filter(r=>r.subject===k&&r.kind!=="practice").sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const lw=S.anki.filter(a=>a[k]).sort((a,b)=>b.week.localeCompare(a.week))[0];
+    const na=nextAssess(k), nc=nextClass(k);
+    const lp=last?pctOf(last):null;
+    return `<article class="subj" style="--c:var(${s.c})"><div class="subj-top"><h3>${s.name}</h3><span class="chip ${st[0]}">${st[1]}</span></div>
+      <dl class="kv"><dt>Last result</dt><dd>${last?`<span class="pct ${pctCls(lp)}">${Math.round(lp*100)}%</span> ${short(last.date)}${last.estimate?" est.":""}`:"none yet"}</dd>
+      <dt>Recall</dt><dd>${lw?.[k]?.recall!=null?`<span class="pct ${lw[k].recall<80?"warn":"ok"}">${lw[k].recall}%</span>`:"no data"}</dd>
+      <dt>Anki</dt><dd>${lw?.[k]?.min!=null?lw[k].min+" min/day":"no data"}</dd>
+      <dt>Open flags</dt><dd>${mine.length}</dd></dl>
+      <div class="next">${na?`Next graded: <b>${esc(na.title)}</b>, ${DOW[parse(na.date).getDay()]} ${short(na.date)} <span class="num">(${diff(na.date,TODAY)===0?"today":"in "+diff(na.date,TODAY)+" d"})</span>`:nc?`Next class: <b>${esc(nc.title)}</b>, ${short(nc.date)}`:"No classes logged ahead."}</div></article>`}).join("");
+  // flags
+  const flagHTML=(f,isDone)=>{const s=SUBJ[f.subj];const a=S.actions[f.id];
+    return `<div class="flag ${f.lvl}" data-id="${esc(f.id)}"><span class="bar"></span><div class="flag-body">
+      <div class="flag-meta">${f.rule} · ${s?s.name:"All subjects"} · ${short(f.date)}</div><div class="flag-title">${esc(f.title)}</div>
+      <div class="flag-do">${esc(f.todo)}</div>${isDone?`<div class="flag-meta" style="margin-top:4px">Handled ${a.date?short(a.date):""}${a.note?": "+esc(a.note):""}</div>`:""}
+      <div class="flag-note" hidden><input placeholder="What did you change?" aria-label="What did you change"><button class="ghost" data-act="save">Save</button></div></div>
+      <div class="flag-actions">${isDone?`<button class="link" data-act="reopen">Reopen</button>`:`<button class="ghost" data-act="done">Handled</button>`}</div></div>`};
+  $("#flagCount").textContent=open.length?`${open.length} open`:"";
+  $("#flags").innerHTML=open.length?open.map(f=>flagHTML(f,false)).join(""):`<div class="empty">${loaded?"Nothing tripped. Keep logging so this stays honest.":"Checking the rules…"}</div>`;
+  $("#handledBox").hidden=!done.length; $("#handledSum").textContent=`${done.length} handled`;
+  $("#handled").innerHTML=done.map(f=>flagHTML(f,true)).join("");
+  // upcoming
+  const up=S.events.filter(e=>{const d=diff(e.date,TODAY);return d>=0&&d<=10}).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||"").localeCompare(b.time||""));
+  const evHTML=(ev,after)=>{const s=SUBJ[ev.subject];
+    const ticks=after?`<button type="button" class="tick after" aria-pressed="${!!ev.prep?.after}" data-ev="${ev.id}" data-k="after"><span class="box"></span>Cards made within 24 h</button>`
+      :s.prep.map((l,i)=>`<button type="button" class="tick" aria-pressed="${!!ev.prep?.["p"+i]}" data-ev="${ev.id}" data-k="p${i}"><span class="box"></span>${l}</button>`).join("");
+    return `<div class="ev" style="--c:var(${s.c})"><div class="ev-date"><b>${short(ev.date)}</b>${DOW[parse(ev.date).getDay()]}${ev.time?" "+ev.time:""}</div><div>
+      <div class="ev-title"><span class="dot"></span>${esc(ev.title)}${isAssess(ev)?` <span class="chip na">graded</span>`:""}</div>
+      ${ev.note?`<div class="ev-note">${esc(ev.note)}</div>`:""}<div class="ticks">${ticks}</div></div></div>`};
+  $("#upcoming").innerHTML=up.length?up.map(e=>evHTML(e,false)).join(""):`<div class="empty">${ready.events?"No classes in the next 10 days. Add one in the Add a class tab.":"Loading classes…"}</div>`;
+  const rec=S.events.filter(e=>{const d=diff(e.date,TODAY);return d<0&&d>=-7&&(e.kind==="lab"||e.kind==="seminar")}).sort((a,b)=>b.date.localeCompare(a.date));
+  $("#recent").innerHTML=rec.length?rec.map(e=>evHTML(e,true)).join(""):`<div class="empty">No labs or seminars in the last week.</div>`;
+  // results
+  const rs=S.results.slice().sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt||"").localeCompare(a.createdAt||""));
+  $("#resRows").innerHTML=rs.length?rs.map(r=>{const p=pctOf(r);return `<tr><td class="n">${short(r.date)}</td><td><span class="dot" style="--c:var(${SUBJ[r.subject].c})"></span> ${SUBJ[r.subject].name}</td>
+    <td>${KIND[r.kind]}${r.title?` · ${esc(r.title)}`:""}${r.misses?`<div class="ev-note">${esc(r.misses).replace(/\n/g,"<br>")}</div>`:""}</td>
+    <td class="n"><span class="pct ${pctCls(p)}">${r.score}/${r.max} · ${Math.round(p*100)}%</span>${r.estimate?" est.":""}</td>
+    <td>${(r.causes||[]).map(c=>`<span class="tag">${esc(CAUSES[c]?.[0]||c)}</span>`).join("")||`<span class="ev-note">none</span>`}</td>
+    <td><button type="button" class="tick" style="--c:var(--accent)" aria-pressed="${!!r.errorCards}" data-res="${r.id}"><span class="box"></span>${r.errorCards?"Done":"Not yet"}</button></td></tr>`}).join("")
+    :`<tr><td colspan="6" class="empty">${ready.results?"No results yet. Log your next quiz in Log a result.":"Loading…"}</td></tr>`;
+  // anki
+  const ws=S.anki.slice().sort((a,b)=>b.week.localeCompare(a.week));
+  const cell=o=>o?`<span class="num">${o.min??"–"}</span> min · <span class="pct ${o.recall==null?"":o.recall<80?"warn":"ok"}">${o.recall??"–"}%</span> · ${o.newc??"–"} new`:`<span class="ev-note">–</span>`;
+  $("#ankiRows").innerHTML=ws.length?ws.map(w=>`<tr><td class="n">${short(w.week)}</td>${SK.map(k=>`<td class="n">${cell(w[k])}</td>`).join("")}<td class="n">${SK.reduce((s,k)=>s+(w[k]?.min||0),0)} min</td><td>${esc(w.note||"")}</td></tr>`).join("")
+    :`<tr><td colspan="7" class="empty">${ready.anki?"No weeks yet. Send the Sunday export.":"Loading…"}</td></tr>`;
+}
+
+/* ---------- interactions ---------- */
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-ev]");
+  if(t&&db){const ev=S.events.find(x=>x.id===t.dataset.ev);if(!ev)return;const k=t.dataset.k;const val=!(ev.prep?.[k]);
+    t.setAttribute("aria-pressed",val);try{await db.doc("events/"+ev.id).update({prep:{[k]:val}})}catch(err){t.setAttribute("aria-pressed",!val)}return}
+  const r=e.target.closest("[data-res]");
+  if(r&&db){const res=S.results.find(x=>x.id===r.dataset.res);if(!res)return;try{await db.doc("results/"+res.id).update({errorCards:!res.errorCards})}catch(err){}return}
+  const a=e.target.closest("[data-act]"); if(!a)return; const fl=a.closest(".flag"); const id=fl.dataset.id;
+  if(a.dataset.act==="done"){const n=fl.querySelector(".flag-note");n.hidden=false;n.querySelector("input").focus();return}
+  if(a.dataset.act==="save"&&db){const note=fl.querySelector(".flag-note input").value.trim();
+    try{await db.doc("actions/"+encodeURIComponent(id).replace(/%/g,"~")).set({flag:id,note,date:TODAY})}catch(err){}return}
+  if(a.dataset.act==="reopen"&&db){try{await db.doc("actions/"+encodeURIComponent(id).replace(/%/g,"~")).delete()}catch(err){}}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest(".flag-note")){e.preventDefault();e.target.closest(".flag-note").querySelector("[data-act=save]").click()}});
+
+/* ---------- data: the hub store (ct_studycontrol_v1, synced and backed up) ---------- */
+let store;
+const KEY=SC.KEY;
+function loadStore(){SC.adopt();return SC.read()}
+let canSave=true;
+function persist(){if(!SC.write(store)){canSave=false;$("#offline").hidden=false}store=SC.read();try{localStorage.setItem("__local_studycontrol_saved",new Date().toISOString())}catch(e){}fire();showSaved()}
+const listeners=[];
+function fire(){for(const[c,fn]of listeners)fn(c)}
+const snapOf=c=>({docs:Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>d}))});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function deepMerge(a,b){const o={...a};for(const[k,v]of Object.entries(b))o[k]=v&&typeof v==="object"&&!Array.isArray(v)&&o[k]&&typeof o[k]==="object"?deepMerge(o[k],v):v;return o}
+function docRef(c,id){return{
+  set:async d=>{(store[c]=store[c]||{})[id]=d;persist()},
+  update:async d=>{if(!store[c]?.[id])throw new Error("missing");store[c][id]=deepMerge(store[c][id],d);persist()},
+  delete:async()=>{if(store[c])delete store[c][id];persist()}}}
+db={
+  collection:c=>({add:async d=>{const id=uid();(store[c]=store[c]||{})[id]=d;persist();return docRef(c,id)},
+    onSnapshot:(next)=>{const fn=x=>{if(x===null||x===c)next(snapOf(c))};listeners.push([c,()=>next(snapOf(c))]);next(snapOf(c));return()=>{}}}),
+  doc:p=>{const i=p.indexOf("/");return docRef(p.slice(0,i),decodeURIComponent(p.slice(i+1)))}
+};
+function showSaved(){let t="";try{t=localStorage.getItem("__local_studycontrol_saved")||""}catch(e){}
+  $("#savedLine").textContent=canSave?(t?"Saved and synced · last change here "+new Date(t).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Saved in this browser"):"This browser is blocking storage. Changes won't be kept."}
+function exportData(){
+  const blob=new Blob([JSON.stringify({exported:new Date().toISOString(),data:store},null,1)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="study-control-backup-"+TODAY+".json";document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+$("#btnExport").addEventListener("click",exportData);
+$("#btnImport").addEventListener("click",()=>$("#fileImport").click());
+$("#fileImport").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const j=JSON.parse(await f.text());const d=j.data||j;
+    if(!d||typeof d!=="object"||!("events"in d||"results"in d))throw new Error("not a backup");
+    store={events:d.events||{},results:d.results||{},anki:d.anki||{},actions:d.actions||{},told:d.told||{}};persist();fillAnkiForm();
+    $("#ioMsg").textContent="Loaded "+f.name+".";$("#ioMsg").classList.remove("err")}
+  catch(err){$("#ioMsg").textContent="That file isn't a Study control backup.";$("#ioMsg").classList.add("err")}
+  e.target.value=""});
+store=loadStore();
+const sub=(name,fn)=>db.collection(name).onSnapshot(snap=>{fn(snap.docs.map(d=>({id:d.id,...d.data()})));ready[name]=true;render()});
+sub("events",d=>S.events=d); sub("results",d=>S.results=d);
+sub("anki",d=>{S.anki=d;fillAnkiForm()}); sub("actions",d=>{S.actions={};for(const x of d)S.actions[x.flag]=x});
+try{localStorage.setItem("__local_probe","1");localStorage.removeItem("__local_probe")}catch(e){canSave=false;$("#offline").hidden=false}
+showSaved();
+</script>
+
+</body>
+</html>
