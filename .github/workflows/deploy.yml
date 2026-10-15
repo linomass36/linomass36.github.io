@@ -116,6 +116,7 @@ jobs:
           node tools/mornings.test.js
           node tools/rut.test.js
           node tools/study-control.test.js
+          node tools/almanac.test.js
           node tools/weekly-review.test.js
           node tools/health-import.test.js
           node tools/facts.test.js

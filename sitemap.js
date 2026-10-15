@@ -64,9 +64,13 @@
      ("Home"), `blurb` is the sentence underneath. Which pair is shown is a
      setting, not a decision taken here — see naming() below. */
   var DESTINATIONS = [
-    { id: 'home',     name: 'The Standing',  plain: 'Home',      icon: '\u25c6',
-      lands: 'Standing.html',
-      blurb: 'What every system owes you today, and what to do next.' },
+    /* v5.0 lands on the Almanac, not the Standing. The Standing asked for
+       something from thirteen systems every morning and went unopened for
+       the first month of Year 2; the Almanac shows what is next and stops.
+       The Standing is kept as this destination's second panel. */
+    { id: 'home',     name: 'The Almanac',   plain: 'Home',      icon: '\u25c6',
+      lands: 'Almanac.html',
+      blurb: 'What is next, what has to change, the dates that matter, and the contents.' },
 
     { id: 'plan',     name: 'The Plan',      plain: 'Plan',      icon: '\u25b3',
       lands: 'Plan.html',
@@ -112,8 +116,12 @@
   ];
 
   var PAGES = {
-    'Standing.html':             { name: 'The Standing',  group: 'Every day', back: 'front',
-      dest: 'home', panel: 'Board', ord: 1,
+    'Almanac.html':              { name: 'The Almanac',   group: 'Every day', back: 'front',
+      dest: 'home', panel: 'Almanac', ord: 1,
+      plain: 'Home',
+      blurb: 'Next classes, three heads-ups, training, the dated plan, and every page.' },
+    'Standing.html':             { name: 'The Standing',  group: 'Every day', parent: 'Almanac.html', back: 'none',
+      dest: 'home', panel: 'Board', ord: 2,
       plain: 'Home',
       blurb: 'Every system, and the seven that want you.' },
     /* back was 'wrong': it carried a stale link to Mission Control, tucked into
@@ -121,7 +129,7 @@
        the Board — and the link went with it, so the page now has no back control
        of its own and upbar.js supplies one. */
     'Today.dc.html':             { name: 'Today',         group: 'Every day', parent: 'Standing.html', back: 'none',
-      dest: 'home', panel: 'Today', ord: 2,
+      dest: 'home', panel: 'Today', ord: 3,
       plain: 'Today',
       blurb: 'The day in front of you, and the next three moves.' },
     'Plan.html':                 { name: 'The Plan',      group: 'Every day', parent: 'Standing.html', back: 'none',
@@ -137,20 +145,20 @@
     /* Lands first because it is what term actually runs on: real classes,
        real results, and rules that say what to change. Recall and the Study
        Engine stay as panels — they still own their stores. */
-    'Study Control.html':        { name: 'Study Control', group: 'Study', parent: 'Standing.html', back: 'none',
-      dest: 'study', panel: 'This term', ord: 0,
+    'Study Control.html':        { name: 'Study Control', group: 'Study', parent: 'Almanac.html', back: 'none',
+      dest: 'study', panel: 'This term', ord: 1,
       plain: 'This term',
       blurb: 'Classes, results, Anki weeks, and the ten rules that flag a change.' },
     'Recall.html':               { name: 'Recall',        group: 'Study', parent: 'Today.dc.html', back: 'none',
-      dest: 'study', panel: 'Due today', ord: 1,
+      dest: 'study', panel: 'Due today', ord: 2,
       plain: 'Due today',
       blurb: 'Anki, error cards and resurfaced notes — one desk.' },
     'Anatomy.dc.html':           { name: 'Anatomy',       group: 'Study', parent: 'Today.dc.html', back: 'wrong',
-      dest: 'study', panel: 'Anatomy', ord: 2,
+      dest: 'study', panel: 'Anatomy', ord: 3,
       plain: 'Anatomy',
       blurb: 'The closure log: open loops, retests, the syllabus.' },
     'Study Engine.dc.html':      { name: 'Study Engine',  group: 'Study', parent: 'Recall.html',   back: 'wrong',
-      dest: 'study', panel: 'Error cards', ord: 3,
+      dest: 'study', panel: 'Error cards', ord: 4,
       plain: 'Error cards',
       blurb: 'Every mistake you log becomes a scheduled re-ask.' },
     'Reading List.dc.html':      { name: 'Reading List',  group: 'Study', parent: 'Today.dc.html', back: 'wrong',

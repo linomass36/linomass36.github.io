@@ -14,13 +14,14 @@ window.APP_CONFIG = {
   authorizedEmail: 'staniszewski.gabriel.k@gmail.com',
 
   // Where the owner lands after signing in, and where intruders are bounced back to.
-  // The Standing is the glance: what is owed today, what is held, and every
-  // page on one filterable list. Mission Control is still there — it is the
-  // workshop now rather than the front door.
-  hubUrl: 'Standing.html',
+  // v5.0: the Almanac — what is next, what has to change, the dated plan, and
+  // the contents of every page. The Standing is still there as the Home
+  // destination's second tab; it stopped being the front door when it went
+  // unopened for the first month of term.
+  hubUrl: 'Almanac.html',
 
-  // The Standing was built phone-first and gets shorter on a bad day, so a
-  // phone and a desktop want the same page. Set to '' to send phones to hubUrl.
+  // The Almanac was built phone-first, so a phone and a desktop want the
+  // same page. Set to '' to send phones to hubUrl.
   mobileHubUrl: '',
   gateUrl: 'index.html',
 

@@ -328,12 +328,20 @@ group('The board and the drawer point somewhere live');
                           .map((t) => t.id + '→' + t.href).join(', ')));
 }
 
+/* The front door is whatever the Home destination lands on, read rather than
+   named: v5.0 moved it from the Standing to the Almanac, and a test that
+   spelled the file out would have had to be found and edited in three
+   places to say so. */
+const FRONT = (S.destinations().find((d) => d.id === 'home') || {}).lands;
+
 group('Every page can be walked home');
 {
+  ok(FRONT && S.pages[FRONT] && S.pages[FRONT].back === 'front',
+     'the Home destination lands on the page marked as the front door (' + FRONT + ')');
   const stranded = S.live().filter((f) => {
-    if (f === 'Standing.html') return false;
+    if (f === FRONT) return false;
     const chain = S.chain(f);
-    return chain[chain.length - 1] !== 'Standing.html';
+    return chain[chain.length - 1] !== FRONT;
   });
   ok(stranded.length === 0, 'every live page reaches the front door' +
      (stranded.length ? ' — stranded: ' + stranded.join(', ') : ''));
@@ -347,7 +355,7 @@ group('The manifest opens the front door');
   const m = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
   const start = String(m.start_url || '').replace(/^\.\//, '');
   ok(!S.isArchived(start), 'start_url is not an archived page (' + start + ')');
-  ok(start === 'Standing.html', 'start_url is the front door');
+  ok(start === FRONT, 'start_url is the front door (' + FRONT + ')');
   ok(!/Mission Control/i.test(m.name || ''), 'the installed app is not named after the retired page');
 }
 

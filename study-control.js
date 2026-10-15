@@ -219,7 +219,7 @@
     V.events.forEach(function (ev) {   // R5, R6
       var d = diff(ev.date, T);
       if (d >= 0 && d <= 2 && prepCount(ev) < 2)
-        F.push({ id: 'prep:' + ev.id, lvl: 'warn', subj: ev.subject, rule: 'R5', date: ev.date,
+        F.push({ id: 'prep:' + ev.id, lvl: 'warn', subj: ev.subject, rule: 'R5', date: ev.date, assess: isAssess(ev),
           title: ev.title + ': ' + prepCount(ev) + ' of 4 prep items',
           todo: d === 0 ? 'Today. Do the blank page or the questions in the gaps before class.'
                         : 'In ' + d + ' day' + (d > 1 ? 's' : '') + '. Read and card it now.' });
@@ -273,6 +273,26 @@
     return flags(s, now).filter(function (f) { return !A[f.id]; });
   }
 
+  /* The front door's share of the rules: at most three, and only the ones
+     that change what you do next. R4, R6, R7, R9 and R10 are bookkeeping
+     about cards and exports — true, and on Study Control, but a front page
+     that repeats them every morning is a page you stop opening. R5 counts
+     here only for a GRADED class: being under-prepped for a seminar is not
+     a heads-up, being under-prepped for Friday's test is. */
+  var FRONT = { R1: 1, R2: 1, R3: 1, R5: 1, R8: 1 };
+  function headsUp(s, now, max) {
+    return open(s, now).filter(function (f) {
+      return FRONT[f.rule] && (f.rule !== 'R5' || f.assess);
+    }).slice(0, max || 3);
+  }
+
+  /* Marking a flag handled, the same record the page's Handled button writes. */
+  function handle(s, flagId, note, now) {
+    s = shape(s);
+    s.actions[encodeURIComponent(flagId).replace(/%/g, '~')] = { flag: flagId, note: note || '', date: today(now) };
+    return write(s, now);
+  }
+
   function nextGraded(s, now) {
     var T = today(now), ev = upcoming(view(s), T, null, isAssess);
     return ev ? Object.assign({ days: diff(ev.date, T), subjectName: SUBJ[ev.subject] ? SUBJ[ev.subject].name : ev.subject }, ev) : null;
@@ -313,7 +333,7 @@
   w.StudyControl = {
     KEY: KEY, LEGACY: LEGACY, SUBJ: SUBJ, SK: SK, CAUSES: CAUSES, KIND: KIND, SEED: SEED,
     read: read, write: write, has: has, adopt: adopt, view: view,
-    flags: flags, open: open, nextGraded: nextGraded, lastTold: lastTold, summary: summary,
+    flags: flags, open: open, headsUp: headsUp, handle: handle, nextGraded: nextGraded, lastTold: lastTold, summary: summary,
     today: today, iso: iso, parse: parse, addDays: addDays, diff: diff, monday: monday, short: short,
     pctOf: pctOf, prepCount: prepCount, isAssess: isAssess
   };

@@ -2,7 +2,7 @@
   "name": "CT Hub",
   "short_name": "CT Hub",
   "description": "Your private command center — plans, reading, journal, and more.",
-  "start_url": "./Standing.html",
+  "start_url": "./Almanac.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

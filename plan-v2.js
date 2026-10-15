@@ -241,6 +241,37 @@
     });
   }
 
+  /* ── what is dated, in one list ─────────────────────────────────────────
+     The front door asks "which dates matter" and the plan holds three kinds
+     of answer in three places: phase items with a `due`, verification
+     questions with a `by`, and milestones. Each panel reads its own; a page
+     that wants all of them asks here rather than walking the plan itself,
+     so a fourth kind added later is added once.
+
+     Open only: an item ticked done, or a question answered (in this store
+     or in the source document), is gone. Milestones carry no done state, so
+     only the ones still ahead are listed. `on` is the day to measure from,
+     passed so a test can set it. */
+  function dated(on) {
+    var P = plan(), t = on || today(), out = [];
+    var iso = /^\d{4}-\d{2}-\d{2}$/;
+    allItems().forEach(function (it) {
+      if (it.due && iso.test(it.due) && !isDone(it.id))
+        out.push({ id: it.id, kind: 'item', date: it.due, label: it.label, href: 'Plan.html' });
+    });
+    (P.verification || []).forEach(function (v) {
+      if (!v.by || !iso.test(v.by) || v.done || verifyResult(v.n)) return;
+      out.push({ id: 'verify:' + v.n, n: v.n, kind: 'verify', date: v.by, label: v.q,
+                 sev: v.sev || '', href: 'Plan.html#verify' });
+    });
+    (P.milestones || []).forEach(function (m) {
+      if (m.date && iso.test(m.date) && m.date >= t)
+        out.push({ id: 'milestone:' + m.id, kind: 'milestone', date: m.date, label: m.label, href: 'Plan.html' });
+    });
+    out.forEach(function (x) { x.late = x.date < t; });
+    return out.sort(function (a, b) { return a.date.localeCompare(b.date); });
+  }
+
   /* ── import / export ───────────────────────────────────────────────
      Export is what you hand an assistant to recalibrate against; import
      is how the answer comes back. Both go through Settings. */
@@ -409,7 +440,7 @@
     livePhase: livePhase, phaseItems: phaseItems, allItems: allItems,
     moves: moves, counts: counts, winsSince: winsSince,
     pipeItem: pipeItem, setPipe: setPipe, touchPipe: touchPipe,
-    verifyResult: verifyResult, setVerify: setVerify,
+    verifyResult: verifyResult, setVerify: setVerify, dated: dated,
     importPlan: importPlan, revertPlan: revertPlan,
     exportState: exportState, resetProgress: resetProgress,
     archivedBanner: archivedBanner

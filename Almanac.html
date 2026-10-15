@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Almanac · CT Hub</title>
+<link rel="stylesheet" href="./hub.css">
+<link rel="stylesheet" href="./mobile.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
+<script src="./day.js"></script>
+<script src="./anatomy-data.js"></script>
+<script src="./anatomy-core.js"></script>
+<script src="./reading-data.js"></script>
+<script src="./plan-v2-data.js"></script>
+<script src="./plan-v2.js"></script>
+<script src="./conditions.js"></script>
+<script src="./sitemap.js"></script>
+<script src="./screen.js"></script>
+<script src="./systems.js"></script>
+<script src="./season.js"></script>
+<script src="./study-control.js"></script>
+<script src="./grind-data.js"></script>
+<script src="./training.js"></script>
+<script src="./facts.js"></script>
+<script src="./contact.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   The Almanac — the v5.0 front door.
+
+   WHY THIS PAGE EXISTS. The Standing asked for something from thirteen
+   systems every morning, counted what was owed, and turned three quiet days
+   into a floor day. When term began none of that fitted the day, so the hub
+   went unopened for a month while Study Control — one standalone page — was
+   the only thing in use. A front door you stop opening is worse than none:
+   the deadlines it holds stop reaching you.
+
+   So this page answers four questions and stops: what is next, what has to
+   change, what is dated, and which tracker wants you. It keeps no store of
+   its own and counts nothing against you. Every figure is asked of the file
+   that owns it — StudyControl for the term, PlanV2 for dates, Systems for
+   the trackers, CTTraining for the session, SITEMAP for the contents — so
+   it cannot disagree with the page it summarises.
+
+   NOTHING WAS REMOVED to make it. The Standing is still a tab under Home and
+   every place on the site is in the Contents at the bottom, generated from
+   sitemap.js so a page added later appears there without anyone editing this.
+
+   TYPE AND COLOUR. Colours are hub.css tokens, so dark mode is the hub's own
+   candlelight swap and crimson still means owed and nothing else. The face
+   is EB Garamond, chosen over the hub's Fell for this page from four
+   prototypes; Fell is the fallback, so the page still sets in a period face
+   if Google Fonts is unreachable.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.alm { --al-face: "EB Garamond", "Fell", Georgia, serif; }
+body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; }
+.alm .page { max-width: 560px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 140px; }
+.alm button, .alm input { font: inherit; color: inherit; }
+.alm a { color: inherit; }
+.alm button:focus-visible, .alm a:focus-visible, .alm input:focus-visible, .alm summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* masthead */
+.al-mast { text-align: center; margin-top: 26px; padding-bottom: 12px; border-bottom: 3px double var(--ink); }
+.al-dateline { font-variant: small-caps; letter-spacing: .12em; color: var(--muted); font-size: 15px; }
+.al-h1 { font: 500 34px/1.1 var(--al-face); margin: 2px 0 0; color: var(--ink); text-wrap: balance; }
+.al-status { margin-top: 6px; font-style: italic; color: var(--body); font-size: 16px; }
+.al-status .owed { color: var(--owed); font-style: normal; font-variant: small-caps; letter-spacing: .04em; }
+.al-status .sep { color: var(--faint); margin: 0 6px; }
+
+/* section heads: a rule, a small-capital title, a rule */
+.al-kick { display: flex; align-items: center; gap: 12px; margin: 30px 0 8px;
+  font-size: 17px; font-variant: small-caps; letter-spacing: .14em; text-transform: lowercase; color: var(--ink); }
+.al-kick::before, .al-kick::after { content: ""; flex: 1; height: 1px; background: var(--ink); }
+.al-kick .orn { color: var(--gilt); font-size: 15px; letter-spacing: 0; }
+
+.al-list > * + * { border-top: 1px solid var(--line-2); }
+.al-item { padding: 12px 2px; }
+.al-calm { color: var(--body); font-style: italic; padding: 10px 2px; }
+.al-small { font-style: italic; color: var(--muted); font-size: 15px; }
+
+/* a class */
+.al-cls .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.al-cls .t { min-width: 0; font-size: 19px; line-height: 1.25; color: var(--ink); }
+.al-cls .s { font-size: 14px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--c); }
+.al-cls .when { font-style: italic; color: var(--body); white-space: nowrap; font-size: 15.5px; }
+.al-cls .note { font-style: italic; color: var(--body); font-size: 16px; }
+.al-dag { font-size: 13px; font-variant: small-caps; letter-spacing: .1em; text-transform: lowercase;
+  color: var(--owed); margin-left: 8px; white-space: nowrap; }
+.al-prep { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: 6px; }
+.al-chk { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent;
+  padding: 4px 0; font-size: 16px; cursor: pointer; min-height: 36px; text-align: left; color: var(--ink); }
+.al-chk .b { width: 15px; height: 15px; border: 1.3px solid var(--ink); flex: none;
+  display: grid; place-items: center; font-size: 14px; line-height: 1; color: var(--c, var(--accent)); }
+.al-chk[aria-pressed="true"] .b::after { content: "\2715"; }
+.al-chk[aria-pressed="true"] .lab { text-decoration: line-through; text-decoration-color: var(--c, var(--accent)); color: var(--muted); }
+.al-chk.only { min-width: 36px; justify-content: center; }
+
+/* heads up */
+.al-flag { display: flex; gap: 12px; align-items: flex-start; }
+.al-flag .txt { flex: 1; min-width: 0; }
+.al-flag .rule { font-size: 14px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--warn); }
+.al-flag.change .rule { color: var(--owed); }
+.al-flag .rule::before { content: "\261E\00a0"; }
+.al-flag .t { font-size: 19px; line-height: 1.25; color: var(--ink); }
+.al-flag .d { font-style: italic; color: var(--body); font-size: 16px; }
+
+.al-btn { border: 1px solid var(--ink); background: transparent; padding: 4px 12px; font-size: 15px;
+  font-variant: small-caps; letter-spacing: .1em; text-transform: lowercase; cursor: pointer;
+  min-height: 38px; white-space: nowrap; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; }
+.al-btn.pri { background: var(--ink); color: var(--canvas); }
+.al-btn.done { border-color: var(--ok); color: var(--ok); }
+
+/* training */
+.al-row { display: flex; align-items: center; gap: 12px; }
+.al-grow { flex: 1; min-width: 0; }
+.al-row .t { font-size: 19px; color: var(--ink); }
+.al-week { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 10px; border: 1px solid var(--line-2); }
+.al-week span { font-size: 14px; color: var(--muted); text-align: center; padding: 4px 0; border-left: 1px solid var(--line-2); }
+.al-week span:first-child { border-left: 0; }
+.al-week span.on { color: var(--ok); }
+.al-week span.on::after { content: " \2713"; }
+.al-week span.today { color: var(--ink); background: var(--sunken); }
+
+/* dates */
+.al-dl { display: grid; grid-template-columns: auto 1fr auto; gap: 0 14px; align-items: baseline; }
+.al-dl > * { padding: 8px 0; border-top: 1px dotted var(--line-2); }
+.al-dl > *:nth-child(-n+3) { border-top: 0; }
+.al-dl .w { font-style: italic; color: var(--body); white-space: nowrap; font-size: 15.5px; }
+.al-dl .w.late { color: var(--owed); }
+.al-dl .x { min-width: 0; font-size: 17px; color: var(--ink); }
+.al-dl .k { font-size: 13px; font-variant: small-caps; letter-spacing: .1em; text-transform: lowercase; color: var(--muted); display: block; }
+.al-dl a.go { font-style: italic; font-size: 15px; color: var(--accent); white-space: nowrap; min-height: 36px; display: inline-flex; align-items: center; }
+
+/* tracker notes */
+.al-note { display: flex; gap: 10px; align-items: baseline; padding: 9px 0; text-decoration: none; min-height: 44px; }
+.al-note .src { font-size: 14px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase;
+  color: var(--accent); min-width: 96px; white-space: nowrap; }
+.al-note .msg { font-size: 16.5px; color: var(--ink); flex: 1; min-width: 0; }
+.al-note .go { font-style: italic; color: var(--muted); font-size: 15px; white-space: nowrap; }
+.al-note:hover .go { color: var(--accent); }
+
+/* contents */
+.al-toc { counter-reset: pl; }
+.al-place { counter-increment: pl; }
+.al-place summary { list-style: none; display: flex; align-items: baseline; gap: 10px; cursor: pointer; min-height: 44px; padding: 6px 0; }
+.al-place summary::-webkit-details-marker { display: none; }
+.al-place summary::before { content: counter(pl, upper-roman) "."; color: var(--gilt); min-width: 38px; }
+.al-place .nm { font-size: 18px; white-space: nowrap; color: var(--ink); }
+.al-place .lead { flex: 1; border-bottom: 1px dotted var(--faint); transform: translateY(-4px); min-width: 16px; }
+.al-place .cnt { color: var(--muted); font-size: 15px; font-style: italic; white-space: nowrap; }
+.al-place .bl { font-style: italic; color: var(--body); font-size: 15.5px; padding-left: 48px; }
+.al-links { display: flex; flex-wrap: wrap; gap: 0 18px; margin: 2px 0 10px; padding-left: 48px; }
+.al-links a { font-size: 16.5px; color: var(--accent); text-decoration: underline; text-decoration-color: var(--line-2);
+  text-underline-offset: 3px; min-height: 36px; display: inline-flex; align-items: center; }
+
+/* the two things you write, and the sheet they open */
+.al-fab { position: fixed; left: 50%; transform: translateX(-50%); z-index: 50;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--hb-tabbar-h, 0px)); display: flex; gap: 8px; }
+.al-fab .al-btn { background: var(--canvas); padding: 9px 16px; min-height: 44px; box-shadow: 3px 3px 0 var(--ink); }
+.al-fab .al-btn.pri { background: var(--ink); }
+.al-scrim { position: fixed; inset: 0; background: rgba(20,14,8,.45); z-index: 2147483000; }
+.al-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2147483001; max-width: 560px; margin: 0 auto;
+  background: var(--canvas); border-top: 3px double var(--ink); max-height: 88vh; overflow: auto;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.al-sheet h3 { margin: 0 0 2px; font: 500 26px var(--al-face); color: var(--ink); }
+.al-lbl { font-size: 14px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--muted); margin: 14px 0 6px; }
+.al-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.al-opts button { border: 1px solid var(--line-2); background: transparent; padding: 5px 11px; font-size: 16px; cursor: pointer; min-height: 38px; }
+.al-opts button[aria-pressed="true"] { background: var(--ink); color: var(--canvas); border-color: var(--ink); }
+.al-nums { display: flex; gap: 10px; align-items: center; }
+.al-nums input { width: 88px; font-size: 22px; padding: 6px; border: 0; border-bottom: 1.5px solid var(--ink); background: transparent; text-align: center; }
+.al-agrid { display: grid; grid-template-columns: 1fr 78px 78px; gap: 6px 10px; align-items: center; }
+.al-agrid input { width: 100%; font-size: 17px; padding: 5px; border: 0; border-bottom: 1.5px solid var(--ink); background: transparent; text-align: center; }
+.al-agrid .h { font-size: 13px; font-variant: small-caps; letter-spacing: .1em; color: var(--muted); text-align: center; text-transform: lowercase; }
+.al-sheet .acts { display: flex; gap: 8px; margin-top: 18px; }
+.al-sheet .acts .al-btn { flex: 1; min-height: 46px; justify-content: center; }
+.al-err { color: var(--owed); font-style: italic; min-height: 1.2em; margin-top: 8px; }
+.al-toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + env(safe-area-inset-top, 0px));
+  background: var(--ink); color: var(--canvas); padding: 6px 14px; font-style: italic; font-size: 15px; z-index: 2147483002; }
+.al-foot { margin-top: 34px; font-style: italic; font-size: 14.5px; color: var(--muted); text-align: center; }
+.al-foot::before { content: "\2766"; display: block; font-style: normal; color: var(--gilt); font-size: 20px; margin-bottom: 4px; }
+@media (prefers-reduced-motion: reduce) { .alm * { transition: none !important; } }
+</style>
+</head>
+<body class="hub alm">
+<main class="page" id="page" aria-live="polite"></main>
+<div class="al-fab"><button class="al-btn pri" type="button" id="openRes">+ log a result</button><button class="al-btn" type="button" id="openAnki">anki week</button></div>
+<div id="sheetHost"></div>
+
+<script>
+(function () {
+  'use strict';
+  try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
+
+  var SC = window.StudyControl, PV = window.PlanV2, SYS = window.Systems, TR = window.CTTraining, SM = window.SITEMAP;
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var MONF = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var DOWF = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var CAUSES = SC ? Object.keys(SC.CAUSES).map(function (k) { return [k, SC.CAUSES[k][0]]; }) : [];
+
+  function T() { return SC ? SC.today() : new Date().toISOString().slice(0, 10); }
+  function parse(s) { var p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function diff(a, b) { return Math.round((parse(a) - parse(b)) / 864e5); }
+  function short(s) { var d = parse(s); return d.getDate() + ' ' + MON[d.getMonth()]; }
+  function rel(s) { var d = diff(s, T()); return d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : (d > 1 && d < 7) ? DOW[parse(s).getDay()] : short(s); }
+  function greeting() { var h = new Date().getHours(); return h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'; }
+  function kick(t) { return '<div class="al-kick"><span class="orn" aria-hidden="true">❧</span>' + esc(t) + '<span class="orn" aria-hidden="true">☙</span></div>'; }
+
+  /* ── the term ── Study Control's store, adopted on first open exactly as
+     its own page does, so the two read the same thing from the first tap. */
+  if (SC) SC.adopt();
+  function store() { return SC ? SC.read() : null; }
+
+  function nextClasses(s, n) {
+    return SC.view(s).events.filter(function (e) { return e.date >= T(); })
+      .sort(function (a, b) { return a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''); })
+      .slice(0, n);
+  }
+  function classHTML(e) {
+    var sub = SC.SUBJ[e.subject] || { name: e.subject, c: '--accent', prep: [] };
+    var prep = sub.prep.map(function (p, i) {
+      var on = !!(e.prep && e.prep['p' + i]);
+      return '<button type="button" class="al-chk" aria-pressed="' + on + '" data-prep="' + esc(e.id) + '" data-k="p' + i + '">' +
+             '<span class="b"></span><span class="lab">' + esc(p) + '</span></button>';
+    }).join('');
+    return '<div class="al-item al-cls" style="--c:var(' + sub.c + ', var(--accent))">' +
+      '<div class="top"><div class="t"><div class="s">' + esc(sub.name) + '</div>' + esc(e.title) +
+      (SC.isAssess(e) ? '<span class="al-dag">†graded</span>' : '') + '</div>' +
+      '<div class="when">' + rel(e.date) + (e.time ? ' ' + esc(e.time) : '') + '</div></div>' +
+      (e.note ? '<div class="note">' + esc(e.note) + '</div>' : '') +
+      '<div class="al-prep">' + prep + '</div></div>';
+  }
+
+  /* ── training ── the planned slot for today, or the block's default for the
+     weekday when the week was never planned: same fallback the Week grid shows. */
+  var DEFAULT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  function slotOn(d) { var s = TR ? TR.slotFor(d) : null; return s || DEFAULT[parse(d).getDay()]; }
+  function trainHTML() {
+    if (!TR) return '';
+    var t = T(), slot = slotOn(t), done = TR.isDone(t, slot);
+    var mon = parse(t); mon.setDate(mon.getDate() - (mon.getDay() + 6) % 7);
+    var days = [];
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(mon); d.setDate(d.getDate() + i); var k = iso(d);
+      days.push('<span class="' + (TR.isDone(k, slotOn(k)) ? 'on ' : '') + (k === t ? 'today' : '') + '">' + 'MTWTFSS'[i] + '</span>');
+    }
+    return kick('Training') + '<div class="al-item"><div class="al-row"><div class="al-grow"><div class="t">' + esc(TR.title(slot)) + '</div>' +
+      '<div class="al-small">' + (TR.slotFor(t) ? 'Planned for today' : 'The block’s default for a ' + DOWF[parse(t).getDay()]) + '</div></div>' +
+      '<button type="button" class="al-btn ' + (done ? 'done' : '') + '" data-train="' + esc(slot) + '">' + (done ? 'done ✓' : 'mark done') + '</button></div>' +
+      '<div class="al-week" aria-label="This week">' + days.join('') + '</div></div>';
+  }
+
+  /* ── dates ── overdue first, then the next ones, from the plan. */
+  function datesHTML() {
+    if (!PV || !PV.dated) return '';
+    var all = PV.dated(T()), late = all.filter(function (x) { return x.late; }),
+        ahead = all.filter(function (x) { return !x.late; });
+    var rows = late.concat(ahead.slice(0, Math.max(3, 6 - late.length)));
+    if (!rows.length) return kick('Dates that matter') + '<div class="al-calm">Nothing dated ahead.</div>';
+    return kick('Dates that matter') + '<div class="al-dl">' + rows.map(function (x) {
+      var ctl = x.kind === 'item'
+        ? '<button type="button" class="al-chk only" aria-pressed="false" data-item="' + esc(x.id) + '" aria-label="Done: ' + esc(x.label) + '"><span class="b"></span></button>'
+        : x.kind === 'verify' ? '<a class="go" href="' + esc(x.href) + '">answer</a>' : '<span></span>';
+      return '<div class="w ' + (x.late ? 'late' : '') + '">' + (x.late ? 'was ' : '') + short(x.date) + '</div>' +
+             '<div class="x"><span class="k">' + ({ item: 'plan', verify: 'verify', milestone: 'milestone' })[x.kind] + '</span>' + esc(x.label) + '</div>' + ctl;
+    }).join('') + '</div>';
+  }
+
+  /* ── the trackers ── one line each from Systems, only when it is owed.
+     The study and training systems are left out because this page already
+     shows them; listing them twice is how a page starts to nag. */
+  var SHOWN_HERE = { grind: 1, week: 1 };
+  function notesHTML() {
+    if (!SYS) return '';
+    var all = []; try { all = SYS.all(); } catch (e) {}
+    var owed = all.filter(function (x) { return x.tone === 'go' && !SHOWN_HERE[x.id]; });
+    var quiet = all.filter(function (x) { return x.tone !== 'go' && !SHOWN_HERE[x.id]; }).map(function (x) { return x.name; });
+    var h = kick('From the other trackers');
+    h += owed.length ? '<div class="al-list">' + owed.map(function (x) {
+      return '<a class="al-note" href="' + esc(x.href) + '"><span class="src">' + esc(x.name) + '</span>' +
+             '<span class="msg">' + esc(x.line || x.unit || '') + '</span><span class="go">open →</span></a>';
+    }).join('') + '</div>' : '<div class="al-calm">Every tracker is current.</div>';
+    if (quiet.length) h += '<div class="al-small" style="margin-top:6px">Quiet: ' + esc(quiet.join(', ')) + '.</div>';
+    return h;
+  }
+
+  /* ── contents ── every destination and every panel, from sitemap.js. */
+  function contentsHTML() {
+    if (!SM) return '';
+    return kick('Contents') + '<div class="al-toc al-list">' + SM.destinations().map(function (d) {
+      var ps = SM.panelsOf(d.id) || [];
+      var L = SM.destLabel ? SM.destLabel(d) : { title: d.name, sub: d.blurb };
+      return '<details class="al-place"><summary><span class="nm">' + esc(L.title || d.name) + '</span><span class="lead" aria-hidden="true"></span>' +
+        '<span class="cnt">' + ps.length + (ps.length === 1 ? ' page' : ' pages') + '</span></summary>' +
+        '<div class="bl">' + esc(d.blurb || '') + '</div><div class="al-links">' + ps.map(function (p) {
+          return '<a href="' + esc(p.href) + '">' + esc(p.panel) + '</a>';
+        }).join('') + '</div></details>';
+    }).join('') + '</div>';
+  }
+
+  function render() {
+    var s = store(), t = T(), now = parse(t);
+    var H = '';
+    var ng = SC ? SC.nextGraded(s) : null;
+    var lateN = PV && PV.dated ? PV.dated(t).filter(function (x) { return x.late; }).length : 0;
+    var f = SYS && SYS.forcing ? SYS.forcing() : null;
+    var bits = [];
+    if (ng) bits.push('Next graded ' + rel(ng.date).toLowerCase() + ', ' + esc(ng.subjectName));
+    bits.push(lateN ? '<span class="owed">' + lateN + ' overdue</span>' : 'nothing overdue');
+    if (f && f.days != null) bits.push(f.days + ' days until ' + esc(String(f.label || '').replace(/^([A-Z])(?=[a-z])/, function (c) { return c.toLowerCase(); })));
+    H += '<header class="al-mast"><div class="al-dateline">' + greeting() + ' · Year II, Lublin</div>' +
+         '<h1 class="al-h1">' + DOWF[now.getDay()] + ', ' + now.getDate() + ' ' + MONF[now.getMonth()] + '</h1>' +
+         '<div class="al-status">' + bits.join('<span class="sep">·</span>') + '</div></header>';
+
+    if (SC) {
+      var up = nextClasses(s, 3);
+      H += kick('Next up') + (up.length ? '<div class="al-list">' + up.map(classHTML).join('') + '</div>'
+           : '<div class="al-calm">No classes on the calendar. <a href="Study Control.html">Add one in Study Control</a>.</div>');
+      var hu = SC.headsUp(s);
+      H += kick('Heads up') + (hu.length ? '<div class="al-list">' + hu.map(function (x) {
+        return '<div class="al-item al-flag ' + esc(x.lvl) + '"><div class="txt"><div class="rule">' + esc(x.rule) + ' · ' +
+          esc(SC.SUBJ[x.subj] ? SC.SUBJ[x.subj].name : 'all subjects') + '</div><div class="t">' + esc(x.title) + '</div>' +
+          '<div class="d">' + esc(x.todo) + '</div></div><button type="button" class="al-btn" data-flag="' + esc(x.id) + '">done</button></div>';
+      }).join('') + '</div>' : '<div class="al-calm">Nothing needs changing. Keep going.</div>');
+    }
+    H += trainHTML();
+    H += datesHTML();
+    H += notesHTML();
+    H += contentsHTML();
+    H += '<div class="al-foot">The full term is in <a href="Study Control.html">Study Control</a>; the old front page is <a href="Standing.html">the Standing</a>.</div>';
+    $('#page').innerHTML = H;
+  }
+
+  var toastT;
+  function toast(t) {
+    var el = $('.al-toast');
+    if (!el) { el = document.createElement('div'); el.className = 'al-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+    el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { el.hidden = true; }, 1800);
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var d = b.dataset;
+    if (d.prep) {
+      var s = store(), ev = s.events[d.prep]; if (!ev) return;
+      ev.prep = ev.prep || {}; ev.prep[d.k] = !ev.prep[d.k];
+      SC.write(s); return render();
+    }
+    if (d.flag) { SC.handle(store(), d.flag, ''); toast('Marked done'); return render(); }
+    if (d.item) { PV.setDone(d.item, true); toast('Ticked off in the plan'); return render(); }
+    if (d.train) { var t = T(); TR.setDone(t, !TR.isDone(t, d.train), { slot: d.train }); return render(); }
+  });
+
+  /* ── the two things you write ── */
+  function sheet(html) {
+    $('#sheetHost').innerHTML = '<div class="al-scrim"></div><div class="al-sheet" role="dialog" aria-modal="true">' + html + '</div>';
+    $('#sheetHost .al-scrim').onclick = close;
+  }
+  function close() { $('#sheetHost').innerHTML = ''; }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  function pick(sel, fn) { $(sel).onclick = function (e) { var b = e.target.closest('button'); if (b) fn(b); }; }
+
+  $('#openRes').onclick = function () {
+    if (!SC) return;
+    var ng = SC.nextGraded(store());
+    var subj = ng ? ng.subject : SC.SK[0], kind = 'quiz', causes = {};
+    var KINDS = [['quiz', 'Class quiz'], ['entrance', 'Entrance test'], ['partial', 'Partial'], ['practice', 'Practice']];
+    sheet('<h3>Log a result</h3><div class="al-small">About fifteen seconds. Only the score is needed.</div>' +
+      '<div class="al-lbl">subject</div><div class="al-opts" id="oS">' + SC.SK.map(function (k) { return '<button type="button" data-v="' + k + '" aria-pressed="' + (k === subj) + '">' + esc(SC.SUBJ[k].name) + '</button>'; }).join('') + '</div>' +
+      '<div class="al-lbl">type</div><div class="al-opts" id="oK">' + KINDS.map(function (k) { return '<button type="button" data-v="' + k[0] + '" aria-pressed="' + (k[0] === kind) + '">' + k[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="al-lbl">score</div><div class="al-nums"><input id="sc" inputmode="decimal" aria-label="Score"><span class="al-small">out of</span><input id="mx" inputmode="decimal" aria-label="Out of"></div>' +
+      '<div class="al-lbl">lost points to · optional</div><div class="al-opts" id="oC">' + CAUSES.map(function (c) { return '<button type="button" data-v="' + c[0] + '" aria-pressed="false">' + esc(c[1]) + '</button>'; }).join('') + '</div>' +
+      '<div class="al-err" id="er" role="alert"></div><div class="acts"><button class="al-btn" type="button" id="cx">cancel</button><button class="al-btn pri" type="button" id="sv">save</button></div>');
+    pick('#oS', function (b) { subj = b.dataset.v; [].forEach.call($('#oS').children, function (x) { x.setAttribute('aria-pressed', x === b); }); });
+    pick('#oK', function (b) { kind = b.dataset.v; [].forEach.call($('#oK').children, function (x) { x.setAttribute('aria-pressed', x === b); }); });
+    pick('#oC', function (b) { var v = b.dataset.v; causes[v] = !causes[v]; b.setAttribute('aria-pressed', !!causes[v]); });
+    $('#cx').onclick = close;
+    $('#sv').onclick = function () {
+      var sc = parseFloat(String($('#sc').value).replace(',', '.')), mx = parseFloat(String($('#mx').value).replace(',', '.'));
+      if (!(mx > 0) || isNaN(sc) || sc < 0 || sc > mx) { $('#er').textContent = 'Enter a score between 0 and the maximum.'; return; }
+      var s = store(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      s.results[id] = { date: T(), subject: subj, kind: kind, title: '', score: sc, max: mx, estimate: false,
+        causes: Object.keys(causes).filter(function (k) { return causes[k]; }), misses: '', errorCards: false, createdAt: new Date().toISOString() };
+      SC.write(s); close(); toast('Result saved'); render();
+    };
+    setTimeout(function () { var i = $('#sc'); if (i) i.focus(); }, 50);
+  };
+
+  $('#openAnki').onclick = function () {
+    if (!SC) return;
+    var wk = SC.monday(T()), s = store(), last = s.anki['w' + wk] || {};
+    sheet('<h3>Anki · week of ' + short(wk) + '</h3><div class="al-small">Real minutes a day and recall. Leave a subject blank to skip it.</div>' +
+      '<div class="al-agrid" style="margin-top:14px"><div></div><div class="h">min/day</div><div class="h">recall %</div>' +
+      SC.SK.map(function (k) {
+        var o = last[k] || {};
+        return '<label for="am_' + k + '">' + esc(SC.SUBJ[k].name) + '</label>' +
+          '<input id="am_' + k + '" inputmode="numeric" value="' + (o.min != null ? o.min : '') + '" aria-label="' + esc(SC.SUBJ[k].name) + ' minutes">' +
+          '<input id="ar_' + k + '" inputmode="numeric" value="' + (o.recall != null ? o.recall : '') + '" aria-label="' + esc(SC.SUBJ[k].name) + ' recall">';
+      }).join('') + '</div><div class="acts"><button class="al-btn" type="button" id="cx">cancel</button><button class="al-btn pri" type="button" id="sv">save week</button></div>');
+    $('#cx').onclick = close;
+    $('#sv').onclick = function () {
+      var s = store(), doc = Object.assign({}, s.anki['w' + wk] || {}, { week: wk });
+      SC.SK.forEach(function (k) {
+        var m = $('#am_' + k).value, r = $('#ar_' + k).value, o = Object.assign({}, doc[k] || {});
+        if (m !== '') o.min = Number(m); if (r !== '') o.recall = Number(r);
+        if (Object.keys(o).length) doc[k] = o;
+      });
+      s.anki['w' + wk] = doc; SC.write(s); close(); toast('Week saved'); render();
+    };
+  };
+
+  render();
+  /* The page outlives the day on a phone: repaint when the hub's day turns. */
+  try { if (window.CTDay && window.CTDay.watch) window.CTDay.watch(render); } catch (e) {}
+  window.addEventListener('storage', function (e) { if (!e.key || /^ct_/.test(e.key)) render(); });
+})();
+</script>
+</body>
+</html>
