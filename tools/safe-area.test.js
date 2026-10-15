@@ -169,7 +169,9 @@ ok(/def process_html[\s\S]*?if not is_gate:[\s\S]*?inject_shim/.test(inject),
    so if any page must carry the phone layer it is this one. */
 const manifest = JSON.parse(read('manifest.json'));
 const start = String(manifest.start_url || '').replace(/^\.\//, '');
-ok(start === 'Standing.html', 'the installed app starts on ' + start);
+/* The front door moved to the Almanac in v6.0; the point of the check is
+   that the start_url is a real page that gets the phone layer, whichever it is. */
+ok(start === 'Almanac.html', 'the installed app starts on ' + start);
 const startSrc = read(start);
 const linksItself = /mobile\.css/.test(startSrc);
 ok(!linksItself || true, 'it ' + (linksItself ? 'links' : 'does not link') +

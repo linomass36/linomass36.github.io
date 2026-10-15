@@ -50,11 +50,55 @@
 
   <div class="hub-kicker">How it is put together</div>
   <div class="hub-card">
+    <h3 class="hub-h3">The front door is the Almanac</h3>
+    <p class="hub-p">Since v6.0 the hub opens on <a href="Almanac.html">the Almanac</a>, a single page
+      read top to bottom: your next three classes with their prep, at most three <b>heads-ups</b>,
+      today's training, the <b>dates that matter</b>, a line from any other tracker that wants
+      something, and the <b>Contents</b>, every place on the site, numbered like the front of a book.
+      Two buttons stay at the bottom: log a result, and the week's Anki numbers.</p>
+    <p class="hub-p">It replaced the Standing as the first page because the Standing went unopened
+      for the first month of Year 2. It asked something of thirteen systems every morning and called
+      three quiet days a floor day, and term did not fit that. Nothing was removed to make the
+      Almanac: <a href="Standing.html">the Standing</a> is still the second tab under Home, with its
+      board, its floor day and its season card, and every other page is unchanged and listed in the
+      Contents.</p>
+    <p class="hub-p">The Almanac keeps nothing of its own and counts nothing against you. Each section
+      asks the file that owns the answer. The classes, results and heads-ups come from Study Control,
+      and only the rules that change what you do next reach the front page: a score under 70%, two
+      weak results in a row, the same cause twice, a <i>graded</i> class within two days with little
+      prep, and recall under 80%. The rest stay on Study Control. The dates are the plan's own: phase
+      items with a due date, verification questions with a deadline, and milestones still ahead.
+      Ticking an item there ticks it in the plan, and a verification question is answered on the
+      Verify panel, because it needs an answer rather than a tick. The tracker lines are whatever the
+      Standing's board would have shown as owed, one line each, and a tracker with nothing to ask is
+      named once under <i>Quiet</i>.</p>
+  </div>
+  <div class="hub-card">
     <h3 class="hub-h3">A place can hold several panels</h3>
     <p class="hub-p">Tabs across the top of a place move between its panels. Some places keep all
       their panels in one file; others keep them as separate pages and show the same tab bar on
       each. You cannot tell from using it, which is the point — the difference exists because
       merging some of them would have risked breaking them, not because it means anything to you.</p>
+  </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">Term runs on Study Control</h3>
+    <p class="hub-p">Study now opens on <a href="Study Control.html">Study Control</a>: the term's
+      real classes, labs and partials, every quiz and test you log, the Anki numbers by week, and
+      ten rules (R1–R10) that say when something has to <b>change</b> rather than just reporting how
+      it went. A result under 70%, two under 80% in a row, the same cause twice, prep not ticked two
+      days before a class, no cards within a day of a lab — each raises a flag with what to do, and
+      you mark it handled with a note on what you changed. Recall and the error cards are still
+      panels beside it; they keep their own stores.</p>
+    <p class="hub-p">It began as a standalone page, and for the first month of Year 2 it was the only
+      thing in use — in a store the hub could not see, that did not sync between devices and was not
+      in a backup. It lives in <code>ct_studycontrol_v1</code> now, so it syncs and backs up like
+      everything else, and the first time it opens it copies the old page's data across without
+      deleting it. Data saved from the standalone file on a different address will not be there:
+      use <i>Back up</i> on the old page and <i>Restore from backup</i> here.</p>
+    <p class="hub-p">The Standing shows a <b>This term</b> card once the page has been opened on that
+      device: how many flags want a change, how many to watch, the worst one, and the next graded
+      class. The rules are in <code>study-control.js</code>, so the card and the page cannot
+      disagree.</p>
   </div>
   <div class="hub-card">
     <h3 class="hub-h3">A floor day, and the one thing it asks for</h3>
@@ -77,7 +121,9 @@
       its nine rows write their own store and no Life Log day, so a fortnight of keeping the season
       every evening came back as a fortnight of silence — and because a floor day skips the season
       card, the page hid the very checklist holding the evidence against its own verdict. It now
-      takes whichever of the two heard from you most recently. A tick is evidence the day was
+      takes whichever heard from you most recently — the Life Log, the season board, or
+      <a href="Study Control.html">Study Control</a>, where logging a result, ticking prep or saving
+      an Anki week all count as telling the hub about the day. A tick is evidence the day was
       <i>reported</i>, never that it went well, and a day the board was told nothing about is
       silence rather than a zero.</p>
   </div>
