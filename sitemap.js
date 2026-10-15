@@ -64,7 +64,7 @@
      ("Home"), `blurb` is the sentence underneath. Which pair is shown is a
      setting, not a decision taken here — see naming() below. */
   var DESTINATIONS = [
-    /* v5.0 lands on the Almanac, not the Standing. The Standing asked for
+    /* v6.0 lands on the Almanac, not the Standing. The Standing asked for
        something from thirteen systems every morning and went unopened for
        the first month of Year 2; the Almanac shows what is next and stops.
        The Standing is kept as this destination's second panel. */

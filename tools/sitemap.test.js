@@ -329,7 +329,7 @@ group('The board and the drawer point somewhere live');
 }
 
 /* The front door is whatever the Home destination lands on, read rather than
-   named: v5.0 moved it from the Standing to the Almanac, and a test that
+   named: v6.0 moved it from the Standing to the Almanac, and a test that
    spelled the file out would have had to be found and edited in three
    places to say so. */
 const FRONT = (S.destinations().find((d) => d.id === 'home') || {}).lands;

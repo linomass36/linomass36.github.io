@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   almanac.test.js — the v5.0 front door asks; it does not keep.
+   almanac.test.js — the v6.0 front door asks; it does not keep.
 
    Run with `node tools/almanac.test.js` from the repo root. Also run by the
    deploy.

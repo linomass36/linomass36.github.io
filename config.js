@@ -14,7 +14,7 @@ window.APP_CONFIG = {
   authorizedEmail: 'staniszewski.gabriel.k@gmail.com',
 
   // Where the owner lands after signing in, and where intruders are bounced back to.
-  // v5.0: the Almanac — what is next, what has to change, the dated plan, and
+  // v6.0: the Almanac — what is next, what has to change, the dated plan, and
   // the contents of every page. The Standing is still there as the Home
   // destination's second tab; it stopped being the front door when it went
   // unopened for the first month of term.
