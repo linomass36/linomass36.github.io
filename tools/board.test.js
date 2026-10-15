@@ -19,6 +19,14 @@
    So two checks, and they are about reachability rather than layout:
    every live page a tile should open is opened by one, and the board
    reports every system rather than only the failing ones.
+
+   WHAT BROKE THIS FILE ITSELF. It read the real clock. "A phase with every
+   item closed" seeds every item of the LIVE phase as done — and the live
+   phase is chosen by date. On 1 October 2026 the live phase became Phase 1,
+   which has targets but no items, so there was nothing to close and the
+   check failed on every run from then on, blocking every deploy. Per
+   CLAUDE.md the clock is now driven: every board below is built on
+   Wednesday 16 September 2026, inside Phase 0.
    ───────────────────────────────────────────────────────────── */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -29,10 +37,17 @@ const ok = (c, what) => { console.log((c ? '  pass  ' : '  FAIL  ') + what); if 
 const group = (n) => console.log('\n' + n);
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
+const NOW = new Date(2026, 8, 16, 21, 0, 0, 0).getTime();
+/* A Date that reads NOW when asked for "now" and is the real Date otherwise. */
+class FixedDate extends Date {
+  constructor(...a) { if (a.length) super(...a); else super(NOW); }
+  static now() { return NOW; }
+}
+
 function board(stores) {
   const store = Object.assign({}, stores || {});
   const ctx = {
-    console, JSON, Object, Array, String, RegExp, Date, Math, isNaN, parseInt, parseFloat,
+    console, JSON, Object, Array, String, RegExp, Date: FixedDate, Math, isNaN, parseInt, parseFloat,
     localStorage: {
       getItem: (k) => (k in store ? store[k] : null),
       setItem: (k, v) => { store[k] = v; }
@@ -98,7 +113,7 @@ group('A finished system says so');
    one distinction a glance-first board has to make. */
 function complete() {
   const iso = (n) => {
-    const d = new Date(); d.setDate(d.getDate() - (n || 0));
+    const d = new Date(NOW); d.setDate(d.getDate() - (n || 0));
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
            '-' + String(d.getDate()).padStart(2, '0');
   };
@@ -106,7 +121,7 @@ function complete() {
   const plan = {};
   const seed = board();                       // to read the live phase's ids
   const V = (() => {
-    const ctx = { console, JSON, Object, Array, String, RegExp, Date, Math, isNaN,
+    const ctx = { console, JSON, Object, Array, String, RegExp, Date: FixedDate, Math, isNaN,
       parseInt, parseFloat,
       localStorage: { getItem: () => null, setItem: () => {} },
       document: { createElement: () => ({}) } };
@@ -122,7 +137,7 @@ function complete() {
     plan_v2_state_v1: JSON.stringify({ done: plan }),
     ct_lifelog_v1: JSON.stringify({ days: { [t]: { screen: { total: '2.1' },
                                                    sleep: { asleep: 7.8 } } }, sessions: [] }),
-    ct_anki_v1: JSON.stringify({ due: 0, backlog: 0, streak: 20, at: Date.now() }),
+    ct_anki_v1: JSON.stringify({ due: 0, backlog: 0, streak: 20, at: NOW }),
     ct_study_v1: JSON.stringify({ cards: [] }),
     ct_resurface_v1: JSON.stringify({ queue: [] }),
     ct_week_v1: JSON.stringify({ days: { [t]: { session: 'Push', done: true, free: 4 } } }),
