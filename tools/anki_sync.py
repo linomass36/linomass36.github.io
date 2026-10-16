@@ -39,6 +39,9 @@ WHAT IT COMPUTES
     minsBacklog how long the whole backlog should take, at the mean
     history     one row per Anki day, going back a year by default: reps,
                 distinct cards, Again presses and seconds spent
+    weeks       this week and last, per subject, in the shape Study Control
+                keeps: real minutes a day, recall, new cards a day, and new
+                cards waiting (this week only). See study_weeks().
 
 HISTORY
 -------
@@ -84,6 +87,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -344,6 +348,141 @@ def collect(con, hist_days=0):
     return payload
 
 
+# ── the study week, per subject ─────────────────────────────────────────────
+# Study Control's Anki row was typed in by hand every Sunday, from numbers
+# worked out of an export. Everything it needs is in the revlog, so the sync
+# sends it. The rules are the ones that used to be applied by hand:
+#
+#   real minutes  Anki's logged time stops at 60 s a card and ignores the
+#                 gaps. A card's time is the gap since the previous answer
+#                 when that gap is under IDLE_MS; after a longer gap (a
+#                 break) Anki's own logged time is used, capped at 60 s.
+#                 Divided by the days of the week that have happened.
+#   recall        passes / answers, REVIEW answers only (type 1). Learning
+#                 steps are not recall.
+#   new / day     cards whose first-ever answer fell in the week and was a
+#                 learning step (type 0).
+#   new waiting   cards still new, as they are now — so this week only.
+#
+# Rows with ease 0 are reschedules done from the browser, not answers.
+# Subjects come from deck names, matched anywhere in the path; a card in a
+# filtered deck counts toward its home deck (odid).
+SUBJECTS = [("anatomy", re.compile(r"anat", re.I)),
+            ("histology", re.compile(r"histo", re.I)),
+            ("physiology", re.compile(r"physio|guyton", re.I)),
+            ("embryology", re.compile(r"embry|langman|bwab", re.I))]
+IDLE_MS = 5 * 60 * 1000
+CAP_MS = 60 * 1000
+
+
+def subject_of(name):
+    for key, rx in SUBJECTS:
+        if name and rx.search(name):
+            return key
+    return None
+
+
+def deck_names(con):
+    """Deck id -> full name. Anki 2.1.28+ keeps a `decks` table with the path
+    separated by \x1f; older collections keep JSON in col.decks."""
+    out = {}
+    try:
+        for r in con.execute("SELECT id, name FROM decks"):
+            out[int(r["id"])] = str(r["name"]).replace("\x1f", "::")
+    except sqlite3.Error:
+        pass
+    if not out:
+        try:
+            j = json.loads(con.execute("SELECT decks FROM col").fetchone()["decks"] or "{}")
+            for k, d in j.items():
+                out[int(d.get("id", k))] = d.get("name", "")
+        except Exception:
+            pass
+    return out
+
+
+def anki_day(ms, rollover):
+    return (datetime.fromtimestamp(ms / 1000.0) - timedelta(hours=rollover)).date()
+
+
+def half_up(x):
+    """round() in Python rounds halves to even; the hub's figures round up."""
+    return int(x + 0.5)
+
+
+def study_weeks(con, rollover, now_ms=None, n=2):
+    now_ms = now_ms if now_ms is not None else time.time() * 1000
+    today = anki_day(now_ms, rollover)
+    monday = today - timedelta(days=today.weekday())
+    starts = [monday - timedelta(days=7 * i) for i in range(n)]
+    lo = datetime.combine(starts[-1], datetime.min.time()) + timedelta(hours=rollover)
+    lo_ms = int(lo.timestamp() * 1000) - IDLE_MS     # one earlier answer, for the first gap
+
+    decks = deck_names(con)
+    subj, queue, unmatched = {}, {}, set()
+    for r in con.execute("SELECT id, did, odid, queue FROM cards"):
+        did = int(r["odid"] or 0) or int(r["did"])
+        name = decks.get(did)
+        s = subject_of(name)
+        subj[int(r["id"])] = s
+        queue[int(r["id"])] = int(r["queue"])
+        if not s and name:
+            unmatched.add(name)
+
+    first = {}
+    for r in con.execute(
+            "SELECT r.cid, r.id, r.type FROM revlog r JOIN "
+            "(SELECT cid, MIN(id) m FROM revlog WHERE ease > 0 GROUP BY cid) f "
+            "ON r.cid = f.cid AND r.id = f.m"):
+        first[int(r["cid"])] = (int(r["id"]), int(r["type"]))
+
+    rows = con.execute("SELECT id, cid, ease, type, time FROM revlog "
+                       "WHERE id >= ? AND ease > 0 ORDER BY id", (lo_ms,)).fetchall()
+    out = {}
+    for start in starts:
+        end = start + timedelta(days=7)
+        acc = {k: {"ms": 0, "n": 0, "rev": 0, "pass": 0, "new": 0} for k, _ in SUBJECTS}
+        prev = None
+        for r in rows:
+            t = int(r["id"])
+            gap = t - prev if prev is not None else None
+            prev = t
+            d = anki_day(t, rollover)
+            if d < start or d >= end:
+                continue
+            s = subj.get(int(r["cid"]))
+            if not s:
+                continue
+            ms = gap if gap is not None and gap <= IDLE_MS else min(max(int(r["time"] or 0), 0), CAP_MS)
+            a = acc[s]
+            a["ms"] += ms
+            a["n"] += 1
+            if int(r["type"]) == 1:
+                a["rev"] += 1
+                if int(r["ease"]) > 1:
+                    a["pass"] += 1
+            f = first.get(int(r["cid"]))
+            if f and f[0] == t and f[1] == 0:
+                a["new"] += 1
+        days = 7 if end <= today else (today - start).days + 1
+        current = start <= today < end
+        has_deck = {v for v in subj.values() if v}
+        subjects = {}
+        for k, _ in SUBJECTS:
+            a = acc[k]
+            if not a["n"] and k not in has_deck:
+                continue
+            subjects[k] = {
+                "min": half_up(a["ms"] / 60000.0 / days) if a["n"] else 0,
+                "recall": half_up(100.0 * a["pass"] / a["rev"]) if a["rev"] else None,
+                "newc": half_up(a["new"] / float(days)),
+                "backlog": sum(1 for c, q in queue.items() if subj.get(c) == k and q == 0) if current else None,
+                "reviews": a["n"],
+            }
+        out[start.isoformat()] = {"days": days, "subjects": subjects}
+    return {"weeks": out, "unmatched": sorted(unmatched)}
+
+
 def hub_url(payload, base):
     """Pack the reading into a URL fragment the hub can ingest.
 
@@ -396,7 +535,7 @@ def main():
                     help="print that URL instead of opening it")
     ap.add_argument("--if-studied", action="store_true", dest="if_studied",
                     help="with --open, do nothing unless something was answered today")
-    ap.add_argument("--hub", default="https://linomass36.github.io/Standing.html",
+    ap.add_argument("--hub", default="https://linomass36.github.io/Almanac.html",
                     help="hub page to open")
     ap.add_argument("--uid", help="Firebase uid to publish under")
     ap.add_argument("--history", type=int, default=None, metavar="N",
@@ -420,6 +559,9 @@ def main():
     con, tmpdir = open_snapshot(path)
     try:
         payload = collect(con, hist_days=hist_days)
+        sw = study_weeks(con, payload.get("rollover", 4))
+        payload["weeks"] = sw["weeks"]
+        payload["unmatched"] = sw["unmatched"]
     finally:
         con.close()
         shutil.rmtree(tmpdir, ignore_errors=True)
@@ -441,6 +583,12 @@ def main():
                       + " — this is the figure Anki's header shows")
             print(f"  ~{p['minsRemaining']} min to clear everything "
                   f"(Anki's \"N minutes more\"); the backlog alone is ~{p['minsBacklog']} min")
+        for wk, v in sorted(payload.get("weeks", {}).items()):
+            parts = ", ".join(f"{k} {s['min']} min/day, {s['recall'] if s['recall'] is not None else '-'}% recall"
+                              for k, s in v["subjects"].items())
+            print(f"  week of {wk} ({v['days']} d): {parts or 'no subject decks'}")
+        if payload.get("unmatched"):
+            print(f"  not counted, no subject in the deck name: {', '.join(payload['unmatched'])}")
         print(f"  collection: {path}")
         print(f"  Anki day rolls over at {p['rollover']}:00")
 

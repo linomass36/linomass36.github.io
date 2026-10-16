@@ -84,7 +84,7 @@ group('Heads up is short on purpose');
   const all = SC.open(seed, NOW), hu = SC.headsUp(seed, NOW);
   ok(all.length > 3, 'the full rule set trips ' + all.length + ' flags on the term as written');
   ok(hu.length === 3, 'the front door shows three of them');
-  ok(hu.every((f) => ['R1', 'R2', 'R3', 'R5', 'R8'].indexOf(f.rule) >= 0),
+  ok(hu.every((f) => ['R1', 'R2', 'R3', 'R5', 'R8', 'R11'].indexOf(f.rule) >= 0),
      'and only rules that change what you do next (' + hu.map((f) => f.rule).join(', ') + ')');
   ok(!hu.some((f) => f.rule === 'R5' && !f.assess),
      'prep is a heads-up only for a graded class, not for a seminar');
@@ -110,6 +110,24 @@ group('The Almanac asks the owners');
   ok(!/floorDay|drift\(/.test(code), 'it has no floor day and no drift count');
   ok(/SM\.destinations\(\)/.test(code) && /SM\.panelsOf\(/.test(code),
      'the Contents are generated from the site map, not typed');
+}
+
+/* ── 3b. what v6.1 added ─────────────────────────────────────────────── */
+group('Morning and night, the sabbath, training, and the Anki button');
+{
+  const src = read('Almanac.html');
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  ok(/prayer_am/.test(code) && /prayer_pm/.test(code) && /manuscript/.test(code) && /SZ\.tick\(/.test(code),
+     'prayer morning and night and the manuscript are the Season board\'s own rows, ticked through season.js');
+  ok(/SZ\.isSabbath/.test(code), 'the sabbath is asked of the Season, not computed here');
+  ok(!/DEFAULT\s*=\s*\[/.test(code), 'training no longer falls back to a block that ended on 4 October');
+  ok(/href="cthub-anki:\/\/sync"/.test(src), 'the Anki sheet has the Mac sync button');
+  ok(/Feeds\.fromHash\(\)/.test(code) && /feeds\.js/.test(src), 'and the page files a sync it was opened with');
+  ok(/SC\.ensureGroup\(\)/.test(code), 'the study group\'s sessions are written on first open');
+  ok(fs.existsSync(path.join(ROOT, 'tools', 'install-anki-button.sh')), 'the helper that makes the button work exists');
+  const inst = read('tools/install-anki-button.sh');
+  ok(/CFBundleURLSchemes:0 string cthub-anki/.test(inst) && /--open/.test(inst),
+     'it claims cthub-anki:// links and runs anki_sync.py --open');
 }
 
 /* ── 4. the Contents cannot lose a page ────────────────────────────────── */
