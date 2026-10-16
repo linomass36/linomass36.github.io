@@ -137,5 +137,34 @@ group('Study lands on it');
      'and nothing outside the owner reads its key');
 }
 
+/* ── 6. a result can be corrected ──────────────────────────────────────
+   SHIPPED BROKEN: results and classes could be added and never changed. The
+   official histology and physiology scores came back different from the
+   estimates logged on the day, and the only way to record that was a second
+   result beside the wrong one, which the rules then counted twice. And the
+   three forms were never hidden by their tabs at all: `form{display:flex}`
+   outranks the browser's own [hidden] rule. */
+group('Results and classes can be edited and deleted');
+{
+  const src = read('Study Control.html');
+  ok(/data-edit-res=/.test(src) && /data-edit-ev=/.test(src), 'every result and every class has an Edit control');
+  ok(/db\.doc\("results\/"\+editRes\)\.set\(Object\.assign\(\{\},old,fields/.test(src),
+     'an edited result keeps what the form does not show (when it was logged, whether its cards are made)');
+  ok(/db\.doc\("events\/"\+editEv\)\.set\(Object\.assign\(\{\},old,fields,\{prep:old\.prep/.test(src),
+     'an edited class keeps its ticked prep');
+  ok(/db\.doc\("results\/"\+editRes\)\.delete\(\)/.test(src) && /db\.doc\("events\/"\+editEv\)\.delete\(\)/.test(src),
+     'both can be deleted');
+  ok(/dataset\.armed/.test(src), 'and a delete asks twice, since nothing here can be undone');
+  ok(/\[hidden\]\{display:none!important\}/.test(src), 'a hidden form is actually hidden');
+
+  /* The rules read the corrected figure, not the first one typed. */
+  const c = hub({});
+  const s = c.StudyControl.read();
+  s.results['r-his-1012'] = Object.assign({}, s.results['r-his-1012'], { score: 7, estimate: false });
+  c.StudyControl.write(s, NOW);
+  ok(!c.StudyControl.flags(c.StudyControl.read(), NOW).some((f) => f.rule === 'R1' && /histology|W2/i.test(f.title)),
+     'correcting 6/9 to an official 7/9 clears the under-70% flag');
+}
+
 console.log(failed ? '\n' + failed + ' failed' : '\nall green');
 process.exit(failed ? 1 : 0);
