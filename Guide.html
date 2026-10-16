@@ -56,6 +56,14 @@
       today's training, the <b>dates that matter</b>, a line from any other tracker that wants
       something, and the <b>Contents</b>, every place on the site, numbered like the front of a book.
       Two buttons stay at the bottom: log a result, and the week's Anki numbers.</p>
+    <p class="hub-p"><b>Morning and night</b> opens the page: morning prayer, the manuscript
+      (upkeep or a small practice until there is budget for the paper) and night prayer. They are the
+      Season board's own rows, so a tick here is the same tick there; nothing is counted and nothing
+      turns red. On your sabbath, set on the Season page, the masthead says so, the heads-ups and
+      training stand down, class prep is not asked for, and the manuscript is held; only a graded
+      class still shows its prep. <b>Training</b> shows the session the Week planned for today, and when
+      there is no plan it says so: any thirty minutes counts as a day trained. It used to name sessions
+      from the four-week block that ended on 4 October.</p>
     <p class="hub-p">It replaced the Standing as the first page because the Standing went unopened
       for the first month of Year 2. It asked something of thirteen systems every morning and called
       three quiet days a floor day, and term did not fit that. Nothing was removed to make the
@@ -90,7 +98,29 @@
       you mark it handled with a note on what you changed. Anything logged can be corrected: each
       result and each class has an <b>Edit</b> link that loads it back into its form, so an estimate
       can become the official score, or a placeholder note can become the real reading, without
-      adding a second copy for the rules to count twice. Delete is in the same form and asks twice.
+      adding a second copy for the rules to count twice. Delete is in the same form and asks twice.</p>
+    <p class="hub-p"><b>The study group is in the term.</b> The three weekly sessions from the Year 2
+      Study Group Manual are written in as events: histology on Sunday (45 min), anatomy on Wednesday
+      (90 min) and physiology on Thursday (60 min), each the day before what it prepares, through
+      January, with the manual's note on each crunch week. Their prep is your own study and the last
+      Fix list, and for anatomy, which you lead, the prompt card and key come first. If the card is not
+      ticked by the evening before, rule <b>R11</b> puts it in the heads-up. Sessions raise no class-prep
+      or cards-after flags. Each one can be edited, so set the times once they are fixed; one you
+      delete stays deleted.</p>
+    <p class="hub-p"><b>Anki fills itself in from the Mac.</b> <i>Sync from Anki</i>, in the Almanac's
+      Anki sheet and in Study Control's Anki tab, asks the Mac to run <code>anki_sync.py --open</code>.
+      It reads a copy of your collection, works out this week and last per subject (real minutes a
+      day from the gaps between answers, since Anki's own clock stops at sixty seconds a card; recall
+      from review answers only; new cards a day; new cards waiting), and reopens the Almanac with the
+      numbers in the link, where they are filed into the Anki week. The link's numbers never reach a
+      server. The newest sync wins, so a late one cannot undo a fresher one, and a deck with no
+      subject in its name is listed as not counted. A web page cannot run a command on your
+      computer, so the button needs a small helper, installed once:
+      <code>sh tools/install-anki-button.sh</code> from this repo (it fetches the current
+      <code>anki_sync.py</code> into <code>~/tools</code> and builds an app that answers
+      <code>cthub-anki://</code> links). The button shows only on a Mac; on the phone the week can still
+      be typed. If it seems to do nothing, <code>~/tools/anki_sync.log</code> says why.</p>
+    <p class="hub-p">
       Recall and the error cards are still
       panels beside it; they keep their own stores.</p>
     <p class="hub-p">It began as a standalone page, and for the first month of Year 2 it was the only

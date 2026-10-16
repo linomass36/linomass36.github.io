@@ -166,5 +166,72 @@ group('Results and classes can be edited and deleted');
      'correcting 6/9 to an official 7/9 clears the under-70% flag');
 }
 
+/* ── 7. the study group ────────────────────────────────────────────────
+   From the Year 2 Study Group Manual: three sessions a week, each the day
+   before what it prepares, and you lead anatomy. Written as events so each
+   can be edited; a deleted one must stay deleted. */
+group('The study group\'s sessions are in the term, once each');
+{
+  const c = hub({});
+  const SC = c.StudyControl;
+  SC.adopt();
+  const n = SC.ensureGroup();
+  ok(n > 40, 'a session a week per subject from 11 October to January (' + n + ')');
+  ok(SC.ensureGroup() === 0, 'and opening the page again adds none');
+  const ev = SC.read().events;
+  ok(ev['grp-histology-2026-10-11'] && ev['grp-anatomy-2026-10-14'] && ev['grp-physiology-2026-10-15'],
+     'Sunday histology, Wednesday anatomy, Thursday physiology');
+  ok(ev['grp-anatomy-2026-10-14'].lead && !ev['grp-physiology-2026-10-15'].lead, 'you lead anatomy, not the others');
+  ok(/Crunch week/.test(ev['grp-anatomy-2026-10-28'].note), 'a session in a crunch week carries the manual\'s note');
+  ok(Object.keys(c.__store).length && JSON.parse(c.__store.ct_studycontrol_v1).told &&
+     Object.keys(JSON.parse(c.__store.ct_studycontrol_v1).told).length === 0,
+     'writing the schedule is not you reporting a day');
+
+  const s = SC.read(); delete s.events['grp-anatomy-2026-10-21']; s.dismissed['grp-anatomy-2026-10-21'] = 1; SC.write(s, NOW);
+  SC.ensureGroup();
+  ok(!SC.read().events['grp-anatomy-2026-10-21'], 'a session you deleted is not put back');
+
+  const tue = new Date(2026, 9, 13, 20, 0, 0, 0).getTime();   // the evening before Wednesday 14th
+  const F = SC.flags(SC.read(), tue);
+  ok(F.some((f) => f.rule === 'R11' && /tomorrow/.test(f.title)), 'the evening before, the prompt card and key are a heads-up');
+  ok(SC.headsUp(SC.read(), tue).some((f) => f.rule === 'R11'), 'and reach the front door');
+  ok(!F.some((f) => /^(prep|after):grp-/.test(f.id)), 'a session raises no class prep or cards-after flags');
+  const s2 = SC.read(); s2.events['grp-anatomy-2026-10-28'].prep = { p0: true }; SC.write(s2, NOW);
+  const wed = new Date(2026, 9, 27, 20, 0, 0, 0).getTime();
+  ok(!SC.flags(SC.read(), wed).some((f) => f.id === 'card:grp-anatomy-2026-10-28'), 'ticking the card clears it');
+  ok(SC.prepFor(ev['grp-anatomy-2026-10-14'])[0] === 'Prompt card and key written' &&
+     SC.prepFor(ev['grp-physiology-2026-10-15']).length === 2, 'a session\'s prep is the card when you lead, then own study and the Fix list');
+}
+
+/* ── 8. the Anki week from the Mac ─────────────────────────────────────── */
+group('The Anki week the Mac sends is filed, newest first');
+{
+  const c = hub({});
+  const SC = c.StudyControl;
+  SC.adopt();
+  const weeks = { '2026-10-12': { days: 4, subjects: { anatomy: { min: 40, recall: 82, newc: 12, backlog: 300, reviews: 400 } } } };
+  ok(SC.ingestWeeks(weeks, '2026-10-15T18:00:00Z', NOW).length === 1, 'a synced week is filed');
+  const w = SC.read().anki['w2026-10-12'];
+  ok(w.anatomy.min === 40 && w.anatomy.recall === 82 && /Synced from Anki/.test(w.note), 'with its numbers and a note saying where they came from');
+  ok(SC.ingestWeeks({ '2026-10-12': { days: 3, subjects: { anatomy: { min: 1 } } } }, '2026-10-15T09:00:00Z', NOW).length === 0,
+     'an older reading arriving late does not overwrite a newer one');
+  SC.ingestWeeks({ '2026-10-12': { days: 5, subjects: { anatomy: { min: 45, recall: 80, newc: 10, backlog: null } } } }, '2026-10-16T18:00:00Z', NOW);
+  ok(SC.read().anki['w2026-10-12'].anatomy.backlog === 300, 'a value the sync leaves blank keeps what was there');
+
+  /* The URL route: anki_sync.py --open puts the reading in the fragment. */
+  const payload = { at: '2026-10-17T10:00:00Z', due: 3, weeks: { '2026-10-12': { days: 6, subjects: { histology: { min: 9, recall: 90 } } } } };
+  const b64 = Buffer.from(JSON.stringify(payload)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  c.location = { hash: '#anki=' + b64, pathname: '/Almanac.html', search: '' };
+  c.history = { replaceState: () => { c.location.hash = ''; } };
+  c.atob = (x) => Buffer.from(x, 'base64').toString('binary');
+  c.escape = escape;
+  c.decodeURIComponent = decodeURIComponent;
+  vm.runInContext(read('feeds.js'), c, { filename: 'feeds.js' });
+  const got = c.Feeds.fromHash();
+  ok(got && got.due === 3 && c.location.hash === '', 'the hub reads the reading off the URL and wipes it from the address bar');
+  ok(SC.read().anki['w2026-10-12'].histology && SC.read().anki['w2026-10-12'].histology.min === 9,
+     'and the study week reaches Study Control through Feeds, not a second parser');
+}
+
 console.log(failed ? '\n' + failed + ' failed' : '\nall green');
 process.exit(failed ? 1 : 0);

@@ -81,6 +81,9 @@
         changed.push(field);
       } catch (e) {}
     });
+    /* Study Control keeps its own newer-wins check, so this runs even when
+       the reading itself was not newer: a week filed once is not refiled. */
+    handOn(doc);
     return changed;
   }
 
@@ -109,5 +112,33 @@
     } catch (e) {}
   }
 
-  w.Feeds = { FEEDS: FEEDS, apply: apply, pull: pull, start: start, stamp: stamp };
+  /* The study week rides on the Anki reading (anki_sync.py sends `weeks`),
+     and Study Control owns where it goes. Handed over whichever way the
+     reading arrived — the button's URL or the half-hourly Firestore feed —
+     so neither path can file it and the other forget to. */
+  function handOn(doc) {
+    var a = doc && doc.anki;
+    if (!a || !a.weeks || !w.StudyControl || !w.StudyControl.ingestWeeks) return [];
+    try { return w.StudyControl.ingestWeeks(a.weeks, a.at); } catch (e) { return []; }
+  }
+
+  /* The no-credential path: `anki_sync.py --open` opens the hub with the
+     reading in the URL fragment, which a browser never sends to a server.
+     Applied, then wiped from the address bar so it cannot be replayed out of
+     history. Returns the reading, or null when there was none. */
+  function fromHash() {
+    var m = /[#&]anki=([A-Za-z0-9_-]+)/.exec(w.location && w.location.hash || '');
+    if (!m) return null;
+    var payload = null;
+    try {
+      var b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      payload = JSON.parse(decodeURIComponent(escape(atob(b))));
+      apply({ anki: payload });
+    } catch (e) { payload = null; }
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    return payload;
+  }
+
+  w.Feeds = { FEEDS: FEEDS, apply: apply, pull: pull, start: start, stamp: stamp, fromHash: fromHash };
 })(window);

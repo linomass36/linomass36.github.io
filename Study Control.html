@@ -107,6 +107,8 @@ button.primary{align-self:flex-start;background:var(--accent);color:var(--panel)
 button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:4px 10px;font:500 12.5px var(--f-body);cursor:pointer;white-space:nowrap}
 button.link{background:none;border:0;color:var(--accent);font:500 13px var(--f-body);cursor:pointer;padding:0}
 .formmsg{font-size:13px;color:var(--ok);min-height:1em}
+.sync{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px dashed var(--line)}
+.sync .primary{text-decoration:none;display:inline-block}
 .form-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .form-acts .primary{align-self:auto}
 button.ghost.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
@@ -202,18 +204,20 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
       </form>
 
       <form id="fAnki" data-pane="anki" hidden>
+        <div class="sync" id="aSyncBox" hidden><a class="primary" href="cthub-anki://sync">Sync from Anki</a>
+          <span class="ev-note">Reads Anki on this Mac and opens the Almanac with this week and last filled in. The first time, install the helper: see the Guide, under Anki.</span></div>
         <label>Week starting (Monday)<input type="date" id="aWeek"></label>
         <div class="scroll"><div class="anki-grid" id="aGrid"></div></div>
         <label>Note<input id="aNote" placeholder="e.g. from Sunday export, real time rebuilt"></label>
         <button class="primary" type="submit">Save week</button>
         <div class="formmsg" id="aMsg" role="status"></div>
-        <p class="ev-note" style="margin:0">Real minutes per day, not Anki's logged time. Send me the export on Sunday and I fill this in.</p>
+        <p class="ev-note" style="margin:0">Real minutes per day, not Anki's logged time. Sync from Anki on the Mac fills it; typing here works anywhere.</p>
       </form>
 
       <form id="fEv" data-pane="ev" hidden>
         <div class="row">
           <label>Subject<select id="eSubj"></select></label>
-          <label>Kind<select id="eKind"><option value="lab">Lab</option><option value="seminar">Seminar</option><option value="test">Test</option><option value="partial">Partial</option></select></label>
+          <label>Kind<select id="eKind"><option value="lab">Lab</option><option value="seminar">Seminar</option><option value="test">Test</option><option value="partial">Partial</option><option value="session">Study group session</option></select></label>
         </div>
         <div class="row">
           <label>Date<input type="date" id="eDate"></label>
@@ -290,6 +294,8 @@ document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",
   document.querySelectorAll("[data-pane]").forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab);
 }));
 $("#aWeek").addEventListener("change",fillAnkiForm);
+/* A phone has no Anki collection to read; the button is for the Mac. */
+if(/Macintosh/.test(navigator.userAgent)&&(navigator.maxTouchPoints||0)<2)$("#aSyncBox").hidden=false;
 function fillAnkiForm(){
   const w=monday($("#aWeek").value||TODAY); const doc=S.anki.find(a=>a.week===w)||{};
   for(const k of SK)for(const f of ["min","recall","newc","backlog"]){const v=doc[k]?.[f];$(`#a_${k}_${f}`).value=v??""}
@@ -327,7 +333,9 @@ $("#rDel").addEventListener("click",async()=>{const b=$("#rDel");if(!editRes||!d
   b.dataset.armed="";try{await db.doc("results/"+editRes).delete();resetRes();msg($("#rMsg"),"Result deleted.")}catch(err){msg($("#rMsg"),"Couldn't delete: "+(err.message||err.code),true)}});
 $("#eDel").addEventListener("click",async()=>{const b=$("#eDel");if(!editEv||!db)return;
   if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Tap again to delete";setTimeout(()=>{b.dataset.armed="";if(editEv)b.textContent="Delete class"},4000);return}
-  b.dataset.armed="";try{await db.doc("events/"+editEv).delete();resetEv();msg($("#eMsg"),"Class deleted.")}catch(err){msg($("#eMsg"),"Couldn't delete: "+(err.message||err.code),true)}});
+  /* A group session deleted here stays deleted: ensureGroup() would
+     otherwise write it straight back on the next open. */
+  b.dataset.armed="";try{if(/^grp-/.test(editEv))await db.doc("dismissed/"+editEv).set(1);await db.doc("events/"+editEv).delete();resetEv();msg($("#eMsg"),"Class deleted.")}catch(err){msg($("#eMsg"),"Couldn't delete: "+(err.message||err.code),true)}});
 /* Switching away from a form mid-edit drops the edit, so a later save cannot
    quietly overwrite the item that was loaded and forgotten. */
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.tab!=="res"&&editRes)resetRes();if(b.dataset.tab!=="ev"&&editEv)resetEv()}));
@@ -400,7 +408,7 @@ function render(){
   const up=S.events.filter(e=>{const d=diff(e.date,TODAY);return d>=0&&d<=10}).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||"").localeCompare(b.time||""));
   const evHTML=(ev,after)=>{const s=SUBJ[ev.subject];
     const ticks=after?`<button type="button" class="tick after" aria-pressed="${!!ev.prep?.after}" data-ev="${ev.id}" data-k="after"><span class="box"></span>Cards made within 24 h</button>`
-      :s.prep.map((l,i)=>`<button type="button" class="tick" aria-pressed="${!!ev.prep?.["p"+i]}" data-ev="${ev.id}" data-k="p${i}"><span class="box"></span>${l}</button>`).join("");
+      :SC.prepFor(ev).map((l,i)=>`<button type="button" class="tick" aria-pressed="${!!ev.prep?.["p"+i]}" data-ev="${ev.id}" data-k="p${i}"><span class="box"></span>${esc(l)}</button>`).join("");
     return `<div class="ev" style="--c:var(${s.c})"><div class="ev-date"><b>${short(ev.date)}</b>${DOW[parse(ev.date).getDay()]}${ev.time?" "+ev.time:""}</div><div>
       <div class="ev-title"><span class="dot"></span>${esc(ev.title)}${isAssess(ev)?` <span class="chip na">graded</span>`:""}<button type="button" class="link ev-edit" data-edit-ev="${ev.id}">Edit</button></div>
       ${ev.note?`<div class="ev-note">${esc(ev.note)}</div>`:""}<div class="ticks">${ticks}</div></div></div>`};
@@ -425,7 +433,7 @@ function render(){
   const ws=S.anki.slice().sort((a,b)=>b.week.localeCompare(a.week));
   const cell=o=>o?`<span class="num">${o.min??"–"}</span> min · <span class="pct ${o.recall==null?"":o.recall<80?"warn":"ok"}">${o.recall??"–"}%</span> · ${o.newc??"–"} new`:`<span class="ev-note">–</span>`;
   $("#ankiRows").innerHTML=ws.length?ws.map(w=>`<tr><td class="n">${short(w.week)}</td>${SK.map(k=>`<td class="n">${cell(w[k])}</td>`).join("")}<td class="n">${SK.reduce((s,k)=>s+(w[k]?.min||0),0)} min</td><td>${esc(w.note||"")}</td></tr>`).join("")
-    :`<tr><td colspan="7" class="empty">${ready.anki?"No weeks yet. Send the Sunday export.":"Loading…"}</td></tr>`;
+    :`<tr><td colspan="7" class="empty">${ready.anki?"No weeks yet. Press Sync from Anki on the Mac, or type one in.":"Loading…"}</td></tr>`;
 }
 
 /* ---------- interactions ---------- */
@@ -448,7 +456,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest(".f
 /* ---------- data: the hub store (ct_studycontrol_v1, synced and backed up) ---------- */
 let store;
 const KEY=SC.KEY;
-function loadStore(){SC.adopt();return SC.read()}
+function loadStore(){SC.adopt();SC.ensureGroup();return SC.read()}
 let canSave=true;
 function persist(){if(!SC.write(store)){canSave=false;$("#offline").hidden=false}store=SC.read();try{localStorage.setItem("__local_studycontrol_saved",new Date().toISOString())}catch(e){}fire();showSaved()}
 const listeners=[];

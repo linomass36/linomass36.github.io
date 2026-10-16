@@ -57,6 +57,38 @@
   };
   var KIND = { quiz: 'Class quiz', entrance: 'Entrance test', partial: 'Partial', practice: 'Practice' };
 
+  /* ── the study group ─────────────────────────────────────────────────────
+     From the Year 2 Study Group Manual (version of 10 October 2026): three
+     sessions a week, each the day before the class or test it prepares, and
+     you lead anatomy. They are written into the store as ordinary events —
+     not computed on the fly — so each one can be edited (the manual says to
+     fix one time per slot; the times were not chosen when this was written)
+     or deleted like any class. A deleted one is remembered in `dismissed` so
+     it is not put back. Crunch weeks carry the manual's own note. */
+  var GROUP = {
+    from: '2026-10-11', to: '2027-01-31',
+    sessions: [
+      { dow: 0, subject: 'histology',  mins: 45, prepares: 'Monday\u2019s histology lab' },
+      { dow: 3, subject: 'anatomy',    mins: 90, prepares: 'Thursday\u2019s anatomy lab', lead: true },
+      { dow: 4, subject: 'physiology', mins: 60, prepares: 'Friday\u2019s entrance test' }
+    ],
+    crunch: [
+      { from: '2026-10-25', to: '2026-10-30', note: 'Anatomy Lab 5 Thursday, then the 57-page physiology test Friday; read special senses the weekend before.' },
+      { from: '2026-11-08', to: '2026-11-13', note: 'Histology lab Monday, anatomy Module A partials Tuesday and Thursday, physiology Friday; prepare physiology the weekend before.' },
+      { from: '2026-12-13', to: '2026-12-18', note: 'Histology slide test (date to confirm), anatomy Module B Thursday, physiology Friday.' },
+      { from: '2027-01-06', to: '2027-01-15', note: 'Anatomy Lab 12 and Modules C and D, physiology heart and ECG tests.' }
+    ]
+  };
+  var SESSION_PREP = ['Prompt card and key written', 'Own study done', 'Last Fix list read'];
+  function isSession(ev) { return ev && ev.kind === 'session'; }
+  /* What "prep" means for an event: the subject's four steps for a class,
+     and for a group session your own study and the last Fix list — plus the
+     prompt card first when you lead it. */
+  function prepFor(ev) {
+    if (isSession(ev)) return ev.lead ? SESSION_PREP.slice() : SESSION_PREP.slice(1);
+    return (SUBJ[ev.subject] || { prep: [] }).prep;
+  }
+
   /* ── dates ── all day keys are local YYYY-MM-DD, as the page always used.
      The hub's 05:00 boundary (day.js) decides what "today" is when present,
      so a quiz logged at 01:00 belongs to the evening it was studied for. */
@@ -122,7 +154,7 @@
   function shape(d) {
     d = d || {};
     return { events: d.events || {}, results: d.results || {}, anki: d.anki || {},
-             actions: d.actions || {}, told: d.told || {} };
+             actions: d.actions || {}, told: d.told || {}, dismissed: d.dismissed || {} };
   }
 
   /* ── the store ── */
@@ -156,6 +188,29 @@
     if (has()) return false;
     var L = ls();
     try { L.setItem(KEY, JSON.stringify(read())); return true; } catch (e) { return false; }
+  }
+
+  /* Writes the group's sessions into the store once each. Not a write that
+     stamps `told`: a schedule appearing is not you reporting a day. */
+  function ensureGroup() {
+    var L = ls(); if (!L || !has()) return 0;
+    var s = read(), added = 0;
+    for (var d = GROUP.from; d <= GROUP.to; d = addDays(d, 1)) {
+      var dow = parse(d).getDay();
+      GROUP.sessions.forEach(function (g) {
+        if (g.dow !== dow) return;
+        var id = 'grp-' + g.subject + '-' + d;
+        if (s.events[id] || s.dismissed[id]) return;
+        var crunch = GROUP.crunch.filter(function (c) { return d >= c.from && d <= c.to; })[0];
+        s.events[id] = { date: d, time: '', subject: g.subject, kind: 'session', graded: false, prep: {},
+          lead: !!g.lead, title: 'Study group \u00b7 ' + SUBJ[g.subject].name + ' (' + g.mins + ' min)',
+          note: 'Prepares ' + g.prepares + (g.lead ? '. You lead: prompt card and key the evening before' : '') +
+                (crunch ? '. Crunch week: the subject being tested gets the full session, the others 30 min or skip. ' + crunch.note : '') };
+        added++;
+      });
+    }
+    if (added) { try { L.setItem(KEY, JSON.stringify(s)); } catch (e) { return 0; } }
+    return added;
   }
 
   /* The arrays the rules work on, each doc carrying its id. */
@@ -216,8 +271,17 @@
           title: 'Error cards not made for ' + KIND[r.kind].toLowerCase() + ' of ' + short(r.date),
           todo: 'Card every miss, then tick Error cards in the results table.' });
     });
-    V.events.forEach(function (ev) {   // R5, R6
+    V.events.forEach(function (ev) {   // R5, R6, R11
       var d = diff(ev.date, T);
+      /* A group session is not a class: no class prep, no cards-after. The one
+         thing it owes is the lead's prompt card, due the evening before. */
+      if (isSession(ev)) {
+        if (ev.lead && d >= 0 && d <= 1 && !(ev.prep && ev.prep.p0))
+          F.push({ id: 'card:' + ev.id, lvl: 'warn', subj: ev.subject, rule: 'R11', date: ev.date,
+            title: 'Prompt card and key for ' + (d === 0 ? 'today\u2019s' : 'tomorrow\u2019s') + ' ' + SUBJ[ev.subject].name.toLowerCase() + ' session',
+            todo: 'Three prompts by the mix rule (core, apply, detail) plus free recall; run the four checks; write the 4\u20138 point key with pages.' });
+        return;
+      }
       if (d >= 0 && d <= 2 && prepCount(ev) < 2)
         F.push({ id: 'prep:' + ev.id, lvl: 'warn', subj: ev.subject, rule: 'R5', date: ev.date, assess: isAssess(ev),
           title: ev.title + ': ' + prepCount(ev) + ' of 4 prep items',
@@ -228,7 +292,7 @@
           title: 'No cards after ' + ev.title, todo: 'Make the cards for what was taught, then tick Cards made in Last 7 days.' });
     });
     SK.forEach(function (k) {   // R7
-      var miss = V.events.filter(function (e) { var d = diff(T, e.date); return e.subject === k && d >= 1 && d <= 14 && prepCount(e) < 2; })
+      var miss = V.events.filter(function (e) { var d = diff(T, e.date); return !isSession(e) && e.subject === k && d >= 1 && d <= 14 && prepCount(e) < 2; })
         .sort(function (a, b) { return b.date.localeCompare(a.date); });
       if (miss.length >= 2)
         F.push({ id: 'missed:' + k + ':' + miss[0].id, lvl: 'change', subj: k, rule: 'R7', date: miss[0].date,
@@ -262,7 +326,7 @@
     if ((parse(T).getDay() + 6) % 7 >= 1 && !V.anki.some(function (a) { return a.week === prevW; }))
       F.push({ id: 'export:' + prevW, lvl: 'warn', subj: 'all', rule: 'R10', date: prevW,
         title: 'No Anki numbers for the week of ' + short(prevW),
-        todo: 'Export Anki (with scheduling) and send it, or type the numbers in the Anki week tab.' });
+        todo: 'Press Sync from Anki on the Mac, or type the numbers in the Anki week tab.' });
 
     var ord = { change: 0, warn: 1 };
     return F.sort(function (a, b) { return ord[a.lvl] - ord[b.lvl] || b.date.localeCompare(a.date); });
@@ -279,7 +343,7 @@
      that repeats them every morning is a page you stop opening. R5 counts
      here only for a GRADED class: being under-prepped for a seminar is not
      a heads-up, being under-prepped for Friday's test is. */
-  var FRONT = { R1: 1, R2: 1, R3: 1, R5: 1, R8: 1 };
+  var FRONT = { R1: 1, R2: 1, R3: 1, R5: 1, R8: 1, R11: 1 };
   function headsUp(s, now, max) {
     return open(s, now).filter(function (f) {
       return FRONT[f.rule] && (f.rule !== 'R5' || f.assess);
@@ -291,6 +355,36 @@
     s = shape(s);
     s.actions[encodeURIComponent(flagId).replace(/%/g, '~')] = { flag: flagId, note: note || '', date: today(now) };
     return write(s, now);
+  }
+
+  /* The Anki week, filed from the Mac. anki_sync.py sends this week and last
+     per subject (see study_weeks() there); this writes them as Anki-week
+     rows. Newer wins, so a stale reading arriving late through Firestore
+     cannot undo a fresher one opened from the button. Values the sync does
+     not carry (it leaves new-waiting blank for a past week) keep whatever
+     was there. */
+  function ingestWeeks(weeks, at, now) {
+    if (!weeks || typeof weeks !== 'object') return [];
+    var s = read(), done = [], t = at ? Date.parse(at) : NaN;
+    Object.keys(weeks).forEach(function (wk) {
+      var v = weeks[wk];
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(wk) || !v || !v.subjects) return;
+      var id = 'w' + wk, doc = Object.assign({}, s.anki[id] || {}, { week: wk });
+      if (doc.syncedAt && !isNaN(t) && Date.parse(doc.syncedAt) >= t) return;
+      Object.keys(v.subjects).forEach(function (k) {
+        if (!SUBJ[k]) return;
+        var o = Object.assign({}, doc[k] || {}), x = v.subjects[k] || {};
+        ['min', 'recall', 'newc', 'backlog'].forEach(function (f) { if (x[f] != null) o[f] = x[f]; });
+        doc[k] = o;
+      });
+      doc.note = 'Synced from Anki ' + short(today(isNaN(t) ? now : t)) + ' \u00b7 ' +
+                 (v.days || 7) + ' of 7 days \u00b7 real time rebuilt';
+      doc.syncedAt = at || null;
+      s.anki[id] = doc;
+      done.push(wk);
+    });
+    if (done.length) write(s, now);
+    return done;
   }
 
   function nextGraded(s, now) {
@@ -333,7 +427,7 @@
   w.StudyControl = {
     KEY: KEY, LEGACY: LEGACY, SUBJ: SUBJ, SK: SK, CAUSES: CAUSES, KIND: KIND, SEED: SEED,
     read: read, write: write, has: has, adopt: adopt, view: view,
-    flags: flags, open: open, headsUp: headsUp, handle: handle, nextGraded: nextGraded, lastTold: lastTold, summary: summary,
+    flags: flags, open: open, headsUp: headsUp, handle: handle, ensureGroup: ensureGroup, prepFor: prepFor, isSession: isSession, GROUP: GROUP, ingestWeeks: ingestWeeks, nextGraded: nextGraded, lastTold: lastTold, summary: summary,
     today: today, iso: iso, parse: parse, addDays: addDays, diff: diff, monday: monday, short: short,
     pctOf: pctOf, prepCount: prepCount, isAssess: isAssess
   };
