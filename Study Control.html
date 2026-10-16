@@ -90,6 +90,10 @@ header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
 
 /* forms */
 form{display:flex;flex-direction:column;gap:10px}
+/* `form{display:flex}` outranks the browser's own [hidden] rule, so the three
+   tabs never hid anything: all three forms sat on the page at once, from the
+   standalone version on. */
+[hidden]{display:none!important}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row > label{flex:1 1 120px;min-width:0}
 label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
@@ -103,6 +107,13 @@ button.primary{align-self:flex-start;background:var(--accent);color:var(--panel)
 button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:4px 10px;font:500 12.5px var(--f-body);cursor:pointer;white-space:nowrap}
 button.link{background:none;border:0;color:var(--accent);font:500 13px var(--f-body);cursor:pointer;padding:0}
 .formmsg{font-size:13px;color:var(--ok);min-height:1em}
+.form-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.form-acts .primary{align-self:auto}
+button.ghost.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.editing{outline:2px solid var(--accent);outline-offset:6px;border-radius:4px}
+.ev-edit{margin-left:auto;font:500 12.5px var(--f-body)}
+.allev{display:grid;grid-template-columns:62px 1fr auto;gap:4px 12px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
+.allev:first-child{border-top:0}
 .formmsg.err{color:var(--bad)}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}
 .tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:6px 10px;font:600 13.5px var(--f-display);color:var(--muted);cursor:pointer}
@@ -158,6 +169,7 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
       <div class="sec-head"><h2>Next 10 days</h2><span class="eyebrow">Tick prep as you go</span></div>
       <div id="upcoming"><div class="empty">Loading classes…</div></div>
       <details><summary>Last 7 days: cards made after class?</summary><div id="recent" style="margin-top:6px"></div></details>
+      <details><summary id="allSum">Every class ahead</summary><div id="allEv" style="margin-top:6px"></div></details>
     </section>
 
     <section class="panel">
@@ -183,7 +195,9 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
         </div>
         <div><div class="eyebrow" style="margin-bottom:6px">Why points were lost</div><div class="causes" id="rCauses"></div></div>
         <label>The questions you missed<textarea id="rMiss" placeholder="One per line. Each becomes an error card."></textarea></label>
-        <button class="primary" type="submit">Save result</button>
+        <div class="form-acts"><button class="primary" type="submit" id="rSave">Save result</button>
+          <button class="ghost" type="button" id="rCancel" hidden>Cancel edit</button>
+          <button class="ghost danger" type="button" id="rDel" hidden>Delete result</button></div>
         <div class="formmsg" id="rMsg" role="status"></div>
       </form>
 
@@ -208,7 +222,9 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
         <label>Title<input id="eTitle" placeholder="e.g. Lab 6 · brainstem"></label>
         <label>Note<input id="eNote" placeholder="Set pages, chapter, what's tested"></label>
         <label style="flex-direction:row;align-items:center;gap:8px;color:var(--ink)"><input type="checkbox" id="eQuiz" style="width:auto"> Graded (quiz or test at this class)</label>
-        <button class="primary" type="submit">Add class</button>
+        <div class="form-acts"><button class="primary" type="submit" id="eSave">Add class</button>
+          <button class="ghost" type="button" id="eCancel" hidden>Cancel edit</button>
+          <button class="ghost danger" type="button" id="eDel" hidden>Delete class</button></div>
         <div class="formmsg" id="eMsg" role="status"></div>
       </form>
     </section>
@@ -216,7 +232,7 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
 
   <section class="panel">
     <div class="sec-head"><h2>Results</h2><span class="eyebrow">Newest first</span></div>
-    <div class="scroll"><table><thead><tr><th>Date</th><th>Subject</th><th>What</th><th>Score</th><th>Lost to</th><th>Error cards</th></tr></thead><tbody id="resRows"></tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>Date</th><th>Subject</th><th>What</th><th>Score</th><th>Lost to</th><th>Error cards</th><th></th></tr></thead><tbody id="resRows"></tbody></table></div>
   </section>
 
   <section class="panel">
@@ -281,16 +297,51 @@ function fillAnkiForm(){
 }
 function msg(el,t,err){el.textContent=t;el.classList.toggle("err",!!err);if(!err)setTimeout(()=>{if(el.textContent===t)el.textContent=""},4000)}
 
+/* ---------- editing ----------
+   A result or a class could be added and never changed. Reported when the
+   official scores came back different from the estimates typed in on the day:
+   the only way to correct one was to add a second result beside the wrong one,
+   which the rules then counted twice. Edit loads the item into the same form
+   that created it; Delete asks twice, because nothing here can be undone. */
+let editRes=null, editEv=null;
+function showTab(t){document.querySelector(`.tabs [data-tab="${t}"]`).click()}
+function resetRes(){editRes=null;$("#rTitle").value="";$("#rScore").value="";$("#rMax").value="";$("#rMiss").value="";$("#rDate").value=TODAY;$("#rEst").value="1";
+  picked.clear();document.querySelectorAll(".cause").forEach(b=>b.setAttribute("aria-pressed","false"));
+  $("#rSave").textContent="Save result";$("#rCancel").hidden=true;$("#rDel").hidden=true;$("#rDel").textContent="Delete result";$("#fRes").classList.remove("editing");$("#tab-res").textContent="Log a result"}
+function loadRes(id){const r=S.results.find(x=>x.id===id);if(!r)return;resetRes();editRes=id;showTab("res");
+  $("#rSubj").value=r.subject;$("#rKind").value=r.kind;$("#rDate").value=r.date;$("#rTitle").value=r.title||"";$("#rScore").value=r.score;$("#rMax").value=r.max;
+  $("#rEst").value=r.estimate?"1":"0";$("#rMiss").value=r.misses||"";(r.causes||[]).forEach(c=>picked.add(c));
+  document.querySelectorAll(".cause").forEach(b=>b.setAttribute("aria-pressed",picked.has(b.dataset.c)));
+  $("#rSave").textContent="Update result";$("#rCancel").hidden=false;$("#rDel").hidden=false;$("#tab-res").textContent="Edit result";
+  $("#fRes").classList.add("editing");$("#fRes").scrollIntoView({block:"center",behavior:"smooth"});$("#rScore").focus({preventScroll:true})}
+function resetEv(){editEv=null;$("#eTitle").value="";$("#eNote").value="";$("#eTime").value="";$("#eDate").value=TODAY;$("#eQuiz").checked=false;
+  $("#eSave").textContent="Add class";$("#eCancel").hidden=true;$("#eDel").hidden=true;$("#eDel").textContent="Delete class";$("#fEv").classList.remove("editing");$("#tab-ev").textContent="Add a class"}
+function loadEv(id){const v=S.events.find(x=>x.id===id);if(!v)return;resetEv();editEv=id;showTab("ev");
+  $("#eSubj").value=v.subject;$("#eKind").value=v.kind;$("#eDate").value=v.date;$("#eTime").value=v.time||"";$("#eTitle").value=v.title;$("#eNote").value=v.note||"";$("#eQuiz").checked=!!v.graded;
+  $("#eSave").textContent="Update class";$("#eCancel").hidden=false;$("#eDel").hidden=false;$("#tab-ev").textContent="Edit class";
+  $("#fEv").classList.add("editing");$("#fEv").scrollIntoView({block:"center",behavior:"smooth"});$("#eNote").focus({preventScroll:true})}
+$("#rCancel").addEventListener("click",resetRes);
+$("#eCancel").addEventListener("click",resetEv);
+$("#rDel").addEventListener("click",async()=>{const b=$("#rDel");if(!editRes||!db)return;
+  if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Tap again to delete";setTimeout(()=>{b.dataset.armed="";if(editRes)b.textContent="Delete result"},4000);return}
+  b.dataset.armed="";try{await db.doc("results/"+editRes).delete();resetRes();msg($("#rMsg"),"Result deleted.")}catch(err){msg($("#rMsg"),"Couldn't delete: "+(err.message||err.code),true)}});
+$("#eDel").addEventListener("click",async()=>{const b=$("#eDel");if(!editEv||!db)return;
+  if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Tap again to delete";setTimeout(()=>{b.dataset.armed="";if(editEv)b.textContent="Delete class"},4000);return}
+  b.dataset.armed="";try{await db.doc("events/"+editEv).delete();resetEv();msg($("#eMsg"),"Class deleted.")}catch(err){msg($("#eMsg"),"Couldn't delete: "+(err.message||err.code),true)}});
+/* Switching away from a form mid-edit drops the edit, so a later save cannot
+   quietly overwrite the item that was loaded and forgotten. */
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.tab!=="res"&&editRes)resetRes();if(b.dataset.tab!=="ev"&&editEv)resetEv()}));
+
 $("#fRes").addEventListener("submit",async e=>{
   e.preventDefault(); const m=$("#rMsg");
   const score=parseFloat($("#rScore").value), max=parseFloat($("#rMax").value);
   if(!(max>0)||isNaN(score)||score<0||score>max) return msg(m,"Enter a score between 0 and the maximum.",true);
   if(!db) return msg(m,"Saving isn't available in this view.",true);
-  const doc={date:$("#rDate").value||TODAY,subject:$("#rSubj").value,kind:$("#rKind").value,title:$("#rTitle").value.trim(),
-    score,max,estimate:$("#rEst").value==="1",causes:[...picked],misses:$("#rMiss").value.trim(),errorCards:false,createdAt:new Date().toISOString()};
-  try{await db.collection("results").add(doc); msg(m,"Saved. Rules re-checked.");
-    $("#rTitle").value="";$("#rScore").value="";$("#rMax").value="";$("#rMiss").value="";picked.clear();
-    document.querySelectorAll(".cause").forEach(b=>b.setAttribute("aria-pressed","false"));
+  const fields={date:$("#rDate").value||TODAY,subject:$("#rSubj").value,kind:$("#rKind").value,title:$("#rTitle").value.trim(),
+    score,max,estimate:$("#rEst").value==="1",causes:[...picked],misses:$("#rMiss").value.trim()};
+  try{
+    if(editRes){const old=store.results[editRes]||{};await db.doc("results/"+editRes).set(Object.assign({},old,fields,{editedAt:new Date().toISOString()}));resetRes();msg(m,"Updated. Rules re-checked.")}
+    else{await db.collection("results").add(Object.assign(fields,{errorCards:false,createdAt:new Date().toISOString()}));resetRes();msg(m,"Saved. Rules re-checked.")}
   }catch(err){msg(m,"Couldn't save: "+(err.message||err.code),true)}
 });
 $("#fAnki").addEventListener("submit",async e=>{
@@ -302,8 +353,11 @@ $("#fAnki").addEventListener("submit",async e=>{
 $("#fEv").addEventListener("submit",async e=>{
   e.preventDefault(); const m=$("#eMsg"); const title=$("#eTitle").value.trim();
   if(!title) return msg(m,"Give the class a title.",true); if(!db) return msg(m,"Saving isn't available in this view.",true);
-  const doc={date:$("#eDate").value||TODAY,time:$("#eTime").value,subject:$("#eSubj").value,kind:$("#eKind").value,title,note:$("#eNote").value.trim(),graded:$("#eQuiz").checked,prep:{}};
-  try{await db.collection("events").add(doc);msg(m,"Added "+title+".");$("#eTitle").value="";$("#eNote").value=""}catch(err){msg(m,"Couldn't save: "+(err.message||err.code),true)}
+  const fields={date:$("#eDate").value||TODAY,time:$("#eTime").value,subject:$("#eSubj").value,kind:$("#eKind").value,title,note:$("#eNote").value.trim(),graded:$("#eQuiz").checked};
+  try{
+    if(editEv){const old=store.events[editEv]||{};await db.doc("events/"+editEv).set(Object.assign({},old,fields,{prep:old.prep||{}}));resetEv();msg(m,"Updated "+title+".")}
+    else{await db.collection("events").add(Object.assign(fields,{prep:{}}));resetEv();msg(m,"Added "+title+".")}
+  }catch(err){msg(m,"Couldn't save: "+(err.message||err.code),true)}
 });
 
 /* ---------- rules ---------- */
@@ -348,9 +402,14 @@ function render(){
     const ticks=after?`<button type="button" class="tick after" aria-pressed="${!!ev.prep?.after}" data-ev="${ev.id}" data-k="after"><span class="box"></span>Cards made within 24 h</button>`
       :s.prep.map((l,i)=>`<button type="button" class="tick" aria-pressed="${!!ev.prep?.["p"+i]}" data-ev="${ev.id}" data-k="p${i}"><span class="box"></span>${l}</button>`).join("");
     return `<div class="ev" style="--c:var(${s.c})"><div class="ev-date"><b>${short(ev.date)}</b>${DOW[parse(ev.date).getDay()]}${ev.time?" "+ev.time:""}</div><div>
-      <div class="ev-title"><span class="dot"></span>${esc(ev.title)}${isAssess(ev)?` <span class="chip na">graded</span>`:""}</div>
+      <div class="ev-title"><span class="dot"></span>${esc(ev.title)}${isAssess(ev)?` <span class="chip na">graded</span>`:""}<button type="button" class="link ev-edit" data-edit-ev="${ev.id}">Edit</button></div>
       ${ev.note?`<div class="ev-note">${esc(ev.note)}</div>`:""}<div class="ticks">${ticks}</div></div></div>`};
   $("#upcoming").innerHTML=up.length?up.map(e=>evHTML(e,false)).join(""):`<div class="empty">${ready.events?"No classes in the next 10 days. Add one in the Add a class tab.":"Loading classes…"}</div>`;
+  const ahead=S.events.filter(e=>e.date>=TODAY).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||"").localeCompare(b.time||""));
+  $("#allSum").textContent=`Every class ahead (${ahead.length})`;
+  $("#allEv").innerHTML=ahead.length?ahead.map(e=>`<div class="allev" style="--c:var(${SUBJ[e.subject].c})"><span class="ev-date">${short(e.date)}${e.time?" "+e.time:""}</span>
+    <span><span class="dot"></span> ${esc(SUBJ[e.subject].name)} · ${esc(e.title)}${e.note?`<span class="ev-note"> · ${esc(e.note)}</span>`:""}</span>
+    <button type="button" class="link" data-edit-ev="${e.id}">Edit</button></div>`).join(""):`<div class="empty">No classes ahead.</div>`;
   const rec=S.events.filter(e=>{const d=diff(e.date,TODAY);return d<0&&d>=-7&&(e.kind==="lab"||e.kind==="seminar")}).sort((a,b)=>b.date.localeCompare(a.date));
   $("#recent").innerHTML=rec.length?rec.map(e=>evHTML(e,true)).join(""):`<div class="empty">No labs or seminars in the last week.</div>`;
   // results
@@ -359,8 +418,9 @@ function render(){
     <td>${KIND[r.kind]}${r.title?` · ${esc(r.title)}`:""}${r.misses?`<div class="ev-note">${esc(r.misses).replace(/\n/g,"<br>")}</div>`:""}</td>
     <td class="n"><span class="pct ${pctCls(p)}">${r.score}/${r.max} · ${Math.round(p*100)}%</span>${r.estimate?" est.":""}</td>
     <td>${(r.causes||[]).map(c=>`<span class="tag">${esc(CAUSES[c]?.[0]||c)}</span>`).join("")||`<span class="ev-note">none</span>`}</td>
-    <td><button type="button" class="tick" style="--c:var(--accent)" aria-pressed="${!!r.errorCards}" data-res="${r.id}"><span class="box"></span>${r.errorCards?"Done":"Not yet"}</button></td></tr>`}).join("")
-    :`<tr><td colspan="6" class="empty">${ready.results?"No results yet. Log your next quiz in Log a result.":"Loading…"}</td></tr>`;
+    <td><button type="button" class="tick" style="--c:var(--accent)" aria-pressed="${!!r.errorCards}" data-res="${r.id}"><span class="box"></span>${r.errorCards?"Done":"Not yet"}</button></td>
+    <td><button type="button" class="link" data-edit-res="${r.id}">Edit</button></td></tr>`}).join("")
+    :`<tr><td colspan="7" class="empty">${ready.results?"No results yet. Log your next quiz in Log a result.":"Loading…"}</td></tr>`;
   // anki
   const ws=S.anki.slice().sort((a,b)=>b.week.localeCompare(a.week));
   const cell=o=>o?`<span class="num">${o.min??"–"}</span> min · <span class="pct ${o.recall==null?"":o.recall<80?"warn":"ok"}">${o.recall??"–"}%</span> · ${o.newc??"–"} new`:`<span class="ev-note">–</span>`;
@@ -370,6 +430,8 @@ function render(){
 
 /* ---------- interactions ---------- */
 document.addEventListener("click",async e=>{
+  const er=e.target.closest("[data-edit-res]"); if(er){loadRes(er.dataset.editRes);return}
+  const ee=e.target.closest("[data-edit-ev]"); if(ee){loadEv(ee.dataset.editEv);return}
   const t=e.target.closest("[data-ev]");
   if(t&&db){const ev=S.events.find(x=>x.id===t.dataset.ev);if(!ev)return;const k=t.dataset.k;const val=!(ev.prep?.[k]);
     t.setAttribute("aria-pressed",val);try{await db.doc("events/"+ev.id).update({prep:{[k]:val}})}catch(err){t.setAttribute("aria-pressed",!val)}return}
