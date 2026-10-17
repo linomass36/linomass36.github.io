@@ -363,6 +363,15 @@ def collect(con, hist_days=0):
 #   new / day     cards whose first-ever answer fell in the week and was a
 #                 learning step (type 0).
 #   new waiting   cards still new, as they are now — so this week only.
+#   total, logged the week's real minutes and Anki's own clock, as totals,
+#                 so the week can be checked against Anki rather than
+#                 trusted: a per-day average next to a 95-minute day was
+#                 read as a weekly total, and looked short by half.
+#   today         every answer since today's rollover, in all decks: cards
+#                 and minutes by Anki's own clock, which is the line
+#                 "Studied N cards in M minutes today" on Anki's main screen,
+#                 and the same minutes rebuilt. The check that the pipeline
+#                 is reading the collection it thinks it is.
 #
 # Rows with ease 0 are reschedules done from the browser, not answers.
 # Subjects come from deck names, matched anywhere in the path; a card in a
@@ -441,7 +450,7 @@ def study_weeks(con, rollover, now_ms=None, n=2):
     out = {}
     for start in starts:
         end = start + timedelta(days=7)
-        acc = {k: {"ms": 0, "n": 0, "rev": 0, "pass": 0, "new": 0} for k, _ in SUBJECTS}
+        acc = {k: {"ms": 0, "logged": 0, "n": 0, "rev": 0, "pass": 0, "new": 0} for k, _ in SUBJECTS}
         prev = None
         for r in rows:
             t = int(r["id"])
@@ -456,6 +465,7 @@ def study_weeks(con, rollover, now_ms=None, n=2):
             ms = gap if gap is not None and gap <= IDLE_MS else min(max(int(r["time"] or 0), 0), CAP_MS)
             a = acc[s]
             a["ms"] += ms
+            a["logged"] += min(max(int(r["time"] or 0), 0), CAP_MS)
             a["n"] += 1
             if int(r["type"]) == 1:
                 a["rev"] += 1
@@ -478,9 +488,29 @@ def study_weeks(con, rollover, now_ms=None, n=2):
                 "newc": half_up(a["new"] / float(days)),
                 "backlog": sum(1 for c, q in queue.items() if subj.get(c) == k and q == 0) if current else None,
                 "reviews": a["n"],
+                "total": half_up(a["ms"] / 60000.0),
+                "logged": half_up(a["logged"] / 60000.0),
             }
         out[start.isoformat()] = {"days": days, "subjects": subjects}
-    return {"weeks": out, "unmatched": sorted(unmatched)}
+    # Today, across every deck, the way Anki's main screen counts it: answers
+    # (not reschedules), Anki's own logged time, distinct cards.
+    t_rows = [r for r in rows if anki_day(int(r["id"]), rollover) == today]
+    real = 0
+    prev = None
+    for r in rows:
+        t = int(r["id"])
+        gap = t - prev if prev is not None else None
+        prev = t
+        if anki_day(t, rollover) == today:
+            real += gap if gap is not None and gap <= IDLE_MS else min(max(int(r["time"] or 0), 0), CAP_MS)
+    today_out = {
+        "date": today.isoformat(),
+        "answers": len(t_rows),
+        "cards": len({int(r["cid"]) for r in t_rows}),
+        "minsAnki": round(sum(max(int(r["time"] or 0), 0) for r in t_rows) / 60000.0, 2),
+        "minsReal": half_up(real / 60000.0),
+    }
+    return {"weeks": out, "unmatched": sorted(unmatched), "today": today_out}
 
 
 def hub_url(payload, base):
@@ -562,6 +592,7 @@ def main():
         sw = study_weeks(con, payload.get("rollover", 4))
         payload["weeks"] = sw["weeks"]
         payload["unmatched"] = sw["unmatched"]
+        payload["studiedToday"] = sw["today"]
     finally:
         con.close()
         shutil.rmtree(tmpdir, ignore_errors=True)
@@ -583,8 +614,13 @@ def main():
                       + " — this is the figure Anki's header shows")
             print(f"  ~{p['minsRemaining']} min to clear everything "
                   f"(Anki's \"N minutes more\"); the backlog alone is ~{p['minsBacklog']} min")
+        st = payload.get("studiedToday") or {}
+        if st:
+            print(f"  today: {st['answers']} answers in {st['minsAnki']} min by Anki's clock "
+                  f"(compare Anki's main screen), about {st['minsReal']} min real")
         for wk, v in sorted(payload.get("weeks", {}).items()):
-            parts = ", ".join(f"{k} {s['min']} min/day, {s['recall'] if s['recall'] is not None else '-'}% recall"
+            parts = ", ".join(f"{k} {s['min']} min/day ({s['total']} min this week), "
+                              f"{s['recall'] if s['recall'] is not None else '-'}% recall"
                               for k, s in v["subjects"].items())
             print(f"  week of {wk} ({v['days']} d): {parts or 'no subject decks'}")
         if payload.get("unmatched"):

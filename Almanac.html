@@ -437,11 +437,16 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
        Mac. A phone has no Anki collection to read, so it gets the typed form
        only and a line saying where the sync runs. */
     var when = last.syncedAt ? 'Last synced ' + short(SC.today(Date.parse(last.syncedAt))) + '. ' : '';
+    /* The week's real total beside the per-day figures, and Anki's own clock
+       beside that, so the row can be checked against Anki's screen. */
+    var tot = 0, lg = 0, hasTot = false;
+    SC.SK.forEach(function (k) { var o = last[k]; if (o && o.total != null) { hasTot = true; tot += o.total; lg += (o.logged || 0); } });
+    if (hasTot) when += 'This week so far: ' + tot + ' min (' + lg + ' by Anki\u2019s clock). The boxes are minutes per day. ';
     sheet('<h3>Anki · week of ' + short(wk) + '</h3>' +
       (MAC ? '<div class="acts" style="margin-top:8px"><a class="al-btn pri" href="cthub-anki://sync" id="aSync">sync from anki</a></div>' +
              '<div class="al-small" style="margin-top:6px">' + when + 'Reads your Anki collection on this Mac and reopens the Almanac with the week filled in. The first time, install the helper (the Guide, under Anki).</div>'
            : '<div class="al-small">' + when + 'Syncing runs from your Mac. Or type the week here: real minutes a day and recall.</div>') +
-      '<div class="al-agrid" style="margin-top:14px"><div></div><div class="h">min/day</div><div class="h">recall %</div>' +
+      '<div class="al-agrid" style="margin-top:14px"><div></div><div class="h">min a day</div><div class="h">recall %</div>' +
       SC.SK.map(function (k) {
         var o = last[k] || {};
         return '<label for="am_' + k + '">' + esc(SC.SUBJ[k].name) + '</label>' +
@@ -471,7 +476,9 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
   render();
   if (synced) {
     var wks = synced.weeks ? Object.keys(synced.weeks).sort() : [];
-    toast(wks.length ? 'Anki synced \u00b7 week of ' + short(wks[wks.length - 1]) : 'Anki synced');
+    var st = synced.studiedToday;
+    toast(st ? 'Anki synced \u00b7 today ' + st.answers + ' cards, ' + Math.round(st.minsAnki) + ' min by Anki\u2019s clock'
+             : (wks.length ? 'Anki synced \u00b7 week of ' + short(wks[wks.length - 1]) : 'Anki synced'));
     if (synced.unmatched && synced.unmatched.length)
       setTimeout(function () { toast('Not counted, no subject in the deck name: ' + synced.unmatched.join(', ')); }, 2000);
   }

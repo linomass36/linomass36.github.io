@@ -217,6 +217,12 @@ group('The Anki week the Mac sends is filed, newest first');
      'an older reading arriving late does not overwrite a newer one');
   SC.ingestWeeks({ '2026-10-12': { days: 5, subjects: { anatomy: { min: 45, recall: 80, newc: 10, backlog: null } } } }, '2026-10-16T18:00:00Z', NOW);
   ok(SC.read().anki['w2026-10-12'].anatomy.backlog === 300, 'a value the sync leaves blank keeps what was there');
+  SC.ingestWeeks({ '2026-10-12': { days: 6, subjects: { anatomy: { min: 117, total: 702, logged: 560 } } } }, '2026-10-16T20:00:00Z', NOW);
+  const a = SC.read().anki['w2026-10-12'].anatomy;
+  ok(a.min === 117 && a.total === 702 && a.logged === 560,
+     'the week\'s real total and Anki\'s own minutes are kept beside the per-day figure, so 117 a day is not read as 117 a week');
+  ok(/min\/day/.test(read('Study Control.html')) && /this week/.test(read('Study Control.html')),
+     'and the Anki table says which is which');
 
   /* The URL route: anki_sync.py --open puts the reading in the fragment. */
   const payload = { at: '2026-10-17T10:00:00Z', due: 3, weeks: { '2026-10-12': { days: 6, subjects: { histology: { min: 9, recall: 90 } } } } };

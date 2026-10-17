@@ -374,7 +374,10 @@
       Object.keys(v.subjects).forEach(function (k) {
         if (!SUBJ[k]) return;
         var o = Object.assign({}, doc[k] || {}), x = v.subjects[k] || {};
-        ['min', 'recall', 'newc', 'backlog'].forEach(function (f) { if (x[f] != null) o[f] = x[f]; });
+        /* min is a per-day average; total and logged are the week's minutes,
+           real and by Anki's own clock, so the row can be checked against
+           Anki instead of read as a weekly total it is not. */
+        ['min', 'recall', 'newc', 'backlog', 'total', 'logged'].forEach(function (f) { if (x[f] != null) o[f] = x[f]; });
         doc[k] = o;
       });
       doc.note = 'Synced from Anki ' + short(today(isNaN(t) ? now : t)) + ' \u00b7 ' +
