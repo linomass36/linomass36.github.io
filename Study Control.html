@@ -240,7 +240,7 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
   </section>
 
   <section class="panel">
-    <div class="sec-head"><h2>Anki by week</h2><span class="eyebrow">Real min/day · recall · new/day</span></div>
+    <div class="sec-head"><h2>Anki by week</h2><span class="eyebrow">Real minutes a day, with the week's total · recall · new/day</span></div>
     <div class="scroll"><table><thead><tr><th>Week</th><th>Anatomy</th><th>Histology</th><th>Physiology</th><th>Embryology</th><th>Total</th><th>Note</th></tr></thead><tbody id="ankiRows"></tbody></table></div>
   </section>
 
@@ -431,8 +431,15 @@ function render(){
     :`<tr><td colspan="7" class="empty">${ready.results?"No results yet. Log your next quiz in Log a result.":"Loading…"}</td></tr>`;
   // anki
   const ws=S.anki.slice().sort((a,b)=>b.week.localeCompare(a.week));
-  const cell=o=>o?`<span class="num">${o.min??"–"}</span> min · <span class="pct ${o.recall==null?"":o.recall<80?"warn":"ok"}">${o.recall??"–"}%</span> · ${o.newc??"–"} new`:`<span class="ev-note">–</span>`;
-  $("#ankiRows").innerHTML=ws.length?ws.map(w=>`<tr><td class="n">${short(w.week)}</td>${SK.map(k=>`<td class="n">${cell(w[k])}</td>`).join("")}<td class="n">${SK.reduce((s,k)=>s+(w[k]?.min||0),0)} min</td><td>${esc(w.note||"")}</td></tr>`).join("")
+  /* min is minutes PER DAY. The Total column used to add those up under the
+     word "Total" with no unit, and 117 a day read as 117 for the week next
+     to a 95-minute day in Anki. Per day is now said, and a synced week
+     carries its real total beside it. */
+  const cell=o=>o?`<span class="num">${o.min??"–"}</span> min/day${o.total!=null?` <span class="ev-note">(${o.total} this week)</span>`:""} · <span class="pct ${o.recall==null?"":o.recall<80?"warn":"ok"}">${o.recall??"–"}%</span> · ${o.newc??"–"} new/day`:`<span class="ev-note">–</span>`;
+  const wkTotal=w=>{const per=SK.reduce((s,k)=>s+(w[k]?.min||0),0);const has=SK.some(k=>w[k]?.total!=null);
+    const tot=SK.reduce((s,k)=>s+(w[k]?.total||0),0),lg=SK.reduce((s,k)=>s+(w[k]?.logged||0),0);
+    return `${per} min/day`+(has?`<div class="ev-note">${tot} min this week · Anki's clock ${lg}</div>`:"")};
+  $("#ankiRows").innerHTML=ws.length?ws.map(w=>`<tr><td class="n">${short(w.week)}</td>${SK.map(k=>`<td class="n">${cell(w[k])}</td>`).join("")}<td class="n">${wkTotal(w)}</td><td>${esc(w.note||"")}</td></tr>`).join("")
     :`<tr><td colspan="7" class="empty">${ready.anki?"No weeks yet. Press Sync from Anki on the Mac, or type one in.":"Loading…"}</td></tr>`;
 }
 

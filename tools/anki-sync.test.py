@@ -97,9 +97,18 @@ for modern in (True, False):
        "a card in a filtered deck counts toward its home deck, and 02:00 belongs to the day before")
     ok("embryology" not in wk["subjects"], "a subject with no deck is left out rather than shown as zero")
     ok(r["unmatched"] == ["Misc"], "a deck with no subject in its name is named, not dropped (%s)" % r["unmatched"])
+    ok(an["total"] == 3 and an["logged"] == 2,
+       "the week's totals are sent too: 160 s real is 3 min, 110 s by Anki's clock is 2 (%s, %s)" % (an["total"], an["logged"]))
     last = r["weeks"]["2026-10-05"]
     ok(last["days"] == 7 and last["subjects"]["anatomy"]["backlog"] is None,
        "last week divides by seven, and leaves new-waiting blank: the queue is only known now")
+
+print("\nToday, the way Anki's main screen counts it")
+t = A.study_weeks(collection(True), 4, now_ms=at(13, 23))["today"]
+ok(t["date"] == "2026-10-13", "the 02:00 answer belongs to the 13th")
+ok(t["answers"] == 6, "six answers, every deck counted, the reschedule not (%s)" % t["answers"])
+ok(t["minsAnki"] == 3.33, "20+30+60+15+70+5 s is 3.33 min by Anki's own clock, uncapped, as Anki shows it (%s)" % t["minsAnki"])
+ok(t["minsReal"] == 4, "and about 4 min rebuilt from the gaps (%s)" % t["minsReal"])
 
 print("\nDeck names map to subjects")
 for name, want in [("Year 2::Anatomy::Upper limb", "anatomy"), ("HISTOLOGY", "histology"),

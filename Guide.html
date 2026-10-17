@@ -119,7 +119,12 @@
       <code>sh tools/install-anki-button.sh</code> from this repo (it fetches the current
       <code>anki_sync.py</code> into <code>~/tools</code> and builds an app that answers
       <code>cthub-anki://</code> links). The button shows only on a Mac; on the phone the week can still
-      be typed. If it seems to do nothing, <code>~/tools/anki_sync.log</code> says why.</p>
+      be typed. If it seems to do nothing, <code>~/tools/anki_sync.log</code> says why.
+      The minutes in an Anki week are <b>per day</b>, averaged over the days of the week so far; a
+      synced week also carries its real total and Anki's own clock for the week, shown beside them.
+      To check the sync against Anki itself, compare the message after a sync, "today N cards, M min
+      by Anki's clock", with "Studied N cards in M minutes today" on Anki's main screen. They count
+      the same thing.</p>
     <p class="hub-p">
       Recall and the error cards are still
       panels beside it; they keep their own stores.</p>
