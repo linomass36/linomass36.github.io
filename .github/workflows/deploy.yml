@@ -117,6 +117,7 @@ jobs:
           node tools/rut.test.js
           node tools/study-control.test.js
           node tools/almanac.test.js
+          node tools/protocol.test.js
           python3 tools/anki-sync.test.py
           node tools/weekly-review.test.js
           node tools/health-import.test.js

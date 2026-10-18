@@ -183,6 +183,21 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
 .al-err { color: var(--owed); font-style: italic; min-height: 1.2em; margin-top: 8px; }
 .al-toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + env(safe-area-inset-top, 0px));
   background: var(--ink); color: var(--canvas); padding: 6px 14px; font-style: italic; font-size: 15px; z-index: 2147483002; }
+/* by the protocol */
+.al-day { font-style: italic; color: var(--body); font-size: 16px; margin-bottom: 4px; }
+.al-day b { font-style: normal; font-weight: 500; color: var(--ink); }
+.al-cd { border-left: 3px solid var(--warn); padding: 6px 0 6px 12px; margin: 8px 0; }
+.al-cd .t { font-size: 17px; color: var(--ink); }
+.al-cd .t b { font-weight: 500; font-variant: small-caps; letter-spacing: .06em; color: var(--warn); }
+.al-cd .d { font-style: italic; color: var(--body); font-size: 15.5px; }
+.al-floor .al-chk { align-items: flex-start; width: 100%; padding: 7px 0; }
+.al-floor .al-chk .b { margin-top: 4px; }
+.al-floor .al-chk .lab { flex: 1; min-width: 0; line-height: 1.3; }
+.al-floor .al-chk .who { display: block; font-size: 13px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--c, var(--muted)); }
+.al-floor .al-chk.must .lab { color: var(--ink); font-weight: 500; }
+.al-floor .al-chk.must .who::after { content: " \00b7 today\2019s must-do"; color: var(--muted); }
+.al-sub { font-size: 14px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--muted); margin: 12px 0 2px; }
+.al-step { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; }
 .al-foot { margin-top: 34px; font-style: italic; font-size: 14.5px; color: var(--muted); text-align: center; }
 .al-foot::before { content: "\2766"; display: block; font-style: normal; color: var(--gilt); font-size: 20px; margin-bottom: 4px; }
 @media (prefers-reduced-motion: reduce) { .alm * { transition: none !important; } }
@@ -219,7 +234,7 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
 
   /* ── the term ── Study Control's store, adopted on first open exactly as
      its own page does, so the two read the same thing from the first tap. */
-  if (SC) { SC.adopt(); SC.ensureGroup(); }
+  if (SC) { SC.adopt(); SC.ensureGroup(); SC.ensureProtocol(); }
   function store() { return SC ? SC.read() : null; }
 
   function nextClasses(s, n) {
@@ -236,7 +251,7 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
              '<span class="b"></span><span class="lab">' + esc(p) + '</span></button>';
     }).join('');
     return '<div class="al-item al-cls" style="--c:var(' + sub.c + ', var(--accent))">' +
-      '<div class="top"><div class="t"><div class="s">' + esc(SC.isSession(e) ? 'study group' : sub.name) + '</div>' + esc(e.title) +
+      '<div class="top"><div class="t"><div class="s">' + esc(SC.isSession(e) ? (e.subject === 'step' ? 'step 1 group' : 'study group') : sub.name) + '</div>' + esc(e.title) +
       (SC.isAssess(e) ? '<span class="al-dag">†graded</span>' : '') + '</div>' +
       '<div class="when">' + rel(e.date) + (e.time ? ' ' + esc(e.time) : '') + '</div></div>' +
       (e.note ? '<div class="note">' + esc(e.note) + '</div>' : '') +
@@ -287,19 +302,48 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
     }).join('') + '</div>';
   }
 
-  /* ── dates ── overdue first, then the next ones, from the plan. */
+  /* ── by the protocol ── the Year 2 Study Protocol's page for today, asked
+     of Study Control, which owns it (study-control.js, "the protocol"). The
+     rows are the week at a glance for this weekday; the countdown appears
+     only when a stacked week is three weeks out or closer. A bad day swaps
+     the rows for the minimum viable day, and back. */
+  function protocolHTML(s) {
+    if (!SC || !SC.dayPlan) return '';
+    var p = SC.dayPlan(s);
+    var h = kick('By the protocol') + '<div class="al-day"><b>' + esc(p.day) + ', ' + esc(p.label) + '.</b>' +
+      (p.fixed ? ' ' + esc(p.fixed) + '.' : '') + (p.bad ? ' A bad day: the minimum only.' : '') + '</div>';
+    if (!p.bad) h += p.countdown.map(function (c) {
+      return '<div class="al-cd"><div class="t"><b>' + esc(c.stageName) + '</b> · ' + esc(c.label) + '</div><div class="d">' + esc(c.todo) + '</div></div>';
+    }).join('');
+    function chk(r) {
+      var sub = SC.SUBJ[r.subj];
+      return '<button type="button" class="al-chk' + (r.must ? ' must' : '') + '" style="--c:var(' + (sub ? sub.c : '--gilt') + ', var(--accent))" aria-pressed="' + !!r.done + '" data-floor="' + esc(r.id) + '">' +
+        '<span class="b"></span><span class="lab">' + (r.name ? '<span class="who">' + esc(r.name) + '</span>' : '') + esc(r.text) + '</span></button>';
+    }
+    h += '<div class="al-floor">' + p.rows.map(chk).join('') + '</div>';
+    if (p.sunday) h += '<div class="al-sub">the Sunday review</div><div class="al-floor">' + p.sunday.map(chk).join('') + '</div>';
+    var ph = p.phase;
+    h += '<div class="al-step"><span class="al-small">' + (ph ? 'Step 1 · Phase ' + esc(ph.n) + ', ' + esc(ph.name).toLowerCase() + ' · Floor: ' + esc(p.floorWeek ? 'AnKing + 10 questions (countdown week)' : ph.floor) : '') + '</span>' +
+      '<button type="button" class="al-btn" data-bad="' + (p.bad ? '0' : '1') + '">' + (p.bad ? 'back to the full day' : 'a bad day? minimum only') + '</button></div>';
+    return h;
+  }
+
+  /* ── dates ── overdue first, then the next ones, from the plan and from
+     the protocol's open items and Step dates, each asked of its owner. */
   function datesHTML() {
     if (!PV || !PV.dated) return '';
-    var all = PV.dated(T()), late = all.filter(function (x) { return x.late; }),
+    var all = PV.dated(T()).concat(SC && SC.dated ? SC.dated(store(), T()) : [])
+      .sort(function (a, b) { return a.date.localeCompare(b.date); }), late = all.filter(function (x) { return x.late; }),
         ahead = all.filter(function (x) { return !x.late; });
     var rows = late.concat(ahead.slice(0, Math.max(3, 6 - late.length)));
     if (!rows.length) return kick('Dates that matter') + '<div class="al-calm">Nothing dated ahead.</div>';
     return kick('Dates that matter') + '<div class="al-dl">' + rows.map(function (x) {
       var ctl = x.kind === 'item'
         ? '<button type="button" class="al-chk only" aria-pressed="false" data-item="' + esc(x.id) + '" aria-label="Done: ' + esc(x.label) + '"><span class="b"></span></button>'
+        : x.kind === 'open' ? '<button type="button" class="al-chk only" aria-pressed="false" data-open="' + esc(x.id) + '" aria-label="Done: ' + esc(x.label) + '"><span class="b"></span></button>'
         : x.kind === 'verify' ? '<a class="go" href="' + esc(x.href) + '">answer</a>' : '<span></span>';
       return '<div class="w ' + (x.late ? 'late' : '') + '">' + (x.late ? 'was ' : '') + short(x.date) + '</div>' +
-             '<div class="x"><span class="k">' + ({ item: 'plan', verify: 'verify', milestone: 'milestone' })[x.kind] + '</span>' + esc(x.label) + '</div>' + ctl;
+             '<div class="x"><span class="k">' + ({ item: 'plan', verify: 'verify', milestone: 'milestone', open: 'protocol' })[x.kind] + '</span>' + esc(x.label) + '</div>' + ctl;
     }).join('') + '</div>';
   }
 
@@ -351,6 +395,7 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
          '<div class="al-status">' + bits.join('<span class="sep">·</span>') + '</div></header>';
 
     H += bookendsHTML();
+    if (SC && !sabbath()) H += protocolHTML(s);
     if (SC) {
       var up = nextClasses(s, 3);
       H += kick('Next up') + (up.length ? '<div class="al-list">' + up.map(classHTML).join('') + '</div>'
@@ -386,6 +431,9 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
       SC.write(s); return render();
     }
     if (d.flag) { SC.handle(store(), d.flag, ''); toast('Marked done'); return render(); }
+    if (d.floor) { SC.tickFloor(d.floor, b.getAttribute('aria-pressed') !== 'true'); return render(); }
+    if (d.bad) { SC.badDay(d.bad === '1'); toast(d.bad === '1' ? 'Minimum viable day: it keeps the chain' : 'The full day again'); return render(); }
+    if (d.open) { SC.setItem(d.open, true); toast('Ticked off in Study Control'); return render(); }
     if (d.item) { PV.setDone(d.item, true); toast('Ticked off in the plan'); return render(); }
     if (d.train !== undefined) {
       var t = T(), sl = d.train || null;

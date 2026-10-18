@@ -60,10 +60,15 @@ const ok = (c, what) => { console.log((c ? '  pass  ' : '  FAIL  ') + what); if 
 const group = (n) => console.log('\n' + n);
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
+/* The hub's day, not the calendar's: day.js turns the day at 05:00, so
+   between midnight and five the stores are keyed to yesterday. This used
+   toISOString() on the wall clock, and from 00:00 to 05:00 every night the
+   test's to-do sat on a day the hub had not reached yet — red, and blocking
+   any deploy that ran in those hours. */
 const iso = (off) => {
-  const d = new Date();
+  const d = new Date(Date.now() - 5 * 36e5);
   d.setDate(d.getDate() - (off || 0));
-  return d.toISOString().slice(0, 10);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 };
 
 /* conditions.js + todo.js in one context, with whatever fakes a case needs

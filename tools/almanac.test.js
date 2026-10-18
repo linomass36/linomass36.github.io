@@ -84,7 +84,7 @@ group('Heads up is short on purpose');
   const all = SC.open(seed, NOW), hu = SC.headsUp(seed, NOW);
   ok(all.length > 3, 'the full rule set trips ' + all.length + ' flags on the term as written');
   ok(hu.length === 3, 'the front door shows three of them');
-  ok(hu.every((f) => ['R1', 'R2', 'R3', 'R5', 'R8', 'R11'].indexOf(f.rule) >= 0),
+  ok(hu.every((f) => ['R1', 'R2', 'R3', 'R5', 'R8', 'R11', 'R13', 'R14'].indexOf(f.rule) >= 0),
      'and only rules that change what you do next (' + hu.map((f) => f.rule).join(', ') + ')');
   ok(!hu.some((f) => f.rule === 'R5' && !f.assess),
      'prep is a heads-up only for a graded class, not for a seminar');
