@@ -92,7 +92,7 @@
     <h3 class="hub-h3">Term runs on Study Control</h3>
     <p class="hub-p">Study now opens on <a href="Study Control.html">Study Control</a>: the term's
       real classes, labs and partials, every quiz and test you log, the Anki numbers by week, and
-      ten rules (R1–R10) that say when something has to <b>change</b> rather than just reporting how
+      rules (R1–R14) that say when something has to <b>change</b> rather than just reporting how
       it went. A result under 70%, two under 80% in a row, the same cause twice, prep not ticked two
       days before a class, no cards within a day of a lab — each raises a flag with what to do, and
       you mark it handled with a note on what you changed. Anything logged can be corrected: each
@@ -124,7 +124,51 @@
       synced week also carries its real total and Anki's own clock for the week, shown beside them.
       To check the sync against Anki itself, compare the message after a sync, "today N cards, M min
       by Anki's clock", with "Studied N cards in M minutes today" on Anki's main screen. They count
-      the same thing.</p>
+      the same thing. AnKing (any deck named AnKing, USMLE or Step 1) is kept as its own <i>Step 1</i>
+      row and is matched first, because its subdecks are named by discipline and would otherwise be
+      counted as course anatomy. Each subject also carries the most new cards on any one day.</p>
+  </div>
+  <div class="hub-card">
+    <h3 class="hub-h3">The Year 2 Study Protocol runs inside Study Control</h3>
+    <p class="hub-p">The protocol (v1.1, 18 October 2026) says "no new trackers, pages or decks", so
+      it has no page of its own. Study Control holds it and the Almanac shows the day of it.</p>
+    <p class="hub-p"><b>By the protocol</b>, on the Almanac under Morning and night, is today's row
+      of the week at a glance: the fixed event, then one line per subject and one for Step 1, with
+      the day's must-do marked (histology on Monday, embryology Tuesday and Wednesday, anatomy
+      Thursday and Saturday, physiology Friday, the re-test hour on Sunday). Every day opens with the
+      daily rules: reviews before new, Anki done by 22:00 and under 2½ hours, anatomy new at most 100,
+      AnKing new 15–20. Each line is a tick, kept in Study Control's store. On Sunday the six-step
+      Sunday review follows, and the re-test hour names the practice sets logged about a week and a
+      month before, worked out from your results. If none were logged, it says so. Step rows follow
+      the date: AnKing and the week's First Aid pages until 2 November, then the two Qbank blocks
+      on Tuesday and Thursday. In a week with a partial, or from seven days before a stacked week,
+      Step drops to Floor (AnKing and 10 questions). The first Saturday of a month is the
+      2.5-hour Step Saturday. <i>A bad day?</i> swaps the rows for the minimum viable day: all due
+      reviews, 10 questions in whatever is graded next, AnKing for 30 minutes at most, and sleep. It
+      applies to that day only, and can be undone. The section stands down on the sabbath, like the
+      rest of the study.</p>
+    <p class="hub-p"><b>The countdown is computed.</b> The stacked weeks (9–13 Nov, 14–18 Dec,
+      11–15 Jan, late January and the 4–10 February session) each start their countdown 21 days out,
+      and the step shows on the Almanac and as rule <b>R12</b> on Study Control:
+      T−21 list the week, T−14 boost, T−7 no first reading and mocks, the week itself, then two days
+      of after. A partial you add later that falls outside those weeks gets its own countdown,
+      because it comes from the partial's date rather than being typed in.</p>
+    <p class="hub-p"><b>Three more rules.</b> <b>R13</b>: a practice set logged this week under 80%.
+      At 70–79% it says do set 2 from the misses and re-read; under 70% it says re-read, then take a
+      fresh set. Two sets in a row under 70% in one subject call for a method review. Log every AI set
+      as a <i>Practice</i> result. <b>R14</b>: a new-card cap broken, meaning over 100 new anatomy
+      cards on one day, or AnKing over 60 minutes a day across the week. <b>R9</b>, the 150-minute
+      ceiling, now counts AnKing too. R13 and R14 can reach the Almanac's heads-ups.</p>
+    <p class="hub-p"><b>Classes and dates it adds.</b> On first open, the Saturday Step group sessions
+      from 24 October to 19 June and anatomy seminars 7–10 (the Tuesdays from 17 November) are
+      written into the term, editable and deletable like the study group's. A deleted one stays
+      deleted. The open items (D3) with a date, and the Step 1 dates (UWorld from 2 November, the
+      session, finals, the NBMEs, the CBSE around 26 May 2028, the exam on 27 July 2028), join the
+      Almanac's dates that matter. Two open items have no date in the document and are given none;
+      they are listed with the rest on Study Control's <a href="Study Control.html#protocol">protocol
+      panel</a>, along with every countdown's start, the week at a glance as a table, and the Step 1
+      dates. The study group's Sunday, Wednesday and Thursday sessions are a separate plan and are
+      unchanged.</p>
     <p class="hub-p">
       Recall and the error cards are still
       panels beside it; they keep their own stores.</p>

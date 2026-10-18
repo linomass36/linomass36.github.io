@@ -132,6 +132,11 @@ td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pct.bad{color:var(--bad)} .pct.warn{color:var(--warn)} .pct.ok{color:var(--ok)}
 .tag{display:inline-block;font-size:11.5px;background:var(--soft);border-radius:4px;padding:0 6px;margin:1px 3px 1px 0;color:var(--muted)}
+.proto-day{font-size:14px;margin:0 0 8px}
+.proto-cd{border-left:3px solid var(--warn,#b7791f);padding:4px 0 4px 10px;margin:6px 0;font-size:13.5px}
+.proto-list .allev{grid-template-columns:86px 1fr auto}
+.wk{width:100%;border-collapse:collapse;font-size:12.5px}.wk td,.wk th{vertical-align:top;padding:5px 6px;border-top:1px solid var(--line);text-align:left}
+.wk .must{font-weight:600}
 .rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px;font-size:13.5px}
 @media (max-width:700px){.rules{grid-template-columns:1fr}}
 .rules div{padding:6px 0;border-top:1px solid var(--line)}
@@ -244,6 +249,17 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
     <div class="scroll"><table><thead><tr><th>Week</th><th>Anatomy</th><th>Histology</th><th>Physiology</th><th>Embryology</th><th>Total</th><th>Note</th></tr></thead><tbody id="ankiRows"></tbody></table></div>
   </section>
 
+  <section class="panel" id="protocol">
+    <div class="sec-head"><h2>The protocol</h2><span class="eyebrow">Year 2 Study Protocol v1.1 · 18 Oct 2026</span></div>
+    <p class="proto-day" id="protoDay"></p>
+    <div id="protoCd"></div>
+    <details open><summary id="protoOpenSum">Open items</summary><div class="proto-list" id="protoOpen" style="margin-top:6px"></div></details>
+    <details><summary>Countdowns: every stacked week</summary><div class="proto-list" id="protoStacked" style="margin-top:6px"></div></details>
+    <details><summary>The week at a glance</summary><div class="scroll" style="margin-top:6px"><table class="wk" id="protoWeek"></table></div></details>
+    <details><summary>Step 1 dates</summary><div class="proto-list" id="protoDates" style="margin-top:6px"></div></details>
+    <p class="ev-note" style="margin:8px 0 0">Ticks here and on the Almanac are the same record. Today's rows are ticked on the Almanac, under By the protocol.</p>
+  </section>
+
   <section class="panel">
     <div class="sec-head"><h2>The rules</h2><span class="eyebrow">What trips a flag</span></div>
     <div class="rules">
@@ -257,6 +273,10 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
       <div><b>R8</b>Recall under 80% in a subject: one week is a warning, two weeks means nothing new goes live until it's read and blank-paged.</div>
       <div><b>R9</b>Anki over 150 real min/day for a week: cut new cards in the subject whose next test is furthest away.</div>
       <div><b>R10</b>Last week's Anki row missing by Tuesday: send the export.</div>
+      <div><b>R11</b>You lead the session tomorrow or today and the prompt card and key aren't written.</div>
+      <div><b>R12</b>A stacked week is 21, 14 or 7 days out, under way, or just over: the protocol's countdown step for it.</div>
+      <div><b>R13</b>A practice set under 80% this week: 70–79 means set 2 and a re-read, under 70 a re-read and a fresh set. Two in a row under 70 is a method review.</div>
+      <div><b>R14</b>A new-card cap broken: over 100 new anatomy cards on one day, or AnKing over 60 min a day for the week.</div>
     </div>
   </section>
 </div>
@@ -335,7 +355,7 @@ $("#eDel").addEventListener("click",async()=>{const b=$("#eDel");if(!editEv||!db
   if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Tap again to delete";setTimeout(()=>{b.dataset.armed="";if(editEv)b.textContent="Delete class"},4000);return}
   /* A group session deleted here stays deleted: ensureGroup() would
      otherwise write it straight back on the next open. */
-  b.dataset.armed="";try{if(/^grp-/.test(editEv))await db.doc("dismissed/"+editEv).set(1);await db.doc("events/"+editEv).delete();resetEv();msg($("#eMsg"),"Class deleted.")}catch(err){msg($("#eMsg"),"Couldn't delete: "+(err.message||err.code),true)}});
+  b.dataset.armed="";try{if(/^(grp|step)-|^ana-sem/.test(editEv))await db.doc("dismissed/"+editEv).set(1);await db.doc("events/"+editEv).delete();resetEv();msg($("#eMsg"),"Class deleted.")}catch(err){msg($("#eMsg"),"Couldn't delete: "+(err.message||err.code),true)}});
 /* Switching away from a form mid-edit drops the edit, so a later save cannot
    quietly overwrite the item that was loaded and forgotten. */
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.tab!=="res"&&editRes)resetRes();if(b.dataset.tab!=="ev"&&editEv)resetEv()}));
@@ -429,6 +449,7 @@ function render(){
     <td><button type="button" class="tick" style="--c:var(--accent)" aria-pressed="${!!r.errorCards}" data-res="${r.id}"><span class="box"></span>${r.errorCards?"Done":"Not yet"}</button></td>
     <td><button type="button" class="link" data-edit-res="${r.id}">Edit</button></td></tr>`}).join("")
     :`<tr><td colspan="7" class="empty">${ready.results?"No results yet. Log your next quiz in Log a result.":"Loading…"}</td></tr>`;
+  renderProtocol();
   // anki
   const ws=S.anki.slice().sort((a,b)=>b.week.localeCompare(a.week));
   /* min is minutes PER DAY. The Total column used to add those up under the
@@ -443,6 +464,26 @@ function render(){
     :`<tr><td colspan="7" class="empty">${ready.anki?"No weeks yet. Press Sync from Anki on the Mac, or type one in.":"Loading…"}</td></tr>`;
 }
 
+/* ---------- the protocol ----------
+   Everything here is asked of study-control.js: the day, the countdowns,
+   the open items. The week at a glance is the document's own table, kept
+   there and printed here, so the two cannot be edited apart. */
+function renderProtocol(){
+  const p=SC.dayPlan(store), ph=p.phase;
+  $("#protoDay").innerHTML=`<b>${p.day}, ${esc(p.label)}.</b> ${esc(p.fixed||"")}${ph?` · Step 1 Phase ${esc(ph.n)} (${esc(ph.name)}), Floor: ${esc(p.floorWeek?"AnKing + 10 questions, countdown week":ph.floor)}`:""}`;
+  $("#protoCd").innerHTML=p.countdown.map(c=>`<div class="proto-cd"><b>${esc(c.stageName)}</b> · ${esc(c.label)}<div class="ev-note">${esc(c.todo)}</div></div>`).join("");
+  const items=SC.openItems(store), left=items.filter(i=>!i.done).length;
+  $("#protoOpenSum").textContent=`Open items (${left} of ${items.length} left)`;
+  $("#protoOpen").innerHTML=items.map(i=>`<div class="allev"><span class="ev-date">${i.by?short(i.by):"no date"}</span><span>${esc(i.label)}${i.done?` <span class="ev-note">· done ${short(i.done)}</span>`:""}</span>
+    <button type="button" class="tick" style="--c:var(--accent)" aria-pressed="${!!i.done}" data-open-item="${i.id}"><span class="box"></span>${i.done?"Done":"Open"}</button></div>`).join("");
+  $("#protoStacked").innerHTML=SC.countdowns(store).map(c=>`<div class="allev"><span class="ev-date">${short(c.from)}</span><span>${esc(c.label)} <span class="ev-note">· ${esc(c.scope)} · countdown from ${short(c.starts)}</span></span><span></span></div>`).join("");
+  const W=SC.PROTOCOL.WEEK, cols=["anatomy","physiology","histology","embryology","step"], order=[1,2,3,4,5,6,0];
+  $("#protoWeek").innerHTML=`<tr><th>Day</th><th>Fixed</th>${cols.map(k=>`<th>${SUBJ[k].name}</th>`).join("")}</tr>`+order.map(d=>{const w=W[d];
+    return `<tr><th>${DOW[d]}<div class="ev-note">${esc(w.label)}</div></th><td>${esc(w.fixed||"")}</td>${cols.map(k=>{let t=w.rows[k]||(k!=="step"&&w.rows.retest&&k!=="anatomy"?w.rows.retest:"");if(Array.isArray(t))t=t.join(". From 2 Nov: ");
+      return `<td class="${w.must===k?"must":""}">${esc(t||"—")}</td>`}).join("")}</tr>`}).join("");
+  $("#protoDates").innerHTML=SC.PROTOCOL.MILESTONES.map(m=>`<div class="allev"><span class="ev-date">${short(m.date)} ${m.date.slice(0,4)}</span><span>${esc(m.label)}</span><span></span></div>`).join("");
+}
+
 /* ---------- interactions ---------- */
 document.addEventListener("click",async e=>{
   const er=e.target.closest("[data-edit-res]"); if(er){loadRes(er.dataset.editRes);return}
@@ -450,6 +491,8 @@ document.addEventListener("click",async e=>{
   const t=e.target.closest("[data-ev]");
   if(t&&db){const ev=S.events.find(x=>x.id===t.dataset.ev);if(!ev)return;const k=t.dataset.k;const val=!(ev.prep?.[k]);
     t.setAttribute("aria-pressed",val);try{await db.doc("events/"+ev.id).update({prep:{[k]:val}})}catch(err){t.setAttribute("aria-pressed",!val)}return}
+  const oi=e.target.closest("[data-open-item]");
+  if(oi){const id=oi.dataset.openItem;store.items=store.items||{};if(store.items[id])delete store.items[id];else store.items[id]=TODAY;persist();render();return}
   const r=e.target.closest("[data-res]");
   if(r&&db){const res=S.results.find(x=>x.id===r.dataset.res);if(!res)return;try{await db.doc("results/"+res.id).update({errorCards:!res.errorCards})}catch(err){}return}
   const a=e.target.closest("[data-act]"); if(!a)return; const fl=a.closest(".flag"); const id=fl.dataset.id;
@@ -463,7 +506,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest(".f
 /* ---------- data: the hub store (ct_studycontrol_v1, synced and backed up) ---------- */
 let store;
 const KEY=SC.KEY;
-function loadStore(){SC.adopt();SC.ensureGroup();return SC.read()}
+function loadStore(){SC.adopt();SC.ensureGroup();SC.ensureProtocol();return SC.read()}
 let canSave=true;
 function persist(){if(!SC.write(store)){canSave=false;$("#offline").hidden=false}store=SC.read();try{localStorage.setItem("__local_studycontrol_saved",new Date().toISOString())}catch(e){}fire();showSaved()}
 const listeners=[];
@@ -492,7 +535,7 @@ $("#fileImport").addEventListener("change",async e=>{
   const f=e.target.files[0];if(!f)return;
   try{const j=JSON.parse(await f.text());const d=j.data||j;
     if(!d||typeof d!=="object"||!("events"in d||"results"in d))throw new Error("not a backup");
-    store={events:d.events||{},results:d.results||{},anki:d.anki||{},actions:d.actions||{},told:d.told||{}};persist();fillAnkiForm();
+    store={events:d.events||{},results:d.results||{},anki:d.anki||{},actions:d.actions||{},told:d.told||{},dismissed:d.dismissed||{},items:d.items||{},floor:d.floor||{}};persist();fillAnkiForm();
     $("#ioMsg").textContent="Loaded "+f.name+".";$("#ioMsg").classList.remove("err")}
   catch(err){$("#ioMsg").textContent="That file isn't a Study control backup.";$("#ioMsg").classList.add("err")}
   e.target.value=""});

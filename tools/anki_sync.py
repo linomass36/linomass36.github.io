@@ -376,7 +376,16 @@ def collect(con, hist_days=0):
 # Rows with ease 0 are reschedules done from the browser, not answers.
 # Subjects come from deck names, matched anywhere in the path; a card in a
 # filtered deck counts toward its home deck (odid).
-SUBJECTS = [("anatomy", re.compile(r"anat", re.I)),
+#
+# AnKing is matched FIRST and kept as its own row, "step": its subdecks are
+# named by discipline ("AnKing Step Deck::...::Anatomy"), so matched second
+# it would be filed as course anatomy and the protocol's two ceilings —
+# AnKing over 60 min a day, anatomy over 100 new on one day — would each
+# read the other's cards.
+#   newMax        the most new cards on any one day of the week: the
+#                 anatomy cap is "100 on any day", which an average hides.
+SUBJECTS = [("step", re.compile(r"anking|usmle|step ?1", re.I)),
+            ("anatomy", re.compile(r"anat", re.I)),
             ("histology", re.compile(r"histo", re.I)),
             ("physiology", re.compile(r"physio|guyton", re.I)),
             ("embryology", re.compile(r"embry|langman|bwab", re.I))]
@@ -450,7 +459,7 @@ def study_weeks(con, rollover, now_ms=None, n=2):
     out = {}
     for start in starts:
         end = start + timedelta(days=7)
-        acc = {k: {"ms": 0, "logged": 0, "n": 0, "rev": 0, "pass": 0, "new": 0} for k, _ in SUBJECTS}
+        acc = {k: {"ms": 0, "logged": 0, "n": 0, "rev": 0, "pass": 0, "new": 0, "byday": {}} for k, _ in SUBJECTS}
         prev = None
         for r in rows:
             t = int(r["id"])
@@ -474,6 +483,7 @@ def study_weeks(con, rollover, now_ms=None, n=2):
             f = first.get(int(r["cid"]))
             if f and f[0] == t and f[1] == 0:
                 a["new"] += 1
+                a["byday"][d] = a["byday"].get(d, 0) + 1
         days = 7 if end <= today else (today - start).days + 1
         current = start <= today < end
         has_deck = {v for v in subj.values() if v}
@@ -486,6 +496,7 @@ def study_weeks(con, rollover, now_ms=None, n=2):
                 "min": half_up(a["ms"] / 60000.0 / days) if a["n"] else 0,
                 "recall": half_up(100.0 * a["pass"] / a["rev"]) if a["rev"] else None,
                 "newc": half_up(a["new"] / float(days)),
+                "newMax": max(a["byday"].values()) if a["byday"] else 0,
                 "backlog": sum(1 for c, q in queue.items() if subj.get(c) == k and q == 0) if current else None,
                 "reviews": a["n"],
                 "total": half_up(a["ms"] / 60000.0),

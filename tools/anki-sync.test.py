@@ -11,7 +11,8 @@ was done by hand is pinned here on a history small enough to add up: real
 time from the gaps between answers (Anki's logged time stops at 60 s), the
 04:00 day boundary, review-only recall, a filtered deck counting toward its
 home deck, a deck with no subject in its name, and a reschedule that is not
-an answer.
+an answer. Since the Study Protocol: AnKing kept apart from course anatomy
+(its subdecks are named by discipline), and the busiest day's new cards.
 
 "Now" is passed in, never read from the clock (CLAUDE.md).
 """
@@ -49,7 +50,7 @@ def collection(modern):
     c.execute("create table cards (id integer primary key, did int, odid int, queue int)")
     c.execute("create table revlog (id integer primary key, cid int, ease int, type int, time int)")
     decks = {1: "Year 2\x1fAnatomy", 2: "Year 2\x1fHistology\x1fW2", 3: "Physiology (Guyton)",
-             4: "Misc", 5: "Filtered Deck 1"}
+             4: "Misc", 5: "Filtered Deck 1", 6: "AnKing Step Deck\x1fAnatomy"}
     if modern:
         c.execute("create table decks (id integer primary key, name text)")
         for k, v in decks.items():
@@ -58,10 +59,11 @@ def collection(modern):
     else:
         dj = {str(k): {"id": k, "name": v.replace("\x1f", "::")} for k, v in decks.items()}
         c.execute("insert into col values (1,0,?,?)", (json.dumps({"rollover": 4}), json.dumps(dj)))
-    for row in [(101, 1, 0, 2), (102, 1, 0, 1), (103, 1, 0, 0), (201, 2, 0, 2), (301, 5, 3, 2), (401, 4, 0, 2)]:
+    for row in [(101, 1, 0, 2), (102, 1, 0, 1), (103, 1, 0, 0), (201, 2, 0, 2), (301, 5, 3, 2), (401, 4, 0, 2), (601, 6, 0, 2)]:
         c.execute("insert into cards values (?,?,?,?)", row)
     for row in [
         (at(8, 10), 101, 3, 0, 10000),          # last week: 101's first answer, a learning step
+        (at(12, 9), 601, 3, 0, 8000),           # Monday: an AnKing card's first answer
         (at(13, 20), 101, 3, 1, 20000),         # after a long gap: Anki's 20 s
         (at(13, 20, 0, 50), 102, 3, 0, 30000),  # 50 s gap; first-ever answer
         (at(13, 20, 2, 20), 101, 1, 1, 60000),  # 90 s gap; a failed review
@@ -99,6 +101,11 @@ for modern in (True, False):
     ok(r["unmatched"] == ["Misc"], "a deck with no subject in its name is named, not dropped (%s)" % r["unmatched"])
     ok(an["total"] == 3 and an["logged"] == 2,
        "the week's totals are sent too: 160 s real is 3 min, 110 s by Anki's clock is 2 (%s, %s)" % (an["total"], an["logged"]))
+    st = wk["subjects"].get("step") or {}
+    ok(st.get("reviews") == 1 and an["reviews"] == 3,
+       "an AnKing subdeck named Anatomy is Step, not course anatomy: the two caps read different decks")
+    ok(an["newMax"] == 1 and st.get("newMax") == 1,
+       "the most new cards on one day is sent, because the anatomy cap is 100 on ANY day (%s)" % an["newMax"])
     last = r["weeks"]["2026-10-05"]
     ok(last["days"] == 7 and last["subjects"]["anatomy"]["backlog"] is None,
        "last week divides by seven, and leaves new-waiting blank: the queue is only known now")
@@ -112,7 +119,8 @@ ok(t["minsReal"] == 4, "and about 4 min rebuilt from the gaps (%s)" % t["minsRea
 
 print("\nDeck names map to subjects")
 for name, want in [("Year 2::Anatomy::Upper limb", "anatomy"), ("HISTOLOGY", "histology"),
-                   ("Guyton ch 4-5", "physiology"), ("Embryology - BWAB", "embryology"), ("Spanish", None)]:
+                   ("Guyton ch 4-5", "physiology"), ("Embryology - BWAB", "embryology"), ("Spanish", None),
+                   ("AnKing Step Deck::Anatomy", "step"), ("USMLE::Physiology", "step")]:
     ok(A.subject_of(name) == want, '"%s" -> %s' % (name, want))
 
 print("\nThe sync opens the front door")

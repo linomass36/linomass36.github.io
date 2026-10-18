@@ -41,9 +41,13 @@
     anatomy:    { name: 'Anatomy',    c: '--ana', prep: ['Read Moore + blue boxes', 'Region’s cards live', 'Identify drill', 'Blank page'] },
     histology:  { name: 'Histology',  c: '--his', prep: ['Wheater first look', 'Junqueira section', 'Drew it', 'SecondLook sets'] },
     physiology: { name: 'Physiology', c: '--phy', prep: ['Read set Guyton pages', 'Cards for the pages', 'Practice questions', 'Blank page'] },
-    embryology: { name: 'Embryology', c: '--emb', prep: ['Read BWAB chapter', 'Embryo cards', 'Timeline from memory', 'Practice questions'] }
+    embryology: { name: 'Embryology', c: '--emb', prep: ['Read BWAB chapter', 'Embryo cards', 'Timeline from memory', 'Practice questions'] },
+    /* Step 1 is a subject for the calendar and the Anki row, not one of the
+       four: it has no results, no subject card, and is the first thing cut
+       when a week overloads (protocol A1). So it is not in SK. */
+    step:       { name: 'Step 1',     c: '--accent', prep: ['Numbers ready (blocks, % correct, AnKing streak)', 'Two starred misses ready'] }
   };
-  var SK = Object.keys(SUBJ);
+  var SK = ['anatomy', 'histology', 'physiology', 'embryology'];
 
   var CAUSES = {
     wrong:   ['Studied the wrong material', 'Confirm the set topic three days ahead: syllabus, then ask the lecturer or class rep. Don’t trust the group chat alone.'],
@@ -85,6 +89,7 @@
      and for a group session your own study and the last Fix list — plus the
      prompt card first when you lead it. */
   function prepFor(ev) {
+    if (isSession(ev) && ev.subject === 'step') return SUBJ.step.prep.slice();
     if (isSession(ev)) return ev.lead ? SESSION_PREP.slice() : SESSION_PREP.slice(1);
     return (SUBJ[ev.subject] || { prep: [] }).prep;
   }
@@ -154,7 +159,8 @@
   function shape(d) {
     d = d || {};
     return { events: d.events || {}, results: d.results || {}, anki: d.anki || {},
-             actions: d.actions || {}, told: d.told || {}, dismissed: d.dismissed || {} };
+             actions: d.actions || {}, told: d.told || {}, dismissed: d.dismissed || {},
+             items: d.items || {}, floor: d.floor || {} };
   }
 
   /* ── the store ── */
@@ -313,7 +319,9 @@
     });
     var lw = weeks[weeks.length - 1];   // R9
     if (lw) {
-      var tot = SK.reduce(function (n, k) { return n + ((lw[k] && lw[k].min) || 0); }, 0);
+      /* All Anki, AnKing included: the protocol's ceiling is 2½ h a day
+         across every deck (A4), and AnKing is where the minutes grow. */
+      var tot = SK.concat('step').reduce(function (n, k) { return n + ((lw[k] && lw[k].min) || 0); }, 0);
       if (tot > 150) {
         var far = SK.map(function (k) { return { k: k, n: upcoming(V, T, k, isAssess) }; })
           .sort(function (a, b) { return (b.n ? diff(b.n.date, T) : 999) - (a.n ? diff(a.n.date, T) : 999); })[0];
@@ -322,6 +330,7 @@
           todo: 'Cut new cards in ' + SUBJ[far.k].name + ', whose next test is furthest away.' });
       }
     }
+    protocolFlags(s, V, T, weeks).forEach(function (f) { F.push(f); });
     var prevW = monday(addDays(T, -7));   // R10
     if ((parse(T).getDay() + 6) % 7 >= 1 && !V.anki.some(function (a) { return a.week === prevW; }))
       F.push({ id: 'export:' + prevW, lvl: 'warn', subj: 'all', rule: 'R10', date: prevW,
@@ -343,7 +352,7 @@
      that repeats them every morning is a page you stop opening. R5 counts
      here only for a GRADED class: being under-prepped for a seminar is not
      a heads-up, being under-prepped for Friday's test is. */
-  var FRONT = { R1: 1, R2: 1, R3: 1, R5: 1, R8: 1, R11: 1 };
+  var FRONT = { R1: 1, R2: 1, R3: 1, R5: 1, R8: 1, R11: 1, R13: 1, R14: 1 };
   function headsUp(s, now, max) {
     return open(s, now).filter(function (f) {
       return FRONT[f.rule] && (f.rule !== 'R5' || f.assess);
@@ -377,7 +386,7 @@
         /* min is a per-day average; total and logged are the week's minutes,
            real and by Anki's own clock, so the row can be checked against
            Anki instead of read as a weekly total it is not. */
-        ['min', 'recall', 'newc', 'backlog', 'total', 'logged'].forEach(function (f) { if (x[f] != null) o[f] = x[f]; });
+        ['min', 'recall', 'newc', 'newMax', 'backlog', 'total', 'logged'].forEach(function (f) { if (x[f] != null) o[f] = x[f]; });
         doc[k] = o;
       });
       doc.note = 'Synced from Anki ' + short(today(isNaN(t) ? now : t)) + ' \u00b7 ' +
@@ -427,10 +436,341 @@
     };
   }
 
+  /* ── the protocol ────────────────────────────────────────────────────────
+     Year 2 Study Protocol v1.1, 18 October 2026. Its own first principle
+     after equal priority is "execution over design: no new trackers, pages
+     or decks" (A1.7), so it lives here, in the one tracker it names, and
+     on the two pages that already read this file — not on a page of its own.
+
+     What is STORED is only what the document states: the week at a glance,
+     the stacked weeks, the phases, the open items and their dates. What is
+     shown on a given day is derived from those and from the store: which
+     row is today's, whether this is a countdown week, which practice sets
+     the Sunday re-test hour is owed. A countdown typed in as "T−14 starts
+     26 October" would stay true when a partial moved; one computed from the
+     partial's date cannot.
+
+     Ticks go in the store under `floor` (day → row → 1) and `items`
+     (open item → day done), so they sync and back up with the rest, and a
+     tick is a day reported, which is what drift must see. */
+  var DOW_NAME = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var QBANK_FROM = '2026-11-02';   // UWorld and the build-week blocks start (C2, C4)
+  var EVERY_DAY = 'Reviews in every deck before any new card · Anki done by 22:00, 2½ h at most · anatomy new ≤ 100 · AnKing new 15–20';
+  /* The week at a glance, one row per subject per weekday; the subject in
+     `must` is the day's bold cell. Step rows carry a second text for once
+     the Qbank blocks start. */
+  var WEEK = {
+    1: { label: 'histology', fixed: 'Histology lab + quiz · dissection 16:00', must: 'histology', rows: {
+      anatomy: 'Prime reviews · learn this week’s lab cards (theory slice)',
+      physiology: 'Costanzo map (30–45 min) · Friday’s set pages, part 1',
+      histology: 'Lab + quiz. Within 24 h: miss cards, recall page, one disease card per structure · log the score',
+      embryology: 'Read the seminar chapter · draw the timeline',
+      step: 'AnKing reviews · first half of the week’s FA pages' } },
+    2: { label: 'embryology prep', fixed: '', must: 'embryology', rows: {
+      anatomy: 'Prime reviews · lab cards slice',
+      physiology: 'Set pages, part 2 (finish the reading)',
+      histology: 'Confirm next lab’s topic with the group',
+      embryology: 'AI set (20 questions) · miss cards',
+      step: ['AnKing', 'AnKing · block 1 (filtered to the course system) + review'] } },
+    3: { label: 'embryology', fixed: 'Embryology seminar 13:00', must: 'embryology', rows: {
+      anatomy: 'Prime reviews · last lab cards learned, all live before Thursday',
+      physiology: 'AI set 1, cold (20 questions) · card every miss and guess',
+      embryology: 'Seminar. Malformation cards · recall page, the timeline from memory',
+      step: 'AnKing · second half of the FA pages' } },
+    4: { label: 'anatomy', fixed: 'Anatomy lab', must: 'anatomy', rows: {
+      anatomy: 'Lab. Within 24 h: every dissection miss carded · clinical correlation cards',
+      physiology: 'AI set 2 on set 1’s weak spots · re-read the missed sections',
+      histology: 'Read Wheater for the next lab: every image, every caption',
+      step: ['AnKing', 'AnKing · block 2 + review'] } },
+    5: { label: 'physiology', fixed: 'Physiology test 12:45', must: 'physiology', rows: {
+      anatomy: 'Prime reviews',
+      physiology: 'Test. Recall page the same day · log the score',
+      histology: 'Read Junqueira for the next lab',
+      step: 'AnKing reviews only: no pages, no blocks' } },
+    6: { label: 'build day', fixed: 'Step group session, 75 min', must: 'anatomy', rows: {
+      anatomy: 'Build next Thursday’s lab: authored Entity+ / Relation+ cards · reviews',
+      physiology: 'Depth add-on: a whole chapter or a scheduled gap chapter (1–2 h)',
+      histology: 'Draw each tissue from memory · SecondLook images for the lab',
+      embryology: 'Read the next chapter (light)',
+      step: 'Session, two starred misses ready · AnKing' } },
+    0: { label: 'review day', fixed: 'Sunday review, 30 min, before 21:00', must: 'retest', rows: {
+      anatomy: 'Prime reviews · learn the lab cards slice',
+      retest: 'Re-test hour: the sets from 1 week and 1 month ago, cold, scores logged',
+      histology: 'Histology AI set for Monday’s lab + miss cards',
+      step: 'AnKing · error log: 5 misses, 1 starred' } }
+  };
+  var SUNDAY = [
+    ['anki', 'Anki export: the week’s row (minutes, recall, new cards per deck)'],
+    ['retest', 'Re-test hour done, scores logged'],
+    ['hours', 'Hours per subject against the plan. More than 2 h behind gets the time back next week, taken from Step first'],
+    ['ahead', 'Next 21 days: every graded event, all four subjects'],
+    ['numbers', 'Step numbers posted to the group sheet by 21:00'],
+    ['change', 'At most one change to the method, written down with its reason']
+  ];
+  var BAD_DAY = [
+    ['reviews', 'All due reviews: anatomy and the miss decks'],
+    ['ten', '10 questions in {next}'],
+    ['anking', 'AnKing, 30 minutes at most'],
+    ['sleep', 'Sleep 7 hours; lights out by midnight before a morning class']
+  ];
+  /* Stacked weeks (A3): several subjects graded in one week, each planned
+     three weeks out. A partial added later that falls outside all of these
+     gets a countdown of its own (see countdowns()). */
+  var STACKED = [
+    { id: 'nov',  from: '2026-11-09', to: '2026-11-13', label: 'The Module A week (9–13 Nov)', scope: 'anatomy Module A, histology lab, physiology test' },
+    { id: 'dec',  from: '2026-12-14', to: '2026-12-18', label: 'The Module B week (14–18 Dec)', scope: 'histology slide partial, anatomy Module B, physiology' },
+    { id: 'jan',  from: '2027-01-11', to: '2027-01-15', label: 'The Modules C and D week (11–15 Jan)', scope: 'anatomy Modules C and D, physiology ECG' },
+    { id: 'lateJan', from: '2027-01-25', to: '2027-01-29', label: 'The last winter tests (late Jan)', scope: 'the last winter tests; dates to confirm' },
+    { id: 'session', from: '2027-02-04', to: '2027-02-10', label: 'The winter session (4–10 Feb)', scope: 'the exam session' }
+  ];
+  var STAGES = [
+    { id: 't21', lo: 15, hi: 21, name: 'T−21', todo: 'List every graded event in the week, all four subjects, with its scope. Count the reading left per subject. Step weeks in the window go to Floor.' },
+    { id: 't14', lo: 8, hi: 14, name: 'T−14', todo: 'Boost begins for each subject with a partial in the week. Pull the reading forward so it ends by T−7. Weekly tests elsewhere keep their cycle.' },
+    { id: 't7', lo: 1, hi: 7, name: 'T−7', todo: 'No first reading anywhere. Mocks: anatomy pins + theory mock, histology 20-slide mocks, physiology and embryology cumulative AI sets. Mock misses carded the same day.' },
+    { id: 'week', name: 'Week of', todo: 'Only the next test’s subject the evening before; reviews continue for all; Step at Floor (AnKing + 10 questions).' },
+    { id: 'after', name: 'After', todo: 'Within 48 h: results logged, recall pages, error cards. One lighter day before the next cycle.' }
+  ];
+  /* Step 1 phases (C3) and the Floor for the period (C4, C8). */
+  var PHASES = [
+    { n: '0', from: '2026-10-17', to: '2026-11-15', name: 'Foundations', floor: 'AnKing daily + the week’s FA pages' },
+    { n: '1', from: '2026-11-16', to: '2027-02-21', name: 'Neuro, blood and immune, cardio', floor: 'AnKing + 2 blocks' },
+    { n: '2', from: '2027-02-22', to: '2027-06-20', name: 'Renal, GI, respiratory, endocrine, reproduction', floor: 'AnKing + 2 blocks' },
+    { n: '—', from: '2027-06-21', to: '2027-07-11', name: 'Year-2 finals', floor: 'Floor only' },
+    { n: '3', from: '2027-07-12', to: '2027-09-26', name: 'Summer bridge', floor: 'AnKing 5 days + 2 blocks' },
+    { n: '4', from: '2027-09-27', to: '2028-05-28', name: 'Year 3, every system', floor: 'AnKing + 3 blocks' },
+    { n: '5–6', from: '2028-05-29', to: '2028-07-30', name: 'Integration and dedicated', floor: 'AnKing + 1 block a day' }
+  ];
+  /* D3, the open items, kept as the document words them. The two with no
+     date stay undated rather than being given one it never set. */
+  var OPEN = [
+    { id: 'd3-w3', by: '2026-10-18', label: 'Confirm W3 (19 Oct) is muscle; Junqueira and Wheater page counts' },
+    { id: 'd3-order', by: '2026-10-24', label: 'Physiology Nov–Dec test order and partials (physiology lead); histology lab dates after W3; embryology test dates' },
+    { id: 'd3-level', by: '2026-10-24', label: 'Phase 0 Step level, Floor or Target, agreed at the Saturday session' },
+    { id: 'd3-hours', by: '2026-10-25', label: 'Weekly hours available after classes and tutoring' },
+    { id: 'd3-amboss', by: '2026-11-01', label: 'Saturday session time fixed; AMBOSS group quote (Keeper)' },
+    { id: 'd3-deans', by: '2026-11-30', label: 'Dean’s Office (nbme@umlub.edu.pl): 2028 CBSE dates, sponsorship, summer practices abroad' },
+    { id: 'd3-latest', by: '2026-12-18', label: 'Latest Step 1 pass date accepted for Sep 2028 US rotations' },
+    { id: 'd3-spring', by: '2027-02-22', label: 'Spring anatomy order; Biochem I/II syllabus order' },
+    { id: 'd3-syllabi', by: null, label: 'Export the four CEM syllabi (physiology and histology, Polish and English) and the Polish zagadnienia list' },
+    { id: 'd3-cyto', by: null, label: 'Whether cytophysiology is taught and examined (what W1 covered)' }
+  ];
+  var MILESTONES = [
+    { id: 'ms-qbank', date: QBANK_FROM, label: 'UWorld starts: two blocks a week from now (Floor)' },
+    { id: 'ms-p1', date: '2026-11-16', label: 'Step Phase 1 begins: neuro with Labs 6–10' },
+    { id: 'ms-teach', date: '2027-02-03', label: 'Winter teaching ends' },
+    { id: 'ms-session', date: '2027-02-04', label: 'Winter session, 4–10 Feb' },
+    { id: 'ms-retakes', date: '2027-02-11', label: 'Retakes, 11–17 Feb' },
+    { id: 'ms-brs', date: '2027-06-14', label: 'BRS Physiology comprehensive, cold (week of)' },
+    { id: 'ms-finals', date: '2027-06-21', label: 'Year-2 finals begin (to 11 Jul)' },
+    { id: 'ms-nbme1', date: '2027-10-02', label: 'NBME 1, cold baseline' },
+    { id: 'ms-nbme2', date: '2028-02-19', label: 'NBME 2' },
+    { id: 'ms-nbme3', date: '2028-04-08', label: 'NBME 3' },
+    { id: 'ms-cbsereg', date: '2028-04-10', label: 'Register for the UMLub CBSE (about this date)' },
+    { id: 'ms-nbme4', date: '2028-05-13', label: 'NBME 4' },
+    { id: 'ms-cbse', date: '2028-05-26', label: 'UMLub NBME CBSE, 67% needed (about this date)' },
+    { id: 'ms-resched', date: '2028-06-11', label: 'Last fee-free Step 1 reschedule' },
+    { id: 'ms-step1', date: '2028-07-27', label: 'USMLE Step 1' }
+  ];
+  /* Calendar entries the protocol adds to the term (A3, C7). Written once
+     each, like the study group's, so each can be edited or deleted. */
+  var STEP_GROUP = { from: '2026-10-24', to: '2027-06-19', time: '' };
+  var ANATOMY_SEMINARS = ['2026-11-17', '2026-11-24', '2026-12-01', '2026-12-08'];
+
+  function phaseOf(T) {
+    var p = PHASES.filter(function (x) { return T >= x.from && T <= x.to; })[0] || null;
+    if (!p) return null;
+    p = Object.assign({}, p);
+    if (p.n === '0' && T < QBANK_FROM) p.floor = PHASES[0].floor;
+    else if (p.n === '0') p.floor = 'AnKing + the week’s FA pages + 2 blocks';
+    return p;
+  }
+
+  /* Every countdown target: the stacked weeks, plus any partial in the store
+     that none of them covers, so a TBC partial typed in later gets its own. */
+  function countdowns(s) {
+    var out = STACKED.map(function (x) { return Object.assign({}, x); });
+    view(s).events.filter(function (e) { return e.kind === 'partial'; }).forEach(function (e) {
+      if (out.some(function (x) { return e.date >= x.from && e.date <= x.to; })) return;
+      out.push({ id: 'ev-' + e.id, from: e.date, to: e.date, label: (SUBJ[e.subject] ? SUBJ[e.subject].name + ' ' : '') + e.title + ' (' + short(e.date) + ')', scope: e.title });
+    });
+    return out.sort(function (a, b) { return a.from.localeCompare(b.from); })
+      .map(function (x) { x.starts = addDays(x.from, -21); return x; });
+  }
+  function stageOf(x, T) {
+    var d = diff(x.from, T);
+    if (T >= x.from && T <= x.to) return STAGES[3];
+    if (T > x.to) return diff(T, x.to) <= 2 ? STAGES[4] : null;
+    return STAGES.filter(function (g) { return g.lo != null && d >= g.lo && d <= g.hi; })[0] || null;
+  }
+  function countdown(s, now) {
+    var T = today(now);
+    return countdowns(s).map(function (x) {
+      var g = stageOf(x, T);
+      return g ? Object.assign({}, x, { stage: g.id, stageName: g.name, todo: g.todo, days: diff(x.from, T) }) : null;
+    }).filter(Boolean);
+  }
+
+  /* Practice sets owed to the Sunday re-test hour: the ones sat about a week
+     and about a month ago (B5). Derived from the results, so a set logged
+     as practice is asked for again without anything else being written. */
+  function retestDue(s, now) {
+    var T = today(now);
+    return view(s).results.filter(function (r) {
+      if (r.kind !== 'practice') return false;
+      var d = diff(T, r.date);
+      return (d >= 6 && d <= 8) || (d >= 27 && d <= 34);
+    }).sort(function (a, b) { return a.date.localeCompare(b.date); });
+  }
+
+  /* A week runs on the countdown when a partial in any subject falls in it,
+     or a stacked week is a week or less away: Step drops to Floor (C8). */
+  function floorWeek(s, T) {
+    var mon = monday(T), sun = addDays(mon, 6);
+    if (view(s).events.some(function (e) { return e.kind === 'partial' && e.date >= mon && e.date <= sun; })) return true;
+    return countdown(s, parse(T).getTime() + 12 * 36e5).some(function (c) { return c.stage === 't7' || c.stage === 'week'; });
+  }
+
+  /* Today's page of the protocol: the fixed event, one row per subject, the
+     Sunday review on a Sunday, the countdown when one is running, and the
+     Step phase. On a bad day the rows are replaced by the minimum viable
+     day (A4) — which keeps the chain; it is not a plan. */
+  function dayPlan(s, now) {
+    s = shape(s);
+    var T = today(now), dow = parse(T).getDay(), W = WEEK[dow], ticks = s.floor[T] || {};
+    var bad = !!ticks.bad, qb = T >= QBANK_FROM, fw = floorWeek(s, T), ph = phaseOf(T);
+    var fixed = W.fixed;
+    if (dow === 6 && parse(T).getDate() <= 7) fixed = 'Step Saturday, 2.5 h: four timed mixed blocks, top-miss review, retro';
+    var rows;
+    if (bad) {
+      var ng = nextGraded(s, now);
+      rows = BAD_DAY.map(function (b) {
+        return { id: 'bad-' + b[0], subj: 'all', text: b[1].replace('{next}', ng ? ng.subjectName.toLowerCase() + ', graded ' + (ng.days === 0 ? 'today' : ng.days === 1 ? 'tomorrow' : 'in ' + ng.days + ' days') : 'the subject graded next'), must: true };
+      });
+    } else {
+      rows = [{ id: 'daily', subj: 'all', text: EVERY_DAY, must: false }];
+      Object.keys(W.rows).forEach(function (k) {
+        var t = W.rows[k];
+        if (Array.isArray(t)) t = qb ? t[1] : t[0];
+        if (k === 'step' && fw) t = 'Step at Floor this week: AnKing + 10 questions';
+        if (k === 'retest') {
+          var due = retestDue(s, now);
+          t += due.length ? ': ' + due.map(function (r) { return SUBJ[r.subject].name + (r.title ? ' ' + r.title : '') + ' (' + short(r.date) + ')'; }).join(', ')
+                          : '. No practice set was logged a week or a month ago, so there is nothing to re-take yet.';
+        }
+        rows.push({ id: k, subj: k === 'retest' ? 'all' : k, text: t, must: W.must === k });
+      });
+    }
+    rows.forEach(function (r) { r.name = SUBJ[r.subj] ? SUBJ[r.subj].name : (r.id === 'daily' ? 'every day' : r.id === 'retest' ? 're-test' : 'minimum'); r.done = !!ticks[r.id]; });
+    return {
+      date: T, dow: dow, day: DOW_NAME[dow], label: W.label, fixed: fixed, bad: bad, rows: rows,
+      sunday: dow === 0 && !bad ? SUNDAY.map(function (x) { return { id: 'sun-' + x[0], text: x[1], done: !!ticks['sun-' + x[0]] }; }) : null,
+      countdown: countdown(s, now), floorWeek: fw, phase: ph
+    };
+  }
+  function tickFloor(id, on, now) {
+    var s = read(), T = today(now);
+    s.floor[T] = Object.assign({}, s.floor[T] || {});
+    if (on) s.floor[T][id] = 1; else delete s.floor[T][id];
+    return write(s, now);
+  }
+  function badDay(on, now) { return tickFloor('bad', on, now); }
+
+  /* The open items and the Step dates, in the shape PlanV2.dated() returns,
+     so the Almanac's dates list asks both owners and sorts one list. */
+  function openItems(s) {
+    s = shape(s);
+    return OPEN.map(function (o) { return { id: o.id, by: o.by, label: o.label, done: s.items[o.id] || null }; });
+  }
+  function dated(s, on) {
+    s = shape(s);
+    var T = on || today(), out = [];
+    OPEN.forEach(function (o) {
+      if (!o.by || s.items[o.id]) return;
+      out.push({ id: o.id, kind: 'open', date: o.by, label: o.label, href: 'Study Control.html#protocol', late: o.by < T });
+    });
+    MILESTONES.forEach(function (m) {
+      if (m.date < T) return;
+      out.push({ id: m.id, kind: 'milestone', date: m.date, label: m.label, href: 'Study Control.html#protocol', late: false });
+    });
+    return out.sort(function (a, b) { return a.date.localeCompare(b.date); });
+  }
+  function setItem(id, on, now) {
+    var s = read();
+    if (on) s.items[id] = today(now); else delete s.items[id];
+    return write(s, now);
+  }
+
+  /* Writes the protocol's calendar entries once each: the Saturday Step
+     group session (the first Saturday of a month is the 2.5-hour Step
+     Saturday) and the anatomy seminars from 17 November. Same rules as
+     ensureGroup(): never over an existing or deleted one, no `told` stamp. */
+  function ensureProtocol() {
+    var L = ls(); if (!L || !has()) return 0;
+    var s = read(), added = 0;
+    function put(id, ev) { if (s.events[id] || s.dismissed[id]) return; s.events[id] = ev; added++; }
+    for (var d = STEP_GROUP.from; d <= STEP_GROUP.to; d = addDays(d, 7)) {
+      var big = parse(d).getDate() <= 7;
+      put('step-' + d, { date: d, time: STEP_GROUP.time, subject: 'step', kind: 'session', graded: false, prep: {},
+        title: big ? 'Step Saturday (2.5 h)' : 'Step group session (75 min)',
+        note: big ? 'Four timed mixed blocks on the last four weeks’ systems, top-miss review, 15-minute retro.'
+                  : 'Numbers, hard misses (two starred each), pass and defend, next week, fix list. Time to fix: proposal 10:00.' });
+    }
+    ANATOMY_SEMINARS.forEach(function (d, i) {
+      put('ana-sem' + (7 + i), { date: d, time: '', subject: 'anatomy', kind: 'seminar', graded: false, prep: {},
+        title: 'Seminar ' + (7 + i), note: 'From the protocol’s calendar (A3). Add the topic.' });
+    });
+    if (added) { try { L.setItem(KEY, JSON.stringify(s)); } catch (e) { return 0; } }
+    return added;
+  }
+
+  /* R12–R14, the protocol's rules that the original ten did not have.
+       R12  a countdown stage is running (A5)
+       R13  a practice set under 80% (B5 thresholds); two in a row under 70%
+            in one subject is a method review
+       R14  the new-card caps: anatomy over 100 new on any day, AnKing over
+            60 minutes a day for the week (A4, C6) */
+  function protocolFlags(s, V, T, weeks) {
+    var F = [];
+    countdown(s, parse(T).getTime() + 12 * 36e5).forEach(function (c) {
+      F.push({ id: 'count:' + c.id + ':' + c.stage, lvl: 'warn', subj: 'all', rule: 'R12', date: c.from,
+        title: c.label + ': ' + c.stageName + (c.days > 0 ? ' (' + c.days + ' days out)' : ''), todo: c.todo });
+    });
+    var prac = V.results.filter(function (r) { return r.kind === 'practice' && r.max; })
+      .sort(function (a, b) { return a.date.localeCompare(b.date) || (a.createdAt || '').localeCompare(b.createdAt || ''); });
+    prac.forEach(function (r) {
+      var p = pctOf(r), d = diff(T, r.date);
+      if (d < 0 || d > 7 || p >= 0.8) return;
+      F.push({ id: 'set:' + r.id, lvl: p < 0.7 ? 'change' : 'warn', subj: r.subject, rule: 'R13', date: r.date,
+        title: 'Practice set ' + r.score + '/' + r.max + ' (' + Math.round(p * 100) + '%)' + (r.title ? ' · ' + r.title : ''),
+        todo: p < 0.7 ? 'Under 70%: re-read the section, then a fresh set before the test.'
+                      : '70–79%: set 2 from the misses, and re-read the missed sections.' });
+    });
+    SK.forEach(function (k) {
+      var two = prac.filter(function (r) { return r.subject === k; }).slice(-2);
+      if (two.length === 2 && two.every(function (r) { return pctOf(r) < 0.7; }) && diff(T, two[1].date) <= 14)
+        F.push({ id: 'settrend:' + k + ':' + two[1].id, lvl: 'change', subj: k, rule: 'R13', date: two[1].date,
+          title: 'Two practice topics in a row under 70%', todo: 'Method review at the Sunday review: one written change, with its reason.' });
+    });
+    var lw = weeks[weeks.length - 1];
+    if (lw && lw.anatomy && lw.anatomy.newMax > 100)
+      F.push({ id: 'cap:anatomy:' + lw.week, lvl: 'change', subj: 'anatomy', rule: 'R14', date: lw.week,
+        title: lw.anatomy.newMax + ' new anatomy cards on one day in the week of ' + short(lw.week),
+        todo: 'The 100-a-day cap failed. Theory cards before images; images are the first thing dropped on a late night.' });
+    if (lw && lw.step && lw.step.min > 60)
+      F.push({ id: 'cap:step:' + lw.week, lvl: 'change', subj: 'step', rule: 'R14', date: lw.week,
+        title: 'AnKing ' + lw.step.min + ' min a day in the week of ' + short(lw.week),
+        todo: 'Over 60 minutes a day: cut AnKing new cards, never reviews.' });
+    return F;
+  }
+
   w.StudyControl = {
     KEY: KEY, LEGACY: LEGACY, SUBJ: SUBJ, SK: SK, CAUSES: CAUSES, KIND: KIND, SEED: SEED,
     read: read, write: write, has: has, adopt: adopt, view: view,
-    flags: flags, open: open, headsUp: headsUp, handle: handle, ensureGroup: ensureGroup, prepFor: prepFor, isSession: isSession, GROUP: GROUP, ingestWeeks: ingestWeeks, nextGraded: nextGraded, lastTold: lastTold, summary: summary,
+    flags: flags, open: open, headsUp: headsUp, handle: handle, ensureGroup: ensureGroup, prepFor: prepFor, isSession: isSession, GROUP: GROUP, ingestWeeks: ingestWeeks,
+    dayPlan: dayPlan, tickFloor: tickFloor, badDay: badDay, countdown: countdown, countdowns: countdowns, retestDue: retestDue,
+    phaseOf: phaseOf, openItems: openItems, dated: dated, setItem: setItem, ensureProtocol: ensureProtocol,
+    PROTOCOL: { version: '1.1', of: '2026-10-18', WEEK: WEEK, SUNDAY: SUNDAY, STACKED: STACKED, PHASES: PHASES, OPEN: OPEN, MILESTONES: MILESTONES },
+    nextGraded: nextGraded, lastTold: lastTold, summary: summary,
     today: today, iso: iso, parse: parse, addDays: addDays, diff: diff, monday: monday, short: short,
     pctOf: pctOf, prepCount: prepCount, isAssess: isAssess
   };
