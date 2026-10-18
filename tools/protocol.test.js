@@ -228,6 +228,13 @@ group('Both pages ask Study Control for the protocol');
   ok(/SC\.ensureProtocol\(\)/.test(al) && /SC\.ensureProtocol\(\)/.test(sc), 'both write the protocol\'s classes on first open');
   ok(/id="protocol"/.test(read('Study Control.html')) && /SC\.PROTOCOL\.WEEK/.test(sc), 'Study Control has the protocol panel, printing the protocol\'s own table');
   ok(['R11', 'R12', 'R13', 'R14'].every((r) => new RegExp('<b>' + r + '</b>').test(read('Study Control.html'))), 'and its rules list states R11 to R14');
+  /* Shipped broken: the sabbath hid this section, the heads-ups and class
+     prep. The protocol's review day is Sunday and the sabbath was a Sunday,
+     so the Sunday review and the re-test hour were asked for on no day. The
+     sabbath sets the tone; it does not remove the work. */
+  ok(/if \(SC\) H \+= protocolHTML\(s\)/.test(al) && !/sabbath\(\)\s*\?\s*\[\]\s*:\s*SC\.headsUp/.test(al) && !/held\s*\?\s*\[\]/.test(al),
+     'the sabbath hides neither the protocol, nor the heads-ups, nor class prep');
+  ok(/go light/.test(al) && /Keep it light/.test(al), 'it says to keep the day light instead');
   ok(!/\bProtocol\.html\b/.test(read('sitemap.js')), 'no new page: A1.7, no new trackers, pages or decks');
 }
 
