@@ -244,8 +244,7 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
   }
   function classHTML(e) {
     var sub = SC.SUBJ[e.subject] || { name: e.subject, c: '--accent', prep: [] };
-    var held = sabbath() && !SC.isAssess(e);
-    var prep = held ? [] : SC.prepFor(e).map(function (p, i) {
+    var prep = SC.prepFor(e).map(function (p, i) {
       var on = !!(e.prep && e.prep['p' + i]);
       return '<button type="button" class="al-chk" aria-pressed="' + on + '" data-prep="' + esc(e.id) + '" data-k="p' + i + '">' +
              '<span class="b"></span><span class="lab">' + esc(p) + '</span></button>';
@@ -310,7 +309,7 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
   function protocolHTML(s) {
     if (!SC || !SC.dayPlan) return '';
     var p = SC.dayPlan(s);
-    var h = kick('By the protocol') + '<div class="al-day"><b>' + esc(p.day) + ', ' + esc(p.label) + '.</b>' +
+    var h = kick('By the protocol') + (sabbath() ? '<div class="al-calm" style="padding-top:0">Your sabbath. Keep it light: family, rest, worship. Do what is below, then stop.</div>' : '') + '<div class="al-day"><b>' + esc(p.day) + ', ' + esc(p.label) + '.</b>' +
       (p.fixed ? ' ' + esc(p.fixed) + '.' : '') + (p.bad ? ' A bad day: the minimum only.' : '') + '</div>';
     if (!p.bad) h += p.countdown.map(function (c) {
       return '<div class="al-cd"><div class="t"><b>' + esc(c.stageName) + '</b> · ' + esc(c.label) + '</div><div class="d">' + esc(c.todo) + '</div></div>';
@@ -386,7 +385,7 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
     var lateN = PV && PV.dated ? PV.dated(t).filter(function (x) { return x.late; }).length : 0;
     var f = SYS && SYS.forcing ? SYS.forcing() : null;
     var bits = [];
-    if (sabbath()) bits.push('<b>Sabbath</b>: study, training and Anki are held today');
+    if (sabbath()) bits.push('<b>Sabbath</b>: go light. Family, rest and worship first; the work below still stands');
     if (ng) bits.push('Next graded ' + rel(ng.date).toLowerCase() + ', ' + esc(ng.subjectName));
     bits.push(lateN ? '<span class="owed">' + lateN + ' overdue</span>' : 'nothing overdue');
     if (f && f.days != null) bits.push(f.days + ' days until ' + esc(String(f.label || '').replace(/^([A-Z])(?=[a-z])/, function (c) { return c.toLowerCase(); })));
@@ -395,17 +394,22 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
          '<div class="al-status">' + bits.join('<span class="sep">·</span>') + '</div></header>';
 
     H += bookendsHTML();
-    if (SC && !sabbath()) H += protocolHTML(s);
+    /* The sabbath changes the tone of the day, not what is on it. It used
+       to hide this section, the heads-ups and class prep — and the protocol
+       makes Sunday its review day, so on a Sunday sabbath the Sunday review,
+       the re-test hour and Monday's histology set were asked for on no day
+       at all. They still have to be done; the page now says so, gently. */
+    if (SC) H += protocolHTML(s);
     if (SC) {
       var up = nextClasses(s, 3);
       H += kick('Next up') + (up.length ? '<div class="al-list">' + up.map(classHTML).join('') + '</div>'
            : '<div class="al-calm">No classes on the calendar. <a href="Study Control.html">Add one in Study Control</a>.</div>');
-      var hu = sabbath() ? [] : SC.headsUp(s);
+      var hu = SC.headsUp(s);
       H += kick('Heads up') + (hu.length ? '<div class="al-list">' + hu.map(function (x) {
         return '<div class="al-item al-flag ' + esc(x.lvl) + '"><div class="txt"><div class="rule">' + esc(x.rule) + ' · ' +
           esc(SC.SUBJ[x.subj] ? SC.SUBJ[x.subj].name : 'all subjects') + '</div><div class="t">' + esc(x.title) + '</div>' +
           '<div class="d">' + esc(x.todo) + '</div></div><button type="button" class="al-btn" data-flag="' + esc(x.id) + '">done</button></div>';
-      }).join('') + '</div>' : '<div class="al-calm">' + (sabbath() ? 'Nothing is asked of you today.' : 'Nothing needs changing. Keep going.') + '</div>');
+      }).join('') + '</div>' : '<div class="al-calm">' + 'Nothing needs changing. Keep going.' + '</div>');
     }
     if (!sabbath()) H += trainHTML();
     H += datesHTML();
