@@ -197,6 +197,12 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
 .al-floor .al-chk.must .lab { color: var(--ink); font-weight: 500; }
 .al-floor .al-chk.must .who::after { content: " \00b7 today\2019s must-do"; color: var(--muted); }
 .al-sub { font-size: 14px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--muted); margin: 12px 0 2px; }
+.al-wb { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 12px; border: 1px solid var(--line-2); text-decoration: none; }
+.al-wb span { text-align: center; padding: 4px 0 5px; border-left: 1px solid var(--line-2); font-size: 13px; color: var(--muted); line-height: 1.2; }
+.al-wb span:first-child { border-left: 0; }
+.al-wb b { display: block; font-weight: 400; font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.al-wb .full b { color: var(--ok); }
+.al-wb .today { background: var(--sunken); }
 .al-step { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; }
 .al-foot { margin-top: 34px; font-style: italic; font-size: 14.5px; color: var(--muted); text-align: center; }
 .al-foot::before { content: "\2766"; display: block; font-style: normal; color: var(--gilt); font-size: 20px; margin-bottom: 4px; }
@@ -321,6 +327,12 @@ body.hub.alm { font-family: var(--al-face); font-size: 18px; line-height: 1.42; 
     }
     h += '<div class="al-floor">' + p.rows.map(chk).join('') + '</div>';
     if (p.sunday) h += '<div class="al-sub">the Sunday review</div><div class="al-floor">' + p.sunday.map(chk).join('') + '</div>';
+    /* The past week, read back from the same ticks: done of offered, and
+       "min" for a bad day. Days before the protocol show a dash, not a 0. */
+    if (SC.weekBack) h += '<a class="al-wb" href="Study Control.html#protoWeekBack" aria-label="The past seven days, ticked of offered">' + SC.weekBack(s).map(function (d) {
+      return '<span class="' + (d.today ? 'today ' : '') + (!d.before && d.total && d.done === d.total ? 'full' : '') + '">' + d.day.charAt(0) +
+        '<b>' + (d.before ? '\u2013' : d.bad ? 'min' : d.done + '/' + d.total) + '</b></span>';
+    }).join('') + '</a>';
     var ph = p.phase;
     h += '<div class="al-step"><span class="al-small">' + (ph ? 'Step 1 · Phase ' + esc(ph.n) + ', ' + esc(ph.name).toLowerCase() + ' · Floor: ' + esc(p.floorWeek ? 'AnKing + 10 questions (countdown week)' : ph.floor) : '') + '</span>' +
       '<button type="button" class="al-btn" data-bad="' + (p.bad ? '0' : '1') + '">' + (p.bad ? 'back to the full day' : 'a bad day? minimum only') + '</button></div>';

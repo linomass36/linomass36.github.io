@@ -763,12 +763,77 @@
     return F;
   }
 
+
+  /* ── what the ticks add up to ──────────────────────────────────────────
+     The ticks were kept by day from the first one, but nothing showed a past
+     day: the Almanac shows today, so whether last Tuesday's floor was kept
+     could not be seen anywhere. weekBack() reads them back; adherence() sets
+     them beside the grades.
+
+     Both are derived on each call from the stored ticks and results, never
+     stored: a result corrected later, or a tick added late, moves its point. */
+  var PROTOCOL_FROM = '2026-10-18';   // v1.1's date: no day before it had rows to tick
+  function noonOf(d) { return parse(d).getTime() + 12 * 36e5; }
+  function weekBack(s, now, n) {
+    s = shape(s);
+    var T = today(now), out = [];
+    for (var i = (n || 7) - 1; i >= 0; i--) {
+      var d = addDays(T, -i), p = dayPlan(s, noonOf(d)), items = p.rows.concat(p.sunday || []);
+      var must = p.rows.filter(function (r) { return r.must; });
+      out.push({ date: d, day: p.day, today: d === T, before: d < PROTOCOL_FROM, bad: p.bad,
+        total: items.length, done: items.filter(function (x) { return x.done; }).length,
+        must: must.length ? must.every(function (r) { return r.done; }) : null });
+    }
+    return out;
+  }
+
+  /* For each result: how much of that subject's own protocol rows were
+     ticked in the seven days before it (the result's day itself excluded —
+     the test is not prep for itself). Only results whose whole week before
+     falls inside the protocol are plotted; a week half before it would read
+     as half-kept when it was simply not yet tracked. A bad day offers no
+     subject rows, so it neither helps nor hurts.
+
+     r is Pearson's, given only from five points up: with fewer, any line
+     through them means nothing, and the page says so rather than drawing one. */
+  function pearson(xs, ys) {
+    var n = xs.length; if (n < 5) return null;
+    var mx = xs.reduce(function (a, b) { return a + b; }, 0) / n, my = ys.reduce(function (a, b) { return a + b; }, 0) / n;
+    var sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < n; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) * (xs[i] - mx); syy += (ys[i] - my) * (ys[i] - my); }
+    return sxx && syy ? Math.round(100 * sxy / Math.sqrt(sxx * syy)) / 100 : null;
+  }
+  function adherence(s, now) {
+    s = shape(s);
+    var T = today(now), points = [], early = 0, plans = {};
+    function plan(d) { return plans[d] || (plans[d] = dayPlan(s, noonOf(d))); }
+    view(s).results.forEach(function (r) {
+      if (!r.max || SK.indexOf(r.subject) < 0 || r.date > T) return;
+      if (addDays(r.date, -7) < PROTOCOL_FROM) { early++; return; }
+      var off = 0, got = 0;
+      for (var i = 1; i <= 7; i++) plan(addDays(r.date, -i)).rows.forEach(function (x) {
+        if (x.subj === r.subject) { off++; if (x.done) got++; }
+      });
+      if (!off) return;
+      points.push({ id: r.id, date: r.date, subject: r.subject, kind: r.kind, practice: r.kind === 'practice',
+        title: r.title || '', score: pctOf(r), adh: got / off, got: got, off: off });
+    });
+    points.sort(function (a, b) { return a.date.localeCompare(b.date); });
+    var by = {};
+    SK.forEach(function (k) {
+      var ps = points.filter(function (p) { return p.subject === k; });
+      by[k] = { n: ps.length, r: pearson(ps.map(function (p) { return p.adh; }), ps.map(function (p) { return p.score; })) };
+    });
+    return { points: points, early: early, from: addDays(PROTOCOL_FROM, 7), n: points.length,
+      r: pearson(points.map(function (p) { return p.adh; }), points.map(function (p) { return p.score; })), bySubject: by };
+  }
+
   w.StudyControl = {
     KEY: KEY, LEGACY: LEGACY, SUBJ: SUBJ, SK: SK, CAUSES: CAUSES, KIND: KIND, SEED: SEED,
     read: read, write: write, has: has, adopt: adopt, view: view,
     flags: flags, open: open, headsUp: headsUp, handle: handle, ensureGroup: ensureGroup, prepFor: prepFor, isSession: isSession, GROUP: GROUP, ingestWeeks: ingestWeeks,
     dayPlan: dayPlan, tickFloor: tickFloor, badDay: badDay, countdown: countdown, countdowns: countdowns, retestDue: retestDue,
-    phaseOf: phaseOf, openItems: openItems, dated: dated, setItem: setItem, ensureProtocol: ensureProtocol,
+    phaseOf: phaseOf, weekBack: weekBack, adherence: adherence, PROTOCOL_FROM: PROTOCOL_FROM, openItems: openItems, dated: dated, setItem: setItem, ensureProtocol: ensureProtocol,
     PROTOCOL: { version: '1.1', of: '2026-10-18', WEEK: WEEK, SUNDAY: SUNDAY, STACKED: STACKED, PHASES: PHASES, OPEN: OPEN, MILESTONES: MILESTONES },
     nextGraded: nextGraded, lastTold: lastTold, summary: summary,
     today: today, iso: iso, parse: parse, addDays: addDays, diff: diff, monday: monday, short: short,

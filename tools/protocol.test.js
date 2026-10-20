@@ -218,6 +218,51 @@ group('The Step phase and its Floor come from the date');
   ok(SC.phaseOf('2027-07-01').floor === 'Floor only', 'year-2 finals are Floor only');
 }
 
+/* ── 9c. the past week, and the ticks against the grades ───────────────
+   Asked for after the ticks had been kept a few days: they were stored by
+   day but nothing showed a past day, so whether last Tuesday's floor was
+   kept could not be seen, nor whether keeping it moved a grade. */
+group('The past week reads the ticks back, and sets them beside the grades');
+{
+  const SC = fresh().StudyControl;
+  SC.tickFloor('histology', true, at(10, 19));
+  SC.tickFloor('daily', true, at(10, 19));
+  SC.badDay(true, at(10, 20));
+  const W = SC.weekBack(SC.read(), at(10, 21));
+  ok(W.length === 7 && W[6].date === '2026-10-21' && W[6].today, 'seven days, ending today');
+  ok(W[0].before && W[2].before && !W[3].before, 'days before the protocol (18 Oct) say so rather than showing nothing done');
+  const mon = W.find((d) => d.date === '2026-10-19');
+  ok(mon.done === 2 && mon.total === 6 && mon.must === true, 'Monday: 2 of its 6 rows, and the histology must-do done');
+  ok(W.find((d) => d.date === '2026-10-20').bad, 'a bad day is shown as one');
+
+  const c = fresh(), S2 = c.StudyControl, s = S2.read();
+  s.results = {};
+  /* physiology on five Fridays. The seven days before each hold six
+     physiology rows: Saturday to Thursday less Sunday, which has none, and
+     the previous Friday's test-and-recall-page — work in the subject too.
+     The test day itself is excluded. */
+  const fri = ['2026-10-30', '2026-11-06', '2026-11-13', '2026-11-20', '2026-11-27'];
+  const keep = [0, 1, 2, 4, 5], score = [5, 6, 7, 8, 9];
+  fri.forEach((f, i) => {
+    s.results['p' + i] = { date: f, subject: 'physiology', kind: 'entrance', score: score[i], max: 10, createdAt: f + 'T13:00:00Z' };
+    let n = 0;
+    for (let d = 1; d <= 7 && n < keep[i]; d++) {
+      const day = S2.addDays(f, -d), p = S2.dayPlan(s, S2.parse(day).getTime() + 12 * 36e5);
+      if (p.rows.some((r) => r.id === 'physiology')) { (s.floor[day] = s.floor[day] || {}).physiology = 1; n++; }
+    }
+  });
+  s.results.early = { date: '2026-10-23', subject: 'physiology', kind: 'entrance', score: 9, max: 10, createdAt: '2026-10-23T13:00:00Z' };
+  S2.write(s, at(11, 28));
+  const A = S2.adherence(S2.read(), at(11, 28));
+  ok(A.n === 5 && A.early === 1, 'a result whose week before was not all tracked is counted apart, not plotted (' + A.n + ', ' + A.early + ')');
+  ok(A.points.every((p) => p.subject === 'physiology' && p.off === 6), 'each point counts only its own subject\'s rows, the test day excluded');
+  ok(A.points.map((p) => p.got).join() === '0,1,2,4,5', 'and how many of them were ticked');
+  ok(A.r > 0.95 && A.bySubject.physiology.r === A.r, 'more ticks with higher scores gives a strong positive r (' + A.r + ')');
+  ok(A.bySubject.histology.n === 0 && A.bySubject.histology.r === null, 'a subject with no results has no r');
+  const s3 = S2.read(); ['p3', 'p4'].forEach((k) => delete s3.results[k]); S2.write(s3, at(11, 28));
+  ok(S2.adherence(S2.read(), at(11, 28)).r === null, 'under five results there is no r at all, rather than a line through three points');
+}
+
 /* ── 10. the pages ask, they do not keep ───────────────────────────────── */
 group('Both pages ask Study Control for the protocol');
 {
@@ -235,6 +280,8 @@ group('Both pages ask Study Control for the protocol');
   ok(/if \(SC\) H \+= protocolHTML\(s\)/.test(al) && !/sabbath\(\)\s*\?\s*\[\]\s*:\s*SC\.headsUp/.test(al) && !/held\s*\?\s*\[\]/.test(al),
      'the sabbath hides neither the protocol, nor the heads-ups, nor class prep');
   ok(/go light/.test(al) && /Keep it light/.test(al), 'it says to keep the day light instead');
+  ok(/SC\.weekBack\(/.test(al) && /SC\.weekBack\(/.test(sc) && /SC\.adherence\(/.test(sc), 'the past week and the chart are asked of SC, not counted on the page');
+  ok(!/var\(\$\{SUBJ\[[^\]]+\]\.c\}\)"[^>]*legend/.test(sc) && /SK\.map\(panel\)/.test(sc), 'the chart is one panel per subject, so identity is never colour alone');
   ok(!/\bProtocol\.html\b/.test(read('sitemap.js')), 'no new page: A1.7, no new trackers, pages or decks');
 }
 
