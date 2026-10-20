@@ -137,6 +137,14 @@ td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:now
 .proto-list .allev{grid-template-columns:86px 1fr auto}
 .wk{width:100%;border-collapse:collapse;font-size:12.5px}.wk td,.wk th{vertical-align:top;padding:5px 6px;border-top:1px solid var(--line);text-align:left}
 .wk .must{font-weight:600}
+.wb{display:grid;grid-template-columns:96px 1fr 70px 80px;gap:4px 12px;align-items:center;font-size:13.5px}
+.wb>div{padding:5px 0;border-top:1px solid var(--line)}.wb .bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}
+.wb .bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.corr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px;margin-top:8px}
+@media (max-width:560px){.corr{grid-template-columns:minmax(0,1fr)}.wb{grid-template-columns:80px 1fr 56px}.wb .mu{display:none}}
+.corr h4{margin:0 0 2px;font-size:13.5px;font-weight:600;color:var(--ink)}.corr h4 span{font-weight:400;color:var(--muted)}
+.corr svg{width:100%;max-width:360px;height:auto;display:block}.corr svg text{font-size:9.5px;fill:var(--muted)}
+.corr .dot{cursor:pointer}.corr .dot:hover,.corr .dot:focus{stroke-width:3}
 .rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px;font-size:13.5px}
 @media (max-width:700px){.rules{grid-template-columns:1fr}}
 .rules div{padding:6px 0;border-top:1px solid var(--line)}
@@ -254,6 +262,8 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
     <p class="proto-day" id="protoDay"></p>
     <div id="protoCd"></div>
     <details open><summary id="protoOpenSum">Open items</summary><div class="proto-list" id="protoOpen" style="margin-top:6px"></div></details>
+    <details open id="protoWeekBack"><summary>The past week</summary><div class="wb" id="protoWb" style="margin-top:6px"></div></details>
+    <details open><summary>Ticks against grades</summary><div id="protoCorr" style="margin-top:6px"></div></details>
     <details><summary>Countdowns: every stacked week</summary><div class="proto-list" id="protoStacked" style="margin-top:6px"></div></details>
     <details><summary>The week at a glance</summary><div class="scroll" style="margin-top:6px"><table class="wk" id="protoWeek"></table></div></details>
     <details><summary>Step 1 dates</summary><div class="proto-list" id="protoDates" style="margin-top:6px"></div></details>
@@ -481,8 +491,41 @@ function renderProtocol(){
   $("#protoWeek").innerHTML=`<tr><th>Day</th><th>Fixed</th>${cols.map(k=>`<th>${SUBJ[k].name}</th>`).join("")}</tr>`+order.map(d=>{const w=W[d];
     return `<tr><th>${DOW[d]}<div class="ev-note">${esc(w.label)}</div></th><td>${esc(w.fixed||"")}</td>${cols.map(k=>{let t=w.rows[k]||(k!=="step"&&w.rows.retest&&k!=="anatomy"?w.rows.retest:"");if(Array.isArray(t))t=t.join(". From 2 Nov: ");
       return `<td class="${w.must===k?"must":""}">${esc(t||"—")}</td>`}).join("")}</tr>`}).join("");
+  // the past week: done of offered, read back from the same ticks
+  $("#protoWb").innerHTML=`<div class="ev-note">Day</div><div class="ev-note">Ticked of the day's rows</div><div class="ev-note"></div><div class="ev-note mu">Must-do</div>`+
+    SC.weekBack(store).map(d=>`<div><b>${d.day.slice(0,3)}</b> ${short(d.date)}${d.today?' <span class="ev-note">today</span>':''}</div>`+
+      (d.before?`<div class="ev-note">before the protocol</div><div></div><div class="mu"></div>`
+       :`<div><div class="bar" role="img" aria-label="${d.done} of ${d.total}"><i style="width:${d.total?Math.round(100*d.done/d.total):0}%"></i></div></div><div class="num">${d.done}/${d.total}${d.bad?' <span class="ev-note">bad day</span>':''}</div><div class="mu">${d.must==null?'–':d.must?'done':'<span class="ev-note">not ticked</span>'}</div>`)).join("");
+  renderCorr();
   $("#protoDates").innerHTML=SC.PROTOCOL.MILESTONES.map(m=>`<div class="allev"><span class="ev-date">${short(m.date)} ${m.date.slice(0,4)}</span><span>${esc(m.label)}</span><span></span></div>`).join("");
 }
+
+/* Ticks against grades: one small chart per subject rather than one chart
+   coloured by subject. The four subject colours fail a colour-blindness
+   check against each other (histology and physiology are 5.7 apart for
+   protanopes), so identity here is the panel's title, never a colour.
+   x is how much of that subject's own protocol rows were ticked in the
+   week before the result; y is the score. Filled = graded, hollow =
+   practice set. Every number comes from SC.adherence(). */
+function renderCorr(){
+  const A=SC.adherence(store), el=$("#protoCorr");
+  if(!A.n){el.innerHTML=`<div class="empty">Nothing to plot yet. A result is plotted once the whole week before it was tracked, so the first can be from ${short(A.from)}.${A.early?` ${A.early} result${A.early>1?"s are":" is"} from before that and ${A.early>1?"aren't":"isn't"} plotted.`:""}</div>`;return}
+  const W=220,H=168,L=34,R=212,Tp=12,B=136,X=v=>L+v*(R-L),Y=v=>B-v*(B-Tp);
+  const pct=v=>Math.round(v*100)+"%";
+  const panel=k=>{const ps=A.points.filter(p=>p.subject===k),st=A.bySubject[k];
+    const grid=[0,.5,1].map(v=>`<line x1="${X(v)}" x2="${X(v)}" y1="${Tp}" y2="${B}" stroke="var(--line)"/><text x="${X(v)}" y="${B+12}" text-anchor="${v===0?"start":v===1?"end":"middle"}">${pct(v)}</text>`).join("")+
+      [0,.7,.8,1].map(v=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" ${v===.7||v===.8?'stroke-dasharray="3 3"':""}/><text x="${L-4}" y="${Y(v)+3}" text-anchor="end">${pct(v)}</text>`).join("");
+    const dots=ps.map(p=>{const lab=`${SUBJ[k].name} ${KIND[p.kind].toLowerCase()}${p.title?" · "+p.title:""}, ${short(p.date)}: ${pct(p.score)}. ${p.got} of ${p.off} ${SUBJ[k].name.toLowerCase()} rows ticked in the week before (${pct(p.adh)}).`;
+      return `<circle class="dot" tabindex="0" data-lab="${esc(lab)}" cx="${X(p.adh)}" cy="${Y(p.score)}" r="5" fill="${p.practice?"var(--panel)":`var(${SUBJ[k].c})`}" stroke="${p.practice?`var(${SUBJ[k].c})`:"var(--panel)"}" stroke-width="2"><title>${esc(lab)}</title></circle>`}).join("");
+    return `<div><h4>${SUBJ[k].name} <span>· ${st.n?st.r!=null?`r ${st.r.toFixed(2)}, ${st.n} results`:`${st.n} result${st.n>1?"s":""}, too few for r`:"no results yet"}</span></h4>
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${SUBJ[k].name}: score against protocol ticks in the week before">${grid}${dots}<text x="${(L+R)/2}" y="${H-4}" text-anchor="middle">ticked in the week before</text></svg></div>`};
+  el.innerHTML=`<p class="ev-note" style="margin:0">Each point is a result: across, how much of that subject's protocol rows you ticked in the 7 days before it; up, the score. Filled is graded, hollow a practice set; dashed lines are 70% and 80%. Tap a point for its numbers.
+    ${A.r!=null?`All subjects: <b>r ${A.r.toFixed(2)}</b> over ${A.n} results.`:`${A.n} result${A.n>1?"s":""} so far: r needs at least 5.`} A correlation, not a cause: a hard week can lower both.</p>
+    <div class="corr">${SK.map(panel).join("")}</div><div class="ev-note" id="corrLab" role="status" style="min-height:1.3em;margin-top:6px"></div>
+    <details><summary>As a table</summary><div class="scroll"><table><thead><tr><th>Date</th><th>Subject</th><th>What</th><th>Score</th><th>Ticked the week before</th></tr></thead><tbody>${A.points.map(p=>`<tr><td class="n">${short(p.date)}</td><td>${SUBJ[p.subject].name}</td><td>${KIND[p.kind]}${p.title?" · "+esc(p.title):""}</td><td class="n">${pct(p.score)}</td><td class="n">${p.got}/${p.off} · ${pct(p.adh)}</td></tr>`).join("")}</tbody></table></div></details>`;
+}
+document.addEventListener("click",e=>{const d=e.target.closest(".corr .dot");if(d)$("#corrLab").textContent=d.dataset.lab});
+document.addEventListener("keydown",e=>{const d=e.target.closest&&e.target.closest(".corr .dot");if(d&&(e.key==="Enter"||e.key===" ")){e.preventDefault();$("#corrLab").textContent=d.dataset.lab}});
 
 /* ---------- interactions ---------- */
 document.addEventListener("click",async e=>{
