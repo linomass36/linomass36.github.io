@@ -136,7 +136,11 @@
   var CSS =
     '#hbnav-btn{position:fixed;' +
     'right:calc(12px + var(--safe-right, env(safe-area-inset-right,0px)));' +
-    'top:calc(12px + var(--safe-top, env(safe-area-inset-top,0px)));' +
+    /* 16px, not 12: the top of an iPhone's screen is where iOS blurs and
+       fades content under the status bar, and at 12px the button and the
+       chips beside it sat in that fade. tabs.js centres its row on this
+       button (16 + 52/2 = 42px below the inset); move one, move the other. */
+    'top:calc(16px + var(--safe-top, env(safe-area-inset-top,0px)));' +
     'z-index:2147483200;' +
     'width:52px;height:52px;border-radius:50%;border:1px solid #E4E2DD;cursor:pointer;' +
     'background:#993C1D;color:#fff;font-size:21px;line-height:1;display:flex;' +
@@ -397,6 +401,12 @@
 
   function buildTabs() {
     if (document.getElementById('hb-tabs')) return;
+    /* A page can decline the bar. The v6 Almanac does: its own bottom bar
+       holds the two things written from it, its Contents reach every page,
+       and the tab bar on top of that covered its buttons and a band of the
+       page for nothing. Declared in the page, not listed here, so a page
+       says what it is rather than this file keeping a list of exceptions. */
+    if (document.querySelector('meta[name="hb-tabbar"][content="off"]')) return;
     var here = currentFile();
     var css = document.createElement('style');
     css.textContent =
@@ -428,16 +438,15 @@
          rather than from 58/64/100, three hand-copied constants that could
          not all stay right. --hb-tabbar is declared in mobile.css; the
          fallbacks keep this correct if that file ever fails to load. */
+      /* --hb-bottom is how much of the bottom edge a bar holds on this page.
+         The sync pill, the version badge and the capture button all stand
+         on it (mobile.css, capture.js), so they clear whatever bar a page
+         has — this one, a page's own, or none — instead of each knowing
+         about this one. */
       '@media (max-width:640px){#hb-tabs{display:flex;}' +
+      '  :root{--hb-bottom:var(--hb-tabbar,58px);}' +
       '  body{padding-bottom:calc(var(--hb-tabbar,58px) + ' +
-      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))));}' +
-      // sync.js positions its pill and panel with inline styles, so lifting
-      // them clear of the tab bar takes !important — without it the pill
-      // sits on top of the Today tab.
-      '  #hub-sync{bottom:calc(var(--hb-tabbar,58px) + 6px + ' +
-      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))))!important;}' +
-      '  #hub-sync-panel{bottom:calc(var(--hb-tabbar,58px) + 42px + ' +
-      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))))!important;}}';
+      'max(6px,var(--safe-bottom, env(safe-area-inset-bottom,0px))));}}';
     document.head.appendChild(css);
 
     var bar = document.createElement('nav');

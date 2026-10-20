@@ -192,7 +192,7 @@
     var css = document.createElement('style');
     css.textContent =
       '#hb-up{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));' +
-      'top:calc(12px + env(safe-area-inset-top,0px));z-index:2147483100;' +
+      'top:calc(16px + env(safe-area-inset-top,0px));z-index:2147483100;' +
       'display:none;align-items:center;gap:6px;min-height:36px;padding:7px 14px;' +
       'border-radius:20px;border:1px solid #E4E2DD;background:#FFFDF8;color:#55564F;' +
       'font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;' +

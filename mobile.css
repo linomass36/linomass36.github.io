@@ -15,7 +15,7 @@ body::after {
   content: "v__APP_VERSION__";
   position: fixed; z-index: 2147483000;
   right: calc(8px + var(--safe-right, 0px));
-  bottom: calc(7px + var(--safe-bottom, 0px));
+  bottom: calc(var(--hb-bottom, 0px) + 7px + var(--safe-bottom, 0px));
   font: 600 9.5px/1 'IBM Plex Mono', ui-monospace, monospace;
   letter-spacing: .12em; color: #9C9B93;
   background: rgba(255, 253, 248, .82); border: 1px solid #E4E2DD;
@@ -23,12 +23,16 @@ body::after {
   -webkit-backdrop-filter: saturate(1.1) blur(2px);
   backdrop-filter: saturate(1.1) blur(2px);
 }
-/* …and clears the phone tab bar rather than sitting on top of it. Derived
-   from --hb-tabbar so the badge follows the bar if the bar ever changes
-   height, instead of the two drifting apart. */
-@media (max-width: 640px) {
-  body::after { bottom: calc(var(--hb-tabbar) + 6px + var(--safe-bottom, 0px)); }
-}
+/* …and clears whatever bar the page has at the bottom rather than sitting on
+   top of it. --hb-bottom is that bar's height: the tab bar sets it on the
+   pages that have the tab bar, a page with its own bar sets its own, and it
+   is 0 on a page with neither. One number, so the badge, the sync pill and
+   the capture button cannot disagree about where the bar ends.
+
+   sync.js places its pill and panel with inline styles, so lifting them
+   takes !important — without it the pill sat on top of the Today tab. */
+#hub-sync { bottom: calc(var(--hb-bottom, 0px) + 8px + var(--safe-bottom, 0px)) !important; }
+#hub-sync-panel { bottom: calc(var(--hb-bottom, 0px) + 44px + var(--safe-bottom, 0px)) !important; }
 
 /* ── the safe area, in one place ──────────────────────────────────────────
    inject.py puts viewport-fit=cover on every page, so the web view goes
@@ -62,6 +66,8 @@ body::after {
   --safe-right: env(safe-area-inset-right, 0px);
   /* Kept in step with nav.js, which draws the bar. */
   --hb-tabbar: 58px;
+  /* Set by whichever bar a page has at the bottom; 0 when it has none. */
+  --hb-bottom: 0px;
   /* The lane the drawer button occupies at the top right: its own 12px
      margin, its 52px width, and 8px of air. Anything that would otherwise
      sit under it measures from this rather than re-deriving the arithmetic

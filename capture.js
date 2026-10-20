@@ -242,7 +242,7 @@
   // ── the field ──────────────────────────────────────────────────────────
   var CSS =
     '#hbcap-btn{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));' +
-    'top:calc(64px + env(safe-area-inset-top,0px));z-index:2147483190;width:44px;height:44px;' +
+    'top:calc(76px + env(safe-area-inset-top,0px));z-index:2147483190;width:44px;height:44px;' +
     'border-radius:50%;border:1px solid #E4E2DD;cursor:pointer;background:#FFFDF8;color:#3B6D11;' +
     'font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;' +
     'box-shadow:0 4px 14px rgba(26,27,26,.16);-webkit-tap-highlight-color:transparent;' +
@@ -271,7 +271,11 @@
     'box-shadow:0 8px 26px rgba(26,27,26,.28);display:none;align-items:center;gap:12px;}' +
     '#hbcap-toast.on{display:flex;}' +
     '#hbcap-toast a{color:#DCEBC8;text-decoration:underline;}' +
-    '@media (max-width:640px){#hbcap-btn{top:auto;bottom:calc(74px + env(safe-area-inset-bottom,0px));}}';
+    /* Above whatever bar the page has (--hb-bottom, mobile.css) and the
+       version badge under it. This was a fixed 74px, which was the tab bar
+       plus a gap — right on pages with the tab bar, and floating in the
+       middle of the content on a page without one. */
+    '@media (max-width:640px){#hbcap-btn{top:auto;bottom:calc(var(--hb-bottom,0px) + 34px + env(safe-area-inset-bottom,0px));}}';
 
   var back, input, hint, save, toast, toastTimer;
 
