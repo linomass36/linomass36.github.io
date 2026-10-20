@@ -121,7 +121,11 @@
          edge, with the gutter between them. */
       '.hb-desttabs{display:flex;gap:6px;align-items:center;' +
       'max-width:980px;margin:0 auto;box-sizing:border-box;' +
-      'padding:10px max(16px,env(safe-area-inset-right,0px)) 10px 16px;' +
+      /* 25px on top so the chips' centre (25 + 34/2) lines up with the
+         drawer button's (nav.js: 16 + 52/2), and both sit below the band
+         where iOS blurs content under the status bar. They were 9px and
+         12px down — in that band, and not level with each other. */
+      'padding:25px max(16px,env(safe-area-inset-right,0px)) 10px 16px;' +
       'overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;' +
       'border:0;background:none;}' +
       '.hb-desttabs::-webkit-scrollbar{display:none;}' +
@@ -140,8 +144,10 @@
          the chip — is what a thumb has to hit. */
       '@media(max-width:1100px){.hb-desttabs{' +
       '  width:calc(100% - var(--hb-btn-clear,72px));margin-left:0;margin-right:0;}}' +
-      '@media(max-width:640px){.hb-desttabs{padding:9px 12px;gap:5px;}' +
-      '  .hb-desttabs .hub-tab{min-height:36px;font-size:12px;padding:0 14px;}}';
+      /* On a phone the chips are full 44px tap targets, centred on the
+         button at 20 + 44/2 = 42px. */
+      '@media(max-width:640px){.hb-desttabs{padding:20px 12px 8px;gap:6px;}' +
+      '  .hb-desttabs .hub-tab{min-height:44px;font-size:13px;padding:0 16px;border-radius:22px;}}';
     d.head.appendChild(css);
   }
 

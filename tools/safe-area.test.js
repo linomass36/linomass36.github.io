@@ -246,11 +246,34 @@ ok(!/env\(safe-area-inset-[a-z]+,0px\)\)?[;)]/.test(nav.replace(/var\(--safe-[a-
 ok(!/padding-bottom:calc\(58px/.test(nav), 'body clearance is no longer a hard-coded 58px');
 ok(!/bottom:calc\(64px/.test(nav),         'the sync pill is no longer a hard-coded 64px');
 ok(!/bottom:calc\(100px/.test(nav),        'the sync panel is no longer a hard-coded 100px');
-ok((nav.match(/var\(--hb-tabbar,58px\)/g) || []).length === 3,
-   'all three derive from --hb-tabbar, with a fallback if mobile.css is missing');
-ok(/body::after\s*\{\s*bottom:\s*calc\(var\(--hb-tabbar\)/.test(css.replace(/\s+/g, ' ')) ||
-   /bottom: calc\(var\(--hb-tabbar\)/.test(css),
-   'and so does the version badge');
+ok((nav.match(/var\(--hb-tabbar,58px\)/g) || []).length === 2 && /--hb-bottom:var\(--hb-tabbar,58px\)/.test(nav),
+   'the body clearance and --hb-bottom derive from --hb-tabbar, with a fallback if mobile.css is missing');
+
+/* --hb-bottom: how much of the bottom edge a bar holds on THIS page.
+   Shipped broken: the Almanac lifted its buttons by --hb-tabbar-h, which
+   nothing ever set, so the tab bar covered their lower half and the sync
+   pill and version badge sat across them. The pill, the badge and the
+   capture button now all stand on one number that each page's bar sets —
+   the tab bar, a page's own bar, or none (0). */
+const cap = read('capture.js'), alm = read('Almanac.html');
+ok(/--hb-bottom:\s*0px/.test(css), 'mobile.css declares --hb-bottom, 0 by default');
+ok(/body::after \{[^}]*bottom: calc\(var\(--hb-bottom, 0px\)/.test(css.replace(/\s+/g, ' ')), 'the version badge stands on it');
+ok(/#hub-sync \{ bottom: calc\(var\(--hb-bottom, 0px\)/.test(css.replace(/\s+/g, ' ')) && /#hub-sync-panel \{ bottom: calc\(var\(--hb-bottom/.test(css.replace(/\s+/g, ' ')),
+   'so do the sync pill and its panel');
+ok(/#hbcap-btn\{top:auto;bottom:calc\(var\(--hb-bottom,0px\)/.test(cap) && !/bottom:calc\(74px/.test(cap), 'and the capture button, which was a fixed 74px');
+ok(!/--hb-tabbar-h/.test(read('Almanac.html') + read('mobile.css') + nav + cap), 'nothing reads --hb-tabbar-h, which nothing sets');
+ok(/<meta name="hb-tabbar" content="off">/.test(alm) && /meta\[name="hb-tabbar"\]\[content="off"\]/.test(nav),
+   'the Almanac declines the tab bar, and nav.js honours it');
+ok(/--hb-bottom: var\(--al-bar\)/.test(alm), 'and its own bottom bar sets --hb-bottom');
+ok(/<main class="page"><div id="page"/.test(alm), 'it renders into a div inside <main>, so tabs.js\'s chips in <main> survive a re-render');
+
+/* The top: the drawer button and the destination chips sat 12px and 9px
+   below the inset, in the band iOS blurs under the status bar, and not
+   level with each other. Both centre 42px below it now. */
+const tabsJs = read('tabs.js');
+ok(/top:calc\(16px \+ var\(--safe-top/.test(nav), 'the drawer button is 16px below the inset');
+ok(/padding:25px max\(16px/.test(tabsJs) && /padding:20px 12px 8px/.test(tabsJs) && /min-height:44px/.test(tabsJs),
+   'the chips are centred on it (25 + 34/2 on a desktop, 20 + 44/2 on a phone, as 44px targets)');
 
 console.log(failed ? '\n' + failed + ' failed' : '\nall green');
 process.exit(failed ? 1 : 0);
