@@ -1,0 +1,9 @@
+{
+ "package": "year2_hub",
+ "name": "Year 2 Hub",
+ "human_version": "3.1 (polished hub, runs in the background)",
+ "min_point_version": 50,
+ "conflicts": [
+  "direction_c_planner"
+ ]
+}

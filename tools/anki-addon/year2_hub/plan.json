@@ -1,0 +1,4480 @@
+{
+ "id": "direction-c-2026-27",
+ "version": "3.0",
+ "built": "2026-10-23",
+ "decks": {
+  "anking": "AnKing Step Deck",
+  "slides": "SecondLook Histology"
+ },
+ "units": [
+  {
+   "id": "step-w00",
+   "track": "step",
+   "label": "Step wk 0: Cell biology",
+   "release": "2026-10-23",
+   "due": "2026-10-25",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 44-49",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::01_Cell_cycle_phases",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::02_Rough_endoplasmic_reticulum",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::03_Smooth_endoplasmic_reticulum",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::04_Cell_trafficking",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::05_Peroxisome",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::06_Proteasome",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::07_Cytoskeletal_elements",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::08_Microtubule",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::09_Cilia_structure",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::11_Sodium-potassium_pump",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::12_Collagen",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::13_Collagen_synthesis_and_structure",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::14_Osteogenesis_imperfecta",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::15_Ehlers-Danlos_syndrome",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::16_Menkes_disease"
+   ],
+   "cards": 250
+  },
+  {
+   "id": "step-w01",
+   "track": "step",
+   "label": "Step wk 1: General embryology; neurons; junctions and skin",
+   "release": "2026-10-19",
+   "due": "2026-10-25",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 630-636, 503-505, 482-483",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::03_Derm::02_Epithelial_cell_junctions",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::03_Derm::04_Dermatologic_macroscopic_terms",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::03_Derm::05_Dermatologic_microscopic_terms",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::01_Cells_of_the_nervous_system",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::02_Neuron_action_potential",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::03_Sensory_receptors",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::04_Peripheral_nerve",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::05_Neuronal_response_to_axonal_injury",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::06_Neurotransmitter_changes_with_disease",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::01_Early_embryonic_development",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::02_Embryologic_derivatives",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::03_Teratogens",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::04_Types_of_errors_in_morphogenesis",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::05_Fetal_alcohol_syndrome",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::06_Neonatal_abstinence_syndrome",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::07_Placenta",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::08_Amniotic_fluid",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::09_Twinning",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::10_Twin-twin_transfusion_syndrome",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::11_Umbilical_cord"
+   ],
+   "cards": 364
+  },
+  {
+   "id": "step-w02",
+   "track": "step",
+   "label": "Step wk 2: Hearing, pupils, visual pathways; lower-limb nerves",
+   "release": "2026-10-26",
+   "due": "2026-11-01",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 547, 554-557, 455-458",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::08_Actions_of_hip_muscles",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::10_Lower_extremity_nerves",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::11_Ankle_sprains",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::12_Signs_of_lumbosacral_radiculopathy",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::13_Neurovascular_pairing",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::04_Otology::01_Auditory_anatomy_and_physiology",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::04_Otology::02_Otitis_externa",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::04_Otology::03_Otitis_media",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::11_Pupillary_control",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::12_Relative_afferent_pupillary_defect",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::13_Horner_syndrome",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::14_Ocular_motility",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::15_Strabismus",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::16_Cranial_nerve_III_IV_VI_palsies",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::17_Visual_field_defects",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::18_Cavernous_sinus"
+   ],
+   "cards": 425
+  },
+  {
+   "id": "step-w03",
+   "track": "step",
+   "label": "Step wk 3: Upper-limb nerves, brachial plexus, hand; muscle",
+   "release": "2026-11-02",
+   "due": "2026-11-08",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 450-454, 459-461",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::01_Upper_extremity_nerves",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::02_Rotator_cuff_muscles",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::03_Arm_abduction",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::04_Brachial_plexus_lesions",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::05_Wrist_region",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::06_Hand_muscles",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::07_Distortions_of_the_hand",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::09_Knee_exam",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::14_Motoneuron_action_potential_to_muscle_contraction",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::15_Types_of_skeletal_muscle_fibers",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::17_Vascular_smooth_muscle_contraction_and_relaxation",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::18_Muscle_proprioceptors",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::19_Bone_formation"
+   ],
+   "cards": 460
+  },
+  {
+   "id": "step-w05",
+   "track": "step",
+   "label": "Step wk 5: Neuro 1: embryology, meninges, ventricles, cord and tracts",
+   "release": "2026-11-16",
+   "due": "2026-11-22",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 280-282, 500-502, 506, 515, 521-523",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::01_Neural_development",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::02_Regionalization_of_neural_tube",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::03_Central_and_peripheral_nervous_systems_origins",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::04_Neural_tube_defects",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::05_Brain_malformations",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::06_Posterior_fossa_malformations",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::07_Syringomyelia",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::08_Tongue_development",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::07_Meninges",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::08_Blood-brain_barrier",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::09_Vomiting_center",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::25_Ventricular_system",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::26_Brainstem-ventral_view",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::39_Spinal_cord_and_associated_tracts",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::40_Spinal_tract_anatomy_and_functions",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::41_Clinical_reflexes",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::42_Primitive_reflexes",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::43_Landmark_dermatomes"
+   ],
+   "cards": 519
+  },
+  {
+   "id": "step-w06",
+   "track": "step",
+   "label": "Step wk 6: Neuro 2: sleep, hypothalamus, limbic, cerebellum, basal ganglia, cortex",
+   "release": "2026-11-23",
+   "due": "2026-11-29",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 507-513",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::10_Sleep_physiology",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::12_Hypothalamus",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::13_Thalamus",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::14_Limbic_system",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::15_Dopaminergic_pathways",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::16_Cerebellum",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::17_Basal_ganglia",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::18_Cerebral_cortex_regions",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::19_Cerebral_perfusion",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::20_Homunculus",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::21_Cerebral_arteries-cortical_distribution"
+   ],
+   "cards": 342
+  },
+  {
+   "id": "step-w07",
+   "track": "step",
+   "label": "Step wk 7: Neuro 3: circle of Willis, brainstem, cranial nerves, eye movements",
+   "release": "2026-11-30",
+   "due": "2026-12-06",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 514, 516-520, 556, 558",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::23_Circle_of_Willis",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::24_Dural_venous_sinuses",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::28_Cranial_nerve_nuclei",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::29_Vagal_nuclei",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::31_Cranial_nerves_and_vessel_pathways",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::33_Cranial_nerves",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::34_Cranial_nerve_reflexes",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::35_Mastication_muscles",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::36_Spinal_nerves",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::37_Spinal_cord-lower_extent",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::16_Cranial_nerve_III_IV_VI_palsies",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::19_Internuclear_ophthalmoplegia"
+   ],
+   "cards": 365
+  },
+  {
+   "id": "step-w08",
+   "track": "step",
+   "label": "Step wk 8: Blood 1: blood groups, erythropoiesis, blood cells",
+   "release": "2026-12-07",
+   "due": "2026-12-13",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 410-415",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::01_Embryology::01_Fetal_erythropoiesis",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::01_Embryology::03_Blood_groups",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::01_Embryology::04_Hemolytic_disease_of_the_fetus_and_newborn",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::01_Hematopoiesis",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::02_Neutrophils",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::03_Erythrocytes",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::04_Thrombocytes_(platelets)",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::05_Monocytes",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::06_Macrophages",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::07_Dendritic_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::08_Eosinophils",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::09_Basophils",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::10_Mast_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::11_Lymphocytes",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::12_Natural_killer_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::13_B_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::14_T_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::15_Plasma_cells"
+   ],
+   "cards": 323
+  },
+  {
+   "id": "step-w10",
+   "track": "step",
+   "label": "Step wk 10: Blood 2: hemostasis; lymphoid organs and immune cells",
+   "release": "2026-12-21",
+   "due": "2026-12-27",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 416-419, 94-101",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::02_Immunology::01_Lymphoid_Structures::01_Immune_system_organs",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::01_Lymphoid_Structures::02_Lymph_node",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::01_Lymphoid_Structures::03_Lymphatic_drainage_associations",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::01_Lymphoid_Structures::04_Spleen",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::01_Lymphoid_Structures::05_Thymus",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::01_Innate_vs_adaptive_immunity",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::03_Major_histocompatibility_complex_I_and_II",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::04_HLA_subtypes_associated_with_diseases",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::05_Functions_of_natural_killer_cells",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::06_Major_functions_of_B_and_T_cells",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::07_Differentiation_of_T_cells",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::08_Macrophage-lymphocyte_interaction",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::09_Cytotoxic_T_cells",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::10_Regulatory_T_cells",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components::11_T-_and_B-cell_activation",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::10_Anergy",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::01_Hemoglobin_electrophoresis",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::02_Antiglobulin_test",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::03_Platelet_plug_formation_(primary_hemostasis)",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::04_Thrombogenesis",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::05_Coagulation_and_kinin_pathways",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::06_Vitamin_K-dependent_coagulation",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::05_Pharm::01_Heparin",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::05_Pharm::02_Warfarin"
+   ],
+   "cards": 478
+  },
+  {
+   "id": "step-w11",
+   "track": "step",
+   "label": "Step wk 11: Cardio 1: embryology, anatomy, cardiac output, PV loops, heart sounds",
+   "release": "2026-12-28",
+   "due": "2027-01-03",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 284-293",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::01_Embryology::01_Heart_morphogenesis",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::01_Embryology::02_Heart_embryology",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::01_Embryology::03_Fetal_Circulation",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::01_Embryology::04_Fetal-postnatal_derivatives",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::02_Anatomy::01_Heart_anatomy",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::02_Anatomy::*Blood_Vessels",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::02_Anatomy::*Blunt_Cardiac_Injury",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::02_Anatomy::*Circuitry",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::01_Cardiac_output_variables",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::02_Cardiac_output_equations",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::03_Starling_Curves",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::04_Resistance_pressure_flow",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::05_Cardiac_and_vascular_function_curves",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::06_Pressure-volume_loops_and_cardiac_cycle",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::09_Splitting_of_S2",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::*Brugada_Syndrome",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::*Torsades_de_Pointes",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::*Wolff-Parkinson-White_Syndrome"
+   ],
+   "cards": 450
+  },
+  {
+   "id": "step-w12",
+   "track": "step",
+   "label": "Step wk 12: Cardio 2: murmurs, ECG, conduction",
+   "release": "2027-01-04",
+   "due": "2027-01-10",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 294-297",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::10_Auscultation_of_the_heart",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::11_Heart_murmurs",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::12_Myocardial_action_potential",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::13_Pacemaker_action_potential",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::14_Electrocardiogram",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::15_Atrial_natriuretic_peptide",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::16_B-type_(brain)_natriuretic_peptide"
+   ],
+   "cards": 321
+  },
+  {
+   "id": "step-w14",
+   "track": "step",
+   "label": "Step wk 14: Cardio 3: baroreflex, autoregulation, capillary exchange",
+   "release": "2027-01-18",
+   "due": "2027-01-24",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 298-299",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::17_Baroreceptors_and_chemoreceptors",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::18_Normal_resting_cardiac_pressures",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::19_Autoregulation",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::20_Capillary_fluid_exchange"
+   ],
+   "cards": 120
+  },
+  {
+   "id": "step-w15",
+   "track": "step",
+   "label": "Step wk 15: Genetics",
+   "release": "2027-01-25",
+   "due": "2027-01-31",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 54-62",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::10_Gene_expression_modifications",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::01_Genetic_terms",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::03_Hardy-Weinberg_principle",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::04_Disorders_of_imprinting",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::05_Modes_of_inheritance",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::08_Cystic_fibrosis",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::10_Muscular_dystrophies",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::12_Rett_syndrome",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::13_Fragile_X_syndrome",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::14_Trinucleotide_repeat_expansion_diseases",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::15_Autosomal_trisomies",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::17_Robertsonian_translocation",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::18_Cri-du-chat_syndrome",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::04_Genetics::19_Williams_syndrome"
+   ],
+   "cards": 304
+  },
+  {
+   "id": "step-w17",
+   "track": "step",
+   "label": "Step wk 17: Biostatistics 1",
+   "release": "2027-02-08",
+   "due": "2027-02-14",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 256-264",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::01_Observational_studies",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::02_Clinical_therapeutic_trial",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::05_Quantifying_risk",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::07_Likelihood_ratio",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::09_Evaluation_of_diagnostic_tests",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::11_Precision_vs_accuracy",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::12_Incidence_vs_prevalence",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::13_Bias_and_study_errors"
+   ],
+   "cards": 201
+  },
+  {
+   "id": "step-w18",
+   "track": "step",
+   "label": "Step wk 18: Biostatistics 2",
+   "release": "2027-02-15",
+   "due": "2027-02-21",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 265-267",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::15_Statistical_distribution",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::16_Statistical_hypothesis_testing",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::17_Outcomes_of_statistical_hypothesis_testing",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::19_Confidence_interval",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::20_Meta-analysis",
+    "#AK_Step1_v12::#FirstAid::06_Public_Health::01_Epidemiology_and_Biostatistics::21_Common_statistical_tests"
+   ],
+   "cards": 31
+  },
+  {
+   "id": "step-w19",
+   "track": "step",
+   "label": "Step wk 19: Renal 1: embryology, anatomy, clearance, filtration",
+   "release": "2027-02-22",
+   "due": "2027-02-28",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 596-602",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology::01_Kidney_embryology",
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology::02_Potter_sequence",
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology::03_Horseshoe_kidney",
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology::04_Congenital_solitary_functioning_kidney",
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology::05_Duplex_collecting_system",
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology::06_Posterior_urethral_valves",
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology::*Bladder_Exstrophy",
+    "#AK_Step1_v12::#FirstAid::14_Renal::02_Anatomy::02_Glomerular_anatomy",
+    "#AK_Step1_v12::#FirstAid::14_Renal::02_Anatomy::03_Course_of_ureters",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::01_Fluid_compartments",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::02_Glomerular_filtration_barrier",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::03_Renal_clearance",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::04_Glomerular_filtration_rate",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::06_Effective_renal_plasma_flow",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::07_Filtration",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::08_Changes_in_glomerular_dynamics",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::09_Calculation_of_reabsorption_and_secretion_rate",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::*Acute_Dialysis"
+   ],
+   "cards": 381
+  },
+  {
+   "id": "step-w20",
+   "track": "step",
+   "label": "Step wk 20: Renal 2: nephron transport, tubular defects",
+   "release": "2027-03-01",
+   "due": "2027-03-07",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 603-605",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::11_Nephron_transport_physiology",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::12_Renal_tubular_defects",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::13_Relative_concentrations_along_proximal_tubule",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::20_Features_of_renal_disorders"
+   ],
+   "cards": 279
+  },
+  {
+   "id": "step-w21",
+   "track": "step",
+   "label": "Step wk 21: Renal 3: RAAS, JGA, renal hormones, electrolytes",
+   "release": "2027-03-08",
+   "due": "2027-03-14",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 606-609",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::14_Renin-angiotensin-aldosterone_system",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::15_Juxtaglomerular_apparatus",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::16_Kidney_hormone_functions",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::18_Potassium_shifts",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::19_Electrolyte_disturbances",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::21_Acid-base_physiology"
+   ],
+   "cards": 233
+  },
+  {
+   "id": "step-w22",
+   "track": "step",
+   "label": "Step wk 22: GI 1: embryology, pharyngeal apparatus, GI hormones",
+   "release": "2027-03-15",
+   "due": "2027-03-21",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 364-366, 637-639, 378-380",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::01_Embryology::01_Normal_gastrointestinal_embryology",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::01_Embryology::02_Ventral_wall_defects",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::01_Embryology::03_Tracheoesophageal_anomalies",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::01_Embryology::04_Intestinal_atresia",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::01_Embryology::05_Hypertrophic_pyloric_stenosis",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::01_Gastrointestinal_regulatory_substances",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::02_Gastrointestinal_secretory_products",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::04_Pancreatic_secretions",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::*Protein_Absorption",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::12_Pharyngeal_apparatus",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::13_Pharyngeal_cleft_derivatives",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::14_Pharyngeal_pouch_derivatives",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::15_Pharyngeal_arch_derivatives",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::16_Orofacial_clefts",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::17_Genital_embryology"
+   ],
+   "cards": 307
+  },
+  {
+   "id": "step-w24",
+   "track": "step",
+   "label": "Step wk 24: GI 2: digestion, absorption, bile; peritoneum, blood supply",
+   "release": "2027-03-29",
+   "due": "2027-04-04",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 381-382, 367-372",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::01_Embryology::06_Pancreas_and_spleen_embryology",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::01_Retroperitoneal_structures",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::02_Important_gastrointestinal_ligaments",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::03_Digestive_tract_anatomy",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::04_Digestive_tract_histology",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::05_Abdominal_aorta_and_branches",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::06_Gastrointestinal_blood_supply_and_innervation",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::07_Celiac_trunk",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::08_Portosystemic_anastomoses",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::05_Carbohydrate_absorption",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::06_Vitamin_and_mineral_absorption",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::07_Peyer_patches",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::08_Bile",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::09_Bilirubin"
+   ],
+   "cards": 301
+  },
+  {
+   "id": "step-w25",
+   "track": "step",
+   "label": "Step wk 25: GI 3: anal canal, liver, biliary tree, hernias",
+   "release": "2027-04-05",
+   "due": "2027-04-11",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 373-377",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::09_Pectinate_line",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::10_Liver_tissue_architecture",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::11_Biliary_structures",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::12_Femoral_region",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::13_Inguinal_canal",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::15_Hernias"
+   ],
+   "cards": 130
+  },
+  {
+   "id": "step-w26",
+   "track": "step",
+   "label": "Step wk 26: Resp 1: embryology, anatomy, lung volumes, compliance",
+   "release": "2027-04-12",
+   "due": "2027-04-18",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 678-683",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::01_Lung_development",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::02_Choanal_Atresia",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::03_Lung_malformations",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::04_Club_cells",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::05_Alveolar_cell_types",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::06_Neonatal_respiratory_distress_syndrome",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::02_Anatomy::01_Respiratory_tree",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::02_Anatomy::02_Lung_anatomy",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::02_Anatomy::03_Diaphragm_structures",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::02_Anatomy::*Neurological_Control_of_Breathing",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::01_Lung_volumes_and_capacities",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::03_Determination_of_physiologic_dead_space",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::04_Ventilation",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::05_Lung_and_chest_wall_properties",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::*Respiratory_System_Changes_in_the_Elderly"
+   ],
+   "cards": 350
+  },
+  {
+   "id": "step-w27",
+   "track": "step",
+   "label": "Step wk 27: Resp 2: pulmonary circulation, V/Q, alveolar gas, CO2",
+   "release": "2027-04-19",
+   "due": "2027-04-25",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 684-686",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::06_Pulmonary_circulation",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::07_Pulmonary_vascular_resistance",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::08_Ventilation/perfusion_mismatch",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::09_Alveolar_gas_equation",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::10_Carbon_dioxide_transport"
+   ],
+   "cards": 134
+  },
+  {
+   "id": "step-w28",
+   "track": "step",
+   "label": "Step wk 28: Resp 3: hemoglobin, O2 curve, altitude, exercise",
+   "release": "2027-04-26",
+   "due": "2027-05-02",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 687-689",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::11_Hypoxia_and_hypoxemia",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::12_Hemoglobin",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::13_Oxygen_content_of_blood",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::14_Oxyhemoglobin_dissociation_curve",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::15_Response_to_high_altitude",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::16_Response_to_exercise",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::18_Cyanide_vs_carbon_monoxide_poisoning"
+   ],
+   "cards": 171
+  },
+  {
+   "id": "step-w29",
+   "track": "step",
+   "label": "Step wk 29: Biochem 1: molecular; lab techniques",
+   "release": "2027-05-03",
+   "due": "2027-05-09",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 32-43, 50-53",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::01_Chromatin_structure",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::02_Nucleotides",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::03_De_novo_pyrimidine_and_purine_synthesis",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::04_Purine_salvage_deficiencies",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::05_Genetic_code_features",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::06_DNA_replication",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::07_DNA_repair",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::08_Mutations_in_DNA",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::09_Lac_operon",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::10_Functional_organization_of_a_eukaryotic_gene",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::11_Regulation_of_gene_expression",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::12_RNA_processing_(eukaryotes)",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::13_RNA_polymerases",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::14_Introns_vs_exons",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::15_Splicing_of_pre-mRNA",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::16_tRNA",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::17_Start_and_stop_codons",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::18_Protein_synthesis",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::19_Posttranslational_modifications",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::01_Molecular::20_Chaperone_protein",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::17_Elastin",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::01_PCR",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::02_CRISPR/Cas9",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::03_Blotting_procedures",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::04_Flow_cytometry",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::05_Microarrays",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::06_Enzyme-linked_immunosorbent_assay",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::07_Karyotyping",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::08_Fluorescence_in_situ_hybridization",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::03_Laboratory_Techniques::09_Molecular_cloning"
+   ],
+   "cards": 502
+  },
+  {
+   "id": "step-w30",
+   "track": "step",
+   "label": "Step wk 30: Acid-base",
+   "release": "2027-05-10",
+   "due": "2027-05-16",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 610-611",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::22_Acidosis_and_alkalosis",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::23_Renal_tubular_acidosis"
+   ],
+   "cards": 111
+  },
+  {
+   "id": "step-w31",
+   "track": "step",
+   "label": "Step wk 31: Endocrine 1: embryology, anatomy, hypothalamic-pituitary",
+   "release": "2027-05-17",
+   "due": "2027-05-23",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 330-334",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::01_Embryology::01_Thyroid_development",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::02_Anatomy::01_Pituitary_gland",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::02_Anatomy::02_Adrenal_cortex_and_medulla",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::02_Anatomy::03_Endocrine_pancreas_cell_types",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::01_Hypothalamic-pituitary_hormones",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::02_Growth_hormone",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::03_Antidiuretic_hormone",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::04_Prolactin"
+   ],
+   "cards": 224
+  },
+  {
+   "id": "step-w32",
+   "track": "step",
+   "label": "Step wk 32: Endocrine 2: thyroid, cortisol, adrenal steroids",
+   "release": "2027-05-24",
+   "due": "2027-05-30",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 335-336, 339",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::05_Thyroid_hormones",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::06_Parathyroid_hormone",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::11_Adrenal_steroids_and_congenital_adrenal_hyperplasias",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::12_Cortisol"
+   ],
+   "cards": 328
+  },
+  {
+   "id": "step-w33",
+   "track": "step",
+   "label": "Step wk 33: Endocrine 3: calcium, PTH, insulin, glucagon, signalling",
+   "release": "2027-05-31",
+   "due": "2027-06-06",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 337-338, 340-341",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::07_Calcium_homeostasis",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::08_Calcitonin",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::09_Glucagon",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::10_Insulin",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::13_Appetite_regulation",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::14_Signaling_pathways_of_endocrine_hormones",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::15_Signaling_pathways_of_steroid_hormones"
+   ],
+   "cards": 248
+  },
+  {
+   "id": "step-w34",
+   "track": "step",
+   "label": "Step wk 34: Reproduction: differentiation, anatomy, physiology",
+   "release": "2027-06-07",
+   "due": "2027-06-13",
+   "deck": "anking",
+   "tbc": false,
+   "note": "FA pp. 640-654",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::18_Sexual_differentiation",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::19_Uterine_(Müllerian_duct)_anomalies",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::20_Male/female_genital_homologs",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::21_Congenital_penile_abnormalities",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::22_Descent_of_testes_and_ovaries",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::01_Drainage_of_reproductive_organs",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::02_Female_reproductive_anatomy",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::03_Adnexal_torsion",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::04_Pelvic_organ_prolapse",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::05_Female_reproductive_epithelial_histology",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::06_Male_reproductive_anatomy",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::07_Genitourinary_trauma",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::08_Autonomic_innervation_of_male_sexual_response",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::09_Seminiferous_tubules",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::01_Spermatogenesis",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::02_Estrogen",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::03_Progesterone",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::04_Oogenesis",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::05_Ovulation",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::06_Menstrual_cycle",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::07_Abnormal_uterine_bleeding",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::08_Pregnancy",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::10_Human_chorionic_gonadotropin",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::11_Human_placental_lactogen",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::12_Apgar_score",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::13_Neonatal_birth_weight",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::14_Lactation",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::15_Menopause",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::16_Androgens",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::17_Tanner_stages_of_sexual_development",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::18_Precocious_puberty",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::*Infant_&_Child_Development"
+   ],
+   "cards": 605
+  },
+  {
+   "id": "phys-w02",
+   "track": "physio",
+   "label": "Physiology lab 2: Membrane physiology (Ch 4-5)",
+   "release": "2026-10-09",
+   "due": "2026-10-16",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 09 Oct",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Cellular",
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::11_Sodium-potassium_pump",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::02_Neuron_action_potential"
+   ],
+   "cards": 146
+  },
+  {
+   "id": "phys-w03",
+   "track": "physio",
+   "label": "Physiology lab 3: Muscle physiology (Ch 6, 8)",
+   "release": "2026-10-16",
+   "due": "2026-10-23",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 16 Oct",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::14_Motoneuron_action_potential_to_muscle_contraction",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::15_Types_of_skeletal_muscle_fibers",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::17_Vascular_smooth_muscle_contraction_and_relaxation"
+   ],
+   "cards": 65
+  },
+  {
+   "id": "phys-w04",
+   "track": "physio",
+   "label": "Physiology lab 4: Somatic sensations, pain (Ch 47-49)",
+   "release": "2026-10-23",
+   "due": "2026-10-30",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 23 Oct",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::03_Sensory_receptors",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::13_Thalamus",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::40_Spinal_tract_anatomy_and_functions"
+   ],
+   "cards": 117
+  },
+  {
+   "id": "phys-w05",
+   "track": "physio",
+   "label": "Physiology lab 5: Special senses (Ch 50-54)",
+   "release": "2026-10-30",
+   "due": "2026-11-06",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 30 Oct",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::04_Otology::01_Auditory_anatomy_and_physiology",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::01_Normal_eye_anatomy",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::03_Refractive_errors",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::05_Aqueous_humor_pathway",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::11_Pupillary_control",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::17_Visual_field_defects"
+   ],
+   "cards": 200
+  },
+  {
+   "id": "phys-w06",
+   "track": "physio",
+   "label": "Physiology lab 6: Neuron, synapse, NMJ, reflexes (Ch 7, 46, 55)",
+   "release": "2026-11-06",
+   "due": "2026-11-13",
+   "deck": "anking",
+   "tbc": true,
+   "note": "test Fri 06 Nov",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::01_Cells_of_the_nervous_system",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::04_Peripheral_nerve",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::05_Neuronal_response_to_axonal_injury",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::41_Clinical_reflexes",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::42_Primitive_reflexes",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::18_Muscle_proprioceptors"
+   ],
+   "cards": 163
+  },
+  {
+   "id": "phys-w07",
+   "track": "physio",
+   "label": "Physiology lab 7: Higher functions, ANS, temperature (Ch 58-61, 74)",
+   "release": "2026-11-13",
+   "due": "2026-11-20",
+   "deck": "anking",
+   "tbc": true,
+   "note": "test Fri 13 Nov",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::06_Neurotransmitter_changes_with_disease",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::10_Sleep_physiology",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::12_Hypothalamus",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::14_Limbic_system",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::18_Cerebral_cortex_regions",
+    "#AK_Step1_v12::#FirstAid::05_Pharm::02_Autonomic_Drugs::01_Autonomic_receptors",
+    "#AK_Step1_v12::#FirstAid::05_Pharm::02_Autonomic_Drugs::02_Acetylcholine_receptors",
+    "#AK_Step1_v12::#Costanzo::Autonomic",
+    "#AK_Step1_v12::#Costanzo::Cardio::9-Temperature_Regulation"
+   ],
+   "cards": 302
+  },
+  {
+   "id": "phys-w08",
+   "track": "physio",
+   "label": "Physiology lab 8: Motor functions (Ch 56-57)",
+   "release": "2026-11-20",
+   "due": "2026-11-27",
+   "deck": "anking",
+   "tbc": true,
+   "note": "test Fri 20 Nov",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::15_Dopaminergic_pathways",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::16_Cerebellum",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::17_Basal_ganglia",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::20_Homunculus",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::04_Otology::07_Vertigo"
+   ],
+   "cards": 184
+  },
+  {
+   "id": "phys-w09",
+   "track": "physio",
+   "label": "Physiology lab 9: Hemostasis and coagulation (Ch 37)",
+   "release": "2026-11-27",
+   "due": "2026-12-04",
+   "deck": "anking",
+   "tbc": true,
+   "note": "test Fri 27 Nov",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::03_Platelet_plug_formation_(primary_hemostasis)",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::04_Thrombogenesis",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::05_Coagulation_and_kinin_pathways",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::03_Physiology::06_Vitamin_K-dependent_coagulation",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::04_Thrombocytes_(platelets)"
+   ],
+   "cards": 155
+  },
+  {
+   "id": "phys-w10",
+   "track": "physio",
+   "label": "Physiology lab 10: White blood cells and immunity (Ch 34-35)",
+   "release": "2026-12-04",
+   "due": "2026-12-11",
+   "deck": "anking",
+   "tbc": true,
+   "note": "test Fri 04 Dec",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::02_Neutrophils",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::05_Monocytes",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::06_Macrophages",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::07_Dendritic_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::08_Eosinophils",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::09_Basophils",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::10_Mast_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::11_Lymphocytes",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::12_Natural_killer_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::13_B_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::14_T_cells",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::15_Plasma_cells",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::01_Antibody_structure_and_function",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::02_Immunoglobulin_isotypes",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::04_Complement",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::11_Passive_vs_active_immunity",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::13_Hypersensitivity_types",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::18_Transplant_rejection",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::02_Cellular_Components"
+   ],
+   "cards": 488
+  },
+  {
+   "id": "phys-w11",
+   "track": "physio",
+   "label": "Physiology lab 11: Red blood cells, blood groups (Ch 33, 36)",
+   "release": "2026-12-11",
+   "due": "2026-12-18",
+   "deck": "anking",
+   "tbc": true,
+   "note": "test Fri 11 Dec",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::01_Embryology::01_Fetal_erythropoiesis",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::01_Embryology::03_Blood_groups",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::01_Embryology::04_Hemolytic_disease_of_the_fetus_and_newborn",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::01_Hematopoiesis",
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy::03_Erythrocytes",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::03_Immune_Responses::14_Immunologic_blood_transfusion_reactions",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::12_Hemoglobin"
+   ],
+   "cards": 125
+  },
+  {
+   "id": "phys-w12",
+   "track": "physio",
+   "label": "Physiology lab 12: Heart (Ch 9-10, 23)",
+   "release": "2027-01-08",
+   "due": "2027-01-15",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 08 Jan",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Cardio::3-Cardiac_Muscle_Contraction",
+    "#AK_Step1_v12::#Costanzo::Cardio::4-Cardiac_Cycle",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::01_Cardiac_output_variables",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::03_Starling_Curves",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::06_Pressure-volume_loops_and_cardiac_cycle",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::09_Splitting_of_S2",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::10_Auscultation_of_the_heart",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::11_Heart_murmurs"
+   ],
+   "cards": 364
+  },
+  {
+   "id": "phys-w13",
+   "track": "physio",
+   "label": "Physiology lab 13: ECG and arrhythmias (Ch 11-13)",
+   "release": "2027-01-15",
+   "due": "2027-01-22",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 15 Jan",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Cardio::2-Electrophysiology",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::12_Myocardial_action_potential",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::13_Pacemaker_action_potential",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::14_Electrocardiogram",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::*Brugada_Syndrome",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::*Torsades_de_Pointes",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::*Wolff-Parkinson-White_Syndrome"
+   ],
+   "cards": 168
+  },
+  {
+   "id": "phys-w14",
+   "track": "physio",
+   "label": "Physiology lab 14: Circulation 1 (Ch 14-17)",
+   "release": "2027-01-22",
+   "due": "2027-01-29",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 22 Jan",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Cardio::1-Circuitry_&_Hemodynamics",
+    "#AK_Step1_v12::#Costanzo::Cardio::7-Microcirculation_&_beyond",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::04_Resistance_pressure_flow",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::19_Autoregulation",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::20_Capillary_fluid_exchange",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::18_Normal_resting_cardiac_pressures"
+   ],
+   "cards": 176
+  },
+  {
+   "id": "phys-w15",
+   "track": "physio",
+   "label": "Physiology lab 15: Circulation 2: CO, BP control, shock, failure (Ch 18, 20-22, 24, 62)",
+   "release": "2027-01-29",
+   "due": "2027-02-05",
+   "deck": "anking",
+   "tbc": false,
+   "note": "test Fri 29 Jan",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Cardio::5-Cardiac_output_&_venous_return",
+    "#AK_Step1_v12::#Costanzo::Cardio::6-Regulation_of_arterial_pressure",
+    "#AK_Step1_v12::#Costanzo::Cardio::8-Special_Circulations",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::02_Cardiac_output_equations",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::05_Cardiac_and_vascular_function_curves",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::17_Baroreceptors_and_chemoreceptors",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::15_Atrial_natriuretic_peptide",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::16_B-type_(brain)_natriuretic_peptide"
+   ],
+   "cards": 159
+  },
+  {
+   "id": "phys-s19",
+   "track": "physio",
+   "label": "Physiology spring: Topics 1-5: body fluids, kidney function, nephron, micturition, GFR",
+   "release": "2027-02-26",
+   "due": "2027-03-05",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Renal::01_Anatomy_and_Blood_Supply",
+    "#AK_Step1_v12::#Costanzo::Renal::02_Body_fluids",
+    "#AK_Step1_v12::#Costanzo::Renal::03_Renal_Clearance-Renal_Blood_Flow",
+    "#AK_Step1_v12::#Costanzo::Renal::04_Glomerular_Filtration",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::01_Fluid_compartments",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::02_Glomerular_filtration_barrier",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::03_Renal_clearance",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::04_Glomerular_filtration_rate",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::06_Effective_renal_plasma_flow",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::07_Filtration",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::08_Changes_in_glomerular_dynamics",
+    "#AK_Step1_v12::#FirstAid::05_Pharm::02_Autonomic_Drugs::03_Micturition_control"
+   ],
+   "cards": 336
+  },
+  {
+   "id": "phys-s20",
+   "track": "physio",
+   "label": "Physiology spring: Topics 6-8: tubular transport, H+ and K+ secretion",
+   "release": "2027-03-05",
+   "due": "2027-03-12",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Renal::05_Reabsorption_and_Secretion",
+    "#AK_Step1_v12::#Costanzo::Renal::06_Terminology_Associated_with_Single_Nephron",
+    "#AK_Step1_v12::#Costanzo::Renal::08_Potassium_Balance",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::09_Calculation_of_reabsorption_and_secretion_rate",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::11_Nephron_transport_physiology",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::13_Relative_concentrations_along_proximal_tubule",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::18_Potassium_shifts"
+   ],
+   "cards": 290
+  },
+  {
+   "id": "phys-s21",
+   "track": "physio",
+   "label": "Physiology spring: Topics 9-13: concentrating urine, ADH, pressure natriuresis, renal hormones",
+   "release": "2027-03-12",
+   "due": "2027-03-19",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Renal::07_Sodium_Balance",
+    "#AK_Step1_v12::#Costanzo::Renal::09_P_K_Mg_Balance",
+    "#AK_Step1_v12::#Costanzo::Renal::10_Water_Balance_[Urine]",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::14_Renin-angiotensin-aldosterone_system",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::15_Juxtaglomerular_apparatus",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::16_Kidney_hormone_functions",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::19_Electrolyte_disturbances",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::03_Antidiuretic_hormone"
+   ],
+   "cards": 339
+  },
+  {
+   "id": "phys-s22",
+   "track": "physio",
+   "label": "Physiology spring: Topics 14-17: food intake, GI motility, secretion",
+   "release": "2027-03-19",
+   "due": "2027-03-26",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::GI::01_Structure_of_GI_Tract",
+    "#AK_Step1_v12::#Costanzo::GI::02_GI_Regulatory_Substances",
+    "#AK_Step1_v12::#Costanzo::GI::03_Motility",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::13_Appetite_regulation",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::01_Gastrointestinal_regulatory_substances"
+   ],
+   "cards": 153
+  },
+  {
+   "id": "phys-s24",
+   "track": "physio",
+   "label": "Physiology spring: Topics 18-21: digestion, absorption, mouth, stomach, small intestine",
+   "release": "2027-04-02",
+   "due": "2027-04-09",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::GI::04_Secretion",
+    "#AK_Step1_v12::#Costanzo::GI::05_Digestion_End",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::02_Gastrointestinal_secretory_products",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::05_Carbohydrate_absorption",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::06_Vitamin_and_mineral_absorption",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::*Protein_Absorption",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::07_Peyer_patches"
+   ],
+   "cards": 154
+  },
+  {
+   "id": "phys-s25",
+   "track": "physio",
+   "label": "Physiology spring: Topics 22-25: colon, pancreas, liver, bilirubin",
+   "release": "2027-04-09",
+   "due": "2027-04-16",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::04_Pancreatic_secretions",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::08_Bile",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::03_Physiology::09_Bilirubin"
+   ],
+   "cards": 67
+  },
+  {
+   "id": "phys-s26",
+   "track": "physio",
+   "label": "Physiology spring: Topics 26-29: mechanics, surfactant, volumes, spirometry",
+   "release": "2027-04-16",
+   "due": "2027-04-23",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Respiratory::01_Structure_of_the_Respiratory_System",
+    "#AK_Step1_v12::#Costanzo::Respiratory::02_Lung_Volume_and_Capacities",
+    "#AK_Step1_v12::#Costanzo::Respiratory::03_Mechanics_of_Breathing",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::01_Lung_volumes_and_capacities",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::05_Lung_and_chest_wall_properties"
+   ],
+   "cards": 161
+  },
+  {
+   "id": "phys-s27",
+   "track": "physio",
+   "label": "Physiology spring: Topics 30-32: alveolar ventilation, dead space, airways, pulmonary circulation",
+   "release": "2027-04-23",
+   "due": "2027-04-30",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Respiratory::04_Gas_Exchange",
+    "#AK_Step1_v12::#Costanzo::Respiratory::07_Ventilation_Perfusion_Relationships",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::03_Determination_of_physiologic_dead_space",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::04_Ventilation",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::06_Pulmonary_circulation",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::07_Pulmonary_vascular_resistance",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::08_Ventilation/perfusion_mismatch",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::09_Alveolar_gas_equation",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::11_Hypoxia_and_hypoxemia"
+   ],
+   "cards": 151
+  },
+  {
+   "id": "phys-s28",
+   "track": "physio",
+   "label": "Physiology spring: Topics 33-38: control of breathing, O2 and CO2 transport",
+   "release": "2027-04-30",
+   "due": "2027-05-07",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Respiratory::05_Oxygen_Transport_in_Blood",
+    "#AK_Step1_v12::#Costanzo::Respiratory::06_CO2_Transport_in_Blood",
+    "#AK_Step1_v12::#Costanzo::Respiratory::08_Control_of_Breathing",
+    "#AK_Step1_v12::#Costanzo::Respiratory::09_Integrative_Functions",
+    "#AK_Step1_v12::#Costanzo::Respiratory::10_Hypoxemia_and_Hypoxia",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::10_Carbon_dioxide_transport",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::13_Oxygen_content_of_blood",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::14_Oxyhemoglobin_dissociation_curve",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::15_Response_to_high_altitude",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::03_Physiology::16_Response_to_exercise"
+   ],
+   "cards": 190
+  },
+  {
+   "id": "phys-s30",
+   "track": "physio",
+   "label": "Physiology spring: Topics 39-43: acid-base",
+   "release": "2027-05-14",
+   "due": "2027-05-21",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Renal::Ch.7_Acid_Base",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::21_Acid-base_physiology",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::22_Acidosis_and_alkalosis",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::23_Renal_tubular_acidosis"
+   ],
+   "cards": 191
+  },
+  {
+   "id": "phys-s31",
+   "track": "physio",
+   "label": "Physiology spring: Topics 44-49: hormones, hypothalamus, pituitary, GH, ADH, oxytocin",
+   "release": "2027-05-21",
+   "due": "2027-05-28",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Endocrine::01_Hormone_Synthesis",
+    "#AK_Step1_v12::#Costanzo::Endocrine::02_Reg_Hormone_Receptors",
+    "#AK_Step1_v12::#Costanzo::Endocrine::03_Mech_Hormone/2nd_Messengers",
+    "#AK_Step1_v12::#Costanzo::Endocrine::04_Hypothalamic_Pituitary_Relationships",
+    "#AK_Step1_v12::#Costanzo::Endocrine::05_Anterior_Lobe_Hormones",
+    "#AK_Step1_v12::#Costanzo::Endocrine::06_Posterior_Lobe_Hormones",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::01_Hypothalamic-pituitary_hormones",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::02_Growth_hormone",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::04_Prolactin",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::14_Signaling_pathways_of_endocrine_hormones",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::15_Signaling_pathways_of_steroid_hormones"
+   ],
+   "cards": 250
+  },
+  {
+   "id": "phys-s32",
+   "track": "physio",
+   "label": "Physiology spring: Topics 50-54: thyroid, adrenal cortex",
+   "release": "2027-05-28",
+   "due": "2027-06-04",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Endocrine::07_Thyroid_Hormones",
+    "#AK_Step1_v12::#Costanzo::Endocrine::08_Adrenal_Medulla_&_Cortex",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::05_Thyroid_hormones",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::11_Adrenal_steroids_and_congenital_adrenal_hyperplasias",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::12_Cortisol"
+   ],
+   "cards": 309
+  },
+  {
+   "id": "phys-s33",
+   "track": "physio",
+   "label": "Physiology spring: Topics 55-62: insulin, glucagon, somatostatin, calcium, vitamin D, PTH, calcitonin",
+   "release": "2027-06-04",
+   "due": "2027-06-11",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Endocrine::09_Endocrine_Pancreas",
+    "#AK_Step1_v12::#Costanzo::Endocrine::10_Reg_Ca_&_P_Metab",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::06_Parathyroid_hormone",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::07_Calcium_homeostasis",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::08_Calcitonin",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::09_Glucagon",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::03_Physiology::10_Insulin"
+   ],
+   "cards": 270
+  },
+  {
+   "id": "phys-s34",
+   "track": "physio",
+   "label": "Physiology spring: Topics 63-66: male and female reproduction",
+   "release": "2027-06-11",
+   "due": "2027-06-18",
+   "deck": "anking",
+   "tbc": true,
+   "note": "estimated from the Step plan week",
+   "tags": [
+    "#AK_Step1_v12::#Costanzo::Repro",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::01_Spermatogenesis",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::02_Estrogen",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::03_Progesterone",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::04_Oogenesis",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::05_Ovulation",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::06_Menstrual_cycle",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::16_Androgens"
+   ],
+   "cards": 269
+  },
+  {
+   "id": "histo-C1",
+   "track": "histo",
+   "label": "Histology C1: Cell, organelles, cytoskeleton",
+   "release": "2026-10-05",
+   "due": "2026-10-12",
+   "deck": "anking",
+   "tbc": false,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular"
+   ],
+   "cards": 293
+  },
+  {
+   "id": "slides-C1",
+   "track": "slides",
+   "label": "SecondLook C1: Cell, organelles, cytoskeleton",
+   "release": "2026-10-03",
+   "due": "2026-10-05",
+   "deck": "slides",
+   "tbc": false,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::01_Cell_Biology"
+   ],
+   "cards": 23
+  },
+  {
+   "id": "histo-C2",
+   "track": "histo",
+   "label": "Histology C2: Connective tissue, cartilage, bone",
+   "release": "2026-10-12",
+   "due": "2026-10-19",
+   "deck": "anking",
+   "tbc": false,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::19_Bone_formation",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::20_Cell_biology_of_bone"
+   ],
+   "cards": 50
+  },
+  {
+   "id": "slides-C2",
+   "track": "slides",
+   "label": "SecondLook C2: Connective tissue, cartilage, bone",
+   "release": "2026-10-10",
+   "due": "2026-10-12",
+   "deck": "slides",
+   "tbc": false,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::04_Connective_Tissue",
+    "SecondLook::Histology::14_Cartilage",
+    "SecondLook::Histology::15_Bone_and_Bone_Formation"
+   ],
+   "cards": 58
+  },
+  {
+   "id": "histo-C3",
+   "track": "histo",
+   "label": "Histology C3: Muscle",
+   "release": "2026-10-19",
+   "due": "2026-10-26",
+   "deck": "anking",
+   "tbc": false,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::14_Motoneuron_action_potential_to_muscle_contraction",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::15_Types_of_skeletal_muscle_fibers",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::01_Anatomy_and_Physiology::17_Vascular_smooth_muscle_contraction_and_relaxation"
+   ],
+   "cards": 65
+  },
+  {
+   "id": "slides-C3",
+   "track": "slides",
+   "label": "SecondLook C3: Muscle",
+   "release": "2026-10-17",
+   "due": "2026-10-19",
+   "deck": "slides",
+   "tbc": false,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::13_Muscle"
+   ],
+   "cards": 22
+  },
+  {
+   "id": "histo-C4",
+   "track": "histo",
+   "label": "Histology C4: Epithelium, glands, skin, ear, eye",
+   "release": "2026-10-26",
+   "due": "2026-11-02",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::03_Derm::01_Skin_layers",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::03_Derm::02_Epithelial_cell_junctions",
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::03_Derm::05_Dermatologic_microscopic_terms",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::04_Otology::01_Auditory_anatomy_and_physiology",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::05_Ophthalmology::01_Normal_eye_anatomy"
+   ],
+   "cards": 134
+  },
+  {
+   "id": "slides-C4",
+   "track": "slides",
+   "label": "SecondLook C4: Epithelium, glands, skin, ear, eye",
+   "release": "2026-10-24",
+   "due": "2026-10-26",
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::02_Epithelia",
+    "SecondLook::Histology::03_Histology_of_Glands",
+    "SecondLook::Histology::16_Integumentary_System",
+    "SecondLook::Histology::07_Ear",
+    "SecondLook::Histology::08_Eye",
+    "SecondLook::Histology::27_Mammary_Gland"
+   ],
+   "cards": 103
+  },
+  {
+   "id": "histo-C5",
+   "track": "histo",
+   "label": "Histology C5: Nervous tissue, CNS, ganglia",
+   "release": "2026-11-02",
+   "due": "2026-11-09",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::01_Cells_of_the_nervous_system",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::04_Peripheral_nerve",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::05_Neuronal_response_to_axonal_injury",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::08_Blood-brain_barrier",
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::16_Cerebellum"
+   ],
+   "cards": 174
+  },
+  {
+   "id": "slides-C5",
+   "track": "slides",
+   "label": "SecondLook C5: Nervous tissue, CNS, ganglia",
+   "release": "2026-10-31",
+   "due": "2026-11-02",
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::05_Peripheral_Nervous_System",
+    "SecondLook::Histology::06_Central_Nervous_System"
+   ],
+   "cards": 50
+  },
+  {
+   "id": "histo-C6",
+   "track": "histo",
+   "label": "Histology C6: Blood, hematopoiesis, lymphatic organs",
+   "release": "2026-11-23",
+   "due": "2026-11-30",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::10_Hematology_and_Oncology::02_Anatomy",
+    "#AK_Step1_v12::#FirstAid::02_Immunology::01_Lymphoid_Structures"
+   ],
+   "cards": 354
+  },
+  {
+   "id": "slides-C6",
+   "track": "slides",
+   "label": "SecondLook C6: Blood, hematopoiesis, lymphatic organs",
+   "release": "2026-11-21",
+   "due": "2026-11-23",
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::09_Blood_and_Bone_Marrow",
+    "SecondLook::Histology::11_Lymphatic_System"
+   ],
+   "cards": 52
+  },
+  {
+   "id": "histo-C7",
+   "track": "histo",
+   "label": "Histology C7: Circulatory system",
+   "release": "2026-11-30",
+   "due": "2026-12-07",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::02_Anatomy::01_Heart_anatomy",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::02_Anatomy::*Blood_Vessels",
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::03_Physiology::20_Capillary_fluid_exchange"
+   ],
+   "cards": 70
+  },
+  {
+   "id": "slides-C7",
+   "track": "slides",
+   "label": "SecondLook C7: Circulatory system",
+   "release": "2026-11-28",
+   "due": "2026-11-30",
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::10_Cardiovascular_System"
+   ],
+   "cards": 20
+  },
+  {
+   "id": "histo-S1",
+   "track": "histo",
+   "label": "Histology S1: Spring 1: respiratory system",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::02_Anatomy::01_Respiratory_tree",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::04_Club_cells",
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology::05_Alveolar_cell_types"
+   ],
+   "cards": 43
+  },
+  {
+   "id": "slides-S1",
+   "track": "slides",
+   "label": "SecondLook S1: Spring 1: respiratory system",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::12_Respiratory_Tract"
+   ],
+   "cards": 23
+  },
+  {
+   "id": "slides-S2",
+   "track": "slides",
+   "label": "SecondLook S2: Spring 2: oral cavity, tooth, salivary glands",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::17_Digestive_System_Oral_Cavity",
+    "SecondLook::Histology::18_Salivary_Glands"
+   ],
+   "cards": 32
+  },
+  {
+   "id": "histo-S3",
+   "track": "histo",
+   "label": "Histology S3: Spring 3: digestive tract",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::03_Digestive_tract_anatomy",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::04_Digestive_tract_histology"
+   ],
+   "cards": 72
+  },
+  {
+   "id": "slides-S3",
+   "track": "slides",
+   "label": "SecondLook S3: Spring 3: digestive tract",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::19_Digestive_System_Pharynx_to_Stomach",
+    "SecondLook::Histology::20_Digestive_System_Small_Large_Intestine"
+   ],
+   "cards": 31
+  },
+  {
+   "id": "histo-S4",
+   "track": "histo",
+   "label": "Histology S4: Spring 4: liver, gallbladder, pancreas",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::10_Liver_tissue_architecture",
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::02_Anatomy::11_Biliary_structures",
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::02_Anatomy::03_Endocrine_pancreas_cell_types"
+   ],
+   "cards": 52
+  },
+  {
+   "id": "slides-S4",
+   "track": "slides",
+   "label": "SecondLook S4: Spring 4: liver, gallbladder, pancreas",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::21_Liver",
+    "SecondLook::Histology::22_Pancreas"
+   ],
+   "cards": 36
+  },
+  {
+   "id": "histo-S5",
+   "track": "histo",
+   "label": "Histology S5: Spring 5: endocrine system",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::02_Anatomy"
+   ],
+   "cards": 59
+  },
+  {
+   "id": "slides-S5",
+   "track": "slides",
+   "label": "SecondLook S5: Spring 5: endocrine system",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::24_Endocrine_System"
+   ],
+   "cards": 32
+  },
+  {
+   "id": "histo-S7",
+   "track": "histo",
+   "label": "Histology S7: Spring 7: male reproductive system",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::06_Male_reproductive_anatomy",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::09_Seminiferous_tubules"
+   ],
+   "cards": 43
+  },
+  {
+   "id": "slides-S7",
+   "track": "slides",
+   "label": "SecondLook S7: Spring 7: male reproductive system",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::25_Male_Reproductive_System"
+   ],
+   "cards": 19
+  },
+  {
+   "id": "histo-S8",
+   "track": "histo",
+   "label": "Histology S8: Spring 8: female reproductive system, mammary gland",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::02_Female_reproductive_anatomy",
+    "#AK_Step1_v12::#FirstAid::15_Repro::02_Anatomy::05_Female_reproductive_epithelial_histology"
+   ],
+   "cards": 39
+  },
+  {
+   "id": "slides-S8",
+   "track": "slides",
+   "label": "SecondLook S8: Spring 8: female reproductive system, mammary gland",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::26_Female_Reproductive_System"
+   ],
+   "cards": 25
+  },
+  {
+   "id": "histo-S9",
+   "track": "histo",
+   "label": "Histology S9: Spring 9: urinary system",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards for the lab, released on lab day",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::14_Renal::02_Anatomy::02_Glomerular_anatomy",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::02_Glomerular_filtration_barrier",
+    "#AK_Step1_v12::#FirstAid::14_Renal::03_Physiology::15_Juxtaglomerular_apparatus"
+   ],
+   "cards": 96
+  },
+  {
+   "id": "slides-S9",
+   "track": "slides",
+   "label": "SecondLook S9: Spring 9: urinary system",
+   "release": null,
+   "due": null,
+   "deck": "slides",
+   "tbc": true,
+   "note": "slide sets, released the Saturday before the lab",
+   "tags": [
+    "SecondLook::Histology::23_Urinary_Tract"
+   ],
+   "cards": 30
+  },
+  {
+   "id": "embryo-Sem1",
+   "track": "embryo",
+   "label": "Embryology Sem1: Gametes, fertilization, cleavage, implantation",
+   "release": "2026-10-06",
+   "due": "2026-10-14",
+   "deck": "anking",
+   "tbc": false,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::01_Early_embryonic_development",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::01_Spermatogenesis",
+    "#AK_Step1_v12::#FirstAid::15_Repro::03_Physiology::04_Oogenesis"
+   ],
+   "cards": 64
+  },
+  {
+   "id": "embryo-Sem2",
+   "track": "embryo",
+   "label": "Embryology Sem2: Gastrulation, embryonic disc, placenta, pharyngeal apparatus",
+   "release": "2026-10-13",
+   "due": "2026-10-21",
+   "deck": "anking",
+   "tbc": false,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::02_Embryologic_derivatives",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::07_Placenta",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::08_Amniotic_fluid",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::11_Umbilical_cord",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::12_Pharyngeal_apparatus",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::13_Pharyngeal_cleft_derivatives",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::14_Pharyngeal_pouch_derivatives",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::15_Pharyngeal_arch_derivatives"
+   ],
+   "cards": 164
+  },
+  {
+   "id": "embryo-Sem3",
+   "track": "embryo",
+   "label": "Embryology Sem3: Organogenesis, birth defects, multiple pregnancy",
+   "release": "2026-10-20",
+   "due": "2026-10-28",
+   "deck": "anking",
+   "tbc": false,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::03_Teratogens",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::04_Types_of_errors_in_morphogenesis",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::05_Fetal_alcohol_syndrome",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::06_Neonatal_abstinence_syndrome",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::09_Twinning",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::10_Twin-twin_transfusion_syndrome"
+   ],
+   "cards": 42
+  },
+  {
+   "id": "embryo-Sem4",
+   "track": "embryo",
+   "label": "Embryology Sem4: Intercellular junctions, adhesion molecules",
+   "release": "2026-10-27",
+   "due": "2026-11-04",
+   "deck": "anking",
+   "tbc": false,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::11_Musculoskeletal_Skin_and_Connective_Tissue::03_Derm::02_Epithelial_cell_junctions"
+   ],
+   "cards": 13
+  },
+  {
+   "id": "embryo-Sem5",
+   "track": "embryo",
+   "label": "Embryology Sem5: Development of the nervous system, skin and ear",
+   "release": "2026-11-03",
+   "due": "2026-11-11",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology"
+   ],
+   "cards": 141
+  },
+  {
+   "id": "embryo-Sem6",
+   "track": "embryo",
+   "label": "Embryology Sem6: Skin sensation, taste, sight (receptors)",
+   "release": "2026-11-10",
+   "due": "2026-11-18",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::02_Anatomy_and_Physiology::03_Sensory_receptors"
+   ],
+   "cards": 27
+  },
+  {
+   "id": "embryo-Sem7",
+   "track": "embryo",
+   "label": "Embryology Sem7: Cell cycle, proliferation, apoptosis, necrosis",
+   "release": "2026-11-24",
+   "due": "2026-12-02",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::01_Biochem::02_Cellular::01_Cell_cycle_phases",
+    "#AK_Step1_v12::#FirstAid::04_Pathology::01_Cellular_Injury::03_Apoptosis",
+    "#AK_Step1_v12::#FirstAid::04_Pathology::01_Cellular_Injury::04_Necrosis",
+    "#AK_Step1_v12::#FirstAid::04_Pathology::01_Cellular_Injury::01_Cellular_adaptations"
+   ],
+   "cards": 146
+  },
+  {
+   "id": "embryo-Sem8",
+   "track": "embryo",
+   "label": "Embryology Sem8: Aging, cell differentiation",
+   "release": "2026-12-01",
+   "due": "2026-12-09",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::04_Pathology::01_Cellular_Injury::*Lipofuscin",
+    "#AK_Step1_v12::#FirstAid::04_Pathology::01_Cellular_Injury::07_Free_radical_injury"
+   ],
+   "cards": 21
+  },
+  {
+   "id": "embryo-Sem9",
+   "track": "embryo",
+   "label": "Embryology Sem9: Development of the heart and vessels",
+   "release": "2026-12-15",
+   "due": "2026-12-23",
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::07_Cardiovascular::01_Embryology"
+   ],
+   "cards": 89
+  },
+  {
+   "id": "embryo-Spr1",
+   "track": "embryo",
+   "label": "Embryology Spr1: Spring 1: respiratory development and defects",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::16_Respiratory::01_Embryology"
+   ],
+   "cards": 119
+  },
+  {
+   "id": "embryo-Spr2",
+   "track": "embryo",
+   "label": "Embryology Spr2: Spring 2: pharyngeal organ, tooth, salivary glands",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::12_Neurology_and_Special_Senses::01_Embryology::08_Tongue_development",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::16_Orofacial_clefts"
+   ],
+   "cards": 20
+  },
+  {
+   "id": "embryo-Spr3",
+   "track": "embryo",
+   "label": "Embryology Spr3: Spring 3: gut, liver, pancreas development",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::09_Gastrointestinal::01_Embryology"
+   ],
+   "cards": 74
+  },
+  {
+   "id": "embryo-Spr4",
+   "track": "embryo",
+   "label": "Embryology Spr4: Spring 4: endocrine development",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::08_Endocrine::01_Embryology"
+   ],
+   "cards": 14
+  },
+  {
+   "id": "embryo-Spr5",
+   "track": "embryo",
+   "label": "Embryology Spr5: Spring 5: male reproductive development",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::17_Genital_embryology",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::18_Sexual_differentiation",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::20_Male/female_genital_homologs",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::21_Congenital_penile_abnormalities",
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::22_Descent_of_testes_and_ovaries"
+   ],
+   "cards": 75
+  },
+  {
+   "id": "embryo-Spr6",
+   "track": "embryo",
+   "label": "Embryology Spr6: Spring 6: female reproductive development",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::15_Repro::01_Embryology::19_Uterine_(Müllerian_duct)_anomalies"
+   ],
+   "cards": 11
+  },
+  {
+   "id": "embryo-Spr7",
+   "track": "embryo",
+   "label": "Embryology Spr7: Spring 7: urinary development",
+   "release": null,
+   "due": null,
+   "deck": "anking",
+   "tbc": true,
+   "note": "AnKing cards, released the Tuesday before the seminar",
+   "tags": [
+    "#AK_Step1_v12::#FirstAid::14_Renal::01_Embryology"
+   ],
+   "cards": 73
+  }
+ ],
+ "limits": [
+  {
+   "deck": "anking",
+   "start": "2026-10-26",
+   "end": "2026-11-01",
+   "limit": 0,
+   "why": "Crunch: special senses test, Module A boost"
+  },
+  {
+   "deck": "anking",
+   "start": "2026-11-09",
+   "end": "2026-11-15",
+   "limit": 0,
+   "why": "Crunch: Module A partials"
+  },
+  {
+   "deck": "anking",
+   "start": "2026-12-14",
+   "end": "2026-12-20",
+   "limit": 0,
+   "why": "Crunch: slide partial, Module B"
+  },
+  {
+   "deck": "anking",
+   "start": "2026-12-24",
+   "end": "2026-12-27",
+   "limit": 0,
+   "why": "Rest: Christmas"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-01-11",
+   "end": "2027-01-17",
+   "limit": 0,
+   "why": "Crunch: Modules C+D, ECG test"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-02-04",
+   "end": "2027-02-10",
+   "limit": 0,
+   "why": "Crunch: winter session"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-03-24",
+   "end": "2027-03-28",
+   "limit": 0,
+   "why": "Rest: Easter"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-06-21",
+   "end": "2027-07-18",
+   "limit": 0,
+   "why": "Finals and rest week"
+  },
+  {
+   "deck": "anking",
+   "start": "2026-12-21",
+   "end": "2026-12-23",
+   "factor": 1.5,
+   "why": "Push: Christmas break"
+  },
+  {
+   "deck": "anking",
+   "start": "2026-12-28",
+   "end": "2027-01-06",
+   "factor": 1.5,
+   "why": "Push: Christmas break"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-02-11",
+   "end": "2027-02-21",
+   "factor": 1.5,
+   "why": "Push: after the session"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-03-29",
+   "end": "2027-03-30",
+   "factor": 1.5,
+   "why": "Push: Easter break"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-05-01",
+   "end": "2027-05-04",
+   "factor": 1.5,
+   "why": "Push: May break"
+  },
+  {
+   "deck": "anking",
+   "start": "2027-05-26",
+   "end": "2027-05-30",
+   "factor": 1.5,
+   "why": "Push: May break"
+  },
+  {
+   "deck": "slides",
+   "start": "2026-12-07",
+   "end": "2026-12-13",
+   "limit": 25,
+   "why": "Week before the slide partial"
+  }
+ ],
+ "calendar": {
+  "events": [
+   {
+    "id": "phys-lab02",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-10-09",
+    "tbc": false,
+    "label": "Physiology lab 2: Membrane physiology (entrance test 12:45)",
+    "title": "Membrane physiology",
+    "pages": [
+     [
+      "4",
+      51,
+      62
+     ],
+     [
+      "5",
+      63,
+      77
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 1 Cellular physiology",
+    "system": "General principles",
+    "depth": "Whole chapter(s) behind the test, past the set pages",
+    "links": [
+     [
+      "phys-w02",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab03",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-10-16",
+    "tbc": false,
+    "label": "Physiology lab 3: Muscle physiology (entrance test 12:45)",
+    "title": "Muscle physiology",
+    "pages": [
+     [
+      "6",
+      79,
+      92
+     ],
+     [
+      "8",
+      101,
+      109
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 1 Cellular physiology (muscle)",
+    "system": "Musculoskeletal",
+    "depth": "Whole chapter(s) behind the test, past the set pages",
+    "links": [
+     [
+      "phys-w03",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab04",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-10-23",
+    "tbc": false,
+    "label": "Physiology lab 4: Somatic sensations, pain (entrance test 12:45)",
+    "title": "Somatic sensations, pain",
+    "pages": [
+     [
+      "47-49",
+      597,
+      634
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 3 Neurophysiology (sensory systems)",
+    "system": "Nervous system",
+    "depth": "Whole chapter(s) behind the test, past the set pages",
+    "links": [
+     [
+      "phys-w04",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab05",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-10-30",
+    "tbc": false,
+    "label": "Physiology lab 5: The special senses (entrance test 12:45)",
+    "title": "The special senses",
+    "pages": [
+     [
+      "50-54",
+      637,
+      694
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 3 Neurophysiology (vision, audition, taste, smell)",
+    "system": "Nervous system",
+    "depth": "Whole chapter(s) behind the test, past the set pages",
+    "links": [
+     [
+      "phys-w05",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab06",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-11-06",
+    "tbc": true,
+    "label": "Physiology lab 6: Neuron, synapse, neuromuscular junction, reflexes (entrance test 12:45)",
+    "title": "Neuron, synapse, neuromuscular junction, reflexes",
+    "pages": [
+     [
+      "7",
+      93,
+      100
+     ],
+     [
+      "46",
+      579,
+      596
+     ],
+     [
+      "55",
+      697,
+      707
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 1 (synapses, NMJ) and Ch 3 (motor reflexes)",
+    "system": "Nervous system",
+    "depth": "Whole chapter(s) behind the test, past the set pages",
+    "links": [
+     [
+      "phys-w06",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab07",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-11-13",
+    "tbc": true,
+    "label": "Physiology lab 7: Higher nervous activity, temperature regulation, autonomic nervous system (entrance test 12:45)",
+    "title": "Higher nervous activity, temperature regulation, autonomic nervous system",
+    "pages": [
+     [
+      "58-61",
+      739,
+      789
+     ],
+     [
+      "74",
+      923,
+      934
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 2 Autonomic nervous system; Ch 3 (higher functions)",
+    "system": "Nervous system",
+    "depth": "Cell signalling: Guyton Ch 2-3 and Ch 75 (cell biology pass week)",
+    "links": [
+     [
+      "phys-w07",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab08",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-11-20",
+    "tbc": true,
+    "label": "Physiology lab 8: Motor functions (entrance test 12:45)",
+    "title": "Motor functions",
+    "pages": [
+     [
+      "56-57",
+      709,
+      738
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 3 Neurophysiology (motor systems)",
+    "system": "Nervous system",
+    "depth": "Cell biology pass: FA pp. 44-49 + BRS Cell Biology & Histology questions (about 3 h this week)",
+    "links": [
+     [
+      "phys-w08",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab09",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-11-27",
+    "tbc": true,
+    "label": "Physiology lab 9: Blood: hemostasis and coagulation (entrance test 12:45)",
+    "title": "Blood: hemostasis and coagulation",
+    "pages": [
+     [
+      "37",
+      487,
+      498
+     ]
+    ],
+    "optional": [],
+    "costanzo": "none (Guyton only)",
+    "system": "Hematology",
+    "depth": "Whole chapter(s) behind the test, past the set pages",
+    "links": [
+     [
+      "phys-w09",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab10",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-12-04",
+    "tbc": true,
+    "label": "Physiology lab 10: Blood: white blood cells and immunity (entrance test 12:45)",
+    "title": "Blood: white blood cells and immunity",
+    "pages": [
+     [
+      "34-35",
+      457,
+      480
+     ],
+     [
+      "36",
+      485,
+      486
+     ]
+    ],
+    "optional": [],
+    "costanzo": "none (Guyton only)",
+    "system": "Immunology",
+    "depth": "Whole chapter(s) behind the test, past the set pages",
+    "links": [
+     [
+      "phys-w10",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab11",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2026-12-11",
+    "tbc": true,
+    "label": "Physiology lab 11: Blood: red blood cells, blood groups (entrance test 12:45)",
+    "title": "Blood: red blood cells, blood groups",
+    "pages": [
+     [
+      "33",
+      447,
+      456
+     ],
+     [
+      "36",
+      481,
+      485
+     ]
+    ],
+    "optional": [],
+    "costanzo": "none (Guyton only)",
+    "system": "Hematology",
+    "depth": "Blood: haemostasis tests, transfusion reactions, O2-Hb curve (whole Ch 33-37)",
+    "links": [
+     [
+      "phys-w11",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab12",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-01-08",
+    "tbc": false,
+    "label": "Physiology lab 12: Physiology of the heart (entrance test 12:45)",
+    "title": "Physiology of the heart",
+    "pages": [
+     [
+      "9-10",
+      113,
+      133
+     ],
+     [
+      "23",
+      287,
+      296
+     ]
+    ],
+    "optional": [
+     [
+      "24",
+      297,
+      306
+     ]
+    ],
+    "costanzo": "Ch 4 Cardiovascular (cardiac muscle, cycle)",
+    "system": "Cardiovascular",
+    "depth": "Mohrman & Heller or Costanzo CV chapter; whole Guyton Ch 9-10",
+    "links": [
+     [
+      "phys-w12",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab13",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-01-15",
+    "tbc": false,
+    "label": "Physiology lab 13: ECG (entrance test 12:45)",
+    "title": "ECG",
+    "pages": [
+     [
+      "11-12",
+      135,
+      157
+     ]
+    ],
+    "optional": [
+     [
+      "13",
+      159,
+      170
+     ]
+    ],
+    "costanzo": "Ch 4 Cardiovascular (electrophysiology)",
+    "system": "Cardiovascular",
+    "depth": "Gap: arrhythmias, Guyton Ch 13 (if not done over Christmas)",
+    "links": [
+     [
+      "phys-w13",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab14",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-01-22",
+    "tbc": false,
+    "label": "Physiology lab 14: Circulation 1 (entrance test 12:45)",
+    "title": "Circulation 1",
+    "pages": [
+     [
+      "14-17",
+      173,
+      218
+     ]
+    ],
+    "optional": [],
+    "costanzo": "Ch 4 Cardiovascular (hemodynamics, microcirculation)",
+    "system": "Cardiovascular",
+    "depth": "Gap: cardiac failure and pressure-volume loops, Guyton Ch 22",
+    "links": [
+     [
+      "phys-w14",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-lab15",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-01-29",
+    "tbc": false,
+    "label": "Physiology lab 15: Circulation 2: control, cardiac output, shock (entrance test 12:45)",
+    "title": "Circulation 2: control, cardiac output, shock",
+    "pages": [
+     [
+      "18",
+      219,
+      229
+     ],
+     [
+      "20-21",
+      249,
+      274
+     ],
+     [
+      "24",
+      297,
+      306
+     ],
+     [
+      "62",
+      791,
+      799
+     ]
+    ],
+    "optional": [
+     [
+      "22",
+      275,
+      286
+     ]
+    ],
+    "costanzo": "Ch 4 Cardiovascular (regulation, cardiac output)",
+    "system": "Cardiovascular",
+    "depth": "Shock and circulatory arrest, whole Ch 24",
+    "links": [
+     [
+      "phys-w15",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s19",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-02-26",
+    "tbc": true,
+    "label": "Physiology: Topics 1-5: body fluids, kidney function, nephron, micturition, GFR",
+    "title": "Topics 1-5: body fluids, kidney function, nephron, micturition, GFR",
+    "guyton": "Guyton Ch 25-27",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 6 Renal",
+    "system": "Renal",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s19",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s20",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-03-05",
+    "tbc": true,
+    "label": "Physiology: Topics 6-8: tubular transport, H+ and K+ secretion, hormonal control",
+    "title": "Topics 6-8: tubular transport, H+ and K+ secretion, hormonal control",
+    "guyton": "Guyton Ch 28-30",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 6 Renal",
+    "system": "Renal",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s20",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s21",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-03-12",
+    "tbc": true,
+    "label": "Physiology: Topics 9-13: dilute and concentrated urine, ADH, pressure natriuresis, renal hormones",
+    "title": "Topics 9-13: dilute and concentrated urine, ADH, pressure natriuresis, renal hormones",
+    "guyton": "Guyton Ch 29-30, Ch 19",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 6 Renal",
+    "system": "Renal",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s21",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s22",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-03-19",
+    "tbc": true,
+    "label": "Physiology: Topics 14-17: food intake, GI function, motility, secretion",
+    "title": "Topics 14-17: food intake, GI function, motility, secretion",
+    "guyton": "Guyton Ch 63-65, Ch 72",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 8 Gastrointestinal",
+    "system": "Gastrointestinal",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s22",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s24",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-04-02",
+    "tbc": true,
+    "label": "Physiology: Topics 18-21: digestion, absorption, mouth, stomach, small intestine",
+    "title": "Topics 18-21: digestion, absorption, mouth, stomach, small intestine",
+    "guyton": "Guyton Ch 65-66",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 8 Gastrointestinal",
+    "system": "Gastrointestinal",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s24",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s25",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-04-09",
+    "tbc": true,
+    "label": "Physiology: Topics 22-25: colon, pancreas, liver, bilirubin and jaundice",
+    "title": "Topics 22-25: colon, pancreas, liver, bilirubin and jaundice",
+    "guyton": "Guyton Ch 66-67, Ch 71",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 8 Gastrointestinal",
+    "system": "Gastrointestinal",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s25",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s26",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-04-16",
+    "tbc": true,
+    "label": "Physiology: Topics 26-29: ventilation mechanics, surfactant, volumes, spirometry",
+    "title": "Topics 26-29: ventilation mechanics, surfactant, volumes, spirometry",
+    "guyton": "Guyton Ch 38",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 5 Respiratory",
+    "system": "Respiratory",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s26",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s27",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-04-23",
+    "tbc": true,
+    "label": "Physiology: Topics 30-32: alveolar ventilation, dead space, airways, pulmonary circulation (+ gap: gas exchange Ch 40-41)",
+    "title": "Topics 30-32: alveolar ventilation, dead space, airways, pulmonary circulation (+ gap: gas exchange Ch 40-41)",
+    "guyton": "Guyton Ch 38-41",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 5 Respiratory",
+    "system": "Respiratory",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s27",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s28",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-04-30",
+    "tbc": true,
+    "label": "Physiology: Topics 33-38: control of breathing, O2 and CO2 transport (+ gap: Ch 43, Ch 44-45)",
+    "title": "Topics 33-38: control of breathing, O2 and CO2 transport (+ gap: Ch 43, Ch 44-45)",
+    "guyton": "Guyton Ch 41-43",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 5 Respiratory",
+    "system": "Respiratory",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s28",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s30",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-05-14",
+    "tbc": true,
+    "label": "Physiology: Topics 39-43: acid-base",
+    "title": "Topics 39-43: acid-base",
+    "guyton": "Guyton Ch 31",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 7 Acid-base",
+    "system": "Renal",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s30",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s31",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-05-21",
+    "tbc": true,
+    "label": "Physiology: Topics 44-49: hormones, hypothalamus, pituitary, GH, ADH, oxytocin",
+    "title": "Topics 44-49: hormones, hypothalamus, pituitary, GH, ADH, oxytocin",
+    "guyton": "Guyton Ch 75-76",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 9 Endocrine",
+    "system": "Endocrine",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s31",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s32",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-05-28",
+    "tbc": true,
+    "label": "Physiology: Topics 50-54: thyroid, adrenal cortex",
+    "title": "Topics 50-54: thyroid, adrenal cortex",
+    "guyton": "Guyton Ch 77-78",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 9 Endocrine",
+    "system": "Endocrine",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s32",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s33",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-06-04",
+    "tbc": true,
+    "label": "Physiology: Topics 55-62: insulin, glucagon, somatostatin, calcium, vitamin D, PTH, calcitonin",
+    "title": "Topics 55-62: insulin, glucagon, somatostatin, calcium, vitamin D, PTH, calcitonin",
+    "guyton": "Guyton Ch 79-80",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 9 Endocrine",
+    "system": "Endocrine",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s33",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "phys-s34",
+    "subject": "physio",
+    "kind": "test",
+    "date": "2027-06-11",
+    "tbc": true,
+    "label": "Physiology: Topics 63-66: male and female reproduction (+ gap: Ch 83-84 pregnancy, fetal)",
+    "title": "Topics 63-66: male and female reproduction (+ gap: Ch 83-84 pregnancy, fetal)",
+    "guyton": "Guyton Ch 81-84",
+    "pages": [],
+    "optional": [],
+    "costanzo": "Ch 10 Reproductive",
+    "system": "Reproductive",
+    "depth": "Whole Guyton chapters for the block",
+    "links": [
+     [
+      "phys-s34",
+      0,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "histo-C1",
+    "subject": "histo",
+    "kind": "lab",
+    "date": "2026-10-05",
+    "tbc": false,
+    "label": "Histology class 1: Cell, organelles, cytoskeleton, methods",
+    "title": "Cell, organelles, cytoskeleton, methods",
+    "wheater": "Cell structure and function",
+    "junqueira": "Histology & its methods; Cytoplasm; Nucleus",
+    "diseases": "",
+    "links": [
+     [
+      "histo-C1",
+      0,
+      7
+     ],
+     [
+      "slides-C1",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-C2",
+    "subject": "histo",
+    "kind": "lab",
+    "date": "2026-10-12",
+    "tbc": false,
+    "label": "Histology class 2: Connective tissue, cartilage, bone",
+    "title": "Connective tissue, cartilage, bone",
+    "wheater": "Supporting/connective tissues; Skeletal tissues",
+    "junqueira": "Connective tissue; Cartilage; Bone",
+    "diseases": "achondroplasia, osteopetrosis, PTH effects on bone",
+    "links": [
+     [
+      "histo-C2",
+      0,
+      7
+     ],
+     [
+      "slides-C2",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-C3",
+    "subject": "histo",
+    "kind": "lab",
+    "date": "2026-10-19",
+    "tbc": false,
+    "label": "Histology class 3: Muscle",
+    "title": "Muscle",
+    "wheater": "Muscle",
+    "junqueira": "Muscle tissue",
+    "diseases": "Duchenne and Becker, myasthenia gravis, Lambert-Eaton",
+    "links": [
+     [
+      "histo-C3",
+      0,
+      7
+     ],
+     [
+      "slides-C3",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-C4",
+    "subject": "histo",
+    "kind": "lab",
+    "date": "2026-10-26",
+    "tbc": true,
+    "label": "Histology class 4: Epithelium, glands, skin, ear, eye",
+    "title": "Epithelium, glands, skin, ear, eye",
+    "wheater": "Epithelial tissues; Skin; Special sense organs",
+    "junqueira": "Epithelial tissue; Skin; Eye and ear",
+    "diseases": "Barrett metaplasia, squamous metaplasia in smokers, pemphigus vs bullous pemphigoid",
+    "links": [
+     [
+      "histo-C4",
+      0,
+      7
+     ],
+     [
+      "slides-C4",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-C5",
+    "subject": "histo",
+    "kind": "lab",
+    "date": "2026-11-02",
+    "tbc": true,
+    "label": "Histology class 5: Nervous tissue, CNS, ganglia, eye, ear",
+    "title": "Nervous tissue, CNS, ganglia, eye, ear",
+    "wheater": "Nervous tissues; Central nervous system",
+    "junqueira": "Nerve tissue & the nervous system",
+    "diseases": "Guillain-Barre vs multiple sclerosis, Wallerian degeneration",
+    "links": [
+     [
+      "histo-C5",
+      0,
+      7
+     ],
+     [
+      "slides-C5",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-C6",
+    "subject": "histo",
+    "kind": "lab",
+    "date": "2026-11-23",
+    "tbc": true,
+    "label": "Histology class 6: Blood, hematopoiesis, lymphatic organs",
+    "title": "Blood, hematopoiesis, lymphatic organs",
+    "wheater": "Blood; Immune system",
+    "junqueira": "Blood; Hemopoiesis; Immune system & lymphoid organs",
+    "diseases": "DiGeorge syndrome, asplenia and Howell-Jolly bodies",
+    "links": [
+     [
+      "histo-C6",
+      0,
+      7
+     ],
+     [
+      "slides-C6",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-C7",
+    "subject": "histo",
+    "kind": "lab",
+    "date": "2026-11-30",
+    "tbc": true,
+    "label": "Histology class 7: Circulatory system",
+    "title": "Circulatory system",
+    "wheater": "Circulatory system",
+    "junqueira": "The circulatory system",
+    "diseases": "atherosclerosis",
+    "links": [
+     [
+      "histo-C7",
+      0,
+      7
+     ],
+     [
+      "slides-C7",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-C8",
+    "subject": "histo",
+    "kind": "partial",
+    "date": "2026-12-14",
+    "tbc": true,
+    "label": "Histology class 8: Partial test: slide recognition (classes 1-7)",
+    "title": "Partial test: slide recognition (classes 1-7)",
+    "wheater": "",
+    "junqueira": "",
+    "diseases": "",
+    "links": []
+   },
+   {
+    "id": "histo-S1",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 1: Respiratory system",
+    "title": "Respiratory system",
+    "wheater": "Respiratory system",
+    "junqueira": "The respiratory system",
+    "diseases": "neonatal RDS",
+    "links": [
+     [
+      "histo-S1",
+      0,
+      7
+     ],
+     [
+      "slides-S1",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S2",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 2: Oral cavity, tooth, salivary glands",
+    "title": "Oral cavity, tooth, salivary glands",
+    "wheater": "Oral tissues",
+    "junqueira": "Digestive tract (oral cavity)",
+    "diseases": "",
+    "links": [
+     [
+      "slides-S2",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S3",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 3: Digestive tract",
+    "title": "Digestive tract",
+    "wheater": "Gastrointestinal tract",
+    "junqueira": "Digestive tract",
+    "diseases": "",
+    "links": [
+     [
+      "histo-S3",
+      0,
+      7
+     ],
+     [
+      "slides-S3",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S4",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 4: Liver, gallbladder, pancreas",
+    "title": "Liver, gallbladder, pancreas",
+    "wheater": "Liver and pancreas",
+    "junqueira": "Organs associated with the digestive tract",
+    "diseases": "zone 1 vs zone 3 liver injury",
+    "links": [
+     [
+      "histo-S4",
+      0,
+      7
+     ],
+     [
+      "slides-S4",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S5",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 5: Endocrine system",
+    "title": "Endocrine system",
+    "wheater": "Endocrine system",
+    "junqueira": "Endocrine glands",
+    "diseases": "medullary thyroid cancer",
+    "links": [
+     [
+      "histo-S5",
+      0,
+      7
+     ],
+     [
+      "slides-S5",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S6",
+    "subject": "histo",
+    "kind": "partial",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 6: Practical and theoretical test (spring classes 1-5)",
+    "title": "Practical and theoretical test (spring classes 1-5)",
+    "wheater": "",
+    "junqueira": "",
+    "diseases": "",
+    "links": []
+   },
+   {
+    "id": "histo-S7",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 7: Male reproductive system",
+    "title": "Male reproductive system",
+    "wheater": "Male reproductive system",
+    "junqueira": "The male reproductive system",
+    "diseases": "",
+    "links": [
+     [
+      "histo-S7",
+      0,
+      7
+     ],
+     [
+      "slides-S7",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S8",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 8: Female reproductive system, mammary gland",
+    "title": "Female reproductive system, mammary gland",
+    "wheater": "Female reproductive system",
+    "junqueira": "The female reproductive system",
+    "diseases": "",
+    "links": [
+     [
+      "histo-S8",
+      0,
+      7
+     ],
+     [
+      "slides-S8",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S9",
+    "subject": "histo",
+    "kind": "lab",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 9: Urinary system",
+    "title": "Urinary system",
+    "wheater": "Urinary system",
+    "junqueira": "The urinary system",
+    "diseases": "nephrotic syndromes",
+    "links": [
+     [
+      "histo-S9",
+      0,
+      7
+     ],
+     [
+      "slides-S9",
+      -2,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "histo-S10",
+    "subject": "histo",
+    "kind": "partial",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 10: Practical and theoretical test (spring classes 7-9)",
+    "title": "Practical and theoretical test (spring classes 7-9)",
+    "wheater": "",
+    "junqueira": "",
+    "diseases": "",
+    "links": []
+   },
+   {
+    "id": "histo-S11",
+    "subject": "histo",
+    "kind": "review",
+    "date": null,
+    "tbc": true,
+    "label": "Histology spring class 11: Slide review",
+    "title": "Slide review",
+    "wheater": "",
+    "junqueira": "",
+    "diseases": "",
+    "links": []
+   },
+   {
+    "id": "embryo-Sem1",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-10-07",
+    "tbc": false,
+    "label": "Embryology seminar 1: Gametes, gametogenesis, fertilization, cleavage, implantation",
+    "title": "Gametes, gametogenesis, fertilization, cleavage, implantation",
+    "bwab": "germ cells and the first week",
+    "malformations": "",
+    "links": [
+     [
+      "embryo-Sem1",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem2",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-10-14",
+    "tbc": false,
+    "label": "Embryology seminar 2: Gastrulation, embryonic disc, placenta, pharyngeal clefts, arches and pouches",
+    "title": "Gastrulation, embryonic disc, placenta, pharyngeal clefts, arches and pouches",
+    "bwab": "weeks 2-3, the placenta, the pharyngeal apparatus",
+    "malformations": "DiGeorge, branchial cleft cyst, thyroglossal duct cyst",
+    "links": [
+     [
+      "embryo-Sem2",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem3",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-10-21",
+    "tbc": false,
+    "label": "Embryology seminar 3: Differentiation, organogenesis, birth defects, multiple pregnancy",
+    "title": "Differentiation, organogenesis, birth defects, multiple pregnancy",
+    "bwab": "weeks 4-8, the fetal period, birth defects, twins",
+    "malformations": "teratogens and critical periods, twinning",
+    "links": [
+     [
+      "embryo-Sem3",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem4",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-10-28",
+    "tbc": false,
+    "label": "Embryology seminar 4: Intercellular junctions, adhesion molecules",
+    "title": "Intercellular junctions, adhesion molecules",
+    "bwab": "(cell biology: Junqueira epithelium and FA pp. 482-483)",
+    "malformations": "",
+    "links": [
+     [
+      "embryo-Sem4",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem5",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-11-04",
+    "tbc": true,
+    "label": "Embryology seminar 5: Development of the nervous system, skin and the hearing organ",
+    "title": "Development of the nervous system, skin and the hearing organ",
+    "bwab": "the nervous system; the integumentary system; the ear",
+    "malformations": "neural tube defects, brain malformations",
+    "links": [
+     [
+      "embryo-Sem5",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem6",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-11-11",
+    "tbc": true,
+    "label": "Embryology seminar 6: Skin sensation, taste, sight: receptors",
+    "title": "Skin sensation, taste, sight: receptors",
+    "bwab": "(sensory receptors: Junqueira and Guyton Ch 47, 50-53)",
+    "malformations": "",
+    "links": [
+     [
+      "embryo-Sem6",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem7",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-11-25",
+    "tbc": true,
+    "label": "Embryology seminar 7: The cell cycle, proliferation, apoptosis, necrosis",
+    "title": "The cell cycle, proliferation, apoptosis, necrosis",
+    "bwab": "(cell biology: FA pp. 44, 204-205)",
+    "malformations": "",
+    "links": [
+     [
+      "embryo-Sem7",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem8",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-12-02",
+    "tbc": true,
+    "label": "Embryology seminar 8: Ageing of the body, cell differentiation and ageing",
+    "title": "Ageing of the body, cell differentiation and ageing",
+    "bwab": "(cell biology)",
+    "malformations": "",
+    "links": [
+     [
+      "embryo-Sem8",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Sem9",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": "2026-12-16",
+    "tbc": true,
+    "label": "Embryology seminar 9: Development of the heart and blood vessels",
+    "title": "Development of the heart and blood vessels",
+    "bwab": "the cardiovascular system",
+    "malformations": "congenital heart defects, fetal circulation",
+    "links": [
+     [
+      "embryo-Sem9",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Spr1",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": null,
+    "tbc": true,
+    "label": "Embryology seminar spring 1: Respiratory development and defects; ageing",
+    "title": "Respiratory development and defects; ageing",
+    "bwab": "the respiratory system",
+    "malformations": "lung hypoplasia, tracheoesophageal fistula",
+    "links": [
+     [
+      "embryo-Spr1",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Spr2",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": null,
+    "tbc": true,
+    "label": "Embryology seminar spring 2: Pharyngeal organ, tooth and salivary gland development; defects",
+    "title": "Pharyngeal organ, tooth and salivary gland development; defects",
+    "bwab": "the pharyngeal apparatus, face and teeth",
+    "malformations": "",
+    "links": [
+     [
+      "embryo-Spr2",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Spr3",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": null,
+    "tbc": true,
+    "label": "Embryology seminar spring 3: Oesophagus, stomach, intestines, liver, pancreas development; defects",
+    "title": "Oesophagus, stomach, intestines, liver, pancreas development; defects",
+    "bwab": "the alimentary system",
+    "malformations": "malrotation, Meckel, omphalocele vs gastroschisis, pyloric stenosis, Hirschsprung",
+    "links": [
+     [
+      "embryo-Spr3",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Spr4",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": null,
+    "tbc": true,
+    "label": "Embryology seminar spring 4: Endocrine cytophysiology; adipose tissue; endocrine development",
+    "title": "Endocrine cytophysiology; adipose tissue; endocrine development",
+    "bwab": "the endocrine glands",
+    "malformations": "",
+    "links": [
+     [
+      "embryo-Spr4",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Spr5",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": null,
+    "tbc": true,
+    "label": "Embryology seminar spring 5: Spermatogenesis regulation; male reproductive development",
+    "title": "Spermatogenesis regulation; male reproductive development",
+    "bwab": "the urogenital system (male)",
+    "malformations": "hypospadias, cryptorchidism",
+    "links": [
+     [
+      "embryo-Spr5",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Spr6",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": null,
+    "tbc": true,
+    "label": "Embryology seminar spring 6: Female cycle regulation; vaginal cytology; female development",
+    "title": "Female cycle regulation; vaginal cytology; female development",
+    "bwab": "the urogenital system (female)",
+    "malformations": "Mullerian anomalies",
+    "links": [
+     [
+      "embryo-Spr6",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "embryo-Spr7",
+    "subject": "embryo",
+    "kind": "seminar",
+    "date": null,
+    "tbc": true,
+    "label": "Embryology seminar spring 7: Urinary development; congenital kidney defects",
+    "title": "Urinary development; congenital kidney defects",
+    "bwab": "the urinary system",
+    "malformations": "horseshoe kidney, Potter sequence",
+    "links": [
+     [
+      "embryo-Spr7",
+      -1,
+      7
+     ]
+    ]
+   },
+   {
+    "id": "anat-2026-10-22",
+    "subject": "anatomy",
+    "kind": "lab",
+    "date": "2026-10-22",
+    "tbc": false,
+    "label": "Anatomy Lab 4: abdominal wall, inguinal canal, pelvis, perineum",
+    "title": "Lab 4: abdominal wall, inguinal canal, pelvis, perineum",
+    "links": []
+   },
+   {
+    "id": "anat-2026-10-29",
+    "subject": "anatomy",
+    "kind": "lab",
+    "date": "2026-10-29",
+    "tbc": false,
+    "label": "Anatomy Lab 5: lower limb",
+    "title": "Lab 5: lower limb",
+    "links": []
+   },
+   {
+    "id": "anat-2026-11-10",
+    "subject": "anatomy",
+    "kind": "partial",
+    "date": "2026-11-10",
+    "tbc": false,
+    "label": "Anatomy Module A partial: theory",
+    "title": "Module A partial: theory",
+    "links": []
+   },
+   {
+    "id": "anat-2026-11-12",
+    "subject": "anatomy",
+    "kind": "partial",
+    "date": "2026-11-12",
+    "tbc": false,
+    "label": "Anatomy Module A partial: practical",
+    "title": "Module A partial: practical",
+    "links": []
+   },
+   {
+    "id": "anat-2026-11-17",
+    "subject": "anatomy",
+    "kind": "seminar",
+    "date": "2026-11-17",
+    "tbc": false,
+    "label": "Anatomy Seminar 7: ventricles, CSF, meninges",
+    "title": "Seminar 7: ventricles, CSF, meninges",
+    "links": []
+   },
+   {
+    "id": "anat-2026-11-19",
+    "subject": "anatomy",
+    "kind": "lab",
+    "date": "2026-11-19",
+    "tbc": false,
+    "label": "Anatomy Lab 7: spinal cord, tracts, brainstem",
+    "title": "Lab 7: spinal cord, tracts, brainstem",
+    "links": []
+   },
+   {
+    "id": "anat-2026-11-24",
+    "subject": "anatomy",
+    "kind": "seminar",
+    "date": "2026-11-24",
+    "tbc": false,
+    "label": "Anatomy Seminar 8: UMN/LMN, cord and brainstem syndromes",
+    "title": "Seminar 8: UMN/LMN, cord and brainstem syndromes",
+    "links": []
+   },
+   {
+    "id": "anat-2026-11-26",
+    "subject": "anatomy",
+    "kind": "lab",
+    "date": "2026-11-26",
+    "tbc": false,
+    "label": "Anatomy Lab 8: cortex, basal nuclei, limbic system, blood supply",
+    "title": "Lab 8: cortex, basal nuclei, limbic system, blood supply",
+    "links": []
+   },
+   {
+    "id": "anat-2026-12-01",
+    "subject": "anatomy",
+    "kind": "seminar",
+    "date": "2026-12-01",
+    "tbc": false,
+    "label": "Anatomy Seminar 9: strokes, aneurysms",
+    "title": "Seminar 9: strokes, aneurysms",
+    "links": []
+   },
+   {
+    "id": "anat-2026-12-03",
+    "subject": "anatomy",
+    "kind": "lab",
+    "date": "2026-12-03",
+    "tbc": false,
+    "label": "Anatomy Lab 9: orbit, ear, cranial nerves",
+    "title": "Lab 9: orbit, ear, cranial nerves",
+    "links": []
+   },
+   {
+    "id": "anat-2026-12-08",
+    "subject": "anatomy",
+    "kind": "seminar",
+    "date": "2026-12-08",
+    "tbc": false,
+    "label": "Anatomy Seminar 10: cranial nerves, Horner",
+    "title": "Seminar 10: cranial nerves, Horner",
+    "links": []
+   },
+   {
+    "id": "anat-2026-12-10",
+    "subject": "anatomy",
+    "kind": "lab",
+    "date": "2026-12-10",
+    "tbc": false,
+    "label": "Anatomy Lab 10: plexuses, pelvic nerves",
+    "title": "Lab 10: plexuses, pelvic nerves",
+    "links": []
+   },
+   {
+    "id": "anat-2026-12-17",
+    "subject": "anatomy",
+    "kind": "partial",
+    "date": "2026-12-17",
+    "tbc": false,
+    "label": "Anatomy Module B partial + Lab 11",
+    "title": "Module B partial + Lab 11",
+    "links": []
+   },
+   {
+    "id": "anat-2027-01-07",
+    "subject": "anatomy",
+    "kind": "lab",
+    "date": "2027-01-07",
+    "tbc": false,
+    "label": "Anatomy Lab 12: heart, mediastinum, fetal circulation",
+    "title": "Lab 12: heart, mediastinum, fetal circulation",
+    "links": []
+   },
+   {
+    "id": "anat-2027-01-12",
+    "subject": "anatomy",
+    "kind": "partial",
+    "date": "2027-01-12",
+    "tbc": false,
+    "label": "Anatomy Modules C+D partial: theory",
+    "title": "Modules C+D partial: theory",
+    "links": []
+   },
+   {
+    "id": "anat-2027-01-14",
+    "subject": "anatomy",
+    "kind": "partial",
+    "date": "2027-01-14",
+    "tbc": false,
+    "label": "Anatomy Modules C+D partial: practical",
+    "title": "Modules C+D partial: practical",
+    "links": []
+   },
+   {
+    "id": "session-2027-02-04",
+    "subject": "all",
+    "kind": "exam",
+    "date": "2027-02-04",
+    "tbc": false,
+    "label": "Winter session starts (exams 4-10 Feb)",
+    "title": "Winter session starts (exams 4-10 Feb)",
+    "links": []
+   },
+   {
+    "id": "session-2027-06-21",
+    "subject": "all",
+    "kind": "exam",
+    "date": "2027-06-21",
+    "tbc": false,
+    "label": "Year 2 finals start (21 Jun - 11 Jul)",
+    "title": "Year 2 finals start (21 Jun - 11 Jul)",
+    "links": []
+   },
+   {
+    "id": "stepsat-2026-12-05",
+    "subject": "step",
+    "kind": "stepsat",
+    "date": "2026-12-05",
+    "tbc": false,
+    "label": "Step Saturday: 4 timed mixed blocks + retro",
+    "title": "Step Saturday",
+    "links": []
+   },
+   {
+    "id": "stepsat-2027-01-09",
+    "subject": "step",
+    "kind": "stepsat",
+    "date": "2027-01-09",
+    "tbc": false,
+    "label": "Step Saturday: 4 timed mixed blocks + retro",
+    "title": "Step Saturday",
+    "links": []
+   },
+   {
+    "id": "stepsat-2027-02-06",
+    "subject": "step",
+    "kind": "stepsat",
+    "date": "2027-02-06",
+    "tbc": false,
+    "label": "Step Saturday: 4 timed mixed blocks + retro",
+    "title": "Step Saturday",
+    "links": []
+   },
+   {
+    "id": "stepsat-2027-03-06",
+    "subject": "step",
+    "kind": "stepsat",
+    "date": "2027-03-06",
+    "tbc": false,
+    "label": "Step Saturday: 4 timed mixed blocks + retro",
+    "title": "Step Saturday",
+    "links": []
+   },
+   {
+    "id": "stepsat-2027-04-03",
+    "subject": "step",
+    "kind": "stepsat",
+    "date": "2027-04-03",
+    "tbc": false,
+    "label": "Step Saturday: 4 timed mixed blocks + retro",
+    "title": "Step Saturday",
+    "links": []
+   },
+   {
+    "id": "stepsat-2027-05-08",
+    "subject": "step",
+    "kind": "stepsat",
+    "date": "2027-05-08",
+    "tbc": false,
+    "label": "Step Saturday: 4 timed mixed blocks + retro",
+    "title": "Step Saturday",
+    "links": []
+   },
+   {
+    "id": "stepsat-2027-06-05",
+    "subject": "step",
+    "kind": "stepsat",
+    "date": "2027-06-05",
+    "tbc": false,
+    "label": "Step Saturday: 4 timed mixed blocks + retro",
+    "title": "Step Saturday",
+    "links": []
+   },
+   {
+    "id": "uworld-start",
+    "subject": "step",
+    "kind": "milestone",
+    "date": "2026-11-02",
+    "tbc": false,
+    "label": "UWorld and AMBOSS start",
+    "title": "UWorld starts",
+    "links": []
+   }
+  ],
+  "weeks": [
+   {
+    "week": 0,
+    "monday": "2026-10-17",
+    "mode": "Set-up",
+    "blocks": 0,
+    "system": "",
+    "label": "Cell biology",
+    "fa": [
+     [
+      44,
+      49
+     ]
+    ],
+    "unit": "step-w00"
+   },
+   {
+    "week": 1,
+    "monday": "2026-10-19",
+    "mode": "Build",
+    "blocks": 0,
+    "system": "Nervous system",
+    "label": "General embryology; neurons; junctions and skin",
+    "fa": [
+     [
+      630,
+      636
+     ],
+     [
+      503,
+      505
+     ],
+     [
+      482,
+      483
+     ]
+    ],
+    "unit": "step-w01"
+   },
+   {
+    "week": 2,
+    "monday": "2026-10-26",
+    "mode": "Crunch",
+    "blocks": 0,
+    "system": "Nervous system",
+    "label": "Hearing, pupils, visual pathways; lower-limb nerves",
+    "fa": [
+     [
+      547,
+      547
+     ],
+     [
+      554,
+      557
+     ],
+     [
+      455,
+      458
+     ]
+    ],
+    "unit": "step-w02"
+   },
+   {
+    "week": 3,
+    "monday": "2026-11-02",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Musculoskeletal",
+    "label": "Upper-limb nerves, brachial plexus, hand; muscle",
+    "fa": [
+     [
+      450,
+      454
+     ],
+     [
+      459,
+      461
+     ]
+    ],
+    "unit": "step-w03"
+   },
+   {
+    "week": 4,
+    "monday": "2026-11-09",
+    "mode": "Crunch",
+    "blocks": 1,
+    "system": "Musculoskeletal",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 5,
+    "monday": "2026-11-16",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Nervous system",
+    "label": "Neuro 1: embryology, meninges, ventricles, cord and tracts",
+    "fa": [
+     [
+      280,
+      282
+     ],
+     [
+      500,
+      502
+     ],
+     [
+      506,
+      506
+     ],
+     [
+      515,
+      515
+     ],
+     [
+      521,
+      523
+     ]
+    ],
+    "unit": "step-w05"
+   },
+   {
+    "week": 6,
+    "monday": "2026-11-23",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Nervous system",
+    "label": "Neuro 2: sleep, hypothalamus, limbic, cerebellum, basal ganglia, cortex",
+    "fa": [
+     [
+      507,
+      513
+     ]
+    ],
+    "unit": "step-w06"
+   },
+   {
+    "week": 7,
+    "monday": "2026-11-30",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Nervous system",
+    "label": "Neuro 3: circle of Willis, brainstem, cranial nerves, eye movements",
+    "fa": [
+     [
+      514,
+      514
+     ],
+     [
+      516,
+      520
+     ],
+     [
+      556,
+      556
+     ],
+     [
+      558,
+      558
+     ]
+    ],
+    "unit": "step-w07"
+   },
+   {
+    "week": 8,
+    "monday": "2026-12-07",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Hematology",
+    "label": "Blood 1: blood groups, erythropoiesis, blood cells",
+    "fa": [
+     [
+      410,
+      415
+     ]
+    ],
+    "unit": "step-w08"
+   },
+   {
+    "week": 9,
+    "monday": "2026-12-14",
+    "mode": "Crunch",
+    "blocks": 1,
+    "system": "Nervous system",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 10,
+    "monday": "2026-12-21",
+    "mode": "Push",
+    "blocks": 2,
+    "system": "Hematology & Immunology",
+    "label": "Blood 2: hemostasis; lymphoid organs and immune cells",
+    "fa": [
+     [
+      416,
+      419
+     ],
+     [
+      94,
+      101
+     ]
+    ],
+    "unit": "step-w10"
+   },
+   {
+    "week": 11,
+    "monday": "2026-12-28",
+    "mode": "Push",
+    "blocks": 5,
+    "system": "Cardiovascular",
+    "label": "Cardio 1: embryology, anatomy, cardiac output, PV loops, heart sounds",
+    "fa": [
+     [
+      284,
+      293
+     ]
+    ],
+    "unit": "step-w11"
+   },
+   {
+    "week": 12,
+    "monday": "2027-01-04",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Cardiovascular",
+    "label": "Cardio 2: murmurs, ECG, conduction",
+    "fa": [
+     [
+      294,
+      297
+     ]
+    ],
+    "unit": "step-w12"
+   },
+   {
+    "week": 13,
+    "monday": "2027-01-11",
+    "mode": "Crunch",
+    "blocks": 1,
+    "system": "Cardiovascular",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 14,
+    "monday": "2027-01-18",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Cardiovascular",
+    "label": "Cardio 3: baroreflex, autoregulation, capillary exchange",
+    "fa": [
+     [
+      298,
+      299
+     ]
+    ],
+    "unit": "step-w14"
+   },
+   {
+    "week": 15,
+    "monday": "2027-01-25",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Genetics / Cardiovascular",
+    "label": "Genetics",
+    "fa": [
+     [
+      54,
+      62
+     ]
+    ],
+    "unit": "step-w15"
+   },
+   {
+    "week": 16,
+    "monday": "2027-02-01",
+    "mode": "Buffer",
+    "blocks": 2,
+    "system": "Mixed (weeks 1-15)",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 17,
+    "monday": "2027-02-08",
+    "mode": "Push",
+    "blocks": 4,
+    "system": "Biostatistics",
+    "label": "Biostatistics 1",
+    "fa": [
+     [
+      256,
+      264
+     ]
+    ],
+    "unit": "step-w17"
+   },
+   {
+    "week": 18,
+    "monday": "2027-02-15",
+    "mode": "Push",
+    "blocks": 2,
+    "system": "Biostatistics",
+    "label": "Biostatistics 2",
+    "fa": [
+     [
+      265,
+      267
+     ]
+    ],
+    "unit": "step-w18"
+   },
+   {
+    "week": 19,
+    "monday": "2027-02-22",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Renal",
+    "label": "Renal 1: embryology, anatomy, clearance, filtration",
+    "fa": [
+     [
+      596,
+      602
+     ]
+    ],
+    "unit": "step-w19"
+   },
+   {
+    "week": 20,
+    "monday": "2027-03-01",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Renal",
+    "label": "Renal 2: nephron transport, tubular defects",
+    "fa": [
+     [
+      603,
+      605
+     ]
+    ],
+    "unit": "step-w20"
+   },
+   {
+    "week": 21,
+    "monday": "2027-03-08",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Renal",
+    "label": "Renal 3: RAAS, JGA, renal hormones, electrolytes",
+    "fa": [
+     [
+      606,
+      609
+     ]
+    ],
+    "unit": "step-w21"
+   },
+   {
+    "week": 22,
+    "monday": "2027-03-15",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Gastrointestinal",
+    "label": "GI 1: embryology, pharyngeal apparatus, GI hormones",
+    "fa": [
+     [
+      364,
+      366
+     ],
+     [
+      637,
+      639
+     ],
+     [
+      378,
+      380
+     ]
+    ],
+    "unit": "step-w22"
+   },
+   {
+    "week": 23,
+    "monday": "2027-03-22",
+    "mode": "Rest",
+    "blocks": 1,
+    "system": "Gastrointestinal",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 24,
+    "monday": "2027-03-29",
+    "mode": "Push",
+    "blocks": 4,
+    "system": "Gastrointestinal",
+    "label": "GI 2: digestion, absorption, bile; peritoneum, blood supply",
+    "fa": [
+     [
+      381,
+      382
+     ],
+     [
+      367,
+      372
+     ]
+    ],
+    "unit": "step-w24"
+   },
+   {
+    "week": 25,
+    "monday": "2027-04-05",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Gastrointestinal",
+    "label": "GI 3: anal canal, liver, biliary tree, hernias",
+    "fa": [
+     [
+      373,
+      377
+     ]
+    ],
+    "unit": "step-w25"
+   },
+   {
+    "week": 26,
+    "monday": "2027-04-12",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Respiratory",
+    "label": "Resp 1: embryology, anatomy, lung volumes, compliance",
+    "fa": [
+     [
+      678,
+      683
+     ]
+    ],
+    "unit": "step-w26"
+   },
+   {
+    "week": 27,
+    "monday": "2027-04-19",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Respiratory",
+    "label": "Resp 2: pulmonary circulation, V/Q, alveolar gas, CO2",
+    "fa": [
+     [
+      684,
+      686
+     ]
+    ],
+    "unit": "step-w27"
+   },
+   {
+    "week": 28,
+    "monday": "2027-04-26",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Respiratory",
+    "label": "Resp 3: hemoglobin, O2 curve, altitude, exercise",
+    "fa": [
+     [
+      687,
+      689
+     ]
+    ],
+    "unit": "step-w28"
+   },
+   {
+    "week": 29,
+    "monday": "2027-05-03",
+    "mode": "Push",
+    "blocks": 4,
+    "system": "Biochemistry",
+    "label": "Biochem 1: molecular; lab techniques",
+    "fa": [
+     [
+      32,
+      43
+     ],
+     [
+      50,
+      53
+     ]
+    ],
+    "unit": "step-w29"
+   },
+   {
+    "week": 30,
+    "monday": "2027-05-10",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Renal (acid-base)",
+    "label": "Acid-base",
+    "fa": [
+     [
+      610,
+      611
+     ]
+    ],
+    "unit": "step-w30"
+   },
+   {
+    "week": 31,
+    "monday": "2027-05-17",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Endocrine",
+    "label": "Endocrine 1: embryology, anatomy, hypothalamic-pituitary",
+    "fa": [
+     [
+      330,
+      334
+     ]
+    ],
+    "unit": "step-w31"
+   },
+   {
+    "week": 32,
+    "monday": "2027-05-24",
+    "mode": "Push",
+    "blocks": 4,
+    "system": "Endocrine",
+    "label": "Endocrine 2: thyroid, cortisol, adrenal steroids",
+    "fa": [
+     [
+      335,
+      336
+     ],
+     [
+      339,
+      339
+     ]
+    ],
+    "unit": "step-w32"
+   },
+   {
+    "week": 33,
+    "monday": "2027-05-31",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Endocrine",
+    "label": "Endocrine 3: calcium, PTH, insulin, glucagon, signalling",
+    "fa": [
+     [
+      337,
+      338
+     ],
+     [
+      340,
+      341
+     ]
+    ],
+    "unit": "step-w33"
+   },
+   {
+    "week": 34,
+    "monday": "2027-06-07",
+    "mode": "Build",
+    "blocks": 3,
+    "system": "Reproductive",
+    "label": "Reproduction: differentiation, anatomy, physiology",
+    "fa": [
+     [
+      640,
+      654
+     ]
+    ],
+    "unit": "step-w34"
+   },
+   {
+    "week": 35,
+    "monday": "2027-06-14",
+    "mode": "Buffer",
+    "blocks": 2,
+    "system": "Mixed (physiology)",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 36,
+    "monday": "2027-06-21",
+    "mode": "Crunch",
+    "blocks": 1,
+    "system": "",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 37,
+    "monday": "2027-06-28",
+    "mode": "Crunch",
+    "blocks": 1,
+    "system": "",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 38,
+    "monday": "2027-07-05",
+    "mode": "Crunch",
+    "blocks": 1,
+    "system": "",
+    "label": "",
+    "fa": [],
+    "unit": null
+   },
+   {
+    "week": 39,
+    "monday": "2027-07-12",
+    "mode": "Rest",
+    "blocks": 0,
+    "system": "",
+    "label": "",
+    "fa": [],
+    "unit": null
+   }
+  ],
+  "uworld_start": "2026-11-02"
+ }
+}

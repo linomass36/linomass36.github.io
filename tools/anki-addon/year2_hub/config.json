@@ -1,0 +1,46 @@
+{
+    "auto_run": true,
+    "decks": {
+        "anking": "AnKing Step Deck",
+        "slides": "SecondLook Histology"
+    },
+    "ceiling": {
+        "anking": 25,
+        "slides": 10
+    },
+    "crunch_ceiling": {
+        "anking": 10,
+        "slides": 10
+    },
+    "reserve": 0.85,
+    "buffer_days": 2,
+    "light_day_factor": 0.5,
+    "core_tiers": {
+        "physio": [
+            0,
+            1
+        ],
+        "default": [
+            0,
+            1
+        ]
+    },
+    "extra": true,
+    "extra_tiers": [
+        2,
+        3
+    ],
+    "course_tracks": [
+        "physio",
+        "histo",
+        "embryo",
+        "slides"
+    ],
+    "confirm_tracks": [],
+    "apply_limits": true,
+    "set_queue_order": true,
+    "qid_cap_per_question": 5,
+    "horizon": "2027-07-31",
+    "tolerance_days": 2,
+    "show_panel": true
+}
