@@ -138,6 +138,39 @@
       counted as course anatomy. Each subject also carries the most new cards on any one day.</p>
   </div>
   <div class="hub-card">
+    <h3 class="hub-h3">The Year 2 Hub add-on and the website are one plan</h3>
+    <p class="hub-p">The <b>Year 2 Hub</b> add-on in Anki (3.2 and later; its source is in
+      <code>tools/anki-addon</code>) builds each day's tasks from the year's calendar and runs the AnKing and
+      SecondLook card plan. Once connected, <b>its list is the Almanac's checklist</b>: under By the protocol
+      the Almanac shows the add-on's tasks for today, by subject with their minutes, plus the card plan,
+      the Anatomy Prime day and anything left from the last three days. A tick here goes to Anki, and one
+      made in Anki shows here. If both change, the newer wins, un-ticking included. The protocol's own rows
+      only show before the add-on has sent a plan for the day. The bad-day button still swaps in the
+      minimum day. The past week and the ticks-against-grades chart count the add-on's tasks on the days
+      it planned.</p>
+    <p class="hub-p"><b>Dates and results.</b> A class dated alike in both calendars is linked. After that,
+      moving it in Study Control (Every class ahead &rsaquo; Edit) moves it in Anki, cards and all, and moving
+      it in Anki moves it here. Classes the two date differently are listed under <i>Anki add-on</i> in
+      Study Control's protocol panel, with a button for each date: pick the right one once. Matching looks
+      at the titles as well as the dates, so two different classes on the same day are never linked. Every
+      result you log goes to the add-on, which shows them on its subject pages.</p>
+    <p class="hub-p"><b>Connecting, once.</b> (1) In the Firebase console, Firestore &rsaquo; Rules, add
+      this inside <code>match /databases/{database}/documents</code> and publish:
+      <code>match /bridge/{userId}/{doc=**} { allow read, write: if request.auth != null &amp;&amp; request.auth.uid == userId; }</code>
+      (DEPLOY.md has the full rules). (2) In Study Control, protocol panel, <i>Anki add-on</i>, press <i>Make
+      a pairing code</i> and copy it. (3) In Anki: Year 2 &rsaquo; Website &rsaquo; Connect&hellip;, and paste
+      it. The add-on then syncs when Anki opens or syncs, every ten minutes, and about twenty seconds after
+      a tick. The code is your sign-in: the add-on acts as you, under the same rule as the browser. It is
+      kept only on that computer (in the add-on's <code>user_files</code>, not in the collection, so not on
+      AnkiWeb), and Disconnect deletes it. Make a code only on your own device.</p>
+    <p class="hub-p"><b>Export.</b> Study Control's header has <i>Export all study data</i> (one JSON file
+      with Study Control, the Anki reading, and the add-on's calendar, card plan and every task since it
+      started, with what you ticked), plus <i>Results (CSV)</i> and <i>Tasks (CSV)</i> for a spreadsheet. In
+      Anki, Year 2 &rsaquo; Export study data&hellip; writes the same three from the add-on's side: its state
+      and tasks, plus the website's results and Study Control as last synced. Either export alone holds
+      both sides.</p>
+  </div>
+  <div class="hub-card">
     <h3 class="hub-h3">The Year 2 Study Protocol runs inside Study Control</h3>
     <p class="hub-p">The protocol (v1.1, 18 October 2026) says "no new trackers, pages or decks", so
       it has no page of its own. Study Control holds it and the Almanac shows the day of it.</p>

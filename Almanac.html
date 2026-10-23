@@ -23,6 +23,7 @@
 <script src="./season.js"></script>
 <script src="./study-control.js"></script>
 <script src="./feeds.js"></script>
+<script src="./anki-bridge.js"></script>
 <script src="./grind-data.js"></script>
 <script src="./training.js"></script>
 <script src="./facts.js"></script>
@@ -211,7 +212,11 @@ body.alm #hub-sync-panel { bottom: calc(var(--al-bar) + max(8px, env(safe-area-i
 .al-floor .al-chk .who { display: block; font-size: 13px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--c, var(--muted)); }
 .al-floor .al-chk.must .lab { color: var(--ink); font-weight: 500; }
 .al-floor .al-chk.must .who::after { content: " \00b7 today\2019s must-do"; color: var(--muted); }
-.al-sub { font-size: 14px; font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--muted); margin: 12px 0 2px; }
+.al-floor .al-chk.fl .who::after { content: " \00b7 floor"; color: var(--muted); }
+.al-floor .al-chk .det { display: block; font-style: italic; color: var(--muted); font-size: 14.5px; line-height: 1.3; margin-top: 1px; }
+.al-floor .al-chk .when { font-style: italic; color: var(--muted); }
+.al-note-line { font-style: italic; color: var(--body); font-size: 15.5px; padding: 4px 0 4px 22px; }
+.al-sub { font-variant: small-caps; letter-spacing: .12em; text-transform: lowercase; color: var(--muted); margin: 12px 0 2px; }
 .al-wb { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 12px; border: 1px solid var(--line-2); text-decoration: none; }
 .al-wb span { text-align: center; padding: 4px 0 5px; border-left: 1px solid var(--line-2); font-size: 13px; color: var(--muted); line-height: 1.2; }
 .al-wb span:first-child { border-left: 0; }
@@ -236,7 +241,7 @@ body.alm #hub-sync-panel { bottom: calc(var(--al-bar) + max(8px, env(safe-area-i
   'use strict';
   try { if (localStorage.getItem('hub_theme_v1') === 'dark') document.documentElement.classList.add('hb-dark'); } catch (e) {}
 
-  var SC = window.StudyControl, PV = window.PlanV2, SYS = window.Systems, TR = window.CTTraining, SM = window.SITEMAP, SZ = window.Season;
+  var AB = window.AnkiBridge, SC = window.StudyControl, PV = window.PlanV2, SYS = window.Systems, TR = window.CTTraining, SM = window.SITEMAP, SZ = window.Season;
   var $ = function (s) { return document.querySelector(s); };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -329,12 +334,59 @@ body.alm #hub-sync-panel { bottom: calc(var(--al-bar) + max(8px, env(safe-area-i
      rows are the week at a glance for this weekday; the countdown appears
      only when a stacked week is three weeks out or closer. A bad day swaps
      the rows for the minimum viable day, and back. */
+  function ago(t) {
+    var m = Math.round((Date.now() - Date.parse(t)) / 6e4);
+    return isNaN(m) ? '' : m < 2 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago';
+  }
+  function hmin(m) { m = +m || 0; return m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
+
+  /* ── the add-on's day ── when the Year 2 Hub in Anki has planned today,
+     its list is the day's checklist (anki-bridge.js says why there is only
+     one). Ticks go back to Anki; the past-week strip, the bad day and the
+     Step line below are the same as for the protocol's rows. */
+  function ankiDayHTML(p, a) {
+    var NAME = { anatomy: 'Anatomy', physio: 'Physiology', histo: 'Histology', embryo: 'Embryology', step: 'Step 1', all: 'Every subject' };
+    var real = a.tasks.filter(function (t) { return t.kind !== 'note'; });
+    var done = real.filter(function (t) { return t.done; }).length;
+    var left = real.filter(function (t) { return !t.done; }).reduce(function (n, t) { return n + (+t.min || 0); }, 0);
+    var h = '<div class="al-day"><b>' + esc(p.day) + '.</b> From the Year 2 Hub in Anki' + (a.at ? ', synced ' + esc(ago(a.at)) : '') +
+      '. ' + done + ' of ' + real.length + ' done' + (left ? ', ' + esc(hmin(left)) + ' left' : '') + '.</div>';
+    var c = a.card, bits = [];
+    if (c && c.target) Object.keys(c.target).forEach(function (k) {
+      var mode = c.mode && c.mode[k];
+      bits.push(({ anking: 'AnKing', slides: 'SecondLook' })[k] + ' <b>' + (+c.target[k] || 0) + '</b> new' + (mode && mode !== 'on track' ? ' · ' + esc(mode) : ''));
+    });
+    if (a.anatomy) {
+      var ck = a.anatomy.checklist || [];
+      bits.push('Anatomy Prime day ' + esc(a.anatomy.num || '–') + (a.anatomy.new != null ? ', <b>' + (+a.anatomy.new) + '</b> new' : '') +
+        (ck.length ? ', ' + ck.filter(function (x) { return x[2]; }).length + '/' + ck.length + ' ticked in Anki' : ''));
+    }
+    if (bits.length) h += '<div class="al-small" style="margin-bottom:4px">' + bits.join(' · ') + '</div>';
+    function chk(t, from) {
+      var sub = SC.SUBJ[AB.SUBJ[t.subject]];
+      var who = (NAME[t.subject] || t.subject) + (t.min ? ' · ' + hmin(t.min) : '') + (from ? ' · from ' + DOWF[parse(from).getDay()] : '');
+      return '<button type="button" class="al-chk' + (t.floor && t.kind !== 'test' && t.kind !== 'lab' ? ' fl' : '') + '" style="--c:var(' + (sub ? sub.c : '--gilt') + ', var(--accent))" aria-pressed="' + !!t.done + '" data-btick="' + esc(t.id) + '">' +
+        '<span class="b"></span><span class="lab"><span class="who">' + esc(who) + '</span>' + esc(t.title) +
+        (t.detail ? '<span class="det">' + esc(t.detail) + '</span>' : '') + '</span></button>';
+    }
+    a.order.forEach(function (k) {
+      a.tasks.filter(function (t) { return t.subject === k; }).forEach(function (t) {
+        h += t.kind === 'note' ? '<div class="al-note-line">' + esc(t.title) + '</div>' : '<div class="al-floor">' + chk(t) + '</div>';
+      });
+    });
+    if (a.leftovers.length) h += '<div class="al-sub">left from earlier days</div><div class="al-floor">' +
+      a.leftovers.map(function (t) { return chk(t, t.from); }).join('') + '</div>';
+    return h;
+  }
+
   function protocolHTML(s) {
     if (!SC || !SC.dayPlan) return '';
     var p = SC.dayPlan(s);
-    var h = kick('By the protocol') + (sabbath() ? '<div class="al-calm" style="padding-top:0">Your sabbath. Keep it light: family, rest, worship. Do what is below, then stop.</div>' : '') + '<div class="al-day"><b>' + esc(p.day) + ', ' + esc(p.label) + '.</b>' +
-      (p.fixed ? ' ' + esc(p.fixed) + '.' : '') + (p.bad ? ' A bad day: the minimum only.' : '') + '</div>';
-    if (!p.bad) h += p.countdown.map(function (c) {
+    var a = !p.bad && AB && AB.today ? AB.today() : null;
+    var h = kick('By the protocol') + (sabbath() ? '<div class="al-calm" style="padding-top:0">Your sabbath. Keep it light: family, rest, worship. Do what is below, then stop.</div>' : '') +
+      (a ? ankiDayHTML(p, a) : '<div class="al-day"><b>' + esc(p.day) + ', ' + esc(p.label) + '.</b>' +
+        (p.fixed ? ' ' + esc(p.fixed) + '.' : '') + (p.bad ? ' A bad day: the minimum only.' : '') + '</div>');
+    if (!p.bad && !a) h += p.countdown.map(function (c) {
       return '<div class="al-cd"><div class="t"><b>' + esc(c.stageName) + '</b> · ' + esc(c.label) + '</div><div class="d">' + esc(c.todo) + '</div></div>';
     }).join('');
     function chk(r) {
@@ -342,8 +394,8 @@ body.alm #hub-sync-panel { bottom: calc(var(--al-bar) + max(8px, env(safe-area-i
       return '<button type="button" class="al-chk' + (r.must ? ' must' : '') + '" style="--c:var(' + (sub ? sub.c : '--gilt') + ', var(--accent))" aria-pressed="' + !!r.done + '" data-floor="' + esc(r.id) + '">' +
         '<span class="b"></span><span class="lab">' + (r.name ? '<span class="who">' + esc(r.name) + '</span>' : '') + esc(r.text) + '</span></button>';
     }
-    h += '<div class="al-floor">' + p.rows.map(chk).join('') + '</div>';
-    if (p.sunday) h += '<div class="al-sub">the Sunday review</div><div class="al-floor">' + p.sunday.map(chk).join('') + '</div>';
+    if (!a) h += '<div class="al-floor">' + p.rows.map(chk).join('') + '</div>';
+    if (p.sunday && !a) h += '<div class="al-sub">the Sunday review</div><div class="al-floor">' + p.sunday.map(chk).join('') + '</div>';
     /* The past week, read back from the same ticks: done of offered, and
        "min" for a bad day. Days before the protocol show a dash, not a 0. */
     if (SC.weekBack) h += '<a class="al-wb" href="Study Control.html#protoWeekBack" aria-label="The past seven days, ticked of offered">' + SC.weekBack(s).map(function (d) {
@@ -464,6 +516,7 @@ body.alm #hub-sync-panel { bottom: calc(var(--al-bar) + max(8px, env(safe-area-i
       SC.write(s); return render();
     }
     if (d.flag) { SC.handle(store(), d.flag, ''); toast('Marked done'); return render(); }
+    if (d.btick) { AB.tick(d.btick, b.getAttribute('aria-pressed') !== 'true'); return render(); }
     if (d.floor) { SC.tickFloor(d.floor, b.getAttribute('aria-pressed') !== 'true'); return render(); }
     if (d.bad) { SC.badDay(d.bad === '1'); toast(d.bad === '1' ? 'Minimum viable day: it keeps the chain' : 'The full day again'); return render(); }
     if (d.open) { SC.setItem(d.open, true); toast('Ticked off in Study Control'); return render(); }
@@ -565,6 +618,9 @@ body.alm #hub-sync-panel { bottom: calc(var(--al-bar) + max(8px, env(safe-area-i
   }
   /* The page outlives the day on a phone: repaint when the hub's day turns. */
   try { if (window.CTDay && window.CTDay.watch) window.CTDay.watch(render); } catch (e) {}
+  /* The add-on's latest day, read from the database once signed in; the
+     page repaints if it brought anything new. */
+  try { if (AB && AB.start) AB.start(render); } catch (e) {}
   window.addEventListener('storage', function (e) { if (!e.key || /^ct_/.test(e.key)) render(); });
 })();
 </script>

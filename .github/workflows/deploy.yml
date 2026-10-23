@@ -118,6 +118,8 @@ jobs:
           node tools/study-control.test.js
           node tools/almanac.test.js
           node tools/protocol.test.js
+          node tools/anki-bridge.test.js
+          python3 tools/anki-addon.test.py
           python3 tools/anki-sync.test.py
           node tools/weekly-review.test.js
           node tools/health-import.test.js
