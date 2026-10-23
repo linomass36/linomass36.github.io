@@ -22,9 +22,20 @@ The sync layer lives in the repo, separate from the export, and re-applies itsel
            allow read, write: if request.auth != null && request.auth.uid == userId;
          }
        }
+       match /bridge/{userId}/{doc=**} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
      }
    }
    ```
+
+   **The `bridge` block** is for the Year 2 Hub add-on in Anki
+   (`tools/anki-addon/`, `anki-bridge.js`). The add-on and the website each
+   write their own document under `bridge/{uid}/from/` and read the other's.
+   The add-on signs in as you, with a pairing code from Study Control, so
+   this rule holds it to your data exactly as it holds the browser. Without
+   the block nothing breaks: the add-on and Study Control both say "publish
+   the bridge rule" and the Almanac keeps the protocol's own rows.
    *(Your data, only you — enforced server-side. This is why the public config key is safe.)*
 
    **The `archive` line matters.** A Firestore document tops out at 1 MiB, and

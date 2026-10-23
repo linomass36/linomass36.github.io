@@ -96,6 +96,7 @@ button.ghost{background:transparent}
 h2{font:italic 400 22px var(--serif);margin:6px 0 10px}
 h3{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:500;margin:22px 0 8px}
 .muted{color:var(--muted)} .small{font-size:12px}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
 /* week */
 .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
 .day{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 9px;min-height:220px}
@@ -465,6 +466,7 @@ def subject_page(s, key):
         und = [eid for eid, e in cal.events.items() if e["subject"] == key and not cal.date_of(eid)]
         rows = [event_row(cal, eid, dt_, today) for dt_, eid in evs] + [event_row(cal, eid, None, today) for eid in und]
         h.append("<div class='tl'>%s</div>" % "".join(rows))
+    h.append(results_html(s, key))
     h.append(unit_table(s, key))
     return "".join(h)
 
@@ -595,6 +597,54 @@ def uworld_html(cfg):
 
 
 def settings_html(s, cfg):
+    return _settings_html(s, cfg) + website_html(s)
+
+
+def website_html(s):
+    """Settings > Website: whether this hub is connected to the CT hub website, how the last sync went, and the export."""
+    b = s.get("bridge") or {}
+    st = b.get("status") or {}
+    if b.get("connected"):
+        line = ("<span class='%s'>%s</span>" % ("ok" if st.get("ok") else "bad", E(st.get("msg") or "")) +
+                (" <span class='muted small'>· %s</span>" % E(st["at"].replace("T", " ")[:16] + " UTC") if st.get("at") else "")) \
+            if st else "<span class='muted'>Connected. The first sync runs shortly after Anki opens.</span>"
+        btns = ("<button class='primary' onclick=\"pycmd('y2:web:sync')\">Sync now</button> "
+                "<button class='ghost' onclick=\"pycmd('y2:web:disconnect')\">Disconnect</button>")
+    else:
+        line = ("<span class='muted'>Not connected. On the website, Study Control &gt; The protocol &gt; Anki add-on makes a "
+                "pairing code; paste it here once and the two stay in step.</span>")
+        btns = "<button class='primary' onclick=\"pycmd('y2:web:connect')\">Connect…</button>"
+    return ("<div class='form'><h3 style='margin-top:0'>Website</h3><p>%s</p>"
+            "<p class='muted small'>The website's Almanac shows this hub's tasks and ticks them; dates moved in Study Control move "
+            "here, cards and all; its test results appear on each subject page. A tick or a date changed in both places keeps the "
+            "newer one. Syncs when Anki opens or syncs, every ten minutes, and about twenty seconds after a tick.</p>"
+            "<div class='row'>%s <button class='ghost' onclick=\"pycmd('y2:web:export')\">Export study data…</button></div></div>"
+            % (line, btns))
+
+
+WEB_SUBJECT = {"physio": "physiology", "histo": "histology", "embryo": "embryology", "anatomy": "anatomy"}
+
+
+def results_html(s, key):
+    """The website's results for this subject, newest first: the scores were logged there, not here."""
+    want = WEB_SUBJECT.get(key)
+    rs = [r for r in (s.get("bridge") or {}).get("results", []) if r.get("subject") == want]
+    if not want or not rs:
+        return ""
+    rows = []
+    for r in sorted(rs, key=lambda r: (r.get("date") or "", r.get("createdAt") or ""), reverse=True)[:12]:
+        p = (100.0 * r["score"] / r["max"]) if r.get("max") else None
+        cls = "" if p is None else ("bad" if p < 70 else "warn" if p < 80 else "ok")
+        rows.append("<tr><td>%s</td><td>%s%s</td><td class='%s' style='text-align:right'>%s/%s%s</td></tr>"
+                    % (E(fmt(r.get("date"), True)), E({"quiz": "Class quiz", "entrance": "Entrance test", "partial": "Partial",
+                                                        "practice": "Practice set"}.get(r.get("kind"), r.get("kind") or "")),
+                       (" · " + E(r["title"])) if r.get("title") else "", cls, E(str(r.get("score"))), E(str(r.get("max"))),
+                       (" · %d%%" % round(p)) if p is not None else ""))
+    return ("<h3>Results <span class='muted small'>from the website's Study Control</span></h3>"
+            "<table class='u'>%s</table>" % "".join(rows))
+
+
+def _settings_html(s, cfg):
     an = s.get("anatomy")
     return ("<h2>Settings</h2><div class='form'><h3 style='margin-top:0'>Cards</h3>"
             "<div class='row'><label>AnKing ceiling (new cards on a normal day)</label><input type='number' id='ceil' min='5' max='80' value='%d'></div>"

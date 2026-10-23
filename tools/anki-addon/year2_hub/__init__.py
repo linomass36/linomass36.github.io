@@ -4,7 +4,11 @@ The deck screen shows the hub: each subject's tasks of the day, its next graded 
 window (menu Year 2, or Tools > Year 2 Hub) has Today with a checklist, the Week, each Subject with its calendar and
 material, the card plan (AnKing and SecondLook, planned to fit with spare capacity for weak days), UWorld misses, How to
 study and Settings. Anatomy cards stay with the Anatomy Prime add-on: the hub shows its day and ticks its checklist.
-The state is stored in the collection, so it syncs."""
+The state is stored in the collection, so it syncs.
+
+Since 3.2 it also syncs with the CT hub website (bridge.py): the website's Almanac shows this hub's tasks and ticks them,
+dates moved in Study Control move here (with their cards), and the website's test results show on each subject page.
+Year 2 > Website connects it once; after that it runs whenever Anki opens or syncs, and every ten minutes."""
 import datetime
 import os
 
@@ -13,12 +17,16 @@ from aqt.qt import QAction, QMenu, QTimer
 from aqt.utils import askUser, showInfo, tooltip
 
 from . import anatomy_bridge as AB
+from . import bridge as BR
 from . import core
 from . import tasks as T
 from . import web as W
 
 ADDON = __name__
 HERE = os.path.dirname(os.path.abspath(__file__))
+USER = os.path.join(HERE, "user_files")      # survives add-on updates; never synced to AnkiWeb (the token lives here)
+BRIDGE_EVERY_MS = 10 * 60 * 1000
+BRIDGE_AFTER_TICK_MS = 20 * 1000
 DECK_LABEL = {"anking": "AnKing", "slides": "SecondLook"}
 
 
@@ -31,6 +39,9 @@ class App:
         self._main_pending = False
         self.busy = False
         self._failed = None
+        self.bridge_status = None           # {"ok", "at", "msg"} of the last website sync, this session only
+        self._bridge_running = False
+        self._bridge_pending = False
 
     # ------------------------------------------------------------ config and basics
     def cfg_raw(self):
@@ -128,7 +139,8 @@ class App:
             self.busy = False
             rep, state = res
             fresh = core.get_state(mw.col)
-            for k in ("checks", "hub_start"):          # ticked while the plan ran
+            # ticked, or synced from the website, while the plan ran
+            for k in ("checks", "hub_start", "check_times", "hub_results", "hub_results_at"):
                 if k in fresh:
                     state[k] = fresh[k]
             core.set_state(mw.col, state)
@@ -226,10 +238,13 @@ class App:
         cal = self.calendar(st)
         cal.tick(tid, value)
         cal.prune()
+        BR.record_tick(st, tid)             # when: the newer of this and a website tick wins
+        BR.prune_times(st, self.today())
         core.set_state(mw.col, st)
         self.refresh_main()
         if window:
             self.refresh_window()
+        self.bridge_soon()
 
     def tick_anatomy(self, key, on):
         AB.tick(self.today(), key, on)
@@ -252,11 +267,16 @@ class App:
         self.set_event_date(eid, new)
 
     def set_event_date(self, eid, new):
+        st = core.get_state(mw.col)         # stamped before the plan runs, so the run keeps it
+        BR.record_move(st, eid)
+        core.set_state(mw.col, st)
+
         def act(e):
             T.Calendar(self.plan, e.state).set_date(eid, new)
             e.state["baseline"] = None
             return e.run(force=True)
-        self.do(act, done=lambda rep: tooltip("Moved. Its tasks and cards moved with it."), label="Moving the date…")
+        self.do(act, done=lambda rep: (tooltip("Moved. Its tasks and cards moved with it."), self.bridge_soon()),
+                label="Moving the date…")
 
     def snapshot(self, full=True):
         today = self.today()
@@ -296,7 +316,186 @@ class App:
                 report = {"run": {"target": day.get("target", {}), "mode": day.get("mode", {})}, "units": []}
         return {"today": today, "cal": cal, "tasks": tasks, "leftovers": cal.leftovers(today), "week": week, "next": nxt,
                 "next_any": next_any, "anatomy": AB.summary(today), "report": report,
-                "ap_hidden": AB.available() and not AB.its_panel_shown()}
+                "ap_hidden": AB.available() and not AB.its_panel_shown(),
+                "bridge": {"connected": bool(BR.load_creds(USER)), "status": self.bridge_status,
+                           "results": st.get("hub_results", []), "results_at": st.get("hub_results_at")}}
+
+    # ------------------------------------------------------------ the website (bridge.py)
+    def _background(self, fn, done, fail):
+        """fn() off the main thread, then done(result) or fail(exc) on it. Inline when Anki's task manager is absent."""
+        tm = getattr(mw, "taskman", None)
+        if tm is None or os.environ.get("Y2_SYNC"):
+            try:
+                res = fn()
+            except Exception as e:
+                return fail(e)
+            return done(res)
+
+        def finished(fut):
+            try:
+                res = fut.result()
+            except Exception as e:
+                return fail(e)
+            return done(res)
+        tm.run_in_background(fn, finished)
+
+    def bridge_soon(self):
+        """A tick or a moved date reaches the website within ~20 seconds; a burst of ticks goes as one sync."""
+        if self._bridge_pending or not BR.load_creds(USER):
+            return
+        self._bridge_pending = True
+
+        def go():
+            self._bridge_pending = False
+            self.bridge_sync(quiet=True)
+        QTimer.singleShot(BRIDGE_AFTER_TICK_MS, go)
+
+    def bridge_sync(self, quiet=True, done=None):
+        """Pull the website's ticks, moves and results, apply the newer ones, then publish this hub's days. The network
+        runs in the background; the collection is only touched on the main thread, and never while the card plan is
+        running (its result would be written over what this applied)."""
+        creds = BR.load_creds(USER)
+        if not creds or not mw.col:
+            return
+        if self._bridge_running:
+            return
+        if self.busy:
+            QTimer.singleShot(5000, lambda: self.bridge_sync(quiet=quiet, done=done))
+            return
+        self._bridge_running = True
+        remote = BR.Remote(creds)
+
+        def failed(e):
+            self._bridge_running = False
+            msg = str(e) if isinstance(e, BR.BridgeError) else repr(e)
+            self.bridge_status = {"ok": False, "at": BR.now_iso(), "msg": msg}
+            print("Year 2 Hub, website:", msg)
+            self.refresh_window()
+            if not quiet:
+                showInfo("Syncing with the website did not work.\n\n" + msg)
+
+        def pulled(hub):
+            if remote.rotated:
+                BR.save_creds(USER, remote.creds)
+            if self.busy:                   # the plan started meanwhile: try again once it is done
+                self._bridge_running = False
+                QTimer.singleShot(5000, lambda: self.bridge_sync(quiet=quiet, done=done))
+                return
+            st = core.get_state(mw.col)
+            got = BR.apply_inbound(st, self.plan, hub) if hub else {"ticks": 0, "moves": [], "results": 0}
+            BR.prune_times(st, self.today())
+            core.set_state(mw.col, st)
+            if hub:
+                BR.save_cache(USER, {"at": hub.get("at"), "checks": hub.get("checks", {}), "moves": hub.get("moves", {}),
+                                     "studyControl": hub.get("studyControl")})
+            if got["moves"]:
+                # the cards follow the dates: re-run the plan, then publish what it made
+                self._bridge_running = False
+                self.do(lambda e: e.run(force=True), quiet=True,
+                        done=lambda rep: self._bridge_push(remote, quiet, got, done))
+                return
+            self._bridge_push(remote, quiet, got, done)
+
+        self._background(lambda: remote.get("hub"), pulled, failed)
+
+    def _bridge_push(self, remote, quiet, got, done):
+        self._bridge_running = True
+        try:
+            st = core.get_state(mw.col)
+            payload = BR.build_outbound(self.plan, st, self.today(), AB.summary(self.today()), self.last)
+        except Exception as e:
+            self._bridge_running = False
+            print("Year 2 Hub, website:", repr(e))
+            return
+
+        def pushed(_):
+            self._bridge_running = False
+            if remote.rotated:
+                BR.save_creds(USER, remote.creds)
+            bits = []
+            if got["ticks"]:
+                bits.append("%d tick%s" % (got["ticks"], "" if got["ticks"] == 1 else "s"))
+            if got["moves"]:
+                bits.append("%d date%s moved" % (len(got["moves"]), "" if len(got["moves"]) == 1 else "s"))
+            self.bridge_status = {"ok": True, "at": BR.now_iso(),
+                                  "msg": ("From the website: " + ", ".join(bits)) if bits else "Up to date"}
+            if got["ticks"] or got["moves"] or got["results"]:
+                self.refresh_main()
+            self.refresh_window()
+            if not quiet:
+                tooltip("<b>Year 2 Hub</b><br>Synced with the website. " + self.bridge_status["msg"] + ".", period=5000)
+            if done:
+                done(got)
+
+        def failed(e):
+            self._bridge_running = False
+            msg = str(e) if isinstance(e, BR.BridgeError) else repr(e)
+            self.bridge_status = {"ok": False, "at": BR.now_iso(), "msg": msg}
+            print("Year 2 Hub, website:", msg)
+            self.refresh_window()
+            if not quiet:
+                showInfo("Syncing with the website did not work.\n\n" + msg)
+
+        self._background(lambda: remote.put("anki", payload), pushed, failed)
+
+    def bridge_connect(self):
+        from aqt.qt import QInputDialog
+        code, ok = QInputDialog.getMultiLineText(
+            self.window or mw, "Connect to the website",
+            "On the website, open Study Control > The protocol > Anki add-on, press 'Make a pairing code', copy it and paste "
+            "it here.\n\nThe code lets this add-on read and write your hub's study data. It is kept on this computer only "
+            "(not in your collection, so not on AnkiWeb).")
+        if not ok or not code.strip():
+            return
+        try:
+            creds = BR.decode_pairing(code)
+        except BR.BridgeError as e:
+            showInfo(str(e))
+            return
+        remote = BR.Remote(creds)
+
+        def check():
+            remote.token()                  # proves the code works before anything is saved
+            return True
+
+        def good(_):
+            BR.save_creds(USER, remote.creds)
+            tooltip("Connected to the website. Syncing now.")
+            self.bridge_sync(quiet=False)
+
+        def bad(e):
+            showInfo("That pairing code did not work.\n\n" + (str(e) if isinstance(e, BR.BridgeError) else repr(e)))
+        self._background(check, good, bad)
+
+    def bridge_disconnect(self):
+        if not BR.load_creds(USER):
+            showInfo("The add-on is not connected to the website.")
+            return
+        if not askUser("Disconnect from the website? The sign-in kept on this computer is deleted. Nothing is deleted from "
+                       "the website or from this hub."):
+            return
+        BR.clear_creds(USER)
+        self.bridge_status = None
+        self.refresh_window()
+        tooltip("Disconnected from the website.")
+
+    def export_data(self):
+        """Everything this hub holds and everything the website last sent: one JSON file, and the results and the
+        tasks as CSV for a spreadsheet."""
+        from aqt.qt import QFileDialog
+        folder = QFileDialog.getExistingDirectory(self.window or mw, "Export study data to which folder?",
+                                                  os.path.expanduser("~/Documents"))
+        if not folder:
+            return
+        st = core.get_state(mw.col)
+        bundle = BR.export_bundle(self.plan, st, self.today(), self.cfg_merged(), BR.load_cache(USER))
+        try:
+            paths = BR.write_export(folder, bundle, self.today())
+        except Exception as e:
+            showInfo("Could not write the export: %r" % (e,))
+            return
+        showInfo("Exported:\n\n" + "\n".join(os.path.basename(p) for p in paths) +
+                 ("" if BR.load_creds(USER) else "\n\nNot connected to the website, so its results are not included."))
 
     # ------------------------------------------------------------ browser and decks
     def select_in_browser(self, cids, what, attempt=0):
@@ -493,10 +692,17 @@ APP = App()
 # ---------------------------------------------------------------- hooks
 def _on_open():
     QTimer.singleShot(1500, lambda: APP.run(quiet=True))
+    QTimer.singleShot(6000, lambda: APP.bridge_sync(quiet=True))
 
 
 def _on_sync():
     APP.run(quiet=True)
+    QTimer.singleShot(3000, lambda: APP.bridge_sync(quiet=True))
+
+
+_BRIDGE_TIMER = QTimer(mw)
+_BRIDGE_TIMER.timeout.connect(lambda: APP.bridge_sync(quiet=True))
+_BRIDGE_TIMER.start(BRIDGE_EVERY_MS)
 
 
 def _on_close():
@@ -573,6 +779,15 @@ def _fill_menu():
     add("Light day", lambda: APP.light_day(None))
     add("Day off", lambda: APP.light_day(0.0))
     add("Run the card plan now", lambda: APP.run(quiet=False))
+    m.addSeparator()
+    web = m.addMenu("Website")
+    connected = bool(BR.load_creds(USER))
+    for label, fn in ((("Sync now", lambda: APP.bridge_sync(quiet=False)),) if connected else ()) + \
+            (("Connect…" if not connected else "Connect again…", APP.bridge_connect),) + \
+            ((("Disconnect", APP.bridge_disconnect),) if connected else ()):
+        a = web.addAction(label)
+        a.triggered.connect(lambda _=False, f=fn: f())
+    add("Export study data…", APP.export_data)
     add("Settings", lambda: APP.open_window("Settings"))
 
 

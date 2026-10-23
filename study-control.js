@@ -694,6 +694,17 @@
     });
     return out.sort(function (a, b) { return a.date.localeCompare(b.date); });
   }
+  /* A class moved from outside this page: the add-on, through
+     anki-bridge.js, when a date was changed in Anki. The same record the
+     page's Edit writes, so nothing downstream can tell the difference. */
+  function moveEvent(id, date, now) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return false;
+    var s = read();
+    if (!s.events[id] || s.events[id].date === date) return false;
+    s.events[id] = Object.assign({}, s.events[id], { date: date });
+    return write(s, now);
+  }
+
   function setItem(id, on, now) {
     var s = read();
     if (on) s.items[id] = today(now); else delete s.items[id];
@@ -774,11 +785,22 @@
      stored: a result corrected later, or a tick added late, moves its point. */
   var PROTOCOL_FROM = '2026-10-18';   // v1.1's date: no day before it had rows to tick
   function noonOf(d) { return parse(d).getTime() + 12 * 36e5; }
+  /* A day's rows as they were offered: the add-on's tasks when it planned
+     that day (anki-bridge.js — the Almanac ticked those, not the protocol
+     rows), the protocol's otherwise. A bad day is this site's own and keeps
+     the minimum. */
+  function rowsOn(s, d) {
+    var p = dayPlan(s, noonOf(d));
+    if (p.bad) return p;
+    var b = null;
+    try { b = w.AnkiBridge && w.AnkiBridge.dayTasks ? w.AnkiBridge.dayTasks(d) : null; } catch (e) {}
+    return b && b.length ? Object.assign({}, p, { rows: b, sunday: null, anki: true }) : p;
+  }
   function weekBack(s, now, n) {
     s = shape(s);
     var T = today(now), out = [];
     for (var i = (n || 7) - 1; i >= 0; i--) {
-      var d = addDays(T, -i), p = dayPlan(s, noonOf(d)), items = p.rows.concat(p.sunday || []);
+      var d = addDays(T, -i), p = rowsOn(s, d), items = p.rows.concat(p.sunday || []);
       var must = p.rows.filter(function (r) { return r.must; });
       out.push({ date: d, day: p.day, today: d === T, before: d < PROTOCOL_FROM, bad: p.bad,
         total: items.length, done: items.filter(function (x) { return x.done; }).length,
@@ -806,7 +828,7 @@
   function adherence(s, now) {
     s = shape(s);
     var T = today(now), points = [], early = 0, plans = {};
-    function plan(d) { return plans[d] || (plans[d] = dayPlan(s, noonOf(d))); }
+    function plan(d) { return plans[d] || (plans[d] = rowsOn(s, d)); }
     view(s).results.forEach(function (r) {
       if (!r.max || SK.indexOf(r.subject) < 0 || r.date > T) return;
       if (addDays(r.date, -7) < PROTOCOL_FROM) { early++; return; }
@@ -833,7 +855,7 @@
     read: read, write: write, has: has, adopt: adopt, view: view,
     flags: flags, open: open, headsUp: headsUp, handle: handle, ensureGroup: ensureGroup, prepFor: prepFor, isSession: isSession, GROUP: GROUP, ingestWeeks: ingestWeeks,
     dayPlan: dayPlan, tickFloor: tickFloor, badDay: badDay, countdown: countdown, countdowns: countdowns, retestDue: retestDue,
-    phaseOf: phaseOf, weekBack: weekBack, adherence: adherence, PROTOCOL_FROM: PROTOCOL_FROM, openItems: openItems, dated: dated, setItem: setItem, ensureProtocol: ensureProtocol,
+    phaseOf: phaseOf, weekBack: weekBack, rowsOn: rowsOn, moveEvent: moveEvent, adherence: adherence, PROTOCOL_FROM: PROTOCOL_FROM, openItems: openItems, dated: dated, setItem: setItem, ensureProtocol: ensureProtocol,
     PROTOCOL: { version: '1.1', of: '2026-10-18', WEEK: WEEK, SUNDAY: SUNDAY, STACKED: STACKED, PHASES: PHASES, OPEN: OPEN, MILESTONES: MILESTONES },
     nextGraded: nextGraded, lastTold: lastTold, summary: summary,
     today: today, iso: iso, parse: parse, addDays: addDays, diff: diff, monday: monday, short: short,

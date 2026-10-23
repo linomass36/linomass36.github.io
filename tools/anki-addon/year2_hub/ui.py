@@ -148,6 +148,10 @@ class HubWindow(QDialog):
             app.refresh_main()
         elif head == "config":
             app.edit_config()
+        elif head == "web":
+            self.busy(False)
+            {"sync": lambda: app.bridge_sync(quiet=False), "connect": app.bridge_connect,
+             "disconnect": app.bridge_disconnect, "export": app.export_data}[rest]()
         elif head == "anatomy":
             {"open": AB.open_window, "browse": lambda: AB.browse_today(app.today()), "study": AB.study}[rest]()
         return None

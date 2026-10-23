@@ -145,6 +145,8 @@ td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:now
 .corr h4{margin:0 0 2px;font-size:13.5px;font-weight:600;color:var(--ink)}.corr h4 span{font-weight:400;color:var(--muted)}
 .corr svg{width:100%;max-width:360px;height:auto;display:block}.corr svg text{font-size:9.5px;fill:var(--muted)}
 .corr .dot{cursor:pointer}.corr .dot:hover,.corr .dot:focus{stroke-width:3}
+.pair{width:100%;min-height:76px;font:12px/1.4 var(--f-mono,monospace);word-break:break-all;margin:6px 0}
+.dis .allev{grid-template-columns:minmax(0,1fr) auto}
 .rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px;font-size:13.5px}
 @media (max-width:700px){.rules{grid-template-columns:1fr}}
 .rules div{padding:6px 0;border-top:1px solid var(--line)}
@@ -165,7 +167,7 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
       <p>Log every quiz and test, tick prep before each class, add the Anki numbers each Sunday. The page checks the rules and tells you when something has to change.</p>
     </div>
     <div class="io"><div class="status-line" id="statusLine">Loading…</div><div class="status-line" id="savedLine"></div>
-      <div class="io-btns"><button class="ghost" id="btnExport" type="button">Back up (download)</button><button class="ghost" id="btnImport" type="button">Restore from backup</button><input type="file" id="fileImport" accept=".json,application/json" hidden></div>
+      <div class="io-btns"><button class="ghost" id="btnExport" type="button">Back up (download)</button><button class="ghost" id="btnExportAll" type="button">Export all study data</button><button class="ghost" id="btnExportRes" type="button">Results (CSV)</button><button class="ghost" id="btnExportTasks" type="button">Tasks (CSV)</button><button class="ghost" id="btnImport" type="button">Restore from backup</button><input type="file" id="fileImport" accept=".json,application/json" hidden></div>
       <div class="formmsg" id="ioMsg" role="status"></div></div>
   </header>
 
@@ -262,6 +264,7 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
     <p class="proto-day" id="protoDay"></p>
     <div id="protoCd"></div>
     <details open><summary id="protoOpenSum">Open items</summary><div class="proto-list" id="protoOpen" style="margin-top:6px"></div></details>
+    <details open id="ankiBox"><summary id="ankiSum">Anki add-on</summary><div id="ankiPanel" style="margin-top:6px"></div></details>
     <details open id="protoWeekBack"><summary>The past week</summary><div class="wb" id="protoWb" style="margin-top:6px"></div></details>
     <details open><summary>Ticks against grades</summary><div id="protoCorr" style="margin-top:6px"></div></details>
     <details><summary>Countdowns: every stacked week</summary><div class="proto-list" id="protoStacked" style="margin-top:6px"></div></details>
@@ -293,6 +296,7 @@ details summary{cursor:pointer;font:600 13.5px var(--f-display);color:var(--acce
 
 <script src="./day.js"></script>
 <script src="./study-control.js"></script>
+<script src="./anki-bridge.js"></script>
 <script>
 /* The rules, the store and the subject tables live in study-control.js, so
    the Standing and Systems.drift() can ask the same questions this page
@@ -497,6 +501,7 @@ function renderProtocol(){
       (d.before?`<div class="ev-note">before the protocol</div><div></div><div class="mu"></div>`
        :`<div><div class="bar" role="img" aria-label="${d.done} of ${d.total}"><i style="width:${d.total?Math.round(100*d.done/d.total):0}%"></i></div></div><div class="num">${d.done}/${d.total}${d.bad?' <span class="ev-note">bad day</span>':''}</div><div class="mu">${d.must==null?'–':d.must?'done':'<span class="ev-note">not ticked</span>'}</div>`)).join("");
   renderCorr();
+  renderAnki();
   $("#protoDates").innerHTML=SC.PROTOCOL.MILESTONES.map(m=>`<div class="allev"><span class="ev-date">${short(m.date)} ${m.date.slice(0,4)}</span><span>${esc(m.label)}</span><span></span></div>`).join("");
 }
 
@@ -527,6 +532,50 @@ function renderCorr(){
 document.addEventListener("click",e=>{const d=e.target.closest(".corr .dot");if(d)$("#corrLab").textContent=d.dataset.lab});
 document.addEventListener("keydown",e=>{const d=e.target.closest&&e.target.closest(".corr .dot");if(d&&(e.key==="Enter"||e.key===" ")){e.preventDefault();$("#corrLab").textContent=d.dataset.lab}});
 
+/* ---------- the Anki add-on ----------
+   Everything is asked of anki-bridge.js. The pairing code is made when the
+   button is pressed and only shown: it is this browser's sign-in, and the
+   add-on uses it to act as you, so it is not kept on the page. */
+const AB=window.AnkiBridge;
+let pairShown=false;
+function renderAnki(){
+  if(!AB){$("#ankiBox").hidden=true;return}
+  const st=AB.state(), dis=AB.disagreements(), when=t=>t?new Date(t).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+  $("#ankiSum").textContent="Anki add-on"+(st.connected?" · last plan "+when(st.at):" · not connected");
+  let h=`<p class="ev-note" style="margin:0 0 6px">${st.connected
+    ?`The Almanac's checklist is the Year 2 Hub's (add-on ${esc(st.addon||"")}), last sent from Anki ${when(st.at)}. Ticks made here go back to Anki; dates moved in Every class ahead move there, cards and all; your results show on its subject pages.`
+    :"Not connected yet. Make a pairing code below, then in Anki: Year 2 › Website › Connect…, and paste it. One time only."}</p>`;
+  if(st.error)h+=`<div class="notice" style="margin:6px 0">${esc(st.error)}</div>`;
+  if(dis.length){
+    h+=`<div class="ev-note" style="margin:8px 0 2px"><b>${dis.length} class${dis.length>1?"es are":" is"} dated differently in Anki.</b> Pick the right date once; after that a move on either side moves both.</div><div class="dis">`+
+      dis.map(d=>`<div class="allev"><span>${esc(d.label)}<span class="ev-note"> · Anki: ${short(d.ankiDate)}${d.tbc?" (to confirm)":""} · here: ${short(d.siteDate)}</span></span>
+        <span><button type="button" class="ghost" data-adopt="anki" data-a="${esc(d.anki)}" data-s="${esc(d.site)}">Use ${short(d.ankiDate)}</button>
+        <button type="button" class="ghost" data-adopt="site" data-a="${esc(d.anki)}" data-s="${esc(d.site)}">Use ${short(d.siteDate)}</button></span></div>`).join("")+`</div>`;
+  }
+  h+=`<div class="form-acts" style="margin-top:8px"><button type="button" class="ghost" id="ankiPair">${pairShown?"Hide the pairing code":"Make a pairing code"}</button>${st.signedIn?`<button type="button" class="ghost" id="ankiSync">Sync now</button>`:""}</div>`;
+  if(pairShown){
+    const code=AB.pairingCode();
+    h+=code?`<textarea class="pair" id="pairCode" readonly>${esc(code)}</textarea>
+      <p class="ev-note" style="margin:0">Copy all of it into Anki: Year 2 › Website › Connect…. It lets the add-on read and write your hub's study data as you, and it is kept only on that computer. Make one only on your own device, and don't share it.</p>`
+      :`<div class="notice">Sign in to the hub on this device first: the code is made from your sign-in.</div>`;
+  }
+  $("#ankiPanel").innerHTML=h;
+  const pb=$("#ankiPair"); if(pb)pb.onclick=()=>{pairShown=!pairShown;renderAnki();const t=$("#pairCode");if(t){t.focus();t.select()}};
+  const sb=$("#ankiSync"); if(sb)sb.onclick=()=>{sb.textContent="Syncing…";AB.sync(reloadFromBridge).then(()=>renderAnki())};
+}
+/* The bridge can move a class while this page is open; the page holds the
+   store in memory and writes all of it on every save, so it reloads first
+   or the next tick would put the old date back. */
+function reloadFromBridge(){store=SC.read();fire();render()}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-adopt]");if(!b||!AB)return;
+  AB.adopt(b.dataset.a,b.dataset.s,b.dataset.adopt);reloadFromBridge()});
+function download(name,text,type){
+  const blob=new Blob([text],{type});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+$("#btnExportAll").addEventListener("click",()=>{if(!AB)return;download("study-data-"+TODAY+".json",JSON.stringify(AB.exportAll(),null,1),"application/json")});
+$("#btnExportRes").addEventListener("click",()=>{if(!AB)return;download("study-results-"+TODAY+".csv",AB.resultsCSV(),"text/csv")});
+$("#btnExportTasks").addEventListener("click",()=>{if(!AB)return;download("study-tasks-"+TODAY+".csv",AB.tasksCSV(),"text/csv")});
+
 /* ---------- interactions ---------- */
 document.addEventListener("click",async e=>{
   const er=e.target.closest("[data-edit-res]"); if(er){loadRes(er.dataset.editRes);return}
@@ -551,7 +600,10 @@ let store;
 const KEY=SC.KEY;
 function loadStore(){SC.adopt();SC.ensureGroup();SC.ensureProtocol();return SC.read()}
 let canSave=true;
-function persist(){if(!SC.write(store)){canSave=false;$("#offline").hidden=false}store=SC.read();try{localStorage.setItem("__local_studycontrol_saved",new Date().toISOString())}catch(e){}fire();showSaved()}
+function persist(){if(!SC.write(store)){canSave=false;$("#offline").hidden=false}
+  /* a class moved here goes to the add-on; one moved there since is applied */
+  try{if(window.AnkiBridge)AnkiBridge.reconcile()}catch(e){}
+  store=SC.read();try{localStorage.setItem("__local_studycontrol_saved",new Date().toISOString())}catch(e){}fire();showSaved()}
 const listeners=[];
 function fire(){for(const[c,fn]of listeners)fn(c)}
 const snapOf=c=>({docs:Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>d}))});
@@ -583,6 +635,8 @@ $("#fileImport").addEventListener("change",async e=>{
   catch(err){$("#ioMsg").textContent="That file isn't a Study control backup.";$("#ioMsg").classList.add("err")}
   e.target.value=""});
 store=loadStore();
+/* before the first paint, so the calendars are reconciled when it draws */
+try{if(AB)AB.start(reloadFromBridge)}catch(e){}
 const sub=(name,fn)=>db.collection(name).onSnapshot(snap=>{fn(snap.docs.map(d=>({id:d.id,...d.data()})));ready[name]=true;render()});
 sub("events",d=>S.events=d); sub("results",d=>S.results=d);
 sub("anki",d=>{S.anki=d;fillAnkiForm()}); sub("actions",d=>{S.actions={};for(const x of d)S.actions[x.flag]=x});
